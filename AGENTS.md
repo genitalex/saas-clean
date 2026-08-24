@@ -227,7 +227,7 @@ SENTRY_AUTH_TOKEN=sntrys_...
 NEXT_PUBLIC_SENTRY_DISABLED="false"  # Set to "true" to disable in dev
 ```
 
-**Note**: Clerk supports "keyless mode" - the app works without API keys for initial development.
+**Note**: Clerk supports "keyless mode" — run `npx clerk@latest init` to provision a development instance in seconds (no account needed; keys are written to `.env.local`).
 
 ---
 
@@ -721,8 +721,8 @@ See "Theming System" section above or `docs/themes.md`.
 
 **Clerk keyless mode popup**
 
-- Normal in development without API keys
-- Click popup to claim application or set env variables
+- Run `npx clerk@latest init` to provision a dev instance in seconds (no account needed)
+- It writes keys to `.env.local`; later you can claim application or set env variables
 
 **Theme not applying**
 

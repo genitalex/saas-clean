@@ -1,11 +1,8 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextRequest } from 'next/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
-const isProtectedRoute = createRouteMatcher(['/dashboard(.*)']);
-
-export default clerkMiddleware(async (auth, req: NextRequest) => {
-  if (isProtectedRoute(req)) await auth.protect();
-});
+// Route protection lives in the /dashboard layout via `auth.protect()`.
+// clerkMiddleware() only attaches the auth context to every request.
+export default clerkMiddleware();
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
