@@ -11,20 +11,17 @@ export const navGroups: NavGroup[] = [
         shortcut: ['d', 'd'],
         items: []
       },
-      {
-        title: 'Today',
-        url: '#',
-        icon: 'clock',
-        disabled: true,
-        items: []
-      },
+      { title: 'Today', url: '/dashboard/today', icon: 'clock', items: [] },
       {
         title: 'Calendar',
         url: '/dashboard/calendar',
         icon: 'calendar',
         shortcut: ['c', 'a'],
         items: []
-      }
+      },
+      { title: 'Integrations', url: '/dashboard/integrations', icon: 'code', items: [] },
+      { title: 'Opportunities', url: '/dashboard/opportunities', icon: 'trendingUp', items: [] },
+      { title: 'Business Pulse', url: '/dashboard/business-pulse', icon: 'dashboard', items: [] }
     ]
   },
   {
@@ -37,13 +34,7 @@ export const navGroups: NavGroup[] = [
         shortcut: ['c', 'u'],
         items: []
       },
-      {
-        title: 'Tasks',
-        url: '/dashboard/tasks',
-        icon: 'check',
-        shortcut: ['t', 't'],
-        items: []
-      },
+      { title: 'Tasks', url: '/dashboard/tasks', icon: 'check', shortcut: ['t', 't'], items: [] },
       {
         title: 'Kanban',
         url: '/dashboard/kanban',
@@ -51,13 +42,7 @@ export const navGroups: NavGroup[] = [
         shortcut: ['k', 'k'],
         items: []
       },
-      {
-        title: 'Activity',
-        url: '#',
-        icon: 'trendingUp',
-        disabled: true,
-        items: []
-      }
+      { title: 'Activity', url: '/dashboard/activity', icon: 'trendingUp', items: [] }
     ]
   },
   {
@@ -70,20 +55,8 @@ export const navGroups: NavGroup[] = [
         shortcut: ['n', 'n'],
         items: []
       },
-      {
-        title: 'Team',
-        url: '#',
-        icon: 'teams',
-        disabled: true,
-        items: []
-      },
-      {
-        title: 'Settings',
-        url: '#',
-        icon: 'settings',
-        disabled: true,
-        items: []
-      }
+      { title: 'Team', url: '/dashboard/team', icon: 'teams', items: [] },
+      { title: 'Settings', url: '/dashboard/settings', icon: 'settings', items: [] }
     ]
   }
 ];

@@ -1,0 +1,46 @@
+'use client';
+
+import { Icons } from '@/components/icons';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { KanbanColumn, KanbanColumnHandle } from '@/components/ui/kanban';
+import type { Task } from '@/features/tasks/types';
+import { TaskCard } from './task-card';
+
+const COLUMN_TITLES: Record<string, string> = {
+  todo: 'Todo',
+  in_progress: 'En curso',
+  waiting: 'Esperando',
+  done: 'Hecho'
+};
+
+interface TaskColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>, 'children'> {
+  tasks: Task[];
+}
+
+export function TaskColumn({ value, tasks, ...props }: TaskColumnProps) {
+  return (
+    <KanbanColumn value={value} className='w-full shrink-0 md:w-[320px]' {...props}>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-2'>
+          <span className='text-sm font-semibold'>{COLUMN_TITLES[value] ?? value}</span>
+          <Badge variant='secondary' className='pointer-events-none rounded-sm'>
+            {tasks.length}
+          </Badge>
+        </div>
+        <KanbanColumnHandle render={<Button variant='ghost' size='icon' />}>
+          <Icons.gripVertical className='h-4 w-4' />
+        </KanbanColumnHandle>
+      </div>
+      <div className='flex min-h-24 flex-col gap-2 p-0.5'>
+        {tasks.length > 0 ? (
+          tasks.map((task) => <TaskCard key={task.id} task={task} asHandle />)
+        ) : (
+          <div className='text-muted-foreground rounded-md border border-dashed p-4 text-center text-xs'>
+            Sin tareas
+          </div>
+        )}
+      </div>
+    </KanbanColumn>
+  );
+}
