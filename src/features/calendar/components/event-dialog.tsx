@@ -19,12 +19,16 @@ import { createEvent, deleteEvent, eventKeys, updateEvent } from '../queries';
 import { eventPayloadSchema } from '../schemas/event';
 import type { Event, CustomerOption, UserOption } from '../types';
 
+type Category = { id: string; name: string; color: string };
+
 type EventDialogProps = {
   open: boolean;
   event?: Event | null;
   initialDate?: Date;
   initialCustomerId?: string;
   onOpenChange: (open: boolean) => void;
+  categories?: Category[];
+  onCategoriesChange?: (categories: Category[]) => void;
 };
 
 function toInputValue(value: Date) {
@@ -37,7 +41,9 @@ export function EventDialog({
   event,
   initialDate,
   initialCustomerId,
-  onOpenChange
+  onOpenChange,
+  categories = [],
+  onCategoriesChange
 }: EventDialogProps) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
@@ -48,6 +54,7 @@ export function EventDialog({
   const [location, setLocation] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [pending, setPending] = useState(false);
   const { data: customers = [] } = useQuery({
     queryKey: ['customers', 'event-options'],
@@ -80,6 +87,7 @@ export function EventDialog({
     setLocation(event?.location ?? '');
     setCustomerId(event?.customerId ?? initialCustomerId ?? '');
     setAssigneeId(event?.assigneeId ?? '');
+    setCategoryId('');
   }, [event, initialCustomerId, initialDate, open]);
 
   async function handleSubmit(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -187,6 +195,22 @@ export function EventDialog({
             Todo el día
           </label>
           <div className='grid gap-4 sm:grid-cols-2'>
+            <label htmlFor='event-category' className='flex flex-col gap-1.5 text-sm'>
+              <span className='text-muted-foreground'>Categoría</span>
+              <select
+                id='event-category'
+                className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+                value={categoryId}
+                onChange={(event) => setCategoryId(event.target.value)}
+              >
+                <option value=''>Sin categoría</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label htmlFor='event-customer' className='flex flex-col gap-1.5 text-sm'>
               <span className='text-muted-foreground'>Cliente (opcional)</span>
               <select
