@@ -209,6 +209,10 @@ export const organizationMembers = pgTable(
 
 export const customerKind = pgEnum('customer_kind', ['person', 'company']);
 
+export const taskStatus = pgEnum('task_status', ['todo', 'in_progress', 'waiting', 'done']);
+
+export const taskPriority = pgEnum('task_priority', ['low', 'medium', 'high']);
+
 export const customers = pgTable(
   'customers',
   {
@@ -262,5 +266,38 @@ export const customers = pgTable(
     index('customers_organization_kind_idx').on(table.organizationId, table.kind),
 
     index('customers_organization_updated_at_idx').on(table.organizationId, table.updatedAt)
+  ]
+);
+
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+
+    assigneeId: uuid('assignee_id').references(() => users.id, { onDelete: 'set null' }),
+
+    title: text('title').notNull(),
+    description: text('description'),
+    status: taskStatus('status').notNull().default('todo'),
+    priority: taskPriority('priority').notNull().default('medium'),
+    dueAt: timestamp('due_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true })
+  },
+  (table) => [
+    index('tasks_organization_id_idx').on(table.organizationId),
+    index('tasks_customer_id_idx').on(table.customerId),
+    index('tasks_assignee_id_idx').on(table.assigneeId),
+    index('tasks_status_idx').on(table.status),
+    index('tasks_due_at_idx').on(table.dueAt),
+    index('tasks_organization_status_idx').on(table.organizationId, table.status)
   ]
 );

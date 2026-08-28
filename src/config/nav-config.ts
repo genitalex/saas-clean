@@ -39,9 +39,9 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Tasks',
-        url: '#',
+        url: '/dashboard/tasks',
         icon: 'check',
-        disabled: true,
+        shortcut: ['t', 't'],
         items: []
       },
       {

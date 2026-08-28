@@ -9,7 +9,11 @@ export function RecentCustomers() {
     <Card>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Clientes recientes</CardTitle>
-        <Button variant='ghost' size='sm' render={<Link href='/dashboard/customers' />}>
+        <Button
+          variant='ghost'
+          size='sm'
+          render={<Link href='/dashboard/customers' aria-label='Ver clientes' />}
+        >
           Ver clientes <Icons.chevronRight data-icon='inline-end' />
         </Button>
       </CardHeader>

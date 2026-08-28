@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,7 @@ export function UpcomingPanel() {
     <Card className='h-full'>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Próximamente</CardTitle>
-        <Button variant='ghost' size='sm' render={<Link href='#' />}>
+        <Button variant='ghost' size='sm' type='button' disabled>
           Ver calendario <Icons.chevronRight data-icon='inline-end' />
         </Button>
       </CardHeader>

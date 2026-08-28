@@ -9,7 +9,11 @@ export function KanbanPreview() {
     <Card>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Estado del trabajo</CardTitle>
-        <Button variant='ghost' size='sm' render={<Link href='/dashboard/kanban' />}>
+        <Button
+          variant='ghost'
+          size='sm'
+          render={<Link href='/dashboard/kanban' aria-label='Ver Kanban' />}
+        >
           Ver Kanban <Icons.chevronRight data-icon='inline-end' />
         </Button>
       </CardHeader>

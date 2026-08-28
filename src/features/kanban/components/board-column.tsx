@@ -4,14 +4,14 @@ import { Icons } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { KanbanColumn, KanbanColumnHandle } from '@/components/ui/kanban';
-import type { Task } from '../utils/store';
+import type { Task } from '@/features/tasks/types';
 import { TaskCard } from './task-card';
 
 const COLUMN_TITLES: Record<string, string> = {
-  backlog: 'Backlog',
-  inProgress: 'In Progress',
-  review: 'Review',
-  done: 'Done'
+  todo: 'Todo',
+  in_progress: 'En curso',
+  waiting: 'Esperando',
+  done: 'Hecho'
 };
 
 interface TaskColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>, 'children'> {
@@ -32,10 +32,14 @@ export function TaskColumn({ value, tasks, ...props }: TaskColumnProps) {
           <Icons.gripVertical className='h-4 w-4' />
         </KanbanColumnHandle>
       </div>
-      <div className='flex flex-col gap-2 p-0.5'>
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} asHandle />
-        ))}
+      <div className='flex min-h-24 flex-col gap-2 p-0.5'>
+        {tasks.length > 0 ? (
+          tasks.map((task) => <TaskCard key={task.id} task={task} asHandle />)
+        ) : (
+          <div className='text-muted-foreground rounded-md border border-dashed p-4 text-center text-xs'>
+            Sin tareas
+          </div>
+        )}
       </div>
     </KanbanColumn>
   );
