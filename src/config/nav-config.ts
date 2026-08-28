@@ -45,20 +45,22 @@ export const navGroups: NavGroup[] = [
         shortcut: ['d', 'd'],
         items: []
       },
+
       {
-        title: 'Workspaces',
-        url: '/dashboard/workspaces',
-        icon: 'workspace',
+        title: 'Customers',
+        url: '/dashboard/customers',
+        icon: 'teams',
+        shortcut: ['c', 'u'],
         isActive: false,
         items: []
       },
       {
-        title: 'Teams',
-        url: '/dashboard/workspaces/team',
-        icon: 'teams',
+        title: 'Workspaces',
+        url: '/dashboard/workspaces',
+        icon: 'settings',
+        shortcut: ['w', 'w'],
         isActive: false,
-        items: [],
-        access: { requireOrg: true }
+        items: []
       },
       {
         title: 'Product',
@@ -154,48 +156,22 @@ export const navGroups: NavGroup[] = [
     label: '',
     items: [
       {
-        title: 'Pro',
-        url: '#',
-        icon: 'pro',
-        isActive: false,
-        items: [
-          {
-            title: 'Exclusive',
-            url: '/dashboard/exclusive',
-            icon: 'exclusive',
-            shortcut: ['e', 'e']
-          }
-        ]
-      },
-      {
         title: 'Account',
         url: '#',
         icon: 'account',
         isActive: true,
         items: [
           {
-            title: 'Profile',
-            url: '/dashboard/profile',
-            icon: 'profile',
-            shortcut: ['m', 'm']
-          },
-          {
             title: 'Notifications',
             url: '/dashboard/notifications',
             icon: 'notification',
             shortcut: ['n', 'n']
           },
-          {
-            title: 'Billing',
-            url: '/dashboard/billing',
-            icon: 'billing',
-            shortcut: ['b', 'b'],
-            access: { requireOrg: true }
-          },
+
           {
             title: 'Login',
             shortcut: ['l', 'l'],
-            url: '/',
+            url: '/auth/sign-in',
             icon: 'login'
           }
         ]

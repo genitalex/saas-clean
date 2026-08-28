@@ -1,25 +1,15 @@
-import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 
 export default function CtaGithub() {
   return (
-    <Button
-      variant='ghost'
-      size='sm'
-      className='group hidden sm:flex'
-      nativeButton={false}
+    <a
+      href='https://github.com/Kiranism/next-shadcn-dashboard-starter'
+      target='_blank'
+      rel='noopener noreferrer'
       aria-label='View on GitHub'
-      render={
-        <a
-          aria-label='View on GitHub'
-          href='https://github.com/Kiranism/next-shadcn-dashboard-starter'
-          rel='noopener noreferrer'
-          target='_blank'
-          className='text-muted-foreground hover:text-foreground transition-colors duration-300'
-        />
-      }
+      className='group hidden h-7 shrink-0 items-center justify-center rounded-[min(var(--radius-md),12px)] px-2.5 text-muted-foreground transition-all outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex'
     >
-      <Icons.github className='transition-transform duration-300 group-hover:animate-bounce' />
-    </Button>
+      <Icons.github className='size-3.5 transition-transform duration-300 group-hover:animate-bounce' />
+    </a>
   );
 }

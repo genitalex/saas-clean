@@ -4,23 +4,27 @@ import Header from '@/components/layout/header';
 import { InfoSidebar } from '@/components/layout/info-sidebar';
 import { InfobarProvider } from '@/components/ui/infobar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { auth } from '@clerk/nextjs/server';
+import { getAuthContext, AuthContextError } from '@/lib/db/organization-context';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn Dashboard Starter',
-  description: 'Basic dashboard with Next.js and Shadcn',
-  robots: {
-    index: false,
-    follow: false
-  }
+  title: 'SaaS Dashboard',
+  robots: { index: false, follow: false }
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  // Gate the whole /dashboard segment: redirect to sign-in when signed out.
-  await auth.protect();
-  // Persisting the sidebar state in the cookie.
+  try {
+    await getAuthContext();
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      if (error.code === 'UNAUTHENTICATED') redirect('/auth/sign-in');
+      if (error.code === 'NO_ACTIVE_ORGANIZATION') redirect('/onboarding');
+    }
+    throw error;
+  }
+
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
   return (
