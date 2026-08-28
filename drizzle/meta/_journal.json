@@ -43,6 +43,13 @@
       "when": 1787927487644,
       "tag": "0005_lovely_anita_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787928164683,
+      "tag": "0006_silky_bloodscream",
+      "breakpoints": true
     }
   ]
 }

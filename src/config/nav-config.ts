@@ -20,9 +20,9 @@ export const navGroups: NavGroup[] = [
       },
       {
         title: 'Calendar',
-        url: '#',
+        url: '/dashboard/calendar',
         icon: 'calendar',
-        disabled: true,
+        shortcut: ['c', 'a'],
         items: []
       }
     ]

@@ -301,3 +301,35 @@ export const tasks = pgTable(
     index('tasks_organization_status_idx').on(table.organizationId, table.status)
   ]
 );
+
+export const events = pgTable(
+  'events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+
+    assigneeId: uuid('assignee_id').references(() => users.id, { onDelete: 'set null' }),
+
+    title: text('title').notNull(),
+    description: text('description'),
+    startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+    endAt: timestamp('end_at', { withTimezone: true }).notNull(),
+    allDay: boolean('all_day').notNull().default(false),
+    location: text('location'),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('events_organization_id_idx').on(table.organizationId),
+    index('events_customer_id_idx').on(table.customerId),
+    index('events_assignee_id_idx').on(table.assigneeId),
+    index('events_start_at_idx').on(table.startAt),
+    index('events_organization_start_at_idx').on(table.organizationId, table.startAt)
+  ]
+);
