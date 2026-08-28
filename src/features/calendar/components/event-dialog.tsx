@@ -142,8 +142,8 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-lg'>
-        <DialogHeader>
+      <DialogContent className='grid max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-4 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg'>
+        <DialogHeader className='shrink-0 pr-8'>
           <DialogTitle>{event ? 'Editar evento' : 'Nuevo evento'}</DialogTitle>
           <DialogDescription>
             {event
@@ -151,127 +151,133 @@ export function EventDialog({
               : 'Añade una actividad a la agenda del equipo.'}
           </DialogDescription>
         </DialogHeader>
-        <form id='event-form' className='flex flex-col gap-4 py-2' onSubmit={handleSubmit}>
-          <label htmlFor='event-title' className='flex flex-col gap-1.5 text-sm'>
-            <span className='text-muted-foreground'>Título</span>
-            <Input
-              id='event-title'
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              required
-              maxLength={200}
-            />
-          </label>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <label htmlFor='event-start' className='flex flex-col gap-1.5 text-sm'>
-              <span className='text-muted-foreground'>Inicio</span>
+        <form
+          id='event-form'
+          className='min-h-0 overflow-y-auto overscroll-contain py-2 pr-1'
+          onSubmit={handleSubmit}
+        >
+          <div className='flex flex-col gap-4'>
+            <label htmlFor='event-title' className='flex flex-col gap-1.5 text-sm'>
+              <span className='text-muted-foreground'>Título</span>
               <Input
-                id='event-start'
-                type='datetime-local'
-                value={startAt}
-                onChange={(event) => setStartAt(event.target.value)}
+                id='event-title'
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
                 required
+                maxLength={200}
               />
             </label>
-            <label htmlFor='event-end' className='flex flex-col gap-1.5 text-sm'>
-              <span className='text-muted-foreground'>Fin</span>
+            <div className='grid gap-4 sm:grid-cols-2'>
+              <label htmlFor='event-start' className='flex flex-col gap-1.5 text-sm'>
+                <span className='text-muted-foreground'>Inicio</span>
+                <Input
+                  id='event-start'
+                  type='datetime-local'
+                  value={startAt}
+                  onChange={(event) => setStartAt(event.target.value)}
+                  required
+                />
+              </label>
+              <label htmlFor='event-end' className='flex flex-col gap-1.5 text-sm'>
+                <span className='text-muted-foreground'>Fin</span>
+                <Input
+                  id='event-end'
+                  type='datetime-local'
+                  value={endAt}
+                  onChange={(event) => setEndAt(event.target.value)}
+                  required
+                />
+              </label>
+            </div>
+            <label htmlFor='event-all-day' className='flex items-center gap-2 text-sm'>
+              <input
+                id='event-all-day'
+                aria-label='Todo el día'
+                type='checkbox'
+                checked={allDay}
+                onChange={(event) => setAllDay(event.target.checked)}
+              />{' '}
+              Todo el día
+            </label>
+            <div className='grid gap-4 sm:grid-cols-2'>
+              <label htmlFor='event-category' className='flex flex-col gap-1.5 text-sm'>
+                <span className='text-muted-foreground'>Categoría</span>
+                <select
+                  id='event-category'
+                  className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+                  value={categoryId}
+                  onChange={(event) => setCategoryId(event.target.value)}
+                >
+                  <option value=''>Sin categoría</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label htmlFor='event-customer' className='flex flex-col gap-1.5 text-sm'>
+                <span className='text-muted-foreground'>Cliente (opcional)</span>
+                <select
+                  id='event-customer'
+                  className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+                  value={customerId}
+                  onChange={(event) => setCustomerId(event.target.value)}
+                >
+                  <option value=''>Sin cliente</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label htmlFor='event-assignee' className='flex flex-col gap-1.5 text-sm'>
+                <span className='text-muted-foreground'>Responsable (opcional)</span>
+                <select
+                  id='event-assignee'
+                  className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+                  value={assigneeId}
+                  onChange={(event) => setAssigneeId(event.target.value)}
+                >
+                  <option value=''>Sin responsable</option>
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label htmlFor='event-location' className='flex flex-col gap-1.5 text-sm'>
+              <span className='text-muted-foreground'>Ubicación (opcional)</span>
               <Input
-                id='event-end'
-                type='datetime-local'
-                value={endAt}
-                onChange={(event) => setEndAt(event.target.value)}
-                required
+                id='event-location'
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                maxLength={500}
               />
             </label>
+            <label htmlFor='event-description' className='flex flex-col gap-1.5 text-sm'>
+              <span className='text-muted-foreground'>Notas</span>
+              <Textarea
+                id='event-description'
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={5000}
+              />
+            </label>
+            {event?.customer && (
+              <Link
+                className='text-primary text-xs underline-offset-4 hover:underline'
+                href={`/dashboard/customers/${event.customer.id}`}
+              >
+                Abrir cliente: {event.customer.name}
+              </Link>
+            )}
           </div>
-          <label htmlFor='event-all-day' className='flex items-center gap-2 text-sm'>
-            <input
-              id='event-all-day'
-              aria-label='Todo el día'
-              type='checkbox'
-              checked={allDay}
-              onChange={(event) => setAllDay(event.target.checked)}
-            />{' '}
-            Todo el día
-          </label>
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <label htmlFor='event-category' className='flex flex-col gap-1.5 text-sm'>
-              <span className='text-muted-foreground'>Categoría</span>
-              <select
-                id='event-category'
-                className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
-                value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
-              >
-                <option value=''>Sin categoría</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor='event-customer' className='flex flex-col gap-1.5 text-sm'>
-              <span className='text-muted-foreground'>Cliente (opcional)</span>
-              <select
-                id='event-customer'
-                className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
-                value={customerId}
-                onChange={(event) => setCustomerId(event.target.value)}
-              >
-                <option value=''>Sin cliente</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label htmlFor='event-assignee' className='flex flex-col gap-1.5 text-sm'>
-              <span className='text-muted-foreground'>Responsable (opcional)</span>
-              <select
-                id='event-assignee'
-                className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
-                value={assigneeId}
-                onChange={(event) => setAssigneeId(event.target.value)}
-              >
-                <option value=''>Sin responsable</option>
-                {members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <label htmlFor='event-location' className='flex flex-col gap-1.5 text-sm'>
-            <span className='text-muted-foreground'>Ubicación (opcional)</span>
-            <Input
-              id='event-location'
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              maxLength={500}
-            />
-          </label>
-          <label htmlFor='event-description' className='flex flex-col gap-1.5 text-sm'>
-            <span className='text-muted-foreground'>Notas</span>
-            <Textarea
-              id='event-description'
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              maxLength={5000}
-            />
-          </label>
-          {event?.customer && (
-            <Link
-              className='text-primary text-xs underline-offset-4 hover:underline'
-              href={`/dashboard/customers/${event.customer.id}`}
-            >
-              Abrir cliente: {event.customer.name}
-            </Link>
-          )}
         </form>
-        <DialogFooter className='sm:justify-between'>
+        <DialogFooter className='shrink-0 sm:justify-between'>
           {event ? (
             <Button
               variant='destructive'
