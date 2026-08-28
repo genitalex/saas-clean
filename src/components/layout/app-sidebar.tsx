@@ -46,8 +46,8 @@ export default function AppSidebar() {
   }, [isOpen]);
 
   return (
-    <Sidebar collapsible='icon'>
-      <SidebarHeader>
+    <Sidebar collapsible='icon' variant='sidebar'>
+      <SidebarHeader className='border-b'>
         <OrgSwitcher />
       </SidebarHeader>
       <SidebarContent className='overflow-x-hidden'>
@@ -94,9 +94,12 @@ export default function AppSidebar() {
                 ) : (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
-                      render={<Link href={item.url} aria-label={item.title} />}
+                      render={
+                        item.disabled ? undefined : <Link href={item.url} aria-label={item.title} />
+                      }
                       tooltip={item.title}
                       isActive={pathname === item.url}
+                      disabled={item.disabled}
                     >
                       <Icon />
                       <span>{item.title}</span>

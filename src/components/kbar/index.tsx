@@ -19,7 +19,9 @@ export default function KBar({ children }: { children: React.ReactNode }) {
       router.push(url);
     };
 
-    const allItems = filteredGroups.flatMap((group) => group.items);
+    const allItems = filteredGroups
+      .flatMap((group) => group.items)
+      .filter((item) => !item.disabled);
 
     return allItems.flatMap((navItem) => {
       // Only include base action if the navItem has a real URL and is not just a container
