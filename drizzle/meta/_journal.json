@@ -50,6 +50,13 @@
       "when": 1787928164683,
       "tag": "0006_silky_bloodscream",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787929137779,
+      "tag": "0007_bumpy_may_parker",
+      "breakpoints": true
     }
   ]
 }

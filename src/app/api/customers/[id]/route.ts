@@ -4,6 +4,7 @@ import { customers } from '@/lib/db/schema';
 import { customerSchema } from '@/features/customers/schemas/customer';
 import { and, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import { recordSystemActivity } from '@/features/activities/actions/service';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -47,6 +48,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
     .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
     .returning();
+  if (row) await recordSystemActivity(row.id, 'Cliente actualizado');
   return row
     ? NextResponse.json(row)
     : NextResponse.json({ error: 'CUSTOMER_NOT_FOUND' }, { status: 404 });

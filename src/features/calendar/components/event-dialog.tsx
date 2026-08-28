@@ -23,6 +23,7 @@ type EventDialogProps = {
   open: boolean;
   event?: Event | null;
   initialDate?: Date;
+  initialCustomerId?: string;
   onOpenChange: (open: boolean) => void;
 };
 
@@ -31,7 +32,13 @@ function toInputValue(value: Date) {
   return new Date(value.getTime() - offset * 60 * 1000).toISOString().slice(0, 16);
 }
 
-export function EventDialog({ open, event, initialDate, onOpenChange }: EventDialogProps) {
+export function EventDialog({
+  open,
+  event,
+  initialDate,
+  initialCustomerId,
+  onOpenChange
+}: EventDialogProps) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -71,9 +78,9 @@ export function EventDialog({ open, event, initialDate, onOpenChange }: EventDia
     setEndAt(toInputValue(end));
     setAllDay(event?.allDay ?? false);
     setLocation(event?.location ?? '');
-    setCustomerId(event?.customerId ?? '');
+    setCustomerId(event?.customerId ?? initialCustomerId ?? '');
     setAssigneeId(event?.assigneeId ?? '');
-  }, [event, initialDate, open]);
+  }, [event, initialCustomerId, initialDate, open]);
 
   async function handleSubmit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();

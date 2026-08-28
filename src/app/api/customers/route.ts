@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { and, asc, desc, eq, ilike, or } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { customerSchema } from '@/features/customers/schemas/customer';
+import { recordSystemActivity } from '@/features/activities/actions/service';
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
         updatedAt: now
       })
       .returning();
+    await recordSystemActivity(customer.id, 'Cliente creado');
     return NextResponse.json(customer, { status: 201 });
   } catch (error) {
     console.error('[customers:create]', error);

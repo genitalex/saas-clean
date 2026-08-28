@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -331,5 +332,43 @@ export const events = pgTable(
     index('events_assignee_id_idx').on(table.assigneeId),
     index('events_start_at_idx').on(table.startAt),
     index('events_organization_start_at_idx').on(table.organizationId, table.startAt)
+  ]
+);
+
+export const activityType = pgEnum('activity_type', [
+  'note',
+  'call',
+  'email',
+  'status_change',
+  'system'
+]);
+
+export const activities = pgTable(
+  'activities',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id, { onDelete: 'cascade' }),
+
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+
+    type: activityType('type').notNull(),
+    title: text('title').notNull(),
+    content: text('content'),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('activities_organization_id_idx').on(table.organizationId),
+    index('activities_customer_id_idx').on(table.customerId),
+    index('activities_user_id_idx').on(table.userId),
+    index('activities_created_at_idx').on(table.createdAt),
+    index('activities_organization_customer_idx').on(table.organizationId, table.customerId)
   ]
 );

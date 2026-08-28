@@ -6,6 +6,7 @@ import { getAuthContext } from '@/lib/db/organization-context';
 import { customers, events, organizationMembers, users } from '@/lib/db/schema';
 import { eventFiltersSchema, eventPayloadSchema, eventUpdateSchema } from '../schemas/event';
 import type { EventFilters, EventPayload, EventUpdatePayload } from '../types';
+import { recordSystemActivity } from '@/features/activities/actions/service';
 
 export class EventServiceError extends Error {
   constructor(
@@ -146,6 +147,8 @@ export async function createEvent(input: EventPayload) {
       updatedAt: now
     })
     .returning({ id: events.id });
+  if (parsed.data.customerId)
+    await recordSystemActivity(parsed.data.customerId, 'Evento creado', { eventId: created.id });
   return getEvent(created.id);
 }
 

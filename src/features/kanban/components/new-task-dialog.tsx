@@ -20,7 +20,7 @@ import { taskPayloadSchema } from '@/features/tasks/schemas/task';
 import type { CustomerOption, TaskPriority } from '@/features/tasks/types';
 import { authClient } from '@/lib/auth-client';
 
-export default function NewTaskDialog() {
+export default function NewTaskDialog({ customerId }: { customerId?: string } = {}) {
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const [open, setOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function NewTaskDialog() {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [dueAt, setDueAt] = useState('');
-  const [customerId, setCustomerId] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(customerId ?? '');
   const [assigneeId, setAssigneeId] = useState('');
   const [pending, setPending] = useState(false);
   const { data: customers = [] } = useQuery({
@@ -46,7 +46,7 @@ export default function NewTaskDialog() {
     setDescription('');
     setPriority('medium');
     setDueAt('');
-    setCustomerId('');
+    setSelectedCustomerId(customerId ?? '');
     setAssigneeId('');
   }
 
@@ -57,7 +57,7 @@ export default function NewTaskDialog() {
       description: description || null,
       priority,
       dueAt: dueAt || null,
-      customerId: customerId || null,
+      customerId: selectedCustomerId || null,
       assigneeId: assigneeId || null
     });
     if (!parsed.success) {
@@ -127,8 +127,8 @@ export default function NewTaskDialog() {
             <span className='text-muted-foreground'>Cliente (opcional)</span>
             <select
               className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
-              value={customerId}
-              onChange={(event) => setCustomerId(event.target.value)}
+              value={selectedCustomerId}
+              onChange={(event) => setSelectedCustomerId(event.target.value)}
             >
               <option value=''>Sin cliente</option>
               {customers.map((customer) => (

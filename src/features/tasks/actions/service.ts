@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { customers, organizationMembers, tasks, users } from '@/lib/db/schema';
 import { taskPayloadSchema, taskUpdateSchema } from '../schemas/task';
 import type { TaskFilters, TaskPayload, TaskUpdatePayload } from '../types';
+import { recordSystemActivity } from '@/features/activities/actions/service';
 
 export class TaskServiceError extends Error {
   constructor(
@@ -132,6 +133,8 @@ export async function createTask(input: TaskPayload) {
       updatedAt: now
     })
     .returning({ id: tasks.id });
+  if (parsed.data.customerId)
+    await recordSystemActivity(parsed.data.customerId, 'Tarea creada', { taskId: created.id });
   return getTask(created.id);
 }
 
@@ -139,6 +142,7 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
   const { organization } = await getAuthContext();
   const parsed = taskUpdateSchema.safeParse(input);
   if (!parsed.success) throw new TaskServiceError('Invalid task payload', 'INVALID_PAYLOAD');
+  const previous = parsed.data.status === 'done' ? await getTask(id) : null;
   await validateReferences(organization.id, parsed.data.customerId, parsed.data.assigneeId);
   const now = new Date();
   const [updated] = await db
@@ -163,6 +167,14 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
     .where(and(eq(tasks.id, id), eq(tasks.organizationId, organization.id)))
     .returning({ id: tasks.id });
   if (!updated) throw new TaskServiceError('Task not found', 'NOT_FOUND');
+  if (
+    parsed.data.status === 'done' &&
+    previous &&
+    previous.status !== 'done' &&
+    previous.customerId
+  ) {
+    await recordSystemActivity(previous.customerId, 'Tarea completada', { taskId: id });
+  }
   return getTask(updated.id);
 }
 
