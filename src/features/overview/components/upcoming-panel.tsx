@@ -5,7 +5,7 @@ import { overviewMock } from './mock-data';
 
 export function UpcomingPanel() {
   return (
-    <Card className='h-full'>
+    <Card className='h-full transition-shadow hover:shadow-sm'>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Próximamente</CardTitle>
         <Button variant='ghost' size='sm' type='button' disabled>
@@ -17,7 +17,7 @@ export function UpcomingPanel() {
           {overviewMock.upcoming.map((item) => (
             <div
               key={item.time}
-              className='flex items-center gap-4 rounded-lg px-2 py-2.5 hover:bg-muted/60'
+              className='flex items-center gap-4 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/60'
             >
               <span className='text-muted-foreground w-12 text-sm tabular-nums'>{item.time}</span>
               <span className='bg-primary size-1.5 rounded-full' />

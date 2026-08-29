@@ -5,7 +5,7 @@ import { overviewMock } from './mock-data';
 
 export function AttentionPanel() {
   return (
-    <Card className='h-full'>
+    <Card className='h-full transition-shadow hover:shadow-sm'>
       <CardHeader className='border-b'>
         <CardTitle className='flex items-center gap-2 text-base'>
           <span className='bg-amber-500/15 text-amber-700 dark:text-amber-400 flex size-7 items-center justify-center rounded-full'>
@@ -21,7 +21,7 @@ export function AttentionPanel() {
             return (
               <div
                 key={item.title}
-                className='flex items-center gap-3 rounded-lg px-2 py-3 hover:bg-muted/60'
+                className='group flex items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-muted/60'
               >
                 <Icon className='text-muted-foreground shrink-0' />
                 <div className='min-w-0 flex-1'>

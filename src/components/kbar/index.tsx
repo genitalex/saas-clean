@@ -7,10 +7,14 @@ import { useMemo } from 'react';
 import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
 import { useFilteredNavGroups } from '@/hooks/use-nav';
+import { useModeStore } from '@/features/modes/store';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const filteredGroups = useFilteredNavGroups(navGroups);
+  const setFocusMode = useModeStore((state) => state.setFocusMode);
+  const setPauseMode = useModeStore((state) => state.setPauseMode);
+  const setEndOfDayMode = useModeStore((state) => state.setEndOfDayMode);
 
   // These action are for the navigation
   const actions = useMemo(() => {
@@ -23,37 +27,74 @@ export default function KBar({ children }: { children: React.ReactNode }) {
       .flatMap((group) => group.items)
       .filter((item) => !item.disabled);
 
-    return allItems.flatMap((navItem) => {
-      // Only include base action if the navItem has a real URL and is not just a container
-      const baseAction =
-        navItem.url !== '#'
-          ? {
-              id: `${navItem.title.toLowerCase()}Action`,
-              name: navItem.title,
-              shortcut: navItem.shortcut,
-              keywords: navItem.title.toLowerCase(),
-              section: 'Navigation',
-              subtitle: `Go to ${navItem.title}`,
-              perform: () => navigateTo(navItem.url)
-            }
-          : null;
+    const modeActions = [
+      {
+        id: 'start-focus',
+        name: 'Empezar modo foco',
+        keywords: 'foco focus',
+        section: 'Modos',
+        subtitle: 'Trabajar en una sola prioridad',
+        perform: () =>
+          setFocusMode(
+            'priority',
+            'Revisar los seguimientos prioritarios',
+            'Centro de mando',
+            'Hoy',
+            'Alta'
+          )
+      },
+      {
+        id: 'pause-work',
+        name: 'Poner en pausa',
+        keywords: 'pausa descanso',
+        section: 'Modos',
+        subtitle: 'Tomar una pausa de 5 minutos',
+        perform: () => setPauseMode(300)
+      },
+      {
+        id: 'end-day',
+        name: 'Cerrar el día',
+        keywords: 'cierre día resumen',
+        section: 'Modos',
+        subtitle: 'Preparar el siguiente día',
+        perform: setEndOfDayMode
+      }
+    ];
 
-      // Map child items into actions
-      const childActions =
-        navItem.items?.map((childItem) => ({
-          id: `${childItem.title.toLowerCase()}Action`,
-          name: childItem.title,
-          shortcut: childItem.shortcut,
-          keywords: childItem.title.toLowerCase(),
-          section: navItem.title,
-          subtitle: `Go to ${childItem.title}`,
-          perform: () => navigateTo(childItem.url)
-        })) ?? [];
+    return [
+      ...modeActions,
+      ...allItems.flatMap((navItem) => {
+        // Only include base action if the navItem has a real URL and is not just a container
+        const baseAction =
+          navItem.url !== '#'
+            ? {
+                id: `${navItem.title.toLowerCase()}Action`,
+                name: navItem.title,
+                shortcut: navItem.shortcut,
+                keywords: navItem.title.toLowerCase(),
+                section: 'Navigation',
+                subtitle: `Go to ${navItem.title}`,
+                perform: () => navigateTo(navItem.url)
+              }
+            : null;
 
-      // Return only valid actions (ignoring null base actions for containers)
-      return baseAction ? [baseAction, ...childActions] : childActions;
-    });
-  }, [router, filteredGroups]);
+        // Map child items into actions
+        const childActions =
+          navItem.items?.map((childItem) => ({
+            id: `${childItem.title.toLowerCase()}Action`,
+            name: childItem.title,
+            shortcut: childItem.shortcut,
+            keywords: childItem.title.toLowerCase(),
+            section: navItem.title,
+            subtitle: `Go to ${childItem.title}`,
+            perform: () => navigateTo(childItem.url)
+          })) ?? [];
+
+        // Return only valid actions (ignoring null base actions for containers)
+        return baseAction ? [baseAction, ...childActions] : childActions;
+      })
+    ];
+  }, [router, filteredGroups, setFocusMode, setPauseMode, setEndOfDayMode]);
 
   return (
     <KBarProvider actions={actions}>

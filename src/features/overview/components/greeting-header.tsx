@@ -9,7 +9,7 @@ export function GreetingHeader() {
   const name = session?.user.name?.split(' ')[0] ?? 'de nuevo';
 
   return (
-    <div className='flex flex-col gap-5 border-b pb-6 lg:flex-row lg:items-end lg:justify-between'>
+    <div className='flex flex-col gap-4 border-b pb-5 lg:flex-row lg:items-end lg:justify-between'>
       <div>
         <p className='text-muted-foreground mb-2 text-sm font-medium'>Command Center</p>
         <h1 className='text-3xl font-semibold tracking-tight'>Buenos días, {name}</h1>

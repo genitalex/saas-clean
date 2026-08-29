@@ -3,7 +3,7 @@ import { overviewMock } from './mock-data';
 
 export function RecentActivity() {
   return (
-    <Card className='h-full'>
+    <Card className='h-full transition-shadow hover:shadow-sm'>
       <CardHeader className='border-b'>
         <CardTitle className='text-base'>Actividad reciente</CardTitle>
       </CardHeader>

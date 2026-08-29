@@ -11,6 +11,19 @@
 
 @import './theme.css';
 
+@theme inline {
+  --color-command-line: var(--border);
+  --color-command-signal: var(--primary);
+}
+
+:root {
+  --command-grid: color-mix(in oklab, var(--border) 42%, transparent);
+}
+
+[data-theme='vercel'] {
+  --command-grid: color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

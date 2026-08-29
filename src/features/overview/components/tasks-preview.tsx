@@ -5,7 +5,7 @@ import { overviewMock } from './mock-data';
 
 export function TasksPreview() {
   return (
-    <Card className='h-full'>
+    <Card className='h-full transition-shadow hover:shadow-sm'>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Tus tareas</CardTitle>
         <button
@@ -19,7 +19,7 @@ export function TasksPreview() {
         {overviewMock.tasks.map((task) => (
           <label
             key={task.title}
-            className='hover:bg-muted/60 flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5'
+            className='flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/60'
           >
             <Checkbox aria-label={`Completar ${task.title}`} />
             <span className='min-w-0 flex-1'>
