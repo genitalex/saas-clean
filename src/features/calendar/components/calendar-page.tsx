@@ -30,6 +30,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { getEvents, eventKeys } from '../queries';
 import type { Event } from '../types';
 import { EventDialog } from './event-dialog';
@@ -37,9 +38,9 @@ import { EventDialog } from './event-dialog';
 type CalendarView = 'month' | 'week' | 'day';
 type Category = { id: string; name: string; color: string };
 const defaultCategories: Category[] = [
-  { id: 'work', name: 'Trabajo', color: '#2563eb' },
+  { id: 'work', name: 'Trabajo', color: '#4f39c9' },
   { id: 'important', name: 'Importante', color: '#d97706' },
-  { id: 'personal', name: 'Personal', color: '#0284c7' }
+  { id: 'personal', name: 'Personal', color: '#0d9488' }
 ];
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -134,35 +135,44 @@ export function CalendarPage() {
 
   return (
     <main className='flex flex-col gap-5 pb-8'>
-      <header className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
+      <header className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
         <div>
-          <p className='text-sm text-muted-foreground'>Planificación del equipo</p>
-          <h1 className='mt-1 text-2xl font-semibold tracking-tight capitalize'>{title}</h1>
+          <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
+          <h1 className='mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight capitalize'>
+            {title}
+          </h1>
         </div>
         <div className='flex flex-wrap items-center gap-2'>
-          <div className='flex items-center gap-1 rounded-lg border bg-background p-1'>
+          <div className='bg-surface-subtle flex items-center gap-0.5 rounded-xl border p-1'>
             <Button
-              variant='outline'
-              size='sm'
+              variant='ghost'
+              size='icon-sm'
               onClick={() => shift(-1)}
               aria-label='Ir al periodo anterior'
+              className='rounded-lg'
             >
-              <Icons.chevronLeft data-icon='inline-start' /> Anterior
+              <Icons.chevronLeft className='size-4' />
             </Button>
-            <Button variant='ghost' size='sm' onClick={() => setCursor(new Date())}>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => setCursor(new Date())}
+              className='rounded-lg px-3 text-sm font-medium'
+            >
               Hoy
             </Button>
             <Button
-              variant='outline'
-              size='sm'
+              variant='ghost'
+              size='icon-sm'
               onClick={() => shift(1)}
               aria-label='Ir al periodo siguiente'
+              className='rounded-lg'
             >
-              Siguiente <Icons.chevronRight data-icon='inline-end' />
+              <Icons.chevronRight className='size-4' />
             </Button>
           </div>
           <div
-            className='flex rounded-lg border bg-muted/30 p-1'
+            className='bg-surface-subtle flex rounded-xl border p-1'
             role='group'
             aria-label='Vista del calendario'
           >
@@ -171,51 +181,75 @@ export function CalendarPage() {
                 key={option}
                 onClick={() => setView(option)}
                 aria-pressed={view === option}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${view === option ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                className={cn(
+                  'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
+                  view === option
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
               >
                 {option === 'month' ? 'Mes' : option === 'week' ? 'Semana' : 'Día'}
               </button>
             ))}
           </div>
-          <Button variant='outline' onClick={() => setSettingsOpen(true)}>
-            Configuración
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={() => setSettingsOpen(true)}
+            aria-label='Configuración del calendario'
+            className='text-muted-foreground'
+          >
+            <Icons.settings className='size-[18px]' />
           </Button>
-          <Button onClick={() => openCreate()}>
-            <Icons.add data-icon='inline-start' /> Nuevo evento
+          <Button onClick={() => openCreate()} className='gap-1.5'>
+            <Icons.add className='size-4' /> Nuevo evento
           </Button>
         </div>
       </header>
-      <div className='flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3'>
-        <div className='flex flex-wrap items-center gap-4 text-xs text-muted-foreground'>
-          <span className='font-medium text-foreground'>Categorías</span>
-          {categories.map((category) => (
-            <label key={category.id} className='flex items-center gap-2'>
-              <input
-                type='checkbox'
-                checked={filters.includes(category.id)}
-                onChange={() =>
-                  setFilters((current) =>
-                    current.includes(category.id)
-                      ? current.filter((id) => id !== category.id)
-                      : [...current, category.id]
-                  )
-                }
+
+      <div className='flex flex-wrap items-center gap-2'>
+        {categories.map((category) => {
+          const active = filters.includes(category.id);
+          return (
+            <button
+              key={category.id}
+              type='button'
+              aria-pressed={active}
+              onClick={() =>
+                setFilters((current) =>
+                  current.includes(category.id)
+                    ? current.filter((id) => id !== category.id)
+                    : [...current, category.id]
+                )
+              }
+              className={cn(
+                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
+                active
+                  ? 'border-transparent text-foreground'
+                  : 'text-muted-foreground/70 border-border/70 bg-transparent'
+              )}
+              style={active ? { backgroundColor: `${category.color}1c` } : undefined}
+            >
+              <i
+                className='size-2 shrink-0 rounded-full transition-opacity'
+                style={{ backgroundColor: category.color, opacity: active ? 1 : 0.45 }}
               />
-              <i className='size-2 rounded-full' style={{ backgroundColor: category.color }} />
               {category.name}
-            </label>
-          ))}
-        </div>
-        <span className='text-xs text-muted-foreground'>
+            </button>
+          );
+        })}
+        <span className='text-muted-foreground ml-auto text-xs'>
           {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este periodo
         </span>
       </div>
+
       {isError && (
-        <div className='rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm text-destructive'>
+        <div className='border-destructive/25 bg-destructive/5 text-destructive rounded-xl border px-4 py-3 text-sm'>
           No se pudieron cargar los eventos. Intenta actualizar la vista.
         </div>
       )}
-      <Card className='min-w-0 overflow-hidden shadow-sm'>
+
+      <Card className='min-w-0 overflow-hidden py-0 shadow-sm'>
         {isLoading ? (
           <CalendarSkeleton />
         ) : view === 'month' ? (
@@ -237,6 +271,7 @@ export function CalendarPage() {
           />
         )}
       </Card>
+
       <EventDialog
         open={dialogOpen}
         event={selectedEvent}
@@ -266,19 +301,26 @@ function categoryFor(event: Event, categories: Category[]) {
   const index = Math.abs(event.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0));
   return categories[index % categories.length] ?? defaultCategories[0];
 }
+
+const MONTH_CELL_EVENT_LIMIT = 3;
+
 function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewProps) {
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
   const days: Date[] = [];
   for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
+  const today = new Date();
   return (
     <div className='overflow-x-auto'>
-      <div className='min-w-[680px]'>
-        <div className='grid grid-cols-7 border-b bg-muted/20'>
-          {weekDays.map((day) => (
+      <div className='min-w-[760px]'>
+        <div className='bg-surface-subtle grid grid-cols-7 border-b'>
+          {weekDays.map((day, index) => (
             <div
               key={day}
-              className='px-3 py-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'
+              className={cn(
+                'text-muted-foreground/80 px-3 py-2.5 text-[11px] font-semibold tracking-wider uppercase',
+                (index === 5 || index === 6) && 'text-muted-foreground/60'
+              )}
             >
               {day}
             </div>
@@ -288,40 +330,70 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
           {days.map((day) => {
             const out = !isSameMonth(day, cursor);
             const weekend = day.getDay() === 0 || day.getDay() === 6;
-            const today = isSameDay(day, new Date());
-            const selected = isSameDay(day, cursor);
+            const isToday = isSameDay(day, today);
+            const dayEvents = eventsForDay(events, day);
+            const overflow = dayEvents.length - MONTH_CELL_EVENT_LIMIT;
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-28 border-b border-r p-2.5 transition-colors hover:bg-muted/20 ${weekend ? 'bg-muted/30' : ''} ${out ? 'bg-muted/10 text-muted-foreground/60' : ''} ${selected ? 'ring-1 ring-inset ring-primary/30' : ''}`}
+                onClick={() => onCreate(day)}
+                className={cn(
+                  'group border-border/70 relative min-h-32 cursor-pointer border-r border-b p-2.5 transition-colors last:border-r-0',
+                  'hover:bg-accent/25',
+                  weekend && !out && 'bg-surface-subtle/70',
+                  out && 'bg-surface-subtle/40'
+                )}
               >
                 <button
+                  type='button'
                   aria-label={`Crear evento el ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`}
-                  onClick={() => onCreate(day)}
-                  className={`mb-2 flex size-7 items-center justify-center rounded-full text-xs font-medium ${today ? 'bg-primary text-primary-foreground ring-2 ring-primary/20' : selected ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onCreate(day);
+                  }}
+                  className={cn(
+                    'mb-2 flex size-7 items-center justify-center rounded-full text-[13px] font-medium transition-colors',
+                    isToday
+                      ? 'bg-primary text-primary-foreground font-semibold'
+                      : out
+                        ? 'text-muted-foreground/45'
+                        : 'text-foreground/85 group-hover:bg-accent/60'
+                  )}
                 >
                   {format(day, 'd')}
                 </button>
                 <div className='flex flex-col gap-1'>
-                  {eventsForDay(events, day)
-                    .slice(0, 3)
-                    .map((event) => {
-                      const category = categoryFor(event, categories);
-                      return (
-                        <button
-                          key={event.id}
-                          onClick={() => onOpenEvent(event)}
-                          className='flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[11px] hover:brightness-95'
-                          style={{ backgroundColor: `${category.color}18`, color: category.color }}
-                        >
-                          <i
-                            className='size-1.5 shrink-0 rounded-full'
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span className='truncate font-medium'>{event.title}</span>
-                        </button>
-                      );
-                    })}
+                  {dayEvents.slice(0, MONTH_CELL_EVENT_LIMIT).map((event) => {
+                    const category = categoryFor(event, categories);
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={(clickEvent) => {
+                          clickEvent.stopPropagation();
+                          onOpenEvent(event);
+                        }}
+                        className='flex min-w-0 items-center gap-1.5 rounded-md border-l-2 py-1 pr-2 pl-2 text-left text-xs font-medium transition-colors hover:brightness-95'
+                        style={{
+                          backgroundColor: `${category.color}14`,
+                          borderColor: category.color,
+                          color: category.color
+                        }}
+                      >
+                        <span className='truncate'>{event.title}</span>
+                      </button>
+                    );
+                  })}
+                  {overflow > 0 && (
+                    <button
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation();
+                        onCreate(day);
+                      }}
+                      className='text-muted-foreground hover:text-foreground px-2 text-left text-[11px] font-medium'
+                    >
+                      +{overflow} más
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -342,25 +414,39 @@ function TimelineView({
   const start = view === 'week' ? startOfWeek(cursor, { weekStartsOn: 1 }) : cursor;
   const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [start];
   const hours = Array.from({ length: 12 }, (_, i) => i + 8);
+  const today = new Date();
   return (
     <div className='overflow-x-auto'>
       <div className='min-w-[720px]'>
         <div
-          className='grid'
+          className='bg-surface-subtle grid border-b'
           style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(120px, 1fr))` }}
         >
-          <div className='border-b bg-muted/20 p-3' />
-          {days.map((day) => (
-            <div
-              key={day.toISOString()}
-              className={`border-b border-l bg-muted/20 px-3 py-3 ${day.getDay() === 0 || day.getDay() === 6 ? 'bg-muted/40' : ''} ${isSameDay(day, new Date()) ? 'text-primary' : ''}`}
-            >
-              <p className='text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
-                {format(day, 'EEE', { locale: es })}
-              </p>
-              <p className='mt-1 text-lg font-semibold'>{format(day, 'd')}</p>
-            </div>
-          ))}
+          <div />
+          {days.map((day) => {
+            const isToday = isSameDay(day, today);
+            return (
+              <div
+                key={day.toISOString()}
+                className={cn(
+                  'border-border/70 border-l px-3 py-2.5',
+                  (day.getDay() === 0 || day.getDay() === 6) && 'bg-surface-subtle/70'
+                )}
+              >
+                <p className='text-muted-foreground/80 text-[10px] font-semibold tracking-wider uppercase'>
+                  {format(day, 'EEE', { locale: es })}
+                </p>
+                <p
+                  className={cn(
+                    'mt-0.5 flex size-7 items-center justify-center rounded-full text-lg font-semibold',
+                    isToday && 'bg-primary text-primary-foreground text-base'
+                  )}
+                >
+                  {format(day, 'd')}
+                </p>
+              </div>
+            );
+          })}
         </div>
         <div
           className='grid'
@@ -368,7 +454,7 @@ function TimelineView({
         >
           {hours.map((hour) => (
             <div key={hour} className='contents'>
-              <div className='h-20 border-b px-3 py-2 text-right text-[10px] tabular-nums text-muted-foreground'>
+              <div className='border-border/70 text-muted-foreground/80 h-20 border-b px-3 py-2 text-right text-[11px] tabular-nums'>
                 {String(hour).padStart(2, '0')}:00
               </div>
               {days.map((day) => (
@@ -377,7 +463,7 @@ function TimelineView({
                   onClick={() =>
                     onCreate(new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour))
                   }
-                  className='relative h-20 border-b border-l p-1.5 text-left hover:bg-primary/5'
+                  className='border-border/70 hover:bg-accent/20 relative h-20 border-b border-l p-1.5 text-left transition-colors'
                 >
                   {eventsForDay(events, day)
                     .filter((event) => new Date(event.startAt).getHours() === hour)
@@ -390,8 +476,12 @@ function TimelineView({
                             e.stopPropagation();
                             onOpenEvent(event);
                           }}
-                          className='block truncate rounded-md px-2 py-1 text-[11px] font-medium'
-                          style={{ backgroundColor: `${category.color}18`, color: category.color }}
+                          className='block truncate rounded-md border-l-2 py-1 pr-2 pl-2 text-xs font-medium'
+                          style={{
+                            backgroundColor: `${category.color}14`,
+                            borderColor: category.color,
+                            color: category.color
+                          }}
                         >
                           {event.title}
                         </span>
@@ -418,7 +508,7 @@ function CategoryDialog({
   onChange: (categories: Category[]) => void;
 }) {
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#7c3aed');
+  const [color, setColor] = useState('#4f39c9');
   const [editing, setEditing] = useState<string | null>(null);
   const save = () => {
     if (!name.trim()) return;
@@ -430,7 +520,7 @@ function CategoryDialog({
         : [...categories, { id: crypto.randomUUID(), name: name.trim(), color }]
     );
     setName('');
-    setColor('#7c3aed');
+    setColor('#4f39c9');
     setEditing(null);
   };
   return (
@@ -495,11 +585,11 @@ function CategoryDialog({
 }
 function CalendarSkeleton() {
   return (
-    <div className='grid grid-cols-7 gap-px bg-border p-px'>
+    <div className='bg-border grid grid-cols-7 gap-px p-px'>
       {Array.from({ length: 35 }, (_, i) => (
-        <div key={i} className='h-32 animate-pulse bg-card p-3'>
-          <div className='h-3 w-5 rounded bg-muted' />
-          <div className='mt-8 h-5 rounded bg-muted/60' />
+        <div key={i} className='bg-card h-32 animate-pulse p-3'>
+          <div className='bg-muted h-3 w-5 rounded' />
+          <div className='bg-muted/60 mt-8 h-5 rounded' />
         </div>
       ))}
     </div>
