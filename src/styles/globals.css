@@ -16,6 +16,22 @@
   --color-command-signal: var(--primary);
 }
 
+/* ------------------------------------------------------------------------
+   Typography scale
+   The stock Tailwind scale (14px "sm", 16px "base") reads as dense/utility
+   ("admin dashboard") at normal viewing distance. Nudging the two workhorse
+   sizes up — used by nearly every card, table cell, nav label, and form
+   field in the app — makes the whole product read as more considered
+   without touching layout-critical component heights (buttons, inputs,
+   sidebar rows already set explicit sizes independent of this scale).
+   ------------------------------------------------------------------------ */
+@theme {
+  --text-sm: 0.9375rem; /* 15px, was 14px */
+  --text-sm--line-height: 1.5;
+  --text-base: 1.0625rem; /* 17px, was 16px */
+  --text-base--line-height: 1.6;
+}
+
 :root {
   --command-grid: color-mix(in oklab, var(--border) 42%, transparent);
 }

@@ -1,10 +1,12 @@
 import {
+  IconActivity,
   IconAdjustmentsHorizontal,
   IconAlertCircle,
   IconAlertTriangle,
   IconArrowRight,
   IconBell,
   IconBold,
+  IconBolt,
   IconBox,
   IconBrandGithub,
   IconBrandTwitter,
@@ -35,6 +37,8 @@ import {
   IconExternalLink,
   IconEyeOff,
   IconFile,
+  IconFileDescription,
+  IconFiles,
   IconFileText,
   IconFileTypePdf,
   IconFileTypeDoc,
@@ -43,6 +47,7 @@ import {
   IconFolder,
   IconGripVertical,
   IconHelpCircle,
+  IconInbox,
   IconInfoCircle,
   IconItalic,
   IconLayoutDashboard,
@@ -61,6 +66,7 @@ import {
   IconPhone,
   IconPhoto,
   IconPizza,
+  IconPlug,
   IconPlus,
   IconProps,
   IconRosetteDiscountCheck,
@@ -74,6 +80,8 @@ import {
   IconStack2,
   IconStar,
   IconSun,
+  IconTarget,
+  IconTargetArrow,
   IconTrash,
   IconTrendingDown,
   IconTrendingUp,
@@ -219,5 +227,15 @@ export const Icons = {
   slash: IconSlash,
   calendar: IconCalendar,
   galleryVerticalEnd: IconStack2,
-  moreHorizontal: IconDots
+  moreHorizontal: IconDots,
+
+  // Work objects
+  inbox: IconInbox,
+  opportunities: IconTargetArrow,
+  automations: IconBolt,
+  goals: IconTarget,
+  documents: IconFiles,
+  proposals: IconFileDescription,
+  integrations: IconPlug,
+  pulse: IconActivity
 };

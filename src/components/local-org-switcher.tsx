@@ -16,6 +16,7 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { authClient } from '@/lib/auth-client';
+import { cn } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -61,7 +62,10 @@ export function OrgSwitcher() {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size='lg' disabled>
+          <SidebarMenuButton size='lg' disabled className='text-sidebar-foreground/50'>
+            <span className='bg-sidebar-accent/60 flex size-8 shrink-0 items-center justify-center rounded-lg'>
+              <Icons.galleryVerticalEnd className='size-4' />
+            </span>
             Loading workspace…
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -74,8 +78,9 @@ export function OrgSwitcher() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton size='lg' onClick={() => router.push('/onboarding')}>
-            <Icons.add className='size-4' />
-
+            <span className='bg-sidebar-accent/60 flex size-8 shrink-0 items-center justify-center rounded-lg'>
+              <Icons.add className='size-4' />
+            </span>
             <span className={state === 'collapsed' ? 'sr-only' : ''}>Create workspace</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -128,13 +133,23 @@ export function OrgSwitcher() {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger render={<SidebarMenuButton size='lg' />}>
-            <Icons.galleryVerticalEnd className='size-4' />
-
-            <span className={state === 'collapsed' ? 'sr-only' : 'truncate'}>
-              {active.organization.name}
+            <span className='bg-sidebar-primary/12 text-sidebar-primary flex size-8 shrink-0 items-center justify-center rounded-lg font-semibold'>
+              {active.organization.name.charAt(0).toUpperCase()}
             </span>
 
-            <Icons.chevronsUpDown className='ml-auto size-4' />
+            <span
+              className={cn(
+                'flex min-w-0 flex-col',
+                state === 'collapsed' ? 'sr-only' : 'truncate'
+              )}
+            >
+              <span className='truncate text-[0.925rem] leading-tight font-semibold'>
+                {active.organization.name}
+              </span>
+              <span className='text-sidebar-foreground/55 text-xs leading-tight'>Workspace</span>
+            </span>
+
+            <Icons.chevronsUpDown className='text-sidebar-foreground/50 ml-auto size-4 shrink-0' />
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align='start' className='min-w-56'>

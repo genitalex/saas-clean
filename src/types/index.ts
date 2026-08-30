@@ -25,6 +25,12 @@ export interface NavItem {
 export interface NavGroup {
   label: string;
   items: NavItem[];
+  /**
+   * 'primary' groups are always expanded and given full visual weight.
+   * 'secondary' groups are quieter and start collapsed under a "More" toggle,
+   * keeping the everyday surface calm while the rest of the product stays reachable.
+   */
+  variant?: 'primary' | 'secondary';
 }
 
 export interface NavItemWithChildren extends NavItem {
