@@ -80,7 +80,7 @@ export function KanbanBoard() {
   return (
     <div ref={containerRef} className='min-w-0'>
       <div
-        className='mb-4 flex gap-1 overflow-x-auto rounded-lg border bg-muted/30 p-1 md:hidden'
+        className='mb-4 flex min-h-12 gap-1 overflow-x-auto rounded-lg border bg-muted/30 p-1 md:hidden'
         role='tablist'
         aria-label='Columnas del tablero'
       >
@@ -93,6 +93,7 @@ export function KanbanBoard() {
             className='min-h-10 shrink-0 flex-1 px-3'
             role='tab'
             aria-selected={mobileColumn === status}
+            tabIndex={0}
             onClick={() => setMobileColumn(status)}
           >
             {COLUMN_LABELS[status]}{' '}

@@ -23,14 +23,15 @@ const quickLinks = [
   { label: 'Agenda', href: '/dashboard/calendar', icon: Icons.calendar }
 ];
 
+const isOverdue = (task: Task) => (task.dueAt && new Date(task.dueAt) < new Date() ? 1 : 0);
+
 function nextTask(tasks: Task[]) {
   return tasks
     .filter((task) => task.status !== 'done')
     .toSorted((a, b) => {
       const priority = { high: 3, medium: 2, low: 1 } as Record<string, number>;
-      const overdue = (task: Task) => (task.dueAt && new Date(task.dueAt) < new Date() ? 1 : 0);
       return (
-        overdue(b) - overdue(a) ||
+        isOverdue(b) - isOverdue(a) ||
         (priority[b.priority] ?? 0) - (priority[a.priority] ?? 0) ||
         new Date(a.dueAt ?? '2999-01-01').getTime() - new Date(b.dueAt ?? '2999-01-01').getTime()
       );
@@ -80,7 +81,10 @@ export function DashboardHome() {
               priority={focusTask.priority}
             />
           ) : (
-            <Button nativeButton={false} render={<Link href='/dashboard/tasks' />}>
+            <Button
+              nativeButton={false}
+              render={<Link href='/dashboard/tasks' aria-label='Ver tareas' />}
+            >
               Ver tareas
             </Button>
           )}
@@ -129,7 +133,7 @@ export function DashboardHome() {
             variant='ghost'
             size='sm'
             nativeButton={false}
-            render={<Link href='/dashboard/calendar' />}
+            render={<Link href='/dashboard/calendar' aria-label='Ver mi día' />}
           >
             Ver mi día <Icons.chevronRight data-icon='inline-end' />
           </Button>
@@ -176,7 +180,7 @@ export function DashboardHome() {
             size='sm'
             className='shrink-0'
             nativeButton={false}
-            render={<Link href={href} />}
+            render={<Link href={href} aria-label={label} />}
           >
             <Icon data-icon='inline-start' />
             {label}

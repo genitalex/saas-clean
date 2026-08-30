@@ -55,7 +55,7 @@ function ModeChrome({
 }) {
   const clearMode = useModeStore((state) => state.clearMode);
   return (
-    <main className='mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 py-6 sm:px-8 sm:py-10'>
+    <main className='mx-auto flex min-h-screen w-full max-w-4xl flex-col px-5 py-6 sm:px-10 sm:py-10'>
       <header className='flex items-center justify-between'>
         <Link href='/dashboard/overview' className='flex items-center gap-2 text-sm font-semibold'>
           <span className='grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground'>
@@ -118,7 +118,7 @@ function FocusMode() {
           : 'Una sola tarea, sin ruido. Avanza con el siguiente movimiento que hace progresar el negocio.'
       }
     >
-      <Card className='border-primary/20 shadow-sm'>
+      <Card className='border-primary/20 shadow-none sm:p-2'>
         <CardHeader>
           <div className='flex items-center justify-between gap-3'>
             <CardDescription>
@@ -191,7 +191,7 @@ function PauseMode() {
     >
       <Card>
         <CardContent className='flex flex-col items-center gap-6 py-12 text-center'>
-          <div className='relative grid size-40 place-items-center rounded-full border border-primary/20 bg-primary/[0.04] motion-safe:animate-pulse'>
+          <div className='relative grid size-48 place-items-center rounded-full border border-primary/20 bg-primary/[0.04] motion-safe:animate-pulse sm:size-56'>
             <span className='text-5xl font-semibold tabular-nums tracking-tight'>{time}</span>
           </div>
           <Separator />
