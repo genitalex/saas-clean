@@ -132,7 +132,14 @@ export function OrgSwitcher() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<SidebarMenuButton size='lg' />}>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size='lg'
+                className='border-sidebar-border/60 bg-sidebar-accent/40 hover:bg-sidebar-accent/70 border'
+              />
+            }
+          >
             <span className='bg-sidebar-primary/12 text-sidebar-primary flex size-8 shrink-0 items-center justify-center rounded-lg font-semibold'>
               {active.organization.name.charAt(0).toUpperCase()}
             </span>

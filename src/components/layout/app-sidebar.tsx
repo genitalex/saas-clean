@@ -117,7 +117,7 @@ function SecondaryNavGroup({
           render={
             <button
               type='button'
-              className='group/more text-sidebar-foreground/55 hover:text-sidebar-foreground/80 flex h-7 w-full shrink-0 items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold tracking-wide uppercase outline-hidden transition-colors group-data-[collapsible=icon]:hidden'
+              className='group/more text-sidebar-foreground/55 hover:text-sidebar-foreground/80 mb-0.5 flex h-7 w-full shrink-0 items-center gap-1 rounded-md px-3 text-[11px] font-semibold tracking-wide uppercase outline-hidden transition-colors group-data-[collapsible=icon]:hidden'
             />
           }
         >

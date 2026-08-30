@@ -42,13 +42,13 @@ export function MobileBottomNav() {
                 <Link
                   href={item.url}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors',
-                    isActive ? 'text-primary' : 'text-muted-foreground'
+                    'flex flex-col items-center justify-center gap-1 py-2.5 text-xs transition-colors',
+                    isActive ? 'text-primary font-semibold' : 'text-muted-foreground font-medium'
                   )}
                 >
                   <span
                     className={cn(
-                      'flex size-9 items-center justify-center rounded-xl transition-colors',
+                      'flex size-10 items-center justify-center rounded-xl transition-colors',
                       isActive && 'bg-primary/10'
                     )}
                   >
@@ -64,13 +64,13 @@ export function MobileBottomNav() {
               type='button'
               onClick={() => setMoreOpen(true)}
               className={cn(
-                'flex w-full flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium transition-colors',
-                moreIsActive ? 'text-primary' : 'text-muted-foreground'
+                'flex w-full flex-col items-center justify-center gap-1 py-2.5 text-xs transition-colors',
+                moreIsActive ? 'text-primary font-semibold' : 'text-muted-foreground font-medium'
               )}
             >
               <span
                 className={cn(
-                  'flex size-9 items-center justify-center rounded-xl transition-colors',
+                  'flex size-10 items-center justify-center rounded-xl transition-colors',
                   moreIsActive && 'bg-primary/10'
                 )}
               >
