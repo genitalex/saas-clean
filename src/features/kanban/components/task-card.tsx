@@ -14,7 +14,9 @@ export function TaskCard({ task, ...props }: TaskCardProps) {
       key={task.id}
       value={task.id}
       {...props}
-      render={<div className='bg-card rounded-md border p-3 shadow-xs' />}
+      render={
+        <div className='bg-card rounded-lg border border-border/70 p-3 shadow-none transition-colors hover:bg-muted/30' />
+      }
     >
       <div className='flex flex-col gap-2'>
         <div className='flex items-center justify-between gap-2'>
