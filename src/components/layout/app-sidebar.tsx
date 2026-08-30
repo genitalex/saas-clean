@@ -46,7 +46,7 @@ export default function AppSidebar() {
   }, [isOpen]);
 
   return (
-    <Sidebar collapsible='icon' variant='sidebar'>
+    <Sidebar collapsible='icon' variant='sidebar' className='border-r bg-sidebar'>
       <SidebarHeader className='border-b'>
         <OrgSwitcher />
       </SidebarHeader>
@@ -68,7 +68,7 @@ export default function AppSidebar() {
                         <SidebarMenuButton
                           tooltip={item.title}
                           isActive={pathname === item.url}
-                          className='group/collapsible'
+                          className='group/collapsible min-h-11 text-sm'
                         />
                       }
                     >
@@ -99,6 +99,7 @@ export default function AppSidebar() {
                       }
                       tooltip={item.title}
                       isActive={pathname === item.url}
+                      className='min-h-11 text-sm'
                       disabled={item.disabled}
                     >
                       <Icon />

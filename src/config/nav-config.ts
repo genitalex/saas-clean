@@ -19,8 +19,6 @@ export const navGroups: NavGroup[] = [
         shortcut: ['c', 'a'],
         items: []
       },
-      { title: 'Integrations', url: '/dashboard/integrations', icon: 'code', items: [] },
-      { title: 'Opportunities', url: '/dashboard/opportunities', icon: 'trendingUp', items: [] },
       { title: 'Business Pulse', url: '/dashboard/business-pulse', icon: 'dashboard', items: [] }
     ]
   },
