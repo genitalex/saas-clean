@@ -5,14 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription
-} from '@/components/ui/sheet';
-import { authClient } from '@/lib/auth-client';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { desktopNavItems, mobileNavItems, navGroups } from '@/config/nav-config';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -155,61 +147,79 @@ function MoreSheet({
   isMobile: boolean;
   mobilePrimaryItems: typeof mobileNavItems;
 }) {
-  const { data: session } = authClient.useSession();
   const primaryItems = isMobile ? mobilePrimaryItems : desktopNavItems;
   const primaryUrls = new Set(primaryItems.map((item) => item.url));
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side='bottom'
-        className='max-h-[min(82dvh,760px)] rounded-t-[28px] border-t border-border/60 bg-background/92 p-0 backdrop-blur-2xl md:inset-x-auto md:bottom-24 md:left-1/2 md:right-auto md:w-[min(760px,calc(100vw-48px))] md:-translate-x-1/2 md:rounded-[28px] md:border'
-      >
-        <SheetHeader className='border-b px-5 pb-4 pt-5 text-left'>
-          <div className='flex items-center justify-between gap-4'>
-            <div className='min-w-0'>
-              <SheetTitle className='text-xl tracking-tight'>Más secciones</SheetTitle>
-              <SheetDescription className='mt-1'>
-                Accesos secundarios de tu espacio de trabajo.
-              </SheetDescription>
-            </div>
-            <div className='bg-muted flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold'>
-              {(session?.user.name ?? 'A').charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </SheetHeader>
+  React.useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onOpenChange(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open, onOpenChange]);
 
-        <div className='overflow-y-auto overscroll-contain px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 md:px-5'>
+  if (!open) return null;
+
+  return (
+    <div
+      className='fixed inset-0 z-50 flex items-end justify-center bg-black/12 p-3 backdrop-blur-[2px] md:items-end md:p-0'
+      role='presentation'
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onOpenChange(false);
+      }}
+    >
+      <section
+        role='dialog'
+        aria-modal='true'
+        aria-label='Más secciones'
+        className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] flex w-full max-w-3xl max-h-[min(78dvh,720px)] flex-col overflow-hidden rounded-[28px] border border-border/60 bg-background/95 shadow-[0_28px_80px_-32px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:mb-[calc(var(--mobile-nav-height,72px)+1rem)] md:max-w-[760px] md:rounded-[30px]'
+      >
+        <div className='flex shrink-0 items-center justify-between gap-4 border-b border-border/60 px-5 py-4 md:px-6 md:py-5'>
+          <div className='min-w-0'>
+            <h2 className='truncate text-lg font-semibold tracking-tight md:text-xl'>
+              Más secciones
+            </h2>
+            <p className='text-muted-foreground mt-1 text-sm'>
+              Accesos secundarios de tu espacio de trabajo.
+            </p>
+          </div>
+          <button
+            type='button'
+            onClick={() => onOpenChange(false)}
+            aria-label='Cerrar'
+            className='flex size-10 shrink-0 items-center justify-center rounded-full bg-muted/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95'
+          >
+            <Icons.close className='size-5' />
+          </button>
+        </div>
+
+        <div className='min-h-0 overflow-y-auto overscroll-contain px-4 py-4 md:px-6 md:py-5'>
           {navGroups.map((group) => {
             const items = group.items.filter((item) => !primaryUrls.has(item.url));
-
             if (!items.length) return null;
-
             return (
-              <section key={group.label} className='mb-5 last:mb-0'>
-                <div className='px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
+              <section key={group.label} className='mb-6 last:mb-0'>
+                <div className='px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground'>
                   {group.label}
                 </div>
-
-                <div className='grid gap-1 md:grid-cols-2'>
+                <div className='grid gap-1.5 sm:grid-cols-2'>
                   {items.map((item) => {
                     const Icon = item.icon ? Icons[item.icon] : Icons.logo;
                     const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
-
                     return (
                       <Link
                         key={item.url}
                         href={item.url}
                         onClick={() => onOpenChange(false)}
-                        aria-current={active ? 'page' : undefined}
                         className={cn(
-                          'flex min-h-[52px] items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all active:scale-[0.99]',
+                          'flex min-h-[56px] items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all active:scale-[0.99]',
                           active ? 'bg-primary/10 text-primary' : 'hover:bg-muted/70'
                         )}
                       >
                         <span
                           className={cn(
-                            'flex size-9 shrink-0 items-center justify-center rounded-xl',
+                            'flex size-10 shrink-0 items-center justify-center rounded-xl',
                             active ? 'bg-primary/10' : 'bg-muted/70'
                           )}
                         >
@@ -225,29 +235,27 @@ function MoreSheet({
           })}
 
           <section>
-            <div className='px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
+            <div className='px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground'>
               Cuenta
             </div>
-
             <Link
               href='/dashboard/profile'
               onClick={() => onOpenChange(false)}
-              aria-current={pathname.startsWith('/dashboard/profile') ? 'page' : undefined}
               className={cn(
-                'flex min-h-[52px] items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all',
+                'flex min-h-[56px] items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all',
                 pathname.startsWith('/dashboard/profile')
                   ? 'bg-primary/10 text-primary'
                   : 'hover:bg-muted/70'
               )}
             >
-              <span className='bg-muted/70 flex size-9 shrink-0 items-center justify-center rounded-xl'>
+              <span className='bg-muted/70 flex size-10 shrink-0 items-center justify-center rounded-xl'>
                 <Icons.profile className='size-5' />
               </span>
               Perfil
             </Link>
           </section>
         </div>
-      </SheetContent>
-    </Sheet>
+      </section>
+    </div>
   );
 }
