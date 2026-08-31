@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -73,8 +72,8 @@ function withLocalDateTime(datePart: string, timePart: string) {
 function clampTime(value: string) {
   const [hours, minutes] = value.split(':').map(Number);
   const total = Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : 9 * 60;
-  const snapped = Math.max(0, Math.min(23 * 60 + 45, Math.round(total / 15) * 15));
-  return `${String(Math.floor(snapped / 60)).padStart(2, '0')}:${String(snapped % 60).padStart(2, '0')}`;
+  const clamped = Math.max(0, Math.min(23 * 60 + 59, total));
+  return `${String(Math.floor(clamped / 60)).padStart(2, '0')}:${String(clamped % 60).padStart(2, '0')}`;
 }
 
 function TimeWheel({
@@ -90,9 +89,9 @@ function TimeWheel({
   const [hourText, minuteText] = safeValue.split(':');
   const hour = Number(hourText);
   const minute = Number(minuteText);
-  const minuteIndex = Math.round(minute / 15);
+  const minuteIndex = minute;
   const hours = Array.from({ length: 24 }, (_, index) => index);
-  const minutes = [0, 15, 30, 45];
+  const minutes = Array.from({ length: 60 }, (_, index) => index);
 
   const select = (nextHour: number, nextMinute: number) =>
     onChange(`${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`);

@@ -63,6 +63,7 @@ export function CalendarPage() {
   const [view, setView] = useState<CalendarView>('month');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
@@ -147,15 +148,11 @@ export function CalendarPage() {
         ? `${format(range.start, 'd MMM', { locale: es })} – ${format(addDays(range.end, -1), 'd MMM yyyy', { locale: es })}`
         : format(cursor, "EEEE d 'de' MMMM", { locale: es });
   const shift = (direction: 1 | -1) =>
-    setCursor((current) =>
-      view === 'month'
-        ? direction === 1
-          ? addMonths(current, 1)
-          : subMonths(current, 1)
-        : direction === 1
-          ? addWeeks(current, 1)
-          : subWeeks(current, 1)
-    );
+    setCursor((current) => {
+      if (view === 'month') return direction === 1 ? addMonths(current, 1) : subMonths(current, 1);
+      if (view === 'week') return direction === 1 ? addWeeks(current, 1) : subWeeks(current, 1);
+      return direction === 1 ? addDays(current, 1) : addDays(current, -1);
+    });
   const openCreate = (date = cursor) => {
     setSelectedEvent(null);
     setInitialDate(date);
@@ -193,9 +190,21 @@ export function CalendarPage() {
       <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
         <div className='hidden md:block'>
           <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
-          <h1 className='mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight capitalize'>
-            {title}
-          </h1>
+          {view === 'month' ? (
+            <button
+              type='button'
+              onClick={() => setYearPickerOpen(true)}
+              className='group mt-0.5 inline-flex items-center gap-1.5 rounded-xl px-1.5 py-0.5 text-left text-[1.75rem] leading-tight font-semibold tracking-tight capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              aria-label={`Cambiar mes y año, actualmente ${title}`}
+            >
+              {title}
+              <Icons.chevronDown className='text-muted-foreground/65 size-4.5 opacity-70 transition-transform group-hover:translate-y-0.5' />
+            </button>
+          ) : (
+            <h1 className='mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight capitalize'>
+              {title}
+            </h1>
+          )}
         </div>
         <div className='flex flex-wrap items-center gap-2'>
           <div className='bg-surface-subtle/70 border-border/50 hidden items-center gap-0.5 rounded-xl border p-1 backdrop-blur-sm md:flex'>
@@ -396,6 +405,16 @@ export function CalendarPage() {
         categories={categories}
         onOpenChange={setSettingsOpen}
         onChange={setCategories}
+      />
+      <DesktopYearDialog
+        open={yearPickerOpen}
+        year={cursor.getFullYear()}
+        selectedMonth={cursor.getMonth()}
+        onOpenChange={setYearPickerOpen}
+        onChange={(date) => {
+          setCursor(date);
+          setYearPickerOpen(false);
+        }}
       />
     </main>
   );
@@ -1138,6 +1157,86 @@ function MobileDayTimeline({
   );
 }
 
+function DesktopYearDialog({
+  open,
+  year,
+  selectedMonth,
+  onOpenChange,
+  onChange
+}: {
+  open: boolean;
+  year: number;
+  selectedMonth: number;
+  onOpenChange: (open: boolean) => void;
+  onChange: (date: Date) => void;
+}) {
+  const [displayYear, setDisplayYear] = useState(year);
+
+  useEffect(() => {
+    if (open) setDisplayYear(year);
+  }, [open, year]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='max-w-2xl rounded-[28px] p-6 sm:p-7'>
+        <DialogHeader className='pb-2'>
+          <div className='flex items-center justify-between gap-4'>
+            <div>
+              <DialogTitle className='text-2xl tracking-tight'>
+                Calendario {displayYear}
+              </DialogTitle>
+              <DialogDescription>Elige un mes para saltar directamente a él.</DialogDescription>
+            </div>
+            <div className='flex items-center gap-1'>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => setDisplayYear((current) => current - 1)}
+                aria-label='Año anterior'
+                className='rounded-xl'
+              >
+                <Icons.chevronLeft className='size-4' />
+              </Button>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => setDisplayYear((current) => current + 1)}
+                aria-label='Año siguiente'
+                className='rounded-xl'
+              >
+                <Icons.chevronRight className='size-4' />
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
+        <div className='grid grid-cols-3 gap-2 sm:grid-cols-4'>
+          {mobileMonthNames.map((name, index) => {
+            const active = index === selectedMonth;
+            return (
+              <button
+                key={name}
+                type='button'
+                onClick={() => onChange(new Date(displayYear, index, 1))}
+                className={cn(
+                  'rounded-2xl border px-4 py-4 text-left transition-all hover:bg-accent/50 active:scale-[0.985]',
+                  active
+                    ? 'border-primary/35 bg-primary/10 text-primary shadow-sm'
+                    : 'border-border/60 bg-muted/20'
+                )}
+              >
+                <span className='block text-sm font-semibold'>{name}</span>
+                <span className='text-muted-foreground mt-1 block text-xs'>{displayYear}</span>
+              </button>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 type ViewProps = {
   cursor: Date;
   events: Event[];
@@ -1220,6 +1319,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                     return (
                       <button
                         key={event.id}
+                        type='button'
                         onClick={(clickEvent) => {
                           clickEvent.stopPropagation();
                           onOpenEvent(event);
