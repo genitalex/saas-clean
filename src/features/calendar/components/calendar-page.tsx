@@ -166,7 +166,7 @@ export function CalendarPage() {
   );
 
   return (
-    <main className='flex flex-col gap-4 pb-0 md:gap-5 md:pb-8'>
+    <main className='flex flex-col gap-4 pb-0 md:gap-5 md:pb-8 min-h-0'>
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
@@ -288,25 +288,23 @@ export function CalendarPage() {
       )}
 
       {/*
-        Mobile: a genuine full-screen calendar surface, not a page inside the
-        dashboard. The negative margins fully cancel PageContainer's mobile
-        padding (px-4 pt-3 pb-6) so this is the first thing under the sticky
-        app header, edge to edge.
-
-        Height is derived from the *real*, measured shell geometry rather
-        than a guessed constant: Header and MobileBottomNav each publish
-        their actual rendered height via useShellMetric as
-        --app-header-height / --mobile-nav-height (see
-        src/hooks/use-shell-metric.ts), the same variables the dashboard
-        layout uses to reserve space for the bottom nav. If either piece of
-        chrome ever changes size, this recalculates automatically — no
-        numbers to keep in sync by hand. The px fallbacks only cover the
-        instant before hydration measures the real values and match the
-        current markup (header: h-14 = 56px; bottom nav: py-2.5 + icon +
-        label = 80px).
+        Mobile: a genuine full-screen calendar surface.
+        
+        With the route-level conditional (CalendarPageRoute), on mobile we no
+        longer wrap in PageContainer, so the calendar is the first content
+        element under the Header. It fills the available vertical space via
+        flex-1, edge-to-edge with no dashboard padding.
+        
+        Height is derived from the *real*, measured shell geometry:
+        Header and MobileBottomNav each publish their actual rendered height
+        via useShellMetric as --app-header-height / --mobile-nav-height
+        (src/hooks/use-shell-metric.ts). These are the same variables the
+        dashboard layout uses to reserve space for the bottom nav.
+        
+        Desktop: Hidden entirely — uses the grid view below instead.
       */}
       <div
-        className='-mx-4 -mt-3 -mb-6 flex flex-col overflow-hidden md:hidden'
+        className='flex flex-col overflow-hidden md:hidden flex-1 min-h-0'
         style={{
           height:
             'calc(100dvh - var(--app-header-height, 56px) - var(--mobile-nav-height, 80px) - env(safe-area-inset-bottom))'
