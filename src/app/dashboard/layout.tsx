@@ -30,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <SidebarInset
           id='main-content'
           tabIndex={-1}
-          className='min-w-0 scroll-mt-16 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0'
+          className='min-w-0 scroll-mt-16 pb-[calc(var(--mobile-nav-height,80px)+env(safe-area-inset-bottom))] md:pb-0'
         >
           <Header />
           <ModeExperiences />

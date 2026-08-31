@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { SidebarTrigger } from '../ui/sidebar';
 import { Separator } from '../ui/separator';
@@ -7,10 +9,17 @@ import { ThemeSelector } from '../themes/theme-selector';
 import { ThemeModeToggle } from '../themes/theme-mode-toggle';
 import { NotificationCenter } from '@/features/notifications/components/notification-center';
 import { UserNav } from './user-nav';
+import { useShellMetric } from '@/hooks/use-shell-metric';
 
 export default function Header() {
+  const headerRef = React.useRef<HTMLElement>(null);
+  useShellMetric(headerRef, '--app-header-height');
+
   return (
-    <header className='bg-background/85 sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4'>
+    <header
+      ref={headerRef}
+      className='bg-background/85 sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4'
+    >
       <div className='flex min-w-0 items-center gap-2'>
         <SidebarTrigger className='-ml-1 hidden md:inline-flex' />
         <Separator

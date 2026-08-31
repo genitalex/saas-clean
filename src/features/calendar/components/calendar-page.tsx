@@ -282,37 +282,57 @@ export function CalendarPage() {
       </div>
 
       {(isError || isMobileError) && (
-        <div className='border-destructive/25 bg-destructive/5 mx-4 rounded-xl border px-4 py-3 text-sm text-destructive md:mx-0'>
+        <div className='border-destructive/25 bg-destructive/5 hidden rounded-xl border px-4 py-3 text-sm text-destructive md:block'>
           No se pudieron cargar los eventos. Intenta actualizar la vista.
         </div>
       )}
 
       {/*
         Mobile: a genuine full-screen calendar surface, not a page inside the
-        dashboard. The negative margins cancel PageContainer's mobile padding
-        (px-4 pt-3 pb-6) so this owns the full width and bleeds to the very
-        bottom, and the explicit height fills exactly what's left of the
-        viewport between the sticky app header (h-14 = 3.5rem) and the space
-        SidebarInset already reserves for the bottom nav
-        (pb-[calc(4rem+env(safe-area-inset-bottom))]) — 3.5rem + 4rem rounds
-        the small top padding remainder in, giving 8rem total. No PageContainer
-        card, no generic page header: this is its own composition.
+        dashboard. The negative margins fully cancel PageContainer's mobile
+        padding (px-4 pt-3 pb-6) so this is the first thing under the sticky
+        app header, edge to edge.
+
+        Height is derived from the *real*, measured shell geometry rather
+        than a guessed constant: Header and MobileBottomNav each publish
+        their actual rendered height via useShellMetric as
+        --app-header-height / --mobile-nav-height (see
+        src/hooks/use-shell-metric.ts), the same variables the dashboard
+        layout uses to reserve space for the bottom nav. If either piece of
+        chrome ever changes size, this recalculates automatically — no
+        numbers to keep in sync by hand. The px fallbacks only cover the
+        instant before hydration measures the real values and match the
+        current markup (header: h-14 = 56px; bottom nav: py-2.5 + icon +
+        label = 80px).
       */}
-      <div className='-mx-4 -mt-1 -mb-6 flex h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] flex-col md:hidden'>
-        <MobileCalendar
-          mode={mobileMode}
-          onModeChange={setMobileMode}
-          cursor={mobileCursor}
-          onCursorChange={setMobileCursor}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          events={visibleMobileEvents}
-          categories={categories}
-          isLoading={isMobileLoading}
-          onOpenEvent={openEvent}
-          onCreate={openCreate}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+      <div
+        className='-mx-4 -mt-3 -mb-6 flex flex-col overflow-hidden md:hidden'
+        style={{
+          height:
+            'calc(100dvh - var(--app-header-height, 56px) - var(--mobile-nav-height, 80px) - env(safe-area-inset-bottom))'
+        }}
+      >
+        {(isError || isMobileError) && (
+          <div className='border-destructive/25 bg-destructive/5 mx-4 mt-3 shrink-0 rounded-xl border px-4 py-3 text-sm text-destructive'>
+            No se pudieron cargar los eventos. Intenta actualizar la vista.
+          </div>
+        )}
+        <div className='min-h-0 flex-1'>
+          <MobileCalendar
+            mode={mobileMode}
+            onModeChange={setMobileMode}
+            cursor={mobileCursor}
+            onCursorChange={setMobileCursor}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            events={visibleMobileEvents}
+            categories={categories}
+            isLoading={isMobileLoading}
+            onOpenEvent={openEvent}
+            onCreate={openCreate}
+            onOpenSettings={() => setSettingsOpen(true)}
+          />
+        </div>
       </div>
 
       {/* Desktop / tablet: month, week and day grid views. */}

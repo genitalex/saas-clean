@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sheet';
 import { authClient } from '@/lib/auth-client';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
+import { useShellMetric } from '@/hooks/use-shell-metric';
 
 /**
  * A real mobile app-style bottom tab bar, not a shrunk-down desktop sidebar.
@@ -29,6 +30,8 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = React.useState(false);
   const visible = useScrollDirection();
+  const navRef = React.useRef<HTMLElement>(null);
+  useShellMetric(navRef, '--mobile-nav-height');
 
   const moreIsActive =
     !mobileNavItems.some((item) => item.url === pathname) && pathname !== '/dashboard';
@@ -36,6 +39,7 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
+        ref={navRef}
         aria-label='Primary'
         className={cn(
           'bg-background/85 fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-md',
