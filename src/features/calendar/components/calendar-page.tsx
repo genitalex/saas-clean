@@ -70,9 +70,9 @@ export function CalendarPage() {
   );
   // Mobile gets its own composition: a full month overview you can tap into
   // a day's hourly timeline, rather than the desktop grid shrunk down. It
-  // tracks its own month cursor, selected day and month/day mode.
+  // tracks its own month cursor, selected day and year/month/day mode.
   const [mobileCursor, setMobileCursor] = useState(new Date());
-  const [mobileMode, setMobileMode] = useState<'month' | 'day'>('month');
+  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
   const {
@@ -166,7 +166,7 @@ export function CalendarPage() {
   );
 
   return (
-    <main className='flex flex-col gap-5 pb-8'>
+    <main className='flex flex-col gap-4 pb-4 md:gap-5 md:pb-8'>
       <header className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
         <div className='hidden md:block'>
           <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
@@ -175,7 +175,7 @@ export function CalendarPage() {
           </h1>
         </div>
         <div className='flex flex-wrap items-center gap-2'>
-          <div className='bg-surface-subtle hidden items-center gap-0.5 rounded-xl border p-1 md:flex'>
+          <div className='bg-surface-subtle/70 border-border/50 hidden items-center gap-0.5 rounded-xl border p-1 backdrop-blur-sm md:flex'>
             <Button
               variant='ghost'
               size='icon-sm'
@@ -204,7 +204,7 @@ export function CalendarPage() {
             </Button>
           </div>
           <div
-            className='bg-surface-subtle hidden rounded-xl border p-1 md:flex'
+            className='bg-surface-subtle/70 border-border/50 hidden rounded-xl border p-1 backdrop-blur-sm md:flex'
             role='group'
             aria-label='Vista del calendario'
           >
@@ -282,8 +282,10 @@ export function CalendarPage() {
         </div>
       )}
 
-      {/* Mobile: full month overview that opens into an hourly day timeline. */}
-      <div className='md:hidden'>
+      {/* Mobile: full-screen year → month → day experience, bleeding past the
+          page container's side padding so it reads as a dedicated app surface
+          rather than a card floating inside a generic dashboard page. */}
+      <div className='-mx-4 -mt-1 md:hidden'>
         <MobileCalendar
           mode={mobileMode}
           onModeChange={setMobileMode}
@@ -300,7 +302,12 @@ export function CalendarPage() {
       </div>
 
       {/* Desktop / tablet: month, week and day grid views. */}
-      <Card className='hidden min-w-0 overflow-hidden py-0 shadow-sm md:block'>
+      <Card
+        className={cn(
+          'border-border/60 bg-card/95 hidden min-w-0 overflow-hidden py-0 backdrop-blur-sm md:block',
+          'shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.35)]'
+        )}
+      >
         {isLoading ? (
           <CalendarSkeleton />
         ) : view === 'month' ? (
@@ -352,6 +359,15 @@ const MOBILE_HOUR_ROW_PX = 60;
  * side by side and slide via transform so the transition feels like a
  * native navigation push rather than a hard cut.
  */
+const mobileModeOrder: Array<'year' | 'month' | 'day'> = ['year', 'month', 'day'];
+
+/**
+ * Mobile calendar experience: year → month → day, each one a real, distinct
+ * screen the user zooms through — see CLAUDE.md Calendar Mobile. The three
+ * panels sit side by side inside a 300%-wide track and slide via transform,
+ * so moving between them feels like a connected native push rather than a
+ * hard cut.
+ */
 function MobileCalendar({
   mode,
   onModeChange,
@@ -365,8 +381,8 @@ function MobileCalendar({
   onOpenEvent,
   onCreate
 }: {
-  mode: 'month' | 'day';
-  onModeChange: (mode: 'month' | 'day') => void;
+  mode: 'year' | 'month' | 'day';
+  onModeChange: (mode: 'year' | 'month' | 'day') => void;
   cursor: Date;
   onCursorChange: (date: Date) => void;
   selectedDate: Date;
@@ -382,16 +398,26 @@ function MobileCalendar({
     if (!isSameMonth(day, cursor)) onCursorChange(day);
     onModeChange('day');
   };
+  const openMonthFromYear = (month: Date) => {
+    onCursorChange(month);
+    onModeChange('month');
+  };
+  const index = mobileModeOrder.indexOf(mode);
 
   return (
     <div className='relative overflow-hidden'>
       <div
-        className={cn(
-          'flex w-[200%] transition-transform duration-300 ease-out motion-reduce:transition-none',
-          mode === 'day' && '-translate-x-1/2'
-        )}
+        className='flex w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none'
+        style={{ transform: `translateX(-${index * (100 / 3)}%)` }}
       >
-        <div className='w-1/2 shrink-0' aria-hidden={mode === 'day'} inert={mode === 'day'}>
+        <div className='w-1/3 shrink-0' aria-hidden={mode !== 'year'} inert={mode !== 'year'}>
+          <MobileYearView
+            year={cursor.getFullYear()}
+            onYearChange={(year) => onCursorChange(new Date(year, cursor.getMonth(), 1))}
+            onSelectMonth={openMonthFromYear}
+          />
+        </div>
+        <div className='w-1/3 shrink-0' aria-hidden={mode !== 'month'} inert={mode !== 'month'}>
           <MobileMonthView
             cursor={cursor}
             selectedDate={selectedDate}
@@ -400,9 +426,10 @@ function MobileCalendar({
             isLoading={isLoading}
             onCursorChange={onCursorChange}
             onSelectDay={openDay}
+            onOpenYear={() => onModeChange('year')}
           />
         </div>
-        <div className='w-1/2 shrink-0' aria-hidden={mode === 'month'} inert={mode === 'month'}>
+        <div className='w-1/3 shrink-0' aria-hidden={mode !== 'day'} inert={mode !== 'day'}>
           <MobileDayTimeline
             date={selectedDate}
             events={events}
@@ -417,6 +444,81 @@ function MobileCalendar({
   );
 }
 
+const mobileMonthNames = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre'
+];
+
+/** Secondary screen: a compact grid of the year's months. Never the default
+ * view — reached only by tapping the month/year title. */
+function MobileYearView({
+  year,
+  onYearChange,
+  onSelectMonth
+}: {
+  year: number;
+  onYearChange: (year: number) => void;
+  onSelectMonth: (month: Date) => void;
+}) {
+  const today = new Date();
+  return (
+    <div className='flex flex-col gap-4 px-4 pt-1'>
+      <div className='flex items-center justify-center gap-3'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onYearChange(year - 1)}
+          aria-label='Año anterior'
+          className='rounded-lg'
+        >
+          <Icons.chevronLeft className='size-4' />
+        </Button>
+        <p className='min-w-16 text-center text-2xl font-semibold tracking-tight tabular-nums'>
+          {year}
+        </p>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onYearChange(year + 1)}
+          aria-label='Año siguiente'
+          className='rounded-lg'
+        >
+          <Icons.chevronRight className='size-4' />
+        </Button>
+      </div>
+      <div className='grid grid-cols-3 gap-2.5'>
+        {mobileMonthNames.map((name, index) => {
+          const isCurrent = today.getFullYear() === year && today.getMonth() === index;
+          return (
+            <button
+              key={name}
+              type='button'
+              onClick={() => onSelectMonth(new Date(year, index, 1))}
+              className={cn(
+                'border-border/50 bg-surface-subtle/60 flex flex-col items-center justify-center gap-1 rounded-2xl border py-4 text-sm font-medium backdrop-blur-sm transition-colors',
+                'hover:bg-accent/30 active:scale-[0.98]',
+                isCurrent && 'border-primary/40 text-primary bg-primary/10 font-semibold'
+              )}
+            >
+              {name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function MobileMonthView({
   cursor,
   selectedDate,
@@ -424,7 +526,8 @@ function MobileMonthView({
   categories,
   isLoading,
   onCursorChange,
-  onSelectDay
+  onSelectDay,
+  onOpenYear
 }: {
   cursor: Date;
   selectedDate: Date;
@@ -433,6 +536,7 @@ function MobileMonthView({
   isLoading: boolean;
   onCursorChange: (date: Date) => void;
   onSelectDay: (date: Date) => void;
+  onOpenYear: () => void;
 }) {
   const today = new Date();
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -441,43 +545,57 @@ function MobileMonthView({
   for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex flex-col gap-3 px-4 pt-1'>
       <div className='flex items-center justify-between gap-2'>
-        <p className='text-xl font-semibold tracking-tight capitalize'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCursorChange(subMonths(cursor, 1))}
+          aria-label='Mes anterior'
+          className='rounded-lg'
+        >
+          <Icons.chevronLeft className='size-4' />
+        </Button>
+        <button
+          type='button'
+          onClick={onOpenYear}
+          aria-label='Elegir otro mes del año'
+          className='hover:bg-accent/30 rounded-lg px-2 py-1 text-xl font-semibold tracking-tight capitalize transition-colors active:scale-[0.98]'
+        >
           {format(cursor, 'LLLL yyyy', { locale: es })}
-        </p>
-        <div className='bg-surface-subtle flex shrink-0 items-center gap-0.5 rounded-xl border p-1'>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onCursorChange(subMonths(cursor, 1))}
-            aria-label='Mes anterior'
-            className='rounded-lg'
-          >
-            <Icons.chevronLeft className='size-4' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => onCursorChange(new Date())}
-            className='rounded-lg px-2.5 text-xs font-medium'
-          >
-            Hoy
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onCursorChange(addMonths(cursor, 1))}
-            aria-label='Mes siguiente'
-            className='rounded-lg'
-          >
-            <Icons.chevronRight className='size-4' />
-          </Button>
-        </div>
+        </button>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCursorChange(addMonths(cursor, 1))}
+          aria-label='Mes siguiente'
+          className='rounded-lg'
+        >
+          <Icons.chevronRight className='size-4' />
+        </Button>
+      </div>
+      <div className='flex items-center justify-center gap-2'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => onCursorChange(new Date())}
+          className='rounded-lg px-3 text-xs font-medium'
+        >
+          Hoy
+        </Button>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onSelectDay(startOfDay(new Date()))}
+          aria-label='Nuevo evento hoy'
+          className='rounded-lg'
+        >
+          <Icons.add className='size-4' />
+        </Button>
       </div>
 
-      <Card className='overflow-hidden py-0 shadow-sm'>
-        <div className='bg-surface-subtle grid grid-cols-7 border-b'>
+      <div className='border-border/50 bg-card/70 overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+        <div className='bg-surface-subtle/70 grid grid-cols-7 border-b'>
           {mobileWeekDaysNarrow.map((day, index) => (
             <div
               key={day + index}
@@ -517,20 +635,22 @@ function MobileMonthView({
                   aria-label={format(day, 'EEEE d MMMM', { locale: es })}
                   className={cn(
                     'border-border/60 relative flex aspect-square flex-col items-center justify-center gap-1 border-r border-b transition-colors last:border-r-0',
-                    'hover:bg-accent/25',
-                    weekend && !out && 'bg-surface-subtle/60'
+                    'hover:bg-accent/25 active:scale-[0.97]',
+                    weekend && !out && 'bg-surface-subtle/50'
                   )}
                 >
                   <span
                     className={cn(
-                      'flex size-7 items-center justify-center rounded-full text-[13px] font-medium',
-                      isSelected
-                        ? 'bg-primary text-primary-foreground font-semibold'
-                        : isToday
+                      'flex size-7 items-center justify-center rounded-full text-[13px] font-medium transition-colors',
+                      isSelected && isToday
+                        ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                        : isSelected
                           ? 'bg-accent text-foreground font-semibold'
-                          : out
-                            ? 'text-muted-foreground/35'
-                            : 'text-foreground/85'
+                          : isToday
+                            ? 'ring-primary/60 text-primary font-semibold ring-2'
+                            : out
+                              ? 'text-muted-foreground/35'
+                              : 'text-foreground/85'
                     )}
                   >
                     {format(day, 'd')}
@@ -552,7 +672,7 @@ function MobileMonthView({
             })}
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }
@@ -586,7 +706,7 @@ function MobileDayTimeline({
   const nowOffset = ((nowMinutes - rangeStartMinutes) / 60) * MOBILE_HOUR_ROW_PX;
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex flex-col gap-3 px-4 pt-1'>
       <div className='flex items-center gap-2'>
         <Button
           variant='ghost'
@@ -612,8 +732,8 @@ function MobileDayTimeline({
         )}
       </div>
 
-      <Card className='overflow-hidden py-0 shadow-sm'>
-        <div className='relative max-h-[62vh] overflow-y-auto overscroll-contain'>
+      <div className='border-border/50 bg-card/70 overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+        <div className='relative max-h-[65vh] overflow-y-auto overscroll-contain'>
           {showNowLine && (
             <div
               className='pointer-events-none absolute inset-x-0 z-10 flex items-center gap-1.5 pl-14'
@@ -666,7 +786,7 @@ function MobileDayTimeline({
             );
           })}
         </div>
-      </Card>
+      </div>
 
       <Button
         variant='outline'
