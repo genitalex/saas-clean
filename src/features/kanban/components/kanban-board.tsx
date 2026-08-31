@@ -58,6 +58,7 @@ export function KanbanBoard() {
   const columnsRef = useRef(columns);
   const tasksRef = useRef(tasks);
   const [draggingTask, setDraggingTask] = useState<Task | null>(null);
+  const draggingTaskRef = useRef<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -102,16 +103,21 @@ export function KanbanBoard() {
   const handleDragStart = useCallback(
     (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragStart']>>[0]) => {
       const task = tasksRef.current.find((item) => item.id === String(event.active.id));
+      draggingTaskRef.current = task ?? null;
       setDraggingTask(task ?? null);
     },
     []
   );
 
-  const handleDragCancel = useCallback(() => setDraggingTask(null), []);
+  const handleDragCancel = useCallback(() => {
+    draggingTaskRef.current = null;
+    setDraggingTask(null);
+  }, []);
 
   const handleDragEnd = useCallback(
     async (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragEnd']>>[0]) => {
-      const draggedTask = draggingTask;
+      const draggedTask = draggingTaskRef.current;
+      draggingTaskRef.current = null;
       setDraggingTask(null);
 
       if (!draggedTask) return;
@@ -139,7 +145,7 @@ export function KanbanBoard() {
         toast.error('No se pudo mover la tarea.');
       }
     },
-    [draggingTask, queryClient]
+    [queryClient]
   );
 
   const confirmDelete = useCallback(async () => {
@@ -199,7 +205,7 @@ export function KanbanBoard() {
         onDragEnd={handleDragEnd}
       >
         <div className='hidden w-full overflow-x-auto pb-6 md:block'>
-          <KanbanBoardPrimitive className='mx-auto grid w-full max-w-[1100px] grid-cols-4 items-start gap-4'>
+          <KanbanBoardPrimitive className='grid w-full grid-cols-4 items-start gap-4'>
             {COLUMN_ORDER.map((status) => (
               <TaskColumn
                 key={status}
@@ -226,7 +232,7 @@ export function KanbanBoard() {
 
         <div
           ref={setTrashNodeRef}
-          className={`fixed left-1/2 z-[80] flex min-h-16 w-[min(92vw,360px)] -translate-x-1/2 items-center gap-3 rounded-2xl border px-5 shadow-2xl backdrop-blur-xl transition-all duration-200 ${
+          className={`fixed left-1/2 z-[90] flex min-h-16 w-[min(92vw,360px)] -translate-x-1/2 items-center gap-3 rounded-2xl border px-5 shadow-2xl backdrop-blur-xl transition-all duration-200 ${
             !draggingTask
               ? 'pointer-events-none bottom-[-120px] opacity-0'
               : isTrashOver

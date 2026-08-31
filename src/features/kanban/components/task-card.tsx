@@ -50,7 +50,7 @@ export function TaskCard({ task, onOpenTask, overlay = false, ...props }: TaskCa
 
   if (overlay) {
     return (
-      <div className='bg-card w-full rounded-lg border border-border/70 p-3 shadow-2xl'>
+      <div className='bg-card w-[300px] max-w-[calc(100vw-2rem)] rounded-lg border border-border/70 p-3 shadow-2xl md:w-[300px]'>
         {content}
       </div>
     );

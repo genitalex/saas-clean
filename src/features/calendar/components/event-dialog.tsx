@@ -199,7 +199,8 @@ export function EventDialog({
   initialDate,
   initialCustomerId,
   onOpenChange,
-  categories = []
+  categories = [],
+  onOpenCategorySettings
 }: EventDialogProps) {
   const queryClient = useQueryClient();
 
