@@ -17,10 +17,13 @@ import {
 import { Kanban, KanbanBoard as KanbanBoardPrimitive, KanbanOverlay } from '@/components/ui/kanban';
 import { deleteTask, getTasks, taskKeys, updateTaskStatus } from '@/features/tasks/queries';
 import type { Task, TaskStatus } from '@/features/tasks/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { TaskColumn } from './board-column';
 import { TaskCard } from './task-card';
 
 const COLUMN_ORDER: TaskStatus[] = ['todo', 'in_progress', 'waiting', 'done'];
+const KANBAN_TRASH_ID = 'kanban-trash';
+
 const COLUMN_LABELS: Record<TaskStatus, string> = {
   todo: 'Todo',
   in_progress: 'En curso',
@@ -40,6 +43,7 @@ function toColumns(tasks: Task[]): Record<TaskStatus, Task[]> {
 
 export function KanbanBoard() {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: taskKeys.list(),
     queryFn: () => getTasks()
@@ -81,6 +85,10 @@ export function KanbanBoard() {
   });
 
   const handleValueChange = useCallback((nextColumns: Record<string, Task[]>) => {
+    // Keep the visual board untouched while the dragged card is over the
+    // external trash drop zone. The board will ask for confirmation on drop.
+    if (nextColumns[KANBAN_TRASH_ID]?.length) return;
+
     const normalized = {
       todo: nextColumns.todo ?? [],
       in_progress: nextColumns.in_progress ?? [],
@@ -108,7 +116,7 @@ export function KanbanBoard() {
 
       if (!draggedTask) return;
 
-      if (String(event.over?.id ?? '') === 'kanban-trash') {
+      if (String(event.over?.id ?? '') === KANBAN_TRASH_ID) {
         setDeleteCandidate(draggedTask);
         return;
       }
@@ -171,32 +179,28 @@ export function KanbanBoard() {
       </div>
     );
 
+  const kanbanValue = useMemo(
+    () => ({
+      ...columns,
+      [KANBAN_TRASH_ID]: []
+    }),
+    [columns]
+  );
+
   return (
     <div className='min-w-0'>
       <Kanban
-        value={columns}
+        value={kanbanValue}
         onValueChange={handleValueChange}
         getItemValue={(item) => item.id}
+        orientation={isMobile ? 'vertical' : 'horizontal'}
         autoScroll
         onDragStart={handleDragStart}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        <div className='hidden w-full overflow-x-auto pb-6 md:block'>
-          <KanbanBoardPrimitive className='grid min-w-[900px] grid-cols-4 items-start gap-4'>
-            {COLUMN_ORDER.map((status) => (
-              <TaskColumn
-                key={status}
-                value={status}
-                tasks={columns[status]}
-                onOpenTask={setSelectedTask}
-              />
-            ))}
-          </KanbanBoardPrimitive>
-        </div>
-
-        <div className='grid w-full grid-cols-1 gap-4 md:hidden'>
-          <KanbanBoardPrimitive className='grid w-full grid-cols-1 items-start gap-4'>
+        <div className='w-full overflow-x-auto pb-6 md:overflow-visible'>
+          <KanbanBoardPrimitive className='w-full min-w-0 items-start gap-4'>
             {COLUMN_ORDER.map((status) => (
               <TaskColumn
                 key={status}
@@ -251,7 +255,7 @@ export function KanbanBoard() {
             const task = Object.values(columns)
               .flat()
               .find((item) => item.id === value);
-            return task ? <TaskCard task={task} onOpenTask={setSelectedTask} /> : null;
+            return task ? <TaskCard task={task} presentationOnly /> : null;
           }}
         </KanbanOverlay>
       </Kanban>

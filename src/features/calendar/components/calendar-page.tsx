@@ -792,8 +792,10 @@ function MobileMonthView({
                   className={cn(
                     'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b bg-background transition-colors last:border-r-0 sm:min-h-[64px]',
                     'hover:bg-accent/25 active:scale-[0.97]',
-                    weekend && !out && 'bg-muted/25',
-                    out && 'bg-muted/20'
+                    weekend && !out && 'bg-muted/45',
+                    past && !isToday && !weekend && 'bg-muted/10',
+                    past && !isToday && weekend && 'bg-muted/55',
+                    out && 'bg-muted/70'
                   )}
                 >
                   <span
@@ -807,7 +809,11 @@ function MobileMonthView({
                             ? 'ring-primary/60 text-primary font-semibold ring-2'
                             : out
                               ? 'text-transparent'
-                              : 'text-foreground/85'
+                              : weekend
+                                ? 'text-muted-foreground/75'
+                                : past
+                                  ? 'text-muted-foreground/65'
+                                  : 'text-foreground/90'
                     )}
                   >
                     {out ? '' : format(day, 'd')}
@@ -1178,7 +1184,7 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-[min(94vw,1180px)] max-w-none rounded-[30px] p-6 sm:p-8'>
+      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1200px] rounded-[30px] p-5 sm:p-7 lg:p-8'>
         <DialogHeader className='pb-3'>
           <div className='flex items-center justify-between gap-4'>
             <div>
@@ -1348,7 +1354,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
             const weekend = day.getDay() === 0 || day.getDay() === 6;
             const isToday = isSameDay(day, today);
             const past = day < startOfDay(today);
-            const dayEvents = eventsForDay(events, day);
+            const dayEvents = out ? [] : eventsForDay(events, day);
             const overflow = dayEvents.length - MONTH_CELL_EVENT_LIMIT;
             return (
               <div
@@ -1357,8 +1363,9 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                 className={cn(
                   'group border-border/70 relative min-h-32 cursor-pointer border-r border-b bg-background p-2.5 transition-colors last:border-r-0',
                   'hover:bg-accent/25',
-                  weekend && !out && 'bg-muted/25',
-                  out && 'bg-muted/20'
+                  weekend && !out && 'bg-muted/45',
+                  past && !weekend && !out && 'bg-muted/12',
+                  out && 'bg-muted/65'
                 )}
               >
                 <button
@@ -1373,10 +1380,14 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                     isToday
                       ? 'bg-primary text-primary-foreground font-semibold'
                       : out
-                        ? 'text-muted-foreground/45'
-                        : past
-                          ? 'text-muted-foreground/60'
-                          : 'text-foreground/85 group-hover:bg-accent/60'
+                        ? 'text-transparent'
+                        : past && weekend
+                          ? 'text-muted-foreground/50'
+                          : past
+                            ? 'text-muted-foreground/65'
+                            : weekend
+                              ? 'text-muted-foreground/80'
+                              : 'text-foreground/90 group-hover:bg-accent/60'
                   )}
                 >
                   {out ? '' : format(day, 'd')}
@@ -1439,7 +1450,7 @@ function TimelineView({
   const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [start];
   const startHour = 7;
   const endHour = 21;
-  const hourHeight = 72;
+  const hourHeight = 84;
   const totalHeight = (endHour - startHour) * hourHeight;
   const today = new Date();
   const nowMinutes = today.getHours() * 60 + today.getMinutes();

@@ -137,10 +137,60 @@ function WheelColumn({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const itemHeight = 34;
+  const animationFrameRef = useRef<number | null>(null);
+  const settleTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const userScrollingRef = useRef(false);
+  const lastReportedIndexRef = useRef(selectedIndex);
+  const [visualIndex, setVisualIndex] = useState(selectedIndex);
 
   useEffect(() => {
-    ref.current?.scrollTo({ top: selectedIndex * itemHeight, behavior: 'smooth' });
+    if (userScrollingRef.current) return;
+    if (lastReportedIndexRef.current === selectedIndex) return;
+    ref.current?.scrollTo({ top: selectedIndex * itemHeight, behavior: 'auto' });
+    lastReportedIndexRef.current = selectedIndex;
+    setVisualIndex(selectedIndex);
   }, [selectedIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (settleTimerRef.current !== null) {
+        window.clearTimeout(settleTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    userScrollingRef.current = true;
+    const target = event.currentTarget;
+
+    if (animationFrameRef.current === null) {
+      animationFrameRef.current = window.requestAnimationFrame(() => {
+        animationFrameRef.current = null;
+        const nextIndex = Math.max(
+          0,
+          Math.min(values.length - 1, Math.round(target.scrollTop / itemHeight))
+        );
+        setVisualIndex(nextIndex);
+      });
+    }
+
+    if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
+    settleTimerRef.current = window.setTimeout(() => {
+      const nextIndex = Math.max(
+        0,
+        Math.min(values.length - 1, Math.round(target.scrollTop / itemHeight))
+      );
+      target.scrollTo({ top: nextIndex * itemHeight, behavior: 'smooth' });
+      lastReportedIndexRef.current = nextIndex;
+      onSelect(nextIndex);
+      window.setTimeout(() => {
+        userScrollingRef.current = false;
+      }, 180);
+    }, 70);
+  };
 
   return (
     <div
@@ -148,27 +198,25 @@ function WheelColumn({
       role='listbox'
       aria-label={ariaLabel}
       className='no-scrollbar h-[118px] w-[72px] snap-y snap-mandatory overflow-y-auto overscroll-contain py-[42px] text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
-      onScroll={(event) => {
-        const nextIndex = Math.max(
-          0,
-          Math.min(values.length - 1, Math.round(event.currentTarget.scrollTop / itemHeight))
-        );
-        if (nextIndex !== selectedIndex) onSelect(nextIndex);
-      }}
+      style={{ touchAction: 'pan-y', scrollBehavior: 'auto' }}
+      onScroll={handleScroll}
     >
       {values.map((item, index) => (
         <button
           key={item}
           type='button'
           role='option'
-          aria-selected={index === selectedIndex}
+          aria-selected={index === visualIndex}
           onClick={() => {
+            userScrollingRef.current = false;
+            lastReportedIndexRef.current = index;
+            setVisualIndex(index);
             onSelect(index);
             ref.current?.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
           }}
           className={cn(
-            'flex h-[34px] w-full snap-center items-center justify-center rounded-lg text-lg tabular-nums transition-all',
-            index === selectedIndex
+            'flex h-[34px] w-full snap-center items-center justify-center rounded-lg text-lg tabular-nums transition-[transform,opacity,font-weight] duration-100',
+            index === visualIndex
               ? 'font-semibold text-foreground'
               : 'text-muted-foreground/45 scale-90'
           )}
@@ -405,7 +453,7 @@ export function EventDialog({
 
         <form
           id='event-form'
-          className='min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
+          className='min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
           onSubmit={handleSubmit}
         >
           <div className='space-y-7'>
@@ -520,26 +568,57 @@ export function EventDialog({
               </div>
 
               <div className='grid gap-3 sm:grid-cols-2'>
-                <label htmlFor='event-category' className='flex min-w-0 flex-col gap-2'>
-                  <span className='text-sm font-medium'>Categoría</span>
-
-                  <div className='relative'>
-                    <select
-                      id='event-category'
-                      className='h-12 w-full appearance-none rounded-2xl border border-border/60 bg-muted/25 px-4 pr-10 text-[16px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-11 sm:text-sm'
-                      value={categoryId}
-                      onChange={(inputEvent) => setCategoryId(inputEvent.target.value)}
+                <fieldset className='flex min-w-0 flex-col gap-2'>
+                  <legend className='text-sm font-medium'>Categoría</legend>
+                  <div className='grid grid-cols-2 gap-2 sm:grid-cols-3'>
+                    <button
+                      type='button'
+                      aria-pressed={!categoryId}
+                      onClick={() => setCategoryId('')}
+                      className={cn(
+                        'flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-left text-sm font-medium transition-all',
+                        !categoryId
+                          ? 'border-primary/45 bg-primary/[0.07] text-foreground shadow-sm'
+                          : 'border-border/60 bg-muted/25 text-muted-foreground hover:bg-accent/40'
+                      )}
                     >
-                      <option value=''>Sin categoría</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Icons.chevronDown className='text-muted-foreground pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2' />
+                      <span className='size-3 rounded-full border border-current/30' />
+                      Sin categoría
+                    </button>
+                    {categories.map((category) => {
+                      const active = categoryId === category.id;
+                      return (
+                        <button
+                          key={category.id}
+                          type='button'
+                          aria-pressed={active}
+                          onClick={() => setCategoryId(category.id)}
+                          className={cn(
+                            'flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-left text-sm font-medium transition-all',
+                            active
+                              ? 'shadow-sm'
+                              : 'border-border/60 bg-muted/25 text-muted-foreground hover:bg-accent/40'
+                          )}
+                          style={
+                            active
+                              ? {
+                                  borderColor: `${category.color}80`,
+                                  backgroundColor: `${category.color}12`,
+                                  color: category.color
+                                }
+                              : undefined
+                          }
+                        >
+                          <span
+                            className='size-3 shrink-0 rounded-full'
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className='truncate'>{category.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                </label>
+                </fieldset>
 
                 <label htmlFor='event-customer' className='flex min-w-0 flex-col gap-2'>
                   <span className='text-sm font-medium'>
