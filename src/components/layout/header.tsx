@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { SidebarTrigger } from '../ui/sidebar';
 import { Separator } from '../ui/separator';
 import { Breadcrumbs } from '../breadcrumbs';
 import SearchInput from '../search-input';
@@ -21,11 +20,6 @@ export default function Header() {
       className='bg-background/85 sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4'
     >
       <div className='flex min-w-0 items-center gap-2'>
-        <SidebarTrigger className='-ml-1 hidden md:inline-flex' />
-        <Separator
-          orientation='vertical'
-          className='mr-1 hidden h-4 data-vertical:self-center md:block'
-        />
         <Breadcrumbs />
       </div>
 

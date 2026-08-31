@@ -1,9 +1,7 @@
 import KBar from '@/components/kbar';
-import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
+import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { LayoutContent } from '@/components/layout/layout-content';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'SaaS Dashboard',
@@ -11,11 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true';
   return (
     <KBar>
-      <SidebarProvider defaultOpen={defaultOpen}>
+      <div className='flex flex-col min-h-screen bg-background'>
         <a
           href='#main-content'
           className='bg-background ring-ring sr-only rounded-md px-3 py-2 text-sm font-medium shadow focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-50 focus:ring-2'
@@ -23,8 +19,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
           Skip to content
         </a>
         <LayoutContent>{children}</LayoutContent>
-        <MobileBottomNav />
-      </SidebarProvider>
+        <BottomNavigation />
+      </div>
     </KBar>
   );
 }

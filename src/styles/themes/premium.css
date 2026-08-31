@@ -1,0 +1,163 @@
+/* Premium SaaS Theme - Sophisticated, calm, elegant productivity application */
+
+[data-theme='premium'] {
+  /* Light mode palette */
+  /* Background: Clean, refined white with a hint of warmth */
+  --background: oklch(0.98 0.0008 70);
+  --foreground: oklch(0.2 0.008 280);
+
+  /* Card and surfaces */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.008 280);
+  --popover: oklch(0.99 0.0008 70);
+  --popover-foreground: oklch(0.2 0.008 280);
+
+  /* Primary: Deep, sophisticated teal/cyan - premium but not harsh */
+  --primary: oklch(0.52 0.12 200);
+  --primary-foreground: oklch(0.98 0 0);
+
+  /* Secondary: Soft, sophisticated purple - complements primary */
+  --secondary: oklch(0.92 0.015 280);
+  --secondary-foreground: oklch(0.25 0.01 280);
+
+  /* Muted: Refined grays for secondary content */
+  --muted: oklch(0.94 0.008 280);
+  --muted-foreground: oklch(0.5 0.006 280);
+
+  /* Accent: Warm, sophisticated gold/amber for highlights */
+  --accent: oklch(0.85 0.08 60);
+  --accent-foreground: oklch(0.2 0.008 280);
+
+  /* Destructive: Refined red, not harsh */
+  --destructive: oklch(0.62 0.15 30);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* Borders and inputs */
+  --border: oklch(0.92 0.01 280);
+  --input: oklch(0.96 0.01 280);
+  --ring: oklch(0.52 0.12 200);
+
+  /* Chart colors: Harmonious, sophisticated palette */
+  --chart-1: oklch(0.52 0.12 200); /* Primary teal */
+  --chart-2: oklch(0.6 0.12 320); /* Sophisticated purple */
+  --chart-3: oklch(0.78 0.12 80); /* Golden yellow */
+  --chart-4: oklch(0.68 0.1 140); /* Teal-green */
+  --chart-5: oklch(0.55 0.14 30); /* Warm coral */
+
+  /* Typography */
+  --font-sans: Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono:
+    'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+
+  /* Layout */
+  --radius: 0.625rem;
+
+  /* Shadows: Refined, subtle depth */
+  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.1);
+
+  /* Sidebar (if used) */
+  --sidebar: oklch(0.985 0.0005 70);
+  --sidebar-foreground: oklch(0.2 0.008 280);
+  --sidebar-primary: oklch(0.52 0.12 200);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.92 0.015 280);
+  --sidebar-accent-foreground: oklch(0.2 0.008 280);
+  --sidebar-border: oklch(0.94 0.008 280);
+  --sidebar-ring: oklch(0.52 0.12 200);
+
+  /* Spacing */
+  --spacing: 0.25rem;
+
+  /* Typography fine-tuning */
+  --tracking-normal: 0em;
+}
+
+/* Dark mode */
+[data-theme='premium'].dark {
+  /* Dark background: Deep, rich, not harsh black */
+  --background: oklch(0.12 0.01 280);
+  --foreground: oklch(0.92 0.01 280);
+
+  /* Surfaces in dark mode */
+  --card: oklch(0.18 0.01 280);
+  --card-foreground: oklch(0.92 0.01 280);
+  --popover: oklch(0.22 0.01 280);
+  --popover-foreground: oklch(0.92 0.01 280);
+
+  /* Primary stays consistent */
+  --primary: oklch(0.68 0.1 200);
+  --primary-foreground: oklch(0.12 0.01 280);
+
+  /* Secondary in dark */
+  --secondary: oklch(0.28 0.01 280);
+  --secondary-foreground: oklch(0.92 0.01 280);
+
+  /* Muted in dark */
+  --muted: oklch(0.26 0.01 280);
+  --muted-foreground: oklch(0.68 0.008 280);
+
+  /* Accent in dark */
+  --accent: oklch(0.35 0.08 60);
+  --accent-foreground: oklch(0.92 0.01 280);
+
+  /* Destructive in dark */
+  --destructive: oklch(0.72 0.14 30);
+  --destructive-foreground: oklch(0.12 0.01 280);
+
+  /* Borders in dark */
+  --border: oklch(0.25 0.01 280);
+  --input: oklch(0.32 0.01 280);
+  --ring: oklch(0.68 0.1 200);
+
+  /* Charts in dark */
+  --chart-1: oklch(0.68 0.1 200);
+  --chart-2: oklch(0.72 0.1 320);
+  --chart-3: oklch(0.8 0.1 80);
+  --chart-4: oklch(0.75 0.1 140);
+  --chart-5: oklch(0.72 0.12 30);
+
+  /* Typography */
+  --font-sans: Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono:
+    'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+
+  /* Layout */
+  --radius: 0.625rem;
+
+  /* Shadows in dark: More pronounced but still refined */
+  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+
+  /* Sidebar in dark */
+  --sidebar: oklch(0.16 0.01 280);
+  --sidebar-foreground: oklch(0.92 0.01 280);
+  --sidebar-primary: oklch(0.68 0.1 200);
+  --sidebar-primary-foreground: oklch(0.12 0.01 280);
+  --sidebar-accent: oklch(0.28 0.01 280);
+  --sidebar-accent-foreground: oklch(0.92 0.01 280);
+  --sidebar-border: oklch(0.26 0.01 280);
+  --sidebar-ring: oklch(0.68 0.1 200);
+
+  /* Spacing */
+  --spacing: 0.25rem;
+
+  /* Typography fine-tuning */
+  --tracking-normal: 0em;
+}

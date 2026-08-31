@@ -2,9 +2,13 @@
  * Default theme that loads when no user preference is set
  * Change this value to set a different default theme
  */
-export const DEFAULT_THEME = 'iris';
+export const DEFAULT_THEME = 'premium';
 
 export const THEMES = [
+  {
+    name: 'Premium',
+    value: 'premium'
+  },
   {
     name: 'Iris',
     value: 'iris'

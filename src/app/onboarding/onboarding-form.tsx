@@ -1,11 +1,16 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { authClient } from '@/lib/auth-client';
+import { useQueryClient } from '@tanstack/react-query';
+
 export default function OnboardingForm() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
@@ -21,8 +26,18 @@ export default function OnboardingForm() {
       setError(data.error || 'Could not create workspace');
       return;
     }
-    router.push('/dashboard/overview');
+
+    // Synchronize session state after organization creation
+    // The server updated sessions.activeOrganizationId, but the client
+    // needs to refresh to get the updated session from Better Auth
+    await authClient.getSession();
+    await queryClient.invalidateQueries({ queryKey: ['organizations'] });
+
+    // Force server to re-validate with fresh session
     router.refresh();
+
+    // Navigate to dashboard
+    router.push('/dashboard/overview');
   }
   return (
     <main className='bg-muted/30 flex min-h-screen items-center justify-center p-6'>
