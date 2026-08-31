@@ -166,8 +166,10 @@ export function CalendarPage() {
   );
 
   return (
-    <main className='flex flex-col gap-4 pb-4 md:gap-5 md:pb-8'>
-      <header className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+    <main className='flex flex-col gap-4 pb-0 md:gap-5 md:pb-8'>
+      {/* Desktop-only page header — the mobile experience gets its own
+          purpose-built header inside MobileCalendar instead of this one. */}
+      <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
         <div className='hidden md:block'>
           <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
           <h1 className='mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight capitalize'>
@@ -240,7 +242,10 @@ export function CalendarPage() {
         </div>
       </header>
 
-      <div className='flex flex-wrap items-center gap-2'>
+      {/* Category filter chips — desktop only. On mobile, filtering lives in
+          the calendar's own settings entry point so the full-screen surface
+          isn't preceded by a row of dashboard-style controls. */}
+      <div className='hidden flex-wrap items-center gap-2 md:flex'>
         {categories.map((category) => {
           const active = filters.includes(category.id);
           return (
@@ -277,15 +282,23 @@ export function CalendarPage() {
       </div>
 
       {(isError || isMobileError) && (
-        <div className='border-destructive/25 bg-destructive/5 text-destructive rounded-xl border px-4 py-3 text-sm'>
+        <div className='border-destructive/25 bg-destructive/5 mx-4 rounded-xl border px-4 py-3 text-sm text-destructive md:mx-0'>
           No se pudieron cargar los eventos. Intenta actualizar la vista.
         </div>
       )}
 
-      {/* Mobile: full-screen year → month → day experience, bleeding past the
-          page container's side padding so it reads as a dedicated app surface
-          rather than a card floating inside a generic dashboard page. */}
-      <div className='-mx-4 -mt-1 md:hidden'>
+      {/*
+        Mobile: a genuine full-screen calendar surface, not a page inside the
+        dashboard. The negative margins cancel PageContainer's mobile padding
+        (px-4 pt-3 pb-6) so this owns the full width and bleeds to the very
+        bottom, and the explicit height fills exactly what's left of the
+        viewport between the sticky app header (h-14 = 3.5rem) and the space
+        SidebarInset already reserves for the bottom nav
+        (pb-[calc(4rem+env(safe-area-inset-bottom))]) — 3.5rem + 4rem rounds
+        the small top padding remainder in, giving 8rem total. No PageContainer
+        card, no generic page header: this is its own composition.
+      */}
+      <div className='-mx-4 -mt-1 -mb-6 flex h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] flex-col md:hidden'>
         <MobileCalendar
           mode={mobileMode}
           onModeChange={setMobileMode}
@@ -298,6 +311,7 @@ export function CalendarPage() {
           isLoading={isMobileLoading}
           onOpenEvent={openEvent}
           onCreate={openCreate}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
       </div>
 
@@ -379,7 +393,8 @@ function MobileCalendar({
   categories,
   isLoading,
   onOpenEvent,
-  onCreate
+  onCreate,
+  onOpenSettings
 }: {
   mode: 'year' | 'month' | 'day';
   onModeChange: (mode: 'year' | 'month' | 'day') => void;
@@ -392,6 +407,7 @@ function MobileCalendar({
   isLoading: boolean;
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
+  onOpenSettings: () => void;
 }) {
   const openDay = (day: Date) => {
     onSelectDate(day);
@@ -405,19 +421,27 @@ function MobileCalendar({
   const index = mobileModeOrder.indexOf(mode);
 
   return (
-    <div className='relative overflow-hidden'>
+    <div className='relative h-full overflow-hidden'>
       <div
-        className='flex w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none'
+        className='flex h-full w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none'
         style={{ transform: `translateX(-${index * (100 / 3)}%)` }}
       >
-        <div className='w-1/3 shrink-0' aria-hidden={mode !== 'year'} inert={mode !== 'year'}>
+        <div
+          className='h-full w-1/3 shrink-0'
+          aria-hidden={mode !== 'year'}
+          inert={mode !== 'year'}
+        >
           <MobileYearView
             year={cursor.getFullYear()}
             onYearChange={(year) => onCursorChange(new Date(year, cursor.getMonth(), 1))}
             onSelectMonth={openMonthFromYear}
           />
         </div>
-        <div className='w-1/3 shrink-0' aria-hidden={mode !== 'month'} inert={mode !== 'month'}>
+        <div
+          className='h-full w-1/3 shrink-0'
+          aria-hidden={mode !== 'month'}
+          inert={mode !== 'month'}
+        >
           <MobileMonthView
             cursor={cursor}
             selectedDate={selectedDate}
@@ -427,9 +451,10 @@ function MobileCalendar({
             onCursorChange={onCursorChange}
             onSelectDay={openDay}
             onOpenYear={() => onModeChange('year')}
+            onOpenSettings={onOpenSettings}
           />
         </div>
-        <div className='w-1/3 shrink-0' aria-hidden={mode !== 'day'} inert={mode !== 'day'}>
+        <div className='h-full w-1/3 shrink-0' aria-hidden={mode !== 'day'} inert={mode !== 'day'}>
           <MobileDayTimeline
             date={selectedDate}
             events={events}
@@ -472,7 +497,7 @@ function MobileYearView({
 }) {
   const today = new Date();
   return (
-    <div className='flex flex-col gap-4 px-4 pt-1'>
+    <div className='flex h-full flex-col justify-center gap-4 px-4 pt-1 pb-6'>
       <div className='flex items-center justify-center gap-3'>
         <Button
           variant='ghost'
@@ -527,7 +552,8 @@ function MobileMonthView({
   isLoading,
   onCursorChange,
   onSelectDay,
-  onOpenYear
+  onOpenYear,
+  onOpenSettings
 }: {
   cursor: Date;
   selectedDate: Date;
@@ -537,15 +563,17 @@ function MobileMonthView({
   onCursorChange: (date: Date) => void;
   onSelectDay: (date: Date) => void;
   onOpenYear: () => void;
+  onOpenSettings: () => void;
 }) {
   const today = new Date();
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
   const days: Date[] = [];
   for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
+  const weekRows = days.length / 7;
 
   return (
-    <div className='flex flex-col gap-3 px-4 pt-1'>
+    <div className='flex h-full flex-col gap-3 px-4 pt-1 pb-3'>
       <div className='flex items-center justify-between gap-2'>
         <Button
           variant='ghost'
@@ -574,28 +602,39 @@ function MobileMonthView({
           <Icons.chevronRight className='size-4' />
         </Button>
       </div>
-      <div className='flex items-center justify-center gap-2'>
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={() => onCursorChange(new Date())}
-          className='rounded-lg px-3 text-xs font-medium'
-        >
-          Hoy
-        </Button>
+      <div className='flex items-center justify-between gap-2'>
+        <div className='flex flex-1 items-center justify-center gap-2'>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={() => onCursorChange(new Date())}
+            className='rounded-lg px-3 text-xs font-medium'
+          >
+            Hoy
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onSelectDay(startOfDay(new Date()))}
+            aria-label='Nuevo evento hoy'
+            className='rounded-lg'
+          >
+            <Icons.add className='size-4' />
+          </Button>
+        </div>
         <Button
           variant='ghost'
           size='icon-sm'
-          onClick={() => onSelectDay(startOfDay(new Date()))}
-          aria-label='Nuevo evento hoy'
-          className='rounded-lg'
+          onClick={onOpenSettings}
+          aria-label='Configuración del calendario'
+          className='text-muted-foreground shrink-0 rounded-lg'
         >
-          <Icons.add className='size-4' />
+          <Icons.settings className='size-4' />
         </Button>
       </div>
 
-      <div className='border-border/50 bg-card/70 overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
-        <div className='bg-surface-subtle/70 grid grid-cols-7 border-b'>
+      <div className='border-border/50 bg-card/70 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+        <div className='bg-surface-subtle/70 grid shrink-0 grid-cols-7 border-b'>
           {mobileWeekDaysNarrow.map((day, index) => (
             <div
               key={day + index}
@@ -609,18 +648,24 @@ function MobileMonthView({
           ))}
         </div>
         {isLoading ? (
-          <div className='grid grid-cols-7'>
-            {Array.from({ length: 35 }, (_, i) => (
+          <div
+            className='grid flex-1 grid-cols-7'
+            style={{ gridTemplateRows: `repeat(${weekRows}, minmax(0, 1fr))` }}
+          >
+            {days.map((day) => (
               <div
-                key={i}
-                className='border-border/60 aspect-square border-r border-b p-1.5 last:border-r-0'
+                key={day.toISOString()}
+                className='border-border/60 flex items-center justify-center border-r border-b last:border-r-0'
               >
-                <div className='bg-muted/50 mx-auto size-6 animate-pulse rounded-full' />
+                <div className='bg-muted/50 size-6 animate-pulse rounded-full' />
               </div>
             ))}
           </div>
         ) : (
-          <div className='grid grid-cols-7'>
+          <div
+            className='grid flex-1 grid-cols-7'
+            style={{ gridTemplateRows: `repeat(${weekRows}, minmax(0, 1fr))` }}
+          >
             {days.map((day) => {
               const out = !isSameMonth(day, cursor);
               const weekend = day.getDay() === 0 || day.getDay() === 6;
@@ -634,7 +679,7 @@ function MobileMonthView({
                   onClick={() => onSelectDay(day)}
                   aria-label={format(day, 'EEEE d MMMM', { locale: es })}
                   className={cn(
-                    'border-border/60 relative flex aspect-square flex-col items-center justify-center gap-1 border-r border-b transition-colors last:border-r-0',
+                    'border-border/60 relative flex min-h-11 flex-col items-center justify-center gap-1 border-r border-b transition-colors last:border-r-0',
                     'hover:bg-accent/25 active:scale-[0.97]',
                     weekend && !out && 'bg-surface-subtle/50'
                   )}
@@ -706,8 +751,8 @@ function MobileDayTimeline({
   const nowOffset = ((nowMinutes - rangeStartMinutes) / 60) * MOBILE_HOUR_ROW_PX;
 
   return (
-    <div className='flex flex-col gap-3 px-4 pt-1'>
-      <div className='flex items-center gap-2'>
+    <div className='flex h-full flex-col gap-3 px-4 pt-1 pb-3'>
+      <div className='flex shrink-0 items-center gap-2'>
         <Button
           variant='ghost'
           size='icon-sm'
@@ -732,8 +777,8 @@ function MobileDayTimeline({
         )}
       </div>
 
-      <div className='border-border/50 bg-card/70 overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
-        <div className='relative max-h-[65vh] overflow-y-auto overscroll-contain'>
+      <div className='border-border/50 bg-card/70 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+        <div className='relative flex-1 overflow-y-auto overscroll-contain'>
           {showNowLine && (
             <div
               className='pointer-events-none absolute inset-x-0 z-10 flex items-center gap-1.5 pl-14'
@@ -792,7 +837,7 @@ function MobileDayTimeline({
         variant='outline'
         size='sm'
         onClick={() => onCreate(date)}
-        className='gap-1.5 self-start'
+        className='shrink-0 gap-1.5 self-start'
       >
         <Icons.add className='size-4' />
         Añadir evento
