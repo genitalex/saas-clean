@@ -307,13 +307,7 @@ export function CalendarPage() {
         
         Desktop: Hidden entirely — uses the grid view below instead.
       */}
-      <div
-        className='flex flex-col overflow-hidden md:hidden flex-1 min-h-0'
-        style={{
-          height:
-            'calc(100dvh - var(--app-header-height, 56px) - var(--mobile-nav-height, 80px) - env(safe-area-inset-bottom))'
-        }}
-      >
+      <div className='flex min-h-0 flex-1 flex-col overflow-hidden md:hidden'>
         {(isError || isMobileError) && (
           <div className='border-destructive/25 bg-destructive/5 mx-4 mt-3 shrink-0 rounded-xl border px-4 py-3 text-sm text-destructive'>
             No se pudieron cargar los eventos. Intenta actualizar la vista.
@@ -595,7 +589,7 @@ function MobileMonthView({
   const weekRows = days.length / 7;
 
   return (
-    <div className='flex h-full flex-col gap-3 px-4 pt-1 pb-3'>
+    <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
       <div className='flex items-center justify-between gap-2'>
         <Button
           variant='ghost'
@@ -610,7 +604,7 @@ function MobileMonthView({
           type='button'
           onClick={onOpenYear}
           aria-label='Elegir otro mes del año'
-          className='hover:bg-accent/30 rounded-lg px-2 py-1 text-xl font-semibold tracking-tight capitalize transition-colors active:scale-[0.98]'
+          className='hover:bg-accent/30 rounded-xl px-3 py-2 text-[1.15rem] font-semibold tracking-tight capitalize transition-colors active:scale-[0.98]'
         >
           {format(cursor, 'LLLL yyyy', { locale: es })}
         </button>
@@ -701,14 +695,14 @@ function MobileMonthView({
                   onClick={() => onSelectDay(day)}
                   aria-label={format(day, 'EEEE d MMMM', { locale: es })}
                   className={cn(
-                    'border-border/60 relative flex min-h-11 flex-col items-center justify-center gap-1 border-r border-b transition-colors last:border-r-0',
+                    'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b transition-colors last:border-r-0 sm:min-h-[64px]',
                     'hover:bg-accent/25 active:scale-[0.97]',
                     weekend && !out && 'bg-surface-subtle/50'
                   )}
                 >
                   <span
                     className={cn(
-                      'flex size-7 items-center justify-center rounded-full text-[13px] font-medium transition-colors',
+                      'flex size-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
                       isSelected && isToday
                         ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                         : isSelected
@@ -761,26 +755,24 @@ function MobileDayTimeline({
 }) {
   const today = new Date();
   const isToday = isSameDay(date, today);
-  const hours = Array.from(
-    { length: MOBILE_DAY_END_HOUR - MOBILE_DAY_START_HOUR },
-    (_, i) => i + MOBILE_DAY_START_HOUR
-  );
-  const dayEvents = eventsForDay(events, date);
-  const rangeStartMinutes = MOBILE_DAY_START_HOUR * 60;
-  const rangeEndMinutes = MOBILE_DAY_END_HOUR * 60;
+  const startHour = MOBILE_DAY_START_HOUR;
+  const endHour = MOBILE_DAY_END_HOUR;
+  const hourHeight = MOBILE_HOUR_ROW_PX;
+  const totalHeight = (endHour - startHour) * hourHeight;
+  const dayEvents = eventsForDay(events, date).filter((event) => !event.allDay);
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
-  const showNowLine = isToday && nowMinutes >= rangeStartMinutes && nowMinutes <= rangeEndMinutes;
-  const nowOffset = ((nowMinutes - rangeStartMinutes) / 60) * MOBILE_HOUR_ROW_PX;
+  const nowOffset = ((nowMinutes - startHour * 60) / 60) * hourHeight;
+  const showNowLine = isToday && nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
 
   return (
-    <div className='flex h-full flex-col gap-3 px-4 pt-1 pb-3'>
-      <div className='flex shrink-0 items-center gap-2'>
+    <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
+      <div className='flex shrink-0 items-center gap-2.5'>
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={onBack}
           aria-label='Volver al mes'
-          className='shrink-0 rounded-lg'
+          className='shrink-0 rounded-xl'
         >
           <Icons.chevronLeft className='size-4' />
         </Button>
@@ -788,32 +780,25 @@ function MobileDayTimeline({
           <p className='text-muted-foreground truncate text-xs capitalize'>
             {format(date, 'MMMM yyyy', { locale: es })}
           </p>
-          <p className='truncate text-lg font-semibold tracking-tight capitalize'>
+          <p className='truncate text-xl font-semibold tracking-tight capitalize'>
             {format(date, 'EEEE d', { locale: es })}
           </p>
         </div>
-        {dayEvents.length > 0 && (
-          <span className='text-muted-foreground shrink-0 text-xs'>
-            {dayEvents.length} evento{dayEvents.length === 1 ? '' : 's'}
-          </span>
-        )}
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCreate(date)}
+          aria-label='Añadir evento'
+          className='rounded-xl'
+        >
+          <Icons.add className='size-4' />
+        </Button>
       </div>
 
-      <div className='border-border/50 bg-card/70 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
-        <div className='relative flex-1 overflow-y-auto overscroll-contain'>
-          {showNowLine && (
-            <div
-              className='pointer-events-none absolute inset-x-0 z-10 flex items-center gap-1.5 pl-14'
-              style={{ top: nowOffset }}
-            >
-              <span className='bg-primary size-1.5 shrink-0 rounded-full' />
-              <span className='bg-primary h-px flex-1' />
-            </div>
-          )}
-          {hours.map((hour) => {
-            const hourEvents = dayEvents.filter(
-              (event) => new Date(event.startAt).getHours() === hour
-            );
+      <div className='bg-card/75 border-border/50 min-h-0 flex-1 overflow-y-auto rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+        <div className='relative' style={{ height: totalHeight }}>
+          {Array.from({ length: endHour - startHour }, (_, i) => {
+            const hour = startHour + i;
             return (
               <button
                 key={hour}
@@ -821,49 +806,65 @@ function MobileDayTimeline({
                 onClick={() =>
                   onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
                 }
-                style={{ minHeight: MOBILE_HOUR_ROW_PX }}
-                className='border-border/60 hover:bg-accent/15 flex w-full items-start gap-3 border-b p-2 text-left transition-colors'
+                className='absolute inset-x-0 border-b border-border/60 text-left transition-colors hover:bg-primary/[0.035]'
+                style={{ top: i * hourHeight, height: hourHeight }}
+                aria-label={`Crear evento a las ${String(hour).padStart(2, '0')}:00`}
               >
-                <span className='text-muted-foreground w-11 shrink-0 pt-0.5 text-[11px] font-medium tabular-nums'>
+                <span className='absolute left-3 top-2 w-12 text-[11px] font-medium tabular-nums text-muted-foreground'>
                   {String(hour).padStart(2, '0')}:00
                 </span>
-                <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                  {hourEvents.map((event) => {
-                    const category = categoryFor(event, categories);
-                    return (
-                      <span
-                        key={event.id}
-                        onClick={(clickEvent) => {
-                          clickEvent.stopPropagation();
-                          onOpenEvent(event);
-                        }}
-                        className='flex min-w-0 items-center gap-1.5 truncate rounded-md border-l-2 px-2 py-1.5 text-xs font-medium'
-                        style={{
-                          backgroundColor: `${category.color}14`,
-                          borderColor: category.color,
-                          color: category.color
-                        }}
-                      >
-                        <span className='truncate'>{event.title}</span>
-                      </span>
-                    );
-                  })}
-                </div>
+                <span className='absolute left-16 right-3 top-0 h-px bg-border/35' />
               </button>
             );
           })}
+
+          {dayEvents.map((event) => {
+            const category = categoryFor(event, categories);
+            const startAt = new Date(event.startAt);
+            const endAt = new Date(event.endAt);
+            const minutesFromStart =
+              startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
+            const durationMinutes = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
+            const top = Math.max(4, (minutesFromStart / 60) * hourHeight + 3);
+            const height = Math.max(42, (durationMinutes / 60) * hourHeight - 6);
+            return (
+              <button
+                key={event.id}
+                type='button'
+                onClick={() => onOpenEvent(event)}
+                className='absolute left-16 right-3 z-10 overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px'
+                style={{
+                  top,
+                  height,
+                  backgroundColor: `${category.color}14`,
+                  borderColor: `${category.color}35`
+                }}
+              >
+                <span
+                  className='absolute inset-y-0 left-0 w-1'
+                  style={{ backgroundColor: category.color }}
+                />
+                <span className='flex h-full min-w-0 flex-col justify-center px-3 pl-4'>
+                  <span className='truncate text-sm font-semibold'>{event.title}</span>
+                  <span className='mt-0.5 text-[11px] text-muted-foreground'>
+                    {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+
+          {showNowLine && (
+            <div
+              className='pointer-events-none absolute left-16 right-3 z-20 flex items-center'
+              style={{ top: nowOffset }}
+            >
+              <span className='bg-primary size-2 rounded-full' />
+              <span className='bg-primary h-[2px] flex-1' />
+            </div>
+          )}
         </div>
       </div>
-
-      <Button
-        variant='outline'
-        size='sm'
-        onClick={() => onCreate(date)}
-        className='shrink-0 gap-1.5 self-start'
-      >
-        <Icons.add className='size-4' />
-        Añadir evento
-      </Button>
     </div>
   );
 }
@@ -991,84 +992,146 @@ function TimelineView({
 }: ViewProps & { view: 'week' | 'day' }) {
   const start = view === 'week' ? startOfWeek(cursor, { weekStartsOn: 1 }) : cursor;
   const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [start];
-  const hours = Array.from({ length: 12 }, (_, i) => i + 8);
+  const startHour = 7;
+  const endHour = 21;
+  const hourHeight = 72;
+  const totalHeight = (endHour - startHour) * hourHeight;
   const today = new Date();
+  const nowMinutes = today.getHours() * 60 + today.getMinutes();
+  const nowOffset = ((nowMinutes - startHour * 60) / 60) * hourHeight;
+  const showNow = nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
+
   return (
-    <div className='overflow-x-auto'>
-      <div className='min-w-[720px]'>
-        <div
-          className='bg-surface-subtle grid border-b'
-          style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(120px, 1fr))` }}
-        >
-          <div />
-          {days.map((day) => {
-            const isToday = isSameDay(day, today);
-            return (
-              <div
-                key={day.toISOString()}
-                className={cn(
-                  'border-border/70 border-l px-3 py-2.5',
-                  (day.getDay() === 0 || day.getDay() === 6) && 'bg-surface-subtle/70'
-                )}
-              >
-                <p className='text-muted-foreground/80 text-[10px] font-semibold tracking-wider uppercase'>
-                  {format(day, 'EEE', { locale: es })}
-                </p>
-                <p
-                  className={cn(
-                    'mt-0.5 flex size-7 items-center justify-center rounded-full text-lg font-semibold',
-                    isToday && 'bg-primary text-primary-foreground text-base'
-                  )}
+    <div className='min-w-0 overflow-hidden'>
+      <div className='overflow-x-auto'>
+        <div className={cn('min-w-0', view === 'week' ? 'min-w-[980px]' : 'min-w-[680px]')}>
+          <div
+            className='bg-surface-subtle/70 sticky top-0 z-10 grid border-b backdrop-blur-sm'
+            style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(0, 1fr))` }}
+          >
+            <div className='border-border/60 border-r' />
+            {days.map((day) => {
+              const isToday = isSameDay(day, today);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className='border-border/60 border-r px-4 py-3 last:border-r-0'
                 >
-                  {format(day, 'd')}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-        <div
-          className='grid'
-          style={{ gridTemplateColumns: `64px repeat(${days.length}, minmax(120px, 1fr))` }}
-        >
-          {hours.map((hour) => (
-            <div key={hour} className='contents'>
-              <div className='border-border/70 text-muted-foreground/80 h-20 border-b px-3 py-2 text-right text-[11px] tabular-nums'>
-                {String(hour).padStart(2, '0')}:00
-              </div>
-              {days.map((day) => (
-                <button
-                  key={`${day}-${hour}`}
-                  onClick={() =>
-                    onCreate(new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour))
-                  }
-                  className='border-border/70 hover:bg-accent/20 relative h-20 border-b border-l p-1.5 text-left transition-colors'
-                >
-                  {eventsForDay(events, day)
-                    .filter((event) => new Date(event.startAt).getHours() === hour)
-                    .map((event) => {
-                      const category = categoryFor(event, categories);
-                      return (
-                        <span
-                          key={event.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenEvent(event);
-                          }}
-                          className='block truncate rounded-md border-l-2 py-1 pr-2 pl-2 text-xs font-medium'
-                          style={{
-                            backgroundColor: `${category.color}14`,
-                            borderColor: category.color,
-                            color: category.color
-                          }}
-                        >
-                          {event.title}
-                        </span>
-                      );
-                    })}
-                </button>
-              ))}
+                  <p className='text-muted-foreground text-xs font-medium capitalize'>
+                    {format(day, 'EEEE', { locale: es })}
+                  </p>
+                  <div className='mt-1 flex items-center gap-2'>
+                    <span
+                      className={cn(
+                        'flex size-8 items-center justify-center rounded-full text-lg font-semibold tabular-nums',
+                        isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                      )}
+                    >
+                      {format(day, 'd')}
+                    </span>
+                    <span className='text-muted-foreground text-xs capitalize'>
+                      {format(day, 'MMM', { locale: es })}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            className='grid'
+            style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(0, 1fr))` }}
+          >
+            <div className='relative' style={{ height: totalHeight }}>
+              {Array.from({ length: endHour - startHour }, (_, i) => {
+                const hour = startHour + i;
+                return (
+                  <div
+                    key={hour}
+                    className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
+                    style={{ top: i * hourHeight, height: hourHeight }}
+                  >
+                    {String(hour).padStart(2, '0')}:00
+                  </div>
+                );
+              })}
             </div>
-          ))}
+
+            {days.map((day) => {
+              const dayEvents = eventsForDay(events, day).filter((event) => !event.allDay);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className='border-border/60 relative border-r last:border-r-0'
+                  style={{ height: totalHeight }}
+                >
+                  {Array.from({ length: endHour - startHour }, (_, i) => (
+                    <button
+                      key={i}
+                      type='button'
+                      aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
+                      onClick={() =>
+                        onCreate(
+                          new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour + i)
+                        )
+                      }
+                      className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
+                      style={{ top: i * hourHeight, height: hourHeight }}
+                    />
+                  ))}
+
+                  {dayEvents.map((event) => {
+                    const category = categoryFor(event, categories);
+                    const startAt = new Date(event.startAt);
+                    const endAt = new Date(event.endAt);
+                    const minutesFromStart =
+                      startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
+                    const durationMinutes = Math.max(
+                      30,
+                      (endAt.getTime() - startAt.getTime()) / 60000
+                    );
+                    const clampedTop = Math.max(0, (minutesFromStart / 60) * hourHeight);
+                    const height = Math.max(34, (durationMinutes / 60) * hourHeight - 6);
+                    return (
+                      <button
+                        key={event.id}
+                        type='button'
+                        onClick={() => onOpenEvent(event)}
+                        className='absolute left-1.5 right-1.5 z-10 overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md'
+                        style={{
+                          top: clampedTop,
+                          height,
+                          backgroundColor: `${category.color}12`,
+                          borderColor: `${category.color}35`
+                        }}
+                      >
+                        <span
+                          className='absolute inset-y-0 left-0 w-1'
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
+                          <span className='truncate text-sm font-semibold'>{event.title}</span>
+                          <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
+                            {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  {showNow && isSameDay(day, today) && (
+                    <div
+                      className='pointer-events-none absolute inset-x-0 z-20 flex items-center'
+                      style={{ top: nowOffset }}
+                    >
+                      <span className='bg-primary size-2 rounded-full' />
+                      <span className='bg-primary h-[2px] flex-1' />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

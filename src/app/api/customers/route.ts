@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
 import { and, desc, eq, ilike, or } from 'drizzle-orm';
@@ -7,11 +7,20 @@ import { customerSchema } from '@/features/customers/schemas/customer';
 import { recordSystemActivity } from '@/features/activities/actions/service';
 
 export async function GET(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
-  const organizationId = session.session.activeOrganizationId;
-  if (!organizationId)
-    return NextResponse.json({ error: 'ACTIVE_ORGANIZATION_REQUIRED' }, { status: 403 });
+  let context;
+  try {
+    context = await getAuthContext(request.headers);
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
+    }
+    throw error;
+  }
+  const session = context.session;
+  const organizationId = context.organization.id;
   try {
     const q = request.nextUrl.searchParams.get('search')?.trim() || '';
     const rows = await db
@@ -39,11 +48,20 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
-  const organizationId = session.session.activeOrganizationId;
-  if (!organizationId)
-    return NextResponse.json({ error: 'ACTIVE_ORGANIZATION_REQUIRED' }, { status: 403 });
+  let context;
+  try {
+    context = await getAuthContext(request.headers);
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
+    }
+    throw error;
+  }
+  const session = context.session;
+  const organizationId = context.organization.id;
   const parsed = customerSchema.safeParse(await request.json());
   if (!parsed.success)
     return NextResponse.json({ error: 'INVALID_CUSTOMER_PAYLOAD' }, { status: 400 });

@@ -1,3 +1,6 @@
+// This file is deprecated. Use middleware.ts instead.
+// Kept for backward compatibility but all logic has been moved to middleware.ts
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 

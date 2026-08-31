@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth';
 // ============================================================
 // Route Handler — Single Product (get + update)
 // ============================================================
@@ -10,6 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(request: NextRequest, { params }: Params) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
   const { id } = await params;
   const data = await fakeProducts.getProductById(Number(id));
 
@@ -21,6 +24,8 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
   const { id } = await params;
   const body = await request.json();
   const data = await fakeProducts.updateProduct(Number(id), body);
@@ -33,6 +38,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
   const { id } = await params;
   const data = await fakeProducts.deleteProduct(Number(id));
 

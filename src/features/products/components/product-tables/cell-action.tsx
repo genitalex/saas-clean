@@ -1,6 +1,5 @@
 'use client';
 import { AlertModal } from '@/components/modal/alert-modal';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +44,7 @@ export function CellAction({ data }: CellActionProps) {
         loading={deleteMutation.isPending}
       />
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger render={<Button variant='ghost' className='h-8 w-8 p-0' />}>
+        <DropdownMenuTrigger className='h-8 w-8 p-0 hover:bg-accent rounded-md inline-flex items-center justify-center'>
           <span className='sr-only'>Open menu</span>
           <Icons.ellipsis className='h-4 w-4' />
         </DropdownMenuTrigger>

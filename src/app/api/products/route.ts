@@ -1,3 +1,4 @@
+import { auth } from '@/lib/auth';
 // ============================================================
 // Route Handler — Products (list + create)
 // ============================================================
@@ -19,6 +20,8 @@ import { fakeProducts } from '@/constants/mock-api';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
   const { searchParams } = request.nextUrl;
 
   const page = Number(searchParams.get('page') ?? 1);
@@ -39,6 +42,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
   const body = await request.json();
   const data = await fakeProducts.createProduct(body);
   return NextResponse.json(data, { status: 201 });

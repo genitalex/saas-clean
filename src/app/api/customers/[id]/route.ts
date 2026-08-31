@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth';
+import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
 import { customerSchema } from '@/features/customers/schemas/customer';
@@ -7,11 +7,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { recordSystemActivity } from '@/features/activities/actions/service';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
-  const organizationId = session.session.activeOrganizationId;
-  if (!organizationId)
-    return NextResponse.json({ error: 'ACTIVE_ORGANIZATION_REQUIRED' }, { status: 403 });
+  let context;
+  try {
+    context = await getAuthContext(request.headers);
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
+    }
+    throw error;
+  }
+  const session = context.session;
+  const organizationId = context.organization.id;
   const { id } = await params;
   const [row] = await db
     .select()
@@ -24,11 +33,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
-  const organizationId = session.session.activeOrganizationId;
-  if (!organizationId)
-    return NextResponse.json({ error: 'ACTIVE_ORGANIZATION_REQUIRED' }, { status: 403 });
+  let context;
+  try {
+    context = await getAuthContext(request.headers);
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
+    }
+    throw error;
+  }
+  const session = context.session;
+  const organizationId = context.organization.id;
   const { id } = await params;
   const parsed = customerSchema.safeParse(await request.json());
   if (!parsed.success)
@@ -58,11 +76,20 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
-  const organizationId = session.session.activeOrganizationId;
-  if (!organizationId)
-    return NextResponse.json({ error: 'ACTIVE_ORGANIZATION_REQUIRED' }, { status: 403 });
+  let context;
+  try {
+    context = await getAuthContext(request.headers);
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
+    }
+    throw error;
+  }
+  const session = context.session;
+  const organizationId = context.organization.id;
   const { id } = await params;
   const [row] = await db
     .update(customers)

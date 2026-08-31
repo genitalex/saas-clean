@@ -1,7 +1,9 @@
 import KBar from '@/components/kbar';
 import { BottomNavigation } from '@/components/layout/bottom-navigation';
 import { LayoutContent } from '@/components/layout/layout-content';
+import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'SaaS Dashboard',
@@ -9,6 +11,17 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // Server-side protection is the source of truth for dashboard access.
+  try {
+    await getAuthContext();
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      if (error.code === 'UNAUTHENTICATED') redirect('/auth/sign-in');
+      if (error.code === 'NO_ACTIVE_ORGANIZATION') redirect('/onboarding');
+    }
+    throw error;
+  }
+
   return (
     <KBar>
       <div className='flex flex-col min-h-screen bg-background'>

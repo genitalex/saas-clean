@@ -5,14 +5,20 @@ import * as schema from './schema';
 
 const connectionString = process.env.DATABASE_URL;
 
-/**
- * Keep module loading safe for routes that do not need the database (including
- * the unauthenticated dashboard redirect in the preview). The first database
- * operation still fails with an actionable message when the integration has
- * not been configured.
- */
-export const db = connectionString
-  ? drizzle(new Pool({ connectionString }), { schema })
+let pool: Pool | undefined;
+
+if (connectionString) {
+  pool = new Pool({
+    connectionString,
+    max: 3,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    keepAlive: true
+  });
+}
+
+export const db = pool
+  ? drizzle(pool, { schema })
   : (new Proxy(
       {},
       {

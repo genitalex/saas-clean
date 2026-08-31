@@ -35,7 +35,15 @@ export function LayoutContent({ children }: LayoutContentProps) {
    * The BottomNavigation is still rendered at the dashboard layout level.
    */
   if (isMobile && isCalendarRoute) {
-    return <div className='flex flex-1 flex-col min-h-0 w-full'>{children}</div>;
+    return (
+      <main
+        id='main-content'
+        tabIndex={-1}
+        className='flex min-h-0 flex-1 min-w-0 flex-col pb-[calc(var(--mobile-nav-height,72px)+env(safe-area-inset-bottom))]'
+      >
+        {children}
+      </main>
+    );
   }
 
   /**

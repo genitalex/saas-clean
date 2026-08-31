@@ -3,7 +3,6 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,15 +45,7 @@ export function UserNav() {
         onChange={handlePhotoChange}
       />
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant='ghost'
-              className='h-auto gap-2 px-1.5 py-1.5'
-              aria-label='Abrir menú de perfil'
-            />
-          }
-        >
+        <DropdownMenuTrigger className='inline-flex items-center gap-2 h-auto px-1.5 py-1.5 text-sm font-medium hover:bg-accent rounded-md transition-colors'>
           <Avatar size='sm'>
             <AvatarImage src={photo} alt={name} />
             <AvatarFallback>{initials}</AvatarFallback>
