@@ -1171,6 +1171,7 @@ function DesktopYearDialog({
   onChange: (date: Date) => void;
 }) {
   const [displayYear, setDisplayYear] = useState(year);
+  const today = new Date();
 
   useEffect(() => {
     if (open) setDisplayYear(year);
@@ -1178,14 +1179,17 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-2xl rounded-[28px] p-6 sm:p-7'>
-        <DialogHeader className='pb-2'>
+      <DialogContent className='w-[min(1120px,calc(100vw-48px))] max-w-none rounded-[28px] p-6 sm:p-7'>
+        <DialogHeader className='pb-3'>
           <div className='flex items-center justify-between gap-4'>
             <div>
               <DialogTitle className='text-2xl tracking-tight'>
                 Calendario {displayYear}
               </DialogTitle>
-              <DialogDescription>Elige un mes para saltar directamente a él.</DialogDescription>
+              <DialogDescription>
+                Elige un mes para abrirlo. La vista mantiene la misma jerarquía visual que el
+                calendario móvil.
+              </DialogDescription>
             </div>
             <div className='flex items-center gap-1'>
               <Button
@@ -1211,23 +1215,65 @@ function DesktopYearDialog({
             </div>
           </div>
         </DialogHeader>
-        <div className='grid grid-cols-3 gap-2 sm:grid-cols-4'>
+
+        <div className='grid max-h-[min(68dvh,680px)] grid-cols-3 gap-3 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-4'>
           {mobileMonthNames.map((name, index) => {
-            const active = index === selectedMonth;
+            const monthDate = new Date(displayYear, index, 1);
+            const monthStart = startOfMonth(monthDate);
+            const monthEnd = endOfMonth(monthDate);
+            const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+            const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+            const days: Date[] = [];
+            for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) days.push(day);
+            const active = index === selectedMonth && displayYear === year;
+            const current = today.getFullYear() === displayYear && today.getMonth() === index;
+
             return (
               <button
                 key={name}
                 type='button'
-                onClick={() => onChange(new Date(displayYear, index, 1))}
+                onClick={() => onChange(monthDate)}
                 className={cn(
-                  'rounded-2xl border px-4 py-4 text-left transition-all hover:bg-accent/50 active:scale-[0.985]',
+                  'group min-w-0 rounded-2xl border p-3 text-left transition-all hover:bg-accent/35 active:scale-[0.985]',
                   active
-                    ? 'border-primary/35 bg-primary/10 text-primary shadow-sm'
+                    ? 'border-primary/40 bg-primary/10 shadow-sm'
                     : 'border-border/60 bg-muted/20'
                 )}
               >
-                <span className='block text-sm font-semibold'>{name}</span>
-                <span className='text-muted-foreground mt-1 block text-xs'>{displayYear}</span>
+                <div className='mb-2 flex items-center justify-between gap-2'>
+                  <span
+                    className={cn(
+                      'text-sm font-semibold',
+                      active || current ? 'text-primary' : 'text-foreground'
+                    )}
+                  >
+                    {name}
+                  </span>
+                  {(active || current) && <span className='bg-primary size-1.5 rounded-full' />}
+                </div>
+                <div className='grid grid-cols-7 gap-x-0.5 text-center'>
+                  {mobileWeekDaysNarrow.map((day) => (
+                    <span key={day} className='text-[8px] font-medium text-muted-foreground/60'>
+                      {day}
+                    </span>
+                  ))}
+                  {days.map((day) => {
+                    const out = day.getMonth() !== index;
+                    const isToday = isSameDay(day, today);
+                    return (
+                      <span
+                        key={day.toISOString()}
+                        className={cn(
+                          'mt-1 flex aspect-square items-center justify-center text-[9px] tabular-nums',
+                          out ? 'text-muted-foreground/20' : 'text-muted-foreground/75',
+                          isToday && 'rounded-full bg-primary font-semibold text-primary-foreground'
+                        )}
+                      >
+                        {format(day, 'd')}
+                      </span>
+                    );
+                  })}
+                </div>
               </button>
             );
           })}
