@@ -290,10 +290,14 @@ export function CalendarPage() {
       {/*
         Mobile: a genuine full-screen calendar surface.
         
-        With the route-level conditional (CalendarPageRoute), on mobile we no
-        longer wrap in PageContainer, so the calendar is the first content
-        element under the Header. It fills the available vertical space via
-        flex-1, edge-to-edge with no dashboard padding.
+        The mobile calendar is now handled through two mechanisms:
+        1. LayoutContent (dashboard layout level) detects mobile + calendar route
+           and strips the generic shell (Header, sidebars, etc.)
+        2. CalendarPageWrapper (page level) detects mobile and renders
+           CalendarPage without PageContainer padding
+        
+        Result: Calendar fills the full screen edge-to-edge on mobile, with
+        only its own headers and navigation.
         
         Height is derived from the *real*, measured shell geometry:
         Header and MobileBottomNav each publish their actual rendered height

@@ -1,10 +1,9 @@
-import { CalendarPageRoute } from '@/features/calendar/components/calendar-page-route';
+import { CalendarPageWrapper } from '@/features/calendar/components/calendar-page-wrapper';
 
 export const metadata = { title: 'Calendar' };
 
 export default function CalendarRoute() {
-  // On mobile: Calendar becomes its own full-screen application surface
-  // On desktop: Calendar is contained within the PageContainer
-  // The CalendarPageRoute component handles this conditional layout
-  return <CalendarPageRoute />;
+  // LayoutContent handles stripping the shell on mobile.
+  // CalendarPageWrapper handles conditional PageContainer wrapping.
+  return <CalendarPageWrapper />;
 }
