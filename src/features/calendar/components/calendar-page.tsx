@@ -767,13 +767,7 @@ function MobileDayTimeline({
   return (
     <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
       <div className='flex shrink-0 items-center gap-2.5'>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={onBack}
-          aria-label='Volver al mes'
-          className='shrink-0 rounded-xl'
-        >
+        <Button variant='ghost' size='icon-sm' onClick={onBack} aria-label='Volver al mes' className='shrink-0 rounded-xl'>
           <Icons.chevronLeft className='size-4' />
         </Button>
         <div className='min-w-0 flex-1'>
@@ -784,13 +778,7 @@ function MobileDayTimeline({
             {format(date, 'EEEE d', { locale: es })}
           </p>
         </div>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCreate(date)}
-          aria-label='Añadir evento'
-          className='rounded-xl'
-        >
+        <Button variant='ghost' size='icon-sm' onClick={() => onCreate(date)} aria-label='Añadir evento' className='rounded-xl'>
           <Icons.add className='size-4' />
         </Button>
       </div>
@@ -803,9 +791,7 @@ function MobileDayTimeline({
               <button
                 key={hour}
                 type='button'
-                onClick={() =>
-                  onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
-                }
+                onClick={() => onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))}
                 className='absolute inset-x-0 border-b border-border/60 text-left transition-colors hover:bg-primary/[0.035]'
                 style={{ top: i * hourHeight, height: hourHeight }}
                 aria-label={`Crear evento a las ${String(hour).padStart(2, '0')}:00`}
@@ -840,10 +826,7 @@ function MobileDayTimeline({
                   borderColor: `${category.color}35`
                 }}
               >
-                <span
-                  className='absolute inset-y-0 left-0 w-1'
-                  style={{ backgroundColor: category.color }}
-                />
+                <span className='absolute inset-y-0 left-0 w-1' style={{ backgroundColor: category.color }} />
                 <span className='flex h-full min-w-0 flex-col justify-center px-3 pl-4'>
                   <span className='truncate text-sm font-semibold'>{event.title}</span>
                   <span className='mt-0.5 text-[11px] text-muted-foreground'>
@@ -855,10 +838,7 @@ function MobileDayTimeline({
           })}
 
           {showNowLine && (
-            <div
-              className='pointer-events-none absolute left-16 right-3 z-20 flex items-center'
-              style={{ top: nowOffset }}
-            >
+            <div className='pointer-events-none absolute left-16 right-3 z-20 flex items-center' style={{ top: nowOffset }}>
               <span className='bg-primary size-2 rounded-full' />
               <span className='bg-primary h-[2px] flex-1' />
             </div>
@@ -1013,10 +993,7 @@ function TimelineView({
             {days.map((day) => {
               const isToday = isSameDay(day, today);
               return (
-                <div
-                  key={day.toISOString()}
-                  className='border-border/60 border-r px-4 py-3 last:border-r-0'
-                >
+                <div key={day.toISOString()} className='border-border/60 border-r px-4 py-3 last:border-r-0'>
                   <p className='text-muted-foreground text-xs font-medium capitalize'>
                     {format(day, 'EEEE', { locale: es })}
                   </p>
@@ -1071,9 +1048,7 @@ function TimelineView({
                       type='button'
                       aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
                       onClick={() =>
-                        onCreate(
-                          new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour + i)
-                        )
+                        onCreate(new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour + i))
                       }
                       className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
                       style={{ top: i * hourHeight, height: hourHeight }}
@@ -1085,7 +1060,7 @@ function TimelineView({
                     const startAt = new Date(event.startAt);
                     const endAt = new Date(event.endAt);
                     const minutesFromStart =
-                      startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
+                      (startAt.getHours() * 60 + startAt.getMinutes()) - startHour * 60;
                     const durationMinutes = Math.max(
                       30,
                       (endAt.getTime() - startAt.getTime()) / 60000
@@ -1105,10 +1080,7 @@ function TimelineView({
                           borderColor: `${category.color}35`
                         }}
                       >
-                        <span
-                          className='absolute inset-y-0 left-0 w-1'
-                          style={{ backgroundColor: category.color }}
-                        />
+                        <span className='absolute inset-y-0 left-0 w-1' style={{ backgroundColor: category.color }} />
                         <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
                           <span className='truncate text-sm font-semibold'>{event.title}</span>
                           <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>

@@ -6,28 +6,10 @@ export const navGroups: NavGroup[] = [
     variant: 'primary',
     items: [
       { title: 'Today', url: '/dashboard/today', icon: 'clock', shortcut: ['g', 't'], items: [] },
-      {
-        title: 'Calendar',
-        url: '/dashboard/calendar',
-        icon: 'calendar',
-        shortcut: ['c', 'a'],
-        items: []
-      },
+      { title: 'Calendar', url: '/dashboard/calendar', icon: 'calendar', shortcut: ['c', 'a'], items: [] },
       { title: 'Tasks', url: '/dashboard/tasks', icon: 'check', shortcut: ['t', 't'], items: [] },
-      {
-        title: 'Customers',
-        url: '/dashboard/customers',
-        icon: 'teams',
-        shortcut: ['c', 'u'],
-        items: []
-      },
-      {
-        title: 'Opportunities',
-        url: '/dashboard/opportunities',
-        icon: 'opportunities',
-        shortcut: ['o', 'p'],
-        items: []
-      },
+      { title: 'Customers', url: '/dashboard/customers', icon: 'teams', shortcut: ['c', 'u'], items: [] },
+      { title: 'Opportunities', url: '/dashboard/opportunities', icon: 'opportunities', shortcut: ['o', 'p'], items: [] },
       { title: 'Kanban', url: '/dashboard/kanban', icon: 'kanban', shortcut: ['k', 'k'], items: [] }
     ]
   },

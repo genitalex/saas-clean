@@ -12,10 +12,7 @@ export async function GET(request: NextRequest) {
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json(
-        { error: error.code },
-        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
-      );
+      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
     }
     throw error;
   }
@@ -53,10 +50,7 @@ export async function POST(request: NextRequest) {
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json(
-        { error: error.code },
-        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
-      );
+      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
     }
     throw error;
   }
