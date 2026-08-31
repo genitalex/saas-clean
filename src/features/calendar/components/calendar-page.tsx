@@ -68,8 +68,11 @@ export function CalendarPage() {
   const [filters, setFilters] = useState<string[]>(
     defaultCategories.map((category) => category.id)
   );
-  // Mobile gets its own day-focused experience rather than a shrunk grid, so
-  // it tracks a selected day independently of the desktop cursor/view.
+  // Mobile gets its own composition: a full month overview you can tap into
+  // a day's hourly timeline, rather than the desktop grid shrunk down. It
+  // tracks its own month cursor, selected day and month/day mode.
+  const [mobileCursor, setMobileCursor] = useState(new Date());
+  const [mobileMode, setMobileMode] = useState<'month' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
   const {
@@ -85,24 +88,26 @@ export function CalendarPage() {
       getEvents({ startDate: range.start.toISOString(), endDate: range.end.toISOString() })
   });
 
-  const mobileWeekStart = useMemo(
-    () => startOfWeek(selectedDate, { weekStartsOn: 1 }),
-    [selectedDate]
+  const mobileRange = useMemo(
+    () => ({
+      start: startOfWeek(startOfMonth(mobileCursor), { weekStartsOn: 1 }),
+      end: endOfWeek(endOfMonth(mobileCursor), { weekStartsOn: 1 })
+    }),
+    [mobileCursor]
   );
-  const mobileWeekEnd = useMemo(() => endOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
   const {
-    data: mobileWeekEvents = [],
+    data: mobileMonthEvents = [],
     isLoading: isMobileLoading,
     isError: isMobileError
   } = useQuery({
     queryKey: eventKeys.list({
-      startDate: mobileWeekStart.toISOString(),
-      endDate: mobileWeekEnd.toISOString()
+      startDate: mobileRange.start.toISOString(),
+      endDate: mobileRange.end.toISOString()
     }),
     queryFn: () =>
       getEvents({
-        startDate: mobileWeekStart.toISOString(),
-        endDate: mobileWeekEnd.toISOString()
+        startDate: mobileRange.start.toISOString(),
+        endDate: mobileRange.end.toISOString()
       })
   });
 
@@ -156,7 +161,7 @@ export function CalendarPage() {
   const visibleEvents = events.filter((event) =>
     filters.includes(categoryFor(event, categories).id)
   );
-  const visibleMobileEvents = mobileWeekEvents.filter((event) =>
+  const visibleMobileEvents = mobileMonthEvents.filter((event) =>
     filters.includes(categoryFor(event, categories).id)
   );
 
@@ -277,12 +282,15 @@ export function CalendarPage() {
         </div>
       )}
 
-      {/* Mobile: a day-focused agenda, not the desktop grid squeezed down. */}
+      {/* Mobile: full month overview that opens into an hourly day timeline. */}
       <div className='md:hidden'>
-        <MobileAgenda
+        <MobileCalendar
+          mode={mobileMode}
+          onModeChange={setMobileMode}
+          cursor={mobileCursor}
+          onCursorChange={setMobileCursor}
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
-          weekStart={mobileWeekStart}
           events={visibleMobileEvents}
           categories={categories}
           isLoading={isMobileLoading}
@@ -333,58 +341,117 @@ export function CalendarPage() {
   );
 }
 
+const mobileWeekDaysNarrow = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const MOBILE_DAY_START_HOUR = 7;
+const MOBILE_DAY_END_HOUR = 21; // exclusive upper bound, last row is 20:00
+const MOBILE_HOUR_ROW_PX = 60;
+
 /**
- * Mobile calendar experience: a large day header, a compact week strip for
- * quick navigation, and an agenda list for the selected day. Deliberately
- * not the desktop grid at a smaller size — see CLAUDE.md Calendar Mobile.
+ * Mobile calendar experience: a real month overview you can tap into a
+ * day's hourly timeline — see CLAUDE.md Calendar Mobile. The two panels sit
+ * side by side and slide via transform so the transition feels like a
+ * native navigation push rather than a hard cut.
  */
-function MobileAgenda({
+function MobileCalendar({
+  mode,
+  onModeChange,
+  cursor,
+  onCursorChange,
   selectedDate,
   onSelectDate,
-  weekStart,
   events,
   categories,
   isLoading,
   onOpenEvent,
   onCreate
 }: {
+  mode: 'month' | 'day';
+  onModeChange: (mode: 'month' | 'day') => void;
+  cursor: Date;
+  onCursorChange: (date: Date) => void;
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
-  weekStart: Date;
   events: Event[];
   categories: Category[];
   isLoading: boolean;
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
 }) {
-  const today = new Date();
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const dayEvents = eventsForDay(events, selectedDate).sort(
-    (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+  const openDay = (day: Date) => {
+    onSelectDate(day);
+    if (!isSameMonth(day, cursor)) onCursorChange(day);
+    onModeChange('day');
+  };
+
+  return (
+    <div className='relative overflow-hidden'>
+      <div
+        className={cn(
+          'flex w-[200%] transition-transform duration-300 ease-out motion-reduce:transition-none',
+          mode === 'day' && '-translate-x-1/2'
+        )}
+      >
+        <div className='w-1/2 shrink-0' aria-hidden={mode === 'day'} inert={mode === 'day'}>
+          <MobileMonthView
+            cursor={cursor}
+            selectedDate={selectedDate}
+            events={events}
+            categories={categories}
+            isLoading={isLoading}
+            onCursorChange={onCursorChange}
+            onSelectDay={openDay}
+          />
+        </div>
+        <div className='w-1/2 shrink-0' aria-hidden={mode === 'month'} inert={mode === 'month'}>
+          <MobileDayTimeline
+            date={selectedDate}
+            events={events}
+            categories={categories}
+            onBack={() => onModeChange('month')}
+            onOpenEvent={onOpenEvent}
+            onCreate={onCreate}
+          />
+        </div>
+      </div>
+    </div>
   );
+}
+
+function MobileMonthView({
+  cursor,
+  selectedDate,
+  events,
+  categories,
+  isLoading,
+  onCursorChange,
+  onSelectDay
+}: {
+  cursor: Date;
+  selectedDate: Date;
+  events: Event[];
+  categories: Category[];
+  isLoading: boolean;
+  onCursorChange: (date: Date) => void;
+  onSelectDay: (date: Date) => void;
+}) {
+  const today = new Date();
+  const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
+  const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
+  const days: Date[] = [];
+  for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
 
   return (
     <div className='flex flex-col gap-3'>
-      <div className='flex items-end justify-between gap-2'>
-        <div>
-          <p className='text-muted-foreground text-sm capitalize'>
-            {format(selectedDate, 'EEEE', { locale: es })}
-          </p>
-          <p className='flex items-baseline gap-2'>
-            <span className='text-[2rem] leading-none font-semibold tracking-tight'>
-              {format(selectedDate, 'd')}
-            </span>
-            <span className='text-muted-foreground text-base font-medium capitalize'>
-              {format(selectedDate, 'MMMM yyyy', { locale: es })}
-            </span>
-          </p>
-        </div>
+      <div className='flex items-center justify-between gap-2'>
+        <p className='text-xl font-semibold tracking-tight capitalize'>
+          {format(cursor, 'LLLL yyyy', { locale: es })}
+        </p>
         <div className='bg-surface-subtle flex shrink-0 items-center gap-0.5 rounded-xl border p-1'>
           <Button
             variant='ghost'
             size='icon-sm'
-            onClick={() => onSelectDate(addDays(selectedDate, -1))}
-            aria-label='Día anterior'
+            onClick={() => onCursorChange(subMonths(cursor, 1))}
+            aria-label='Mes anterior'
             className='rounded-lg'
           >
             <Icons.chevronLeft className='size-4' />
@@ -392,7 +459,7 @@ function MobileAgenda({
           <Button
             variant='ghost'
             size='sm'
-            onClick={() => onSelectDate(startOfDay(new Date()))}
+            onClick={() => onCursorChange(new Date())}
             className='rounded-lg px-2.5 text-xs font-medium'
           >
             Hoy
@@ -400,8 +467,8 @@ function MobileAgenda({
           <Button
             variant='ghost'
             size='icon-sm'
-            onClick={() => onSelectDate(addDays(selectedDate, 1))}
-            aria-label='Día siguiente'
+            onClick={() => onCursorChange(addMonths(cursor, 1))}
+            aria-label='Mes siguiente'
             className='rounded-lg'
           >
             <Icons.chevronRight className='size-4' />
@@ -409,101 +476,76 @@ function MobileAgenda({
         </div>
       </div>
 
-      <div className='flex items-stretch justify-between gap-1'>
-        {days.map((day) => {
-          const isSelected = isSameDay(day, selectedDate);
-          const isToday = isSameDay(day, today);
-          const hasEvents = eventsForDay(events, day).length > 0;
-          return (
-            <button
-              key={day.toISOString()}
-              type='button'
-              onClick={() => onSelectDate(day)}
-              aria-pressed={isSelected}
-              aria-label={format(day, 'EEEE d MMMM', { locale: es })}
+      <Card className='overflow-hidden py-0 shadow-sm'>
+        <div className='bg-surface-subtle grid grid-cols-7 border-b'>
+          {mobileWeekDaysNarrow.map((day, index) => (
+            <div
+              key={day + index}
               className={cn(
-                'flex flex-1 flex-col items-center gap-1.5 rounded-xl py-2 transition-colors',
-                isSelected ? 'bg-primary' : 'hover:bg-accent/40'
+                'text-muted-foreground/80 py-2 text-center text-[11px] font-semibold tracking-wide uppercase',
+                (index === 5 || index === 6) && 'text-muted-foreground/55'
               )}
             >
-              <span
-                className={cn(
-                  'text-[10px] font-semibold tracking-wide uppercase',
-                  isSelected ? 'text-primary-foreground/75' : 'text-muted-foreground/70'
-                )}
-              >
-                {format(day, 'EEEEE', { locale: es })}
-              </span>
-              <span
-                className={cn(
-                  'flex size-8 items-center justify-center rounded-full text-sm font-semibold',
-                  isSelected
-                    ? 'text-primary-foreground'
-                    : isToday
-                      ? 'bg-accent text-foreground'
-                      : 'text-foreground/85'
-                )}
-              >
-                {format(day, 'd')}
-              </span>
-              <span
-                className={cn(
-                  'size-1 rounded-full',
-                  hasEvents
-                    ? isSelected
-                      ? 'bg-primary-foreground'
-                      : 'bg-primary'
-                    : 'bg-transparent'
-                )}
-              />
-            </button>
-          );
-        })}
-      </div>
-
-      <Card className='min-w-0 overflow-hidden py-0 shadow-sm'>
+              {day}
+            </div>
+          ))}
+        </div>
         {isLoading ? (
-          <div className='flex flex-col gap-2 p-4'>
-            {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className='bg-muted h-14 animate-pulse rounded-lg' />
+          <div className='grid grid-cols-7'>
+            {Array.from({ length: 35 }, (_, i) => (
+              <div
+                key={i}
+                className='border-border/60 aspect-square border-r border-b p-1.5 last:border-r-0'
+              >
+                <div className='bg-muted/50 mx-auto size-6 animate-pulse rounded-full' />
+              </div>
             ))}
           </div>
-        ) : dayEvents.length === 0 ? (
-          <div className='flex flex-col items-center gap-3 px-6 py-10 text-center'>
-            <p className='text-muted-foreground text-sm'>Nada por aquí. Un día tranquilo.</p>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => onCreate(selectedDate)}
-              className='gap-1.5'
-            >
-              <Icons.add className='size-4' />
-              Añadir evento
-            </Button>
-          </div>
         ) : (
-          <div className='divide-border/70 divide-y'>
-            {dayEvents.map((event) => {
-              const category = categoryFor(event, categories);
+          <div className='grid grid-cols-7'>
+            {days.map((day) => {
+              const out = !isSameMonth(day, cursor);
+              const weekend = day.getDay() === 0 || day.getDay() === 6;
+              const isToday = isSameDay(day, today);
+              const isSelected = isSameDay(day, selectedDate);
+              const dots = eventsForDay(events, day).slice(0, 3);
               return (
                 <button
-                  key={event.id}
+                  key={day.toISOString()}
                   type='button'
-                  onClick={() => onOpenEvent(event)}
-                  className='hover:bg-accent/20 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:not-aria-[haspopup]:translate-y-px'
+                  onClick={() => onSelectDay(day)}
+                  aria-label={format(day, 'EEEE d MMMM', { locale: es })}
+                  className={cn(
+                    'border-border/60 relative flex aspect-square flex-col items-center justify-center gap-1 border-r border-b transition-colors last:border-r-0',
+                    'hover:bg-accent/25',
+                    weekend && !out && 'bg-surface-subtle/60'
+                  )}
                 >
-                  <span className='text-muted-foreground w-12 shrink-0 text-xs font-medium tabular-nums'>
-                    {format(new Date(event.startAt), 'HH:mm')}
-                  </span>
                   <span
-                    className='h-8 w-[3px] shrink-0 rounded-full'
-                    style={{ backgroundColor: category.color }}
-                  />
-                  <span className='min-w-0 flex-1'>
-                    <span className='block truncate text-sm font-medium'>{event.title}</span>
-                    <span className='text-muted-foreground block truncate text-xs'>
-                      {category.name}
-                    </span>
+                    className={cn(
+                      'flex size-7 items-center justify-center rounded-full text-[13px] font-medium',
+                      isSelected
+                        ? 'bg-primary text-primary-foreground font-semibold'
+                        : isToday
+                          ? 'bg-accent text-foreground font-semibold'
+                          : out
+                            ? 'text-muted-foreground/35'
+                            : 'text-foreground/85'
+                    )}
+                  >
+                    {format(day, 'd')}
+                  </span>
+                  <span className='flex h-1.5 items-center gap-0.5'>
+                    {dots.map((event) => {
+                      const category = categoryFor(event, categories);
+                      return (
+                        <span
+                          key={event.id}
+                          className='size-1 rounded-full'
+                          style={{ backgroundColor: category.color, opacity: out ? 0.4 : 1 }}
+                        />
+                      );
+                    })}
                   </span>
                 </button>
               );
@@ -511,6 +553,130 @@ function MobileAgenda({
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+function MobileDayTimeline({
+  date,
+  events,
+  categories,
+  onBack,
+  onOpenEvent,
+  onCreate
+}: {
+  date: Date;
+  events: Event[];
+  categories: Category[];
+  onBack: () => void;
+  onOpenEvent: (event: Event) => void;
+  onCreate: (date: Date) => void;
+}) {
+  const today = new Date();
+  const isToday = isSameDay(date, today);
+  const hours = Array.from(
+    { length: MOBILE_DAY_END_HOUR - MOBILE_DAY_START_HOUR },
+    (_, i) => i + MOBILE_DAY_START_HOUR
+  );
+  const dayEvents = eventsForDay(events, date);
+  const rangeStartMinutes = MOBILE_DAY_START_HOUR * 60;
+  const rangeEndMinutes = MOBILE_DAY_END_HOUR * 60;
+  const nowMinutes = today.getHours() * 60 + today.getMinutes();
+  const showNowLine = isToday && nowMinutes >= rangeStartMinutes && nowMinutes <= rangeEndMinutes;
+  const nowOffset = ((nowMinutes - rangeStartMinutes) / 60) * MOBILE_HOUR_ROW_PX;
+
+  return (
+    <div className='flex flex-col gap-3'>
+      <div className='flex items-center gap-2'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={onBack}
+          aria-label='Volver al mes'
+          className='shrink-0 rounded-lg'
+        >
+          <Icons.chevronLeft className='size-4' />
+        </Button>
+        <div className='min-w-0 flex-1'>
+          <p className='text-muted-foreground truncate text-xs capitalize'>
+            {format(date, 'MMMM yyyy', { locale: es })}
+          </p>
+          <p className='truncate text-lg font-semibold tracking-tight capitalize'>
+            {format(date, 'EEEE d', { locale: es })}
+          </p>
+        </div>
+        {dayEvents.length > 0 && (
+          <span className='text-muted-foreground shrink-0 text-xs'>
+            {dayEvents.length} evento{dayEvents.length === 1 ? '' : 's'}
+          </span>
+        )}
+      </div>
+
+      <Card className='overflow-hidden py-0 shadow-sm'>
+        <div className='relative max-h-[62vh] overflow-y-auto overscroll-contain'>
+          {showNowLine && (
+            <div
+              className='pointer-events-none absolute inset-x-0 z-10 flex items-center gap-1.5 pl-14'
+              style={{ top: nowOffset }}
+            >
+              <span className='bg-primary size-1.5 shrink-0 rounded-full' />
+              <span className='bg-primary h-px flex-1' />
+            </div>
+          )}
+          {hours.map((hour) => {
+            const hourEvents = dayEvents.filter(
+              (event) => new Date(event.startAt).getHours() === hour
+            );
+            return (
+              <button
+                key={hour}
+                type='button'
+                onClick={() =>
+                  onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
+                }
+                style={{ minHeight: MOBILE_HOUR_ROW_PX }}
+                className='border-border/60 hover:bg-accent/15 flex w-full items-start gap-3 border-b p-2 text-left transition-colors'
+              >
+                <span className='text-muted-foreground w-11 shrink-0 pt-0.5 text-[11px] font-medium tabular-nums'>
+                  {String(hour).padStart(2, '0')}:00
+                </span>
+                <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                  {hourEvents.map((event) => {
+                    const category = categoryFor(event, categories);
+                    return (
+                      <span
+                        key={event.id}
+                        onClick={(clickEvent) => {
+                          clickEvent.stopPropagation();
+                          onOpenEvent(event);
+                        }}
+                        className='flex min-w-0 items-center gap-1.5 truncate rounded-md border-l-2 px-2 py-1.5 text-xs font-medium'
+                        style={{
+                          backgroundColor: `${category.color}14`,
+                          borderColor: category.color,
+                          color: category.color
+                        }}
+                      >
+                        <span className='truncate'>{event.title}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Button
+        variant='outline'
+        size='sm'
+        onClick={() => onCreate(date)}
+        className='gap-1.5 self-start'
+      >
+        <Icons.add className='size-4' />
+        Añadir evento
+      </Button>
     </div>
   );
 }
