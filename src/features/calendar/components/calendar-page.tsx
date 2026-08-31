@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addDays,
   addMonths,
@@ -18,6 +18,7 @@ import {
   subWeeks
 } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,7 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { getEvents, eventKeys } from '../queries';
+import { getEvents, eventKeys, updateEvent } from '../queries';
 import type { Event } from '../types';
 import { EventDialog } from './event-dialog';
 
@@ -65,6 +66,7 @@ export function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState<string[]>(
     defaultCategories.map((category) => category.id)
   );
@@ -158,6 +160,19 @@ export function CalendarPage() {
     setInitialDate(undefined);
     setDialogOpen(true);
   };
+  const moveEvent = useCallback(
+    async (event: Event, nextStart: Date) => {
+      const duration = new Date(event.endAt).getTime() - new Date(event.startAt).getTime();
+      const nextEnd = new Date(nextStart.getTime() + duration);
+      await updateEvent(event.id, {
+        startAt: nextStart.toISOString(),
+        endAt: nextEnd.toISOString()
+      });
+      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      toast.success('Evento reprogramado');
+    },
+    [queryClient]
+  );
   const visibleEvents = events.filter((event) =>
     filters.includes(categoryFor(event, categories).id)
   );
@@ -326,6 +341,7 @@ export function CalendarPage() {
             isLoading={isMobileLoading}
             onOpenEvent={openEvent}
             onCreate={openCreate}
+            onMoveEvent={moveEvent}
             onOpenSettings={() => setSettingsOpen(true)}
           />
         </div>
@@ -356,6 +372,7 @@ export function CalendarPage() {
             categories={categories}
             onCreate={openCreate}
             onOpenEvent={openEvent}
+            onMoveEvent={moveEvent}
           />
         )}
       </Card>
@@ -410,6 +427,7 @@ function MobileCalendar({
   isLoading,
   onOpenEvent,
   onCreate,
+  onMoveEvent,
   onOpenSettings
 }: {
   mode: 'year' | 'month' | 'day';
@@ -423,6 +441,7 @@ function MobileCalendar({
   isLoading: boolean;
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
+  onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
   onOpenSettings: () => void;
 }) {
   const openDay = (day: Date) => {
@@ -478,6 +497,7 @@ function MobileCalendar({
             onBack={() => onModeChange('month')}
             onOpenEvent={onOpenEvent}
             onCreate={onCreate}
+            onMoveEvent={onMoveEvent}
           />
         </div>
       </div>
@@ -782,13 +802,118 @@ function MobileMonthView({
   );
 }
 
+function useEventDrag({
+  startHour,
+  endHour,
+  hourHeight,
+  onMove
+}: {
+  startHour: number;
+  endHour: number;
+  hourHeight: number;
+  onMove: (event: Event, nextStart: Date) => Promise<void> | void;
+}) {
+  const [dragPreview, setDragPreview] = useState<{
+    event: Event;
+    dateKey: string;
+    minutes: number;
+  } | null>(null);
+  const previewRef = useRef<{ event: Event; dateKey: string; minutes: number } | null>(null);
+  const dragRef = useRef<{
+    event: Event;
+    startX: number;
+    startY: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClickRef = useRef(false);
+
+  useEffect(() => {
+    const handleMove = (pointerEvent: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const distance = Math.hypot(
+        pointerEvent.clientX - drag.startX,
+        pointerEvent.clientY - drag.startY
+      );
+      if (!drag.moved && distance < 6) return;
+      drag.moved = true;
+      suppressClickRef.current = true;
+
+      const target = document
+        .elementsFromPoint(pointerEvent.clientX, pointerEvent.clientY)
+        .map((element) => element.closest<HTMLElement>('[data-calendar-day]'))
+        .find(Boolean);
+      if (!target) return;
+
+      const dateKey = target.dataset.calendarDay;
+      if (!dateKey) return;
+      const rect = target.getBoundingClientRect();
+      const durationMinutes = Math.max(
+        15,
+        (new Date(drag.event.endAt).getTime() - new Date(drag.event.startAt).getTime()) / 60000
+      );
+      const rawMinutes = startHour * 60 + ((pointerEvent.clientY - rect.top) / hourHeight) * 60;
+      const maxStart = endHour * 60 - durationMinutes;
+      const minutes = Math.max(
+        startHour * 60,
+        Math.min(maxStart, Math.round(rawMinutes / 15) * 15)
+      );
+      const nextPreview = { event: drag.event, dateKey, minutes };
+      previewRef.current = nextPreview;
+      setDragPreview(nextPreview);
+    };
+
+    const handleUp = async () => {
+      const drag = dragRef.current;
+      const preview = previewRef.current;
+      dragRef.current = null;
+      previewRef.current = null;
+      setDragPreview(null);
+
+      if (!drag?.moved || !preview) {
+        window.setTimeout(() => {
+          suppressClickRef.current = false;
+        }, 0);
+        return;
+      }
+
+      const date = new Date(`${preview.dateKey}T00:00:00`);
+      date.setHours(0, preview.minutes, 0, 0);
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+      await onMove(drag.event, date);
+    };
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+  }, [endHour, hourHeight, onMove, startHour]);
+
+  const startDrag = (event: React.PointerEvent, calendarEvent: Event) => {
+    if (event.button !== 0) return;
+    dragRef.current = {
+      event: calendarEvent,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false
+    };
+  };
+
+  return { dragPreview, startDrag, suppressClickRef };
+}
+
 function MobileDayTimeline({
   date,
   events,
   categories,
   onBack,
   onOpenEvent,
-  onCreate
+  onCreate,
+  onMoveEvent
 }: {
   date: Date;
   events: Event[];
@@ -796,6 +921,7 @@ function MobileDayTimeline({
   onBack: () => void;
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
+  onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
 }) {
   const today = new Date();
   const isToday = isSameDay(date, today);
@@ -807,6 +933,16 @@ function MobileDayTimeline({
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
   const nowOffset = ((nowMinutes - startHour * 60) / 60) * hourHeight;
   const showNowLine = isToday && nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
+  const moveEvent = useCallback(
+    async (event: Event, nextStart: Date) => onMoveEvent(event, nextStart),
+    [onMoveEvent]
+  );
+  const { dragPreview, startDrag, suppressClickRef } = useEventDrag({
+    startHour,
+    endHour,
+    hourHeight,
+    onMove: moveEvent
+  });
 
   return (
     <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
@@ -840,25 +976,38 @@ function MobileDayTimeline({
       </div>
 
       <div className='bg-card/75 border-border/50 min-h-0 flex-1 overflow-y-auto rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
-        <div className='relative' style={{ height: totalHeight }}>
+        <div
+          data-calendar-day={format(date, 'yyyy-MM-dd')}
+          className='relative'
+          style={{ height: totalHeight }}
+        >
           {Array.from({ length: endHour - startHour }, (_, i) => {
             const hour = startHour + i;
             return (
-              <button
+              <div
                 key={hour}
-                type='button'
-                onClick={() =>
-                  onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
-                }
-                className='absolute inset-x-0 border-b border-border/60 text-left transition-colors hover:bg-primary/[0.035]'
+                className='absolute inset-x-0 border-b border-border/60'
                 style={{ top: i * hourHeight, height: hourHeight }}
-                aria-label={`Crear evento a las ${String(hour).padStart(2, '0')}:00`}
               >
-                <span className='absolute left-3 top-2 w-12 text-[11px] font-medium tabular-nums text-muted-foreground'>
+                <button
+                  type='button'
+                  onClick={() =>
+                    onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
+                  }
+                  className='absolute inset-0 text-left transition-colors hover:bg-primary/[0.035]'
+                  aria-label={`Crear evento a las ${String(hour).padStart(2, '0')}:00`}
+                />
+                <span className='pointer-events-none absolute left-3 top-2 w-12 text-[11px] font-medium tabular-nums text-muted-foreground'>
                   {String(hour).padStart(2, '0')}:00
                 </span>
-                <span className='absolute left-16 right-3 top-0 h-px bg-border/35' />
-              </button>
+                {[1, 2, 3].map((quarter) => (
+                  <span
+                    key={quarter}
+                    className='pointer-events-none absolute left-16 right-3 h-px bg-border/20'
+                    style={{ top: quarter * (hourHeight / 4) }}
+                  />
+                ))}
+              </div>
             );
           })}
 
@@ -875,8 +1024,14 @@ function MobileDayTimeline({
               <button
                 key={event.id}
                 type='button'
-                onClick={() => onOpenEvent(event)}
-                className='absolute left-16 right-3 z-10 overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px'
+                onPointerDown={(pointerEvent) => startDrag(pointerEvent, event)}
+                onClick={() => {
+                  if (!suppressClickRef.current) onOpenEvent(event);
+                }}
+                className={cn(
+                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
+                  dragPreview?.event.id === event.id && 'opacity-35'
+                )}
                 style={{
                   top,
                   height,
@@ -897,6 +1052,28 @@ function MobileDayTimeline({
               </button>
             );
           })}
+
+          {dragPreview?.dateKey === format(date, 'yyyy-MM-dd') &&
+            dragPreview.event.id !== null &&
+            (() => {
+              const category = categoryFor(dragPreview.event, categories);
+              const startAt = new Date(dragPreview.event.startAt);
+              const endAt = new Date(dragPreview.event.endAt);
+              const durationMinutes = Math.max(15, (endAt.getTime() - startAt.getTime()) / 60000);
+              const ghostTop = ((dragPreview.minutes - startHour * 60) / 60) * hourHeight;
+              const ghostHeight = Math.max(42, (durationMinutes / 60) * hourHeight - 6);
+              return (
+                <div
+                  className='pointer-events-none absolute left-16 right-3 z-30 overflow-hidden rounded-xl border border-dashed'
+                  style={{
+                    top: ghostTop,
+                    height: ghostHeight,
+                    backgroundColor: `${category.color}1c`,
+                    borderColor: `${category.color}60`
+                  }}
+                />
+              );
+            })()}
 
           {showNowLine && (
             <div
@@ -1036,8 +1213,12 @@ function TimelineView({
   events,
   categories,
   onOpenEvent,
-  onCreate
-}: ViewProps & { view: 'week' | 'day' }) {
+  onCreate,
+  onMoveEvent
+}: ViewProps & {
+  view: 'week' | 'day';
+  onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
+}) {
   const start = view === 'week' ? startOfWeek(cursor, { weekStartsOn: 1 }) : cursor;
   const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [start];
   const startHour = 7;
@@ -1048,6 +1229,16 @@ function TimelineView({
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
   const nowOffset = ((nowMinutes - startHour * 60) / 60) * hourHeight;
   const showNow = nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
+  const moveEvent = useCallback(
+    async (event: Event, nextStart: Date) => onMoveEvent(event, nextStart),
+    [onMoveEvent]
+  );
+  const { dragPreview, startDrag, suppressClickRef } = useEventDrag({
+    startHour,
+    endHour,
+    hourHeight,
+    onMove: moveEvent
+  });
 
   return (
     <div className='min-w-0 overflow-hidden'>
@@ -1100,6 +1291,13 @@ function TimelineView({
                     style={{ top: i * hourHeight, height: hourHeight }}
                   >
                     {String(hour).padStart(2, '0')}:00
+                    {[1, 2, 3].map((quarter) => (
+                      <span
+                        key={quarter}
+                        className='pointer-events-none absolute left-[72px] right-0 h-px bg-border/20'
+                        style={{ top: quarter * (hourHeight / 4) }}
+                      />
+                    ))}
                   </div>
                 );
               })}
@@ -1110,6 +1308,7 @@ function TimelineView({
               return (
                 <div
                   key={day.toISOString()}
+                  data-calendar-day={format(day, 'yyyy-MM-dd')}
                   className='border-border/60 relative border-r last:border-r-0'
                   style={{ height: totalHeight }}
                 >
@@ -1144,8 +1343,15 @@ function TimelineView({
                       <button
                         key={event.id}
                         type='button'
-                        onClick={() => onOpenEvent(event)}
-                        className='absolute left-1.5 right-1.5 z-10 overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md'
+                        onPointerDown={(pointerEvent) => startDrag(pointerEvent, event)}
+                        title='Arrastra para cambiar de hora o día'
+                        onClick={() => {
+                          if (!suppressClickRef.current) onOpenEvent(event);
+                        }}
+                        className={cn(
+                          'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
+                          dragPreview?.event.id === event.id && 'opacity-35'
+                        )}
                         style={{
                           top: clampedTop,
                           height,
@@ -1166,6 +1372,31 @@ function TimelineView({
                       </button>
                     );
                   })}
+
+                  {dragPreview?.dateKey === format(day, 'yyyy-MM-dd') &&
+                    (() => {
+                      const ghostEvent = dragPreview.event;
+                      const ghostCategory = categoryFor(ghostEvent, categories);
+                      const ghostStart = new Date(ghostEvent.startAt);
+                      const ghostEnd = new Date(ghostEvent.endAt);
+                      const ghostDuration = Math.max(
+                        15,
+                        (ghostEnd.getTime() - ghostStart.getTime()) / 60000
+                      );
+                      const ghostTop = ((dragPreview.minutes - startHour * 60) / 60) * hourHeight;
+                      const ghostHeight = Math.max(34, (ghostDuration / 60) * hourHeight - 6);
+                      return (
+                        <div
+                          className='pointer-events-none absolute left-1.5 right-1.5 z-30 overflow-hidden rounded-xl border border-dashed'
+                          style={{
+                            top: ghostTop,
+                            height: ghostHeight,
+                            backgroundColor: `${ghostCategory.color}18`,
+                            borderColor: `${ghostCategory.color}65`
+                          }}
+                        />
+                      );
+                    })()}
 
                   {showNow && isSameDay(day, today) && (
                     <div

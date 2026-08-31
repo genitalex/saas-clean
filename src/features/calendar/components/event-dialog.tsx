@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -54,6 +54,129 @@ function formatPreview(value: string) {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date);
+}
+
+function localDatePart(value: string) {
+  return value.split('T')[0] ?? '';
+}
+
+function localTimePart(value: string) {
+  return value.split('T')[1]?.slice(0, 5) ?? '09:00';
+}
+
+function withLocalDateTime(datePart: string, timePart: string) {
+  if (!datePart) return '';
+  return toInputValue(new Date(`${datePart}T${timePart}`));
+}
+
+function clampTime(value: string) {
+  const [hours, minutes] = value.split(':').map(Number);
+  const total = Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : 9 * 60;
+  const snapped = Math.max(0, Math.min(23 * 60 + 45, Math.round(total / 15) * 15));
+  return `${String(Math.floor(snapped / 60)).padStart(2, '0')}:${String(snapped % 60).padStart(2, '0')}`;
+}
+
+function TimeWheel({
+  value,
+  onChange,
+  label
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+}) {
+  const safeValue = clampTime(value);
+  const [hourText, minuteText] = safeValue.split(':');
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const minuteIndex = Math.round(minute / 15);
+  const hours = Array.from({ length: 24 }, (_, index) => index);
+  const minutes = [0, 15, 30, 45];
+
+  const select = (nextHour: number, nextMinute: number) =>
+    onChange(`${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`);
+
+  return (
+    <div
+      className='relative overflow-hidden rounded-2xl border border-border/60 bg-muted/20 px-2 py-1.5'
+      aria-label={label}
+    >
+      <div className='pointer-events-none absolute inset-x-2 top-1/2 z-10 h-10 -translate-y-1/2 rounded-xl border border-primary/25 bg-primary/[0.06]' />
+      <div className='pointer-events-none absolute inset-x-0 top-0 z-20 h-8 bg-gradient-to-b from-background/95 to-transparent' />
+      <div className='pointer-events-none absolute inset-x-0 bottom-0 z-20 h-8 bg-gradient-to-t from-background/95 to-transparent' />
+      <div className='relative z-0 flex h-[134px] items-center justify-center gap-1 sm:h-[122px]'>
+        <WheelColumn
+          ariaLabel='Hora'
+          values={hours.map((item) => String(item).padStart(2, '0'))}
+          selectedIndex={hour}
+          onSelect={(index) => select(index, minute)}
+        />
+        <span className='z-10 -mx-0.5 text-lg font-semibold'>:</span>
+        <WheelColumn
+          ariaLabel='Minutos'
+          values={minutes.map((item) => String(item).padStart(2, '0'))}
+          selectedIndex={minuteIndex}
+          onSelect={(index) => select(hour, minutes[index] ?? 0)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WheelColumn({
+  values,
+  selectedIndex,
+  onSelect,
+  ariaLabel
+}: {
+  values: string[];
+  selectedIndex: number;
+  onSelect: (index: number) => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const itemHeight = 34;
+
+  useEffect(() => {
+    ref.current?.scrollTo({ top: selectedIndex * itemHeight, behavior: 'smooth' });
+  }, [selectedIndex]);
+
+  return (
+    <div
+      ref={ref}
+      role='listbox'
+      aria-label={ariaLabel}
+      className='no-scrollbar h-[118px] w-[72px] snap-y snap-mandatory overflow-y-auto overscroll-contain py-[42px] text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+      onScroll={(event) => {
+        const nextIndex = Math.max(
+          0,
+          Math.min(values.length - 1, Math.round(event.currentTarget.scrollTop / itemHeight))
+        );
+        if (nextIndex !== selectedIndex) onSelect(nextIndex);
+      }}
+    >
+      {values.map((item, index) => (
+        <button
+          key={item}
+          type='button'
+          role='option'
+          aria-selected={index === selectedIndex}
+          onClick={() => {
+            onSelect(index);
+            ref.current?.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
+          }}
+          className={cn(
+            'flex h-[34px] w-full snap-center items-center justify-center rounded-lg text-lg tabular-nums transition-all',
+            index === selectedIndex
+              ? 'font-semibold text-foreground'
+              : 'text-muted-foreground/45 scale-90'
+          )}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function formatPreviewTime(value: string) {
@@ -290,36 +413,56 @@ export function EventDialog({
                 </div>
               </div>
 
-              <div className='grid gap-3 sm:grid-cols-2'>
-                <label htmlFor='event-start' className='flex min-w-0 flex-col gap-2'>
-                  <span className='text-sm font-medium'>Inicio</span>
-
-                  <div className='bg-muted/25 rounded-2xl border border-border/60 p-1'>
-                    <Input
-                      id='event-start'
-                      type='datetime-local'
-                      value={startAt}
-                      onChange={(inputEvent) => setStartAt(inputEvent.target.value)}
-                      required
-                      className='h-11 rounded-xl border-0 bg-transparent px-3 text-[16px] shadow-none focus-visible:ring-0 sm:text-sm'
-                    />
-                  </div>
-                </label>
-
-                <label htmlFor='event-end' className='flex min-w-0 flex-col gap-2'>
-                  <span className='text-sm font-medium'>Fin</span>
-
-                  <div className='bg-muted/25 rounded-2xl border border-border/60 p-1'>
-                    <Input
-                      id='event-end'
-                      type='datetime-local'
-                      value={endAt}
-                      onChange={(inputEvent) => setEndAt(inputEvent.target.value)}
-                      required
-                      className='h-11 rounded-xl border-0 bg-transparent px-3 text-[16px] shadow-none focus-visible:ring-0 sm:text-sm'
-                    />
-                  </div>
-                </label>
+              <div className='grid gap-4 sm:grid-cols-2'>
+                {[
+                  { key: 'start', label: 'Inicio', value: startAt },
+                  { key: 'end', label: 'Fin', value: endAt }
+                ].map((item) => {
+                  const isStart = item.key === 'start';
+                  const dateValue = localDatePart(item.value);
+                  const timeValue = localTimePart(item.value);
+                  return (
+                    <div key={item.key} className='min-w-0 space-y-2'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-sm font-medium'>{item.label}</span>
+                        <span className='text-muted-foreground text-xs tabular-nums'>
+                          {timeValue}
+                        </span>
+                      </div>
+                      <Input
+                        aria-label={`${item.label} fecha`}
+                        type='date'
+                        value={dateValue}
+                        onChange={(inputEvent) => {
+                          const next = withLocalDateTime(inputEvent.target.value, timeValue);
+                          if (isStart) setStartAt(next);
+                          else setEndAt(next);
+                        }}
+                        required
+                        className='h-11 rounded-2xl bg-muted/25 px-4 text-sm'
+                      />
+                      <TimeWheel
+                        label={`${item.label} hora`}
+                        value={timeValue}
+                        onChange={(nextTime) => {
+                          const next = withLocalDateTime(dateValue, nextTime);
+                          if (isStart) {
+                            setStartAt(next);
+                            const nextDate = new Date(next);
+                            const currentEnd = new Date(endAt);
+                            if (currentEnd <= nextDate) {
+                              setEndAt(toInputValue(new Date(nextDate.getTime() + 60 * 60 * 1000)));
+                            }
+                          } else {
+                            const nextDate = new Date(next);
+                            const currentStart = new Date(startAt);
+                            if (nextDate > currentStart) setEndAt(next);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               <label
