@@ -16,81 +16,107 @@ export class AuthContextError extends Error {
   }
 }
 
-export async function getAuthContext(requestHeaders?: Headers) {
-  const session = await auth.api.getSession({ headers: requestHeaders ?? (await headers()) });
-  if (!session) throw new AuthContextError('Authentication is required', 'UNAUTHENTICATED');
+const TRANSIENT_DB_ERRORS = [
+  'Connection terminated unexpectedly',
+  'ECONNRESET',
+  'Connection terminated',
+  'server closed the connection unexpectedly'
+];
 
-  let activeOrganizationId = session.session.activeOrganizationId;
+function isTransientDbError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return TRANSIENT_DB_ERRORS.some((needle) => message.includes(needle));
+}
 
-  // Self-heal stale sessions: if a valid membership exists but the session
-  // has no active organization, select the first organization the user belongs to.
-  if (!activeOrganizationId) {
-    const [membership] = await db
-      .select({ organizationId: organizationMembers.organizationId })
-      .from(organizationMembers)
-      .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-      .where(eq(organizationMembers.userId, session.user.id))
-      .orderBy(organizationMembers.createdAt)
-      .limit(1);
-
-    if (membership) {
-      activeOrganizationId = membership.organizationId;
-      await db
-        .update(sessions)
-        .set({ activeOrganizationId, updatedAt: new Date() })
-        .where(and(eq(sessions.id, session.session.id), eq(sessions.userId, session.user.id)));
+async function withTransientDbRetry<T>(operation: () => Promise<T>) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isTransientDbError(error) || attempt === 2) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
     }
   }
+  throw new Error('Database request failed');
+}
 
-  if (!activeOrganizationId)
-    throw new AuthContextError('An active organization is required', 'NO_ACTIVE_ORGANIZATION');
+export async function getAuthContext(requestHeaders?: Headers) {
+  return withTransientDbRetry(async () => {
+    const session = await auth.api.getSession({ headers: requestHeaders ?? (await headers()) });
+    if (!session) throw new AuthContextError('Authentication is required', 'UNAUTHENTICATED');
 
-  let [context] = await db
-    .select({ user: users, organization: organizations, membership: organizationMembers })
-    .from(organizationMembers)
-    .innerJoin(users, eq(users.id, organizationMembers.userId))
-    .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-    .where(
-      and(
-        eq(organizationMembers.userId, session.user.id),
-        eq(organizationMembers.organizationId, activeOrganizationId)
-      )
-    )
-    .limit(1);
+    let activeOrganizationId = session.session.activeOrganizationId;
 
-  // Recover from a stale session pointing at an organization the user no longer
-  // belongs to. Prefer another real membership instead of failing every query.
-  if (!context) {
-    const [fallback] = await db
-      .select({
-        user: users,
-        organization: organizations,
-        membership: organizationMembers
-      })
+    // Self-heal stale sessions: if a valid membership exists but the session
+    // has no active organization, select the first organization the user belongs to.
+    if (!activeOrganizationId) {
+      const [membership] = await db
+        .select({ organizationId: organizationMembers.organizationId })
+        .from(organizationMembers)
+        .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
+        .where(eq(organizationMembers.userId, session.user.id))
+        .orderBy(organizationMembers.createdAt)
+        .limit(1);
+
+      if (membership) {
+        activeOrganizationId = membership.organizationId;
+        await db
+          .update(sessions)
+          .set({ activeOrganizationId, updatedAt: new Date() })
+          .where(and(eq(sessions.id, session.session.id), eq(sessions.userId, session.user.id)));
+      }
+    }
+
+    if (!activeOrganizationId)
+      throw new AuthContextError('An active organization is required', 'NO_ACTIVE_ORGANIZATION');
+
+    let [context] = await db
+      .select({ user: users, organization: organizations, membership: organizationMembers })
       .from(organizationMembers)
       .innerJoin(users, eq(users.id, organizationMembers.userId))
       .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-      .where(eq(organizationMembers.userId, session.user.id))
-      .orderBy(organizationMembers.createdAt)
+      .where(
+        and(
+          eq(organizationMembers.userId, session.user.id),
+          eq(organizationMembers.organizationId, activeOrganizationId)
+        )
+      )
       .limit(1);
 
-    if (fallback) {
-      context = fallback;
-      activeOrganizationId = fallback.organization.id;
-      await db
-        .update(sessions)
-        .set({ activeOrganizationId, updatedAt: new Date() })
-        .where(and(eq(sessions.id, session.session.id), eq(sessions.userId, session.user.id)));
+    // Recover from a stale session pointing at an organization the user no longer
+    // belongs to. Prefer another real membership instead of failing every query.
+    if (!context) {
+      const [fallback] = await db
+        .select({
+          user: users,
+          organization: organizations,
+          membership: organizationMembers
+        })
+        .from(organizationMembers)
+        .innerJoin(users, eq(users.id, organizationMembers.userId))
+        .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
+        .where(eq(organizationMembers.userId, session.user.id))
+        .orderBy(organizationMembers.createdAt)
+        .limit(1);
+
+      if (fallback) {
+        context = fallback;
+        activeOrganizationId = fallback.organization.id;
+        await db
+          .update(sessions)
+          .set({ activeOrganizationId, updatedAt: new Date() })
+          .where(and(eq(sessions.id, session.session.id), eq(sessions.userId, session.user.id)));
+      }
     }
-  }
 
-  if (!context)
-    throw new AuthContextError('Active organization membership was not found', 'NOT_A_MEMBER');
+    if (!context)
+      throw new AuthContextError('Active organization membership was not found', 'NOT_A_MEMBER');
 
-  return {
-    user: context.user,
-    organization: context.organization,
-    membership: context.membership,
-    session
-  };
+    return {
+      user: context.user,
+      organization: context.organization,
+      membership: context.membership,
+      session
+    };
+  });
 }
