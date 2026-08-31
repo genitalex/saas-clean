@@ -60,12 +60,15 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close
-            data-slot='sheet-close'
-            render={<Button variant='ghost' className='absolute top-3 right-3' size='icon-sm' />}
-          >
-            <IconX />
-            <span className='sr-only'>Close</span>
+          <SheetPrimitive.Close data-slot='sheet-close' asChild>
+            <Button
+              variant='ghost'
+              className='absolute top-3 right-3'
+              size='icon-sm'
+              aria-label='Close'
+            >
+              <IconX className='size-4' />
+            </Button>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

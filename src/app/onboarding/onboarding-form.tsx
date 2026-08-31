@@ -27,17 +27,27 @@ export default function OnboardingForm() {
       return;
     }
 
-    // Synchronize session state after organization creation
-    // The server updated sessions.activeOrganizationId, but the client
-    // needs to refresh to get the updated session from Better Auth
-    await authClient.getSession();
-    await queryClient.invalidateQueries({ queryKey: ['organizations'] });
+    // Synchronize session state after organization creation.
+    // The server updated sessions.activeOrganizationId in the database,
+    // and Better Auth should pick it up. We refresh the client session
+    // and invalidate queries to ensure consistency.
+    try {
+      await authClient.getSession();
+      await queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      // Force Next.js to revalidate cached server components with fresh session
+      router.refresh();
+    } catch (syncError) {
+      console.error('Session sync error:', syncError);
+      // Continue anyway - the session should be available on the next request
+    }
 
-    // Force server to re-validate with fresh session
-    router.refresh();
+    // Small delay to ensure session is synced before navigating
+    // This prevents race conditions where the first request after navigation
+    // tries to use getAuthContext before the session is updated
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Navigate to dashboard
-    router.push('/dashboard/overview');
+    router.push('/dashboard/today');
   }
   return (
     <main className='bg-muted/30 flex min-h-screen items-center justify-center p-6'>
