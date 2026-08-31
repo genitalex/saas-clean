@@ -16,19 +16,20 @@ const COLUMN_TITLES: Record<string, string> = {
 
 interface TaskColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>, 'children'> {
   tasks: Task[];
+  onOpenTask?: (task: Task) => void;
 }
 
-export function TaskColumn({ value, tasks, ...props }: TaskColumnProps) {
+export function TaskColumn({ value, tasks, onOpenTask, ...props }: TaskColumnProps) {
   return (
     <KanbanColumn
       value={value}
-      className='min-w-0 w-full shrink-0 rounded-xl border border-border/70 bg-muted/20 p-3 md:min-h-48'
+      className='w-full min-w-0 shrink-0 rounded-2xl border border-border/70 bg-muted/20 p-3 md:min-h-48'
       {...props}
     >
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-2'>
-          <span className='text-sm font-semibold'>{COLUMN_TITLES[value] ?? value}</span>
-          <Badge variant='secondary' className='pointer-events-none rounded-sm'>
+      <div className='flex items-center justify-between gap-3'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <span className='truncate text-sm font-semibold'>{COLUMN_TITLES[value] ?? value}</span>
+          <Badge variant='secondary' className='pointer-events-none shrink-0 rounded-sm'>
             {tasks.length}
           </Badge>
         </div>
@@ -36,12 +37,12 @@ export function TaskColumn({ value, tasks, ...props }: TaskColumnProps) {
           <Icons.gripVertical className='h-4 w-4' />
         </KanbanColumnHandle>
       </div>
-      <div className='flex min-h-24 flex-col gap-2 p-0.5'>
+      <div className='flex min-h-24 flex-col gap-2.5 p-0.5'>
         {tasks.length > 0 ? (
-          tasks.map((task) => <TaskCard key={task.id} task={task} asHandle />)
+          tasks.map((task) => <TaskCard key={task.id} task={task} asHandle onOpen={onOpenTask} />)
         ) : (
-          <div className='text-muted-foreground rounded-md border border-dashed p-4 text-center text-xs'>
-            Sin tareas
+          <div className='text-muted-foreground rounded-xl border border-dashed p-5 text-center text-xs'>
+            Arrastra aquí una tarea
           </div>
         )}
       </div>
