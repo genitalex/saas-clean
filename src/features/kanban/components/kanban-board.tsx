@@ -215,7 +215,7 @@ export function KanbanBoard() {
   return (
     <div className='min-w-0'>
       <Kanban
-        value={columns}
+        value={{ ...columns, [KANBAN_TRASH_ID]: [] }}
         onValueChange={handleValueChange}
         getItemValue={(item) => item.id}
         autoScroll
