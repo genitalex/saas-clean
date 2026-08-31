@@ -163,7 +163,7 @@ function MoreSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side='bottom'
-        className='max-h-[min(82dvh,760px)] rounded-t-[28px] border-t border-border/60 bg-background/92 p-0 backdrop-blur-2xl md:left-1/2 md:w-[720px] md:-translate-x-1/2 md:rounded-[28px] md:border'
+        className='max-h-[min(82dvh,760px)] rounded-t-[28px] border-t border-border/60 bg-background/92 p-0 backdrop-blur-2xl md:inset-x-auto md:bottom-24 md:left-1/2 md:right-auto md:w-[min(760px,calc(100vw-48px))] md:-translate-x-1/2 md:rounded-[28px] md:border'
       >
         <SheetHeader className='border-b px-5 pb-4 pt-5 text-left'>
           <div className='flex items-center justify-between gap-4'>

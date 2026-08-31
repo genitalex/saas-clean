@@ -87,7 +87,10 @@ export function CalendarPage() {
       endDate: range.end.toISOString()
     }),
     queryFn: () =>
-      getEvents({ startDate: range.start.toISOString(), endDate: range.end.toISOString() })
+      getEvents({ startDate: range.start.toISOString(), endDate: range.end.toISOString() }),
+    retry: 2,
+    retryDelay: (attempt: number) => Math.min(400 * 2 ** attempt, 1600),
+    refetchOnWindowFocus: false
   });
 
   const mobileRange = useMemo(
@@ -110,7 +113,10 @@ export function CalendarPage() {
       getEvents({
         startDate: mobileRange.start.toISOString(),
         endDate: mobileRange.end.toISOString()
-      })
+      }),
+    retry: 2,
+    retryDelay: (attempt: number) => Math.min(400 * 2 ** attempt, 1600),
+    refetchOnWindowFocus: false
   });
 
   useEffect(() => {
@@ -565,9 +571,11 @@ function MobileYearView({
             const monthDate = new Date(year, index, 1);
             const monthStart = startOfMonth(monthDate);
             const monthGridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-            const firstWeekDays = Array.from({ length: 7 }, (_, offset) =>
-              addDays(monthGridStart, offset)
-            );
+            const monthGridEnd = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
+            const monthDays: Date[] = [];
+            for (let day = monthGridStart; day <= monthGridEnd; day = addDays(day, 1)) {
+              monthDays.push(day);
+            }
             const isCurrent = today.getFullYear() === year && today.getMonth() === index;
             return (
               <button
@@ -596,15 +604,20 @@ function MobileYearView({
                       {d}
                     </span>
                   ))}
-                  {firstWeekDays.map((day) => {
+                  {monthDays.map((day) => {
                     const out = day.getMonth() !== index;
                     const isToday = isSameDay(day, today);
+                    const past = day < startOfDay(today);
                     return (
                       <span
                         key={day.toISOString()}
                         className={cn(
                           'mt-1 flex aspect-square items-center justify-center text-[9px] tabular-nums',
-                          out ? 'text-muted-foreground/20' : 'text-muted-foreground/75',
+                          out
+                            ? 'text-muted-foreground/25'
+                            : past
+                              ? 'text-muted-foreground/55'
+                              : 'text-muted-foreground/80',
                           isToday && 'rounded-full bg-primary text-primary-foreground font-semibold'
                         )}
                       >
@@ -747,7 +760,7 @@ function MobileMonthView({
             {days.map((day) => {
               const out = !isSameMonth(day, cursor);
               const weekend = day.getDay() === 0 || day.getDay() === 6;
-              const past = !out && day < startOfDay(today);
+              const past = day < startOfDay(today);
               const isToday = isSameDay(day, today);
               const isSelected = isSameDay(day, selectedDate);
               const dots = eventsForDay(events, day).slice(0, 3);
@@ -758,10 +771,11 @@ function MobileMonthView({
                   onClick={() => onSelectDay(day)}
                   aria-label={format(day, 'EEEE d MMMM', { locale: es })}
                   className={cn(
-                    'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b transition-colors last:border-r-0 sm:min-h-[64px]',
+                    'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b bg-background transition-colors last:border-r-0 sm:min-h-[64px]',
                     'hover:bg-accent/25 active:scale-[0.97]',
-                    weekend && !out && 'bg-surface-subtle/50',
-                    past && !isToday && 'bg-surface-subtle/45'
+                    weekend && !out && 'bg-muted/25',
+                    past && !isToday && 'bg-muted/55',
+                    out && 'bg-muted/20'
                   )}
                 >
                   <span
@@ -824,8 +838,12 @@ function useEventDrag({
     startX: number;
     startY: number;
     moved: boolean;
+    grabOffsetMinutes: number;
   } | null>(null);
   const suppressClickRef = useRef(false);
+
+  const frameRef = useRef<number | null>(null);
+  const latestPointerRef = useRef<PointerEvent | null>(null);
 
   useEffect(() => {
     const handleMove = (pointerEvent: PointerEvent) => {
@@ -838,29 +856,39 @@ function useEventDrag({
       if (!drag.moved && distance < 6) return;
       drag.moved = true;
       suppressClickRef.current = true;
+      latestPointerRef.current = pointerEvent;
+      if (frameRef.current !== null) return;
+      frameRef.current = window.requestAnimationFrame(() => {
+        frameRef.current = null;
+        const nextPointer = latestPointerRef.current;
+        latestPointerRef.current = null;
+        if (!nextPointer || !dragRef.current) return;
 
-      const target = document
-        .elementsFromPoint(pointerEvent.clientX, pointerEvent.clientY)
-        .map((element) => element.closest<HTMLElement>('[data-calendar-day]'))
-        .find(Boolean);
-      if (!target) return;
+        const target = document
+          .elementsFromPoint(nextPointer.clientX, nextPointer.clientY)
+          .map((element) => element.closest<HTMLElement>('[data-calendar-day]'))
+          .find(Boolean);
+        if (!target) return;
 
-      const dateKey = target.dataset.calendarDay;
-      if (!dateKey) return;
-      const rect = target.getBoundingClientRect();
-      const durationMinutes = Math.max(
-        15,
-        (new Date(drag.event.endAt).getTime() - new Date(drag.event.startAt).getTime()) / 60000
-      );
-      const rawMinutes = startHour * 60 + ((pointerEvent.clientY - rect.top) / hourHeight) * 60;
-      const maxStart = endHour * 60 - durationMinutes;
-      const minutes = Math.max(
-        startHour * 60,
-        Math.min(maxStart, Math.round(rawMinutes / 15) * 15)
-      );
-      const nextPreview = { event: drag.event, dateKey, minutes };
-      previewRef.current = nextPreview;
-      setDragPreview(nextPreview);
+        const dateKey = target.dataset.calendarDay;
+        if (!dateKey) return;
+        const rect = target.getBoundingClientRect();
+        const durationMinutes = Math.max(
+          15,
+          (new Date(drag.event.endAt).getTime() - new Date(drag.event.startAt).getTime()) / 60000
+        );
+        const pointerMinutes =
+          startHour * 60 + ((nextPointer.clientY - rect.top) / hourHeight) * 60;
+        const rawMinutes = pointerMinutes - drag.grabOffsetMinutes;
+        const maxStart = endHour * 60 - durationMinutes;
+        const minutes = Math.max(
+          startHour * 60,
+          Math.min(maxStart, Math.round(rawMinutes / 15) * 15)
+        );
+        const nextPreview = { event: drag.event, dateKey, minutes };
+        previewRef.current = nextPreview;
+        setDragPreview(nextPreview);
+      });
     };
 
     const handleUp = async () => {
@@ -887,20 +915,40 @@ function useEventDrag({
 
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
+    window.addEventListener('pointercancel', handleUp);
     return () => {
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleUp);
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      latestPointerRef.current = null;
     };
   }, [endHour, hourHeight, onMove, startHour]);
 
   const startDrag = (event: React.PointerEvent, calendarEvent: Event) => {
     if (event.button !== 0) return;
+    const dayElement = event.currentTarget.closest<HTMLElement>('[data-calendar-day]');
+    const dayRect = dayElement?.getBoundingClientRect();
+    const eventStart = new Date(calendarEvent.startAt);
+    const eventStartMinutes = eventStart.getHours() * 60 + eventStart.getMinutes();
+    const pointerMinutes = dayRect
+      ? startHour * 60 + ((event.clientY - dayRect.top) / hourHeight) * 60
+      : eventStartMinutes;
     dragRef.current = {
       event: calendarEvent,
       startX: event.clientX,
       startY: event.clientY,
-      moved: false
+      moved: false,
+      grabOffsetMinutes: pointerMinutes - eventStartMinutes
     };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is an enhancement; global listeners still handle the drag.
+    }
   };
 
   return { dragPreview, startDrag, suppressClickRef };
@@ -1131,7 +1179,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
             const out = !isSameMonth(day, cursor);
             const weekend = day.getDay() === 0 || day.getDay() === 6;
             const isToday = isSameDay(day, today);
-            const past = !out && day < startOfDay(today);
+            const past = day < startOfDay(today);
             const dayEvents = eventsForDay(events, day);
             const overflow = dayEvents.length - MONTH_CELL_EVENT_LIMIT;
             return (
@@ -1139,11 +1187,11 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                 key={day.toISOString()}
                 onClick={() => onCreate(day)}
                 className={cn(
-                  'group border-border/70 relative min-h-32 cursor-pointer border-r border-b p-2.5 transition-colors last:border-r-0',
+                  'group border-border/70 relative min-h-32 cursor-pointer border-r border-b bg-background p-2.5 transition-colors last:border-r-0',
                   'hover:bg-accent/25',
-                  weekend && !out && 'bg-surface-subtle/70',
-                  past && !isToday && 'bg-surface-subtle/55',
-                  out && 'bg-surface-subtle/40'
+                  weekend && !out && 'bg-muted/25',
+                  past && !isToday && 'bg-muted/55',
+                  out && 'bg-muted/20'
                 )}
               >
                 <button

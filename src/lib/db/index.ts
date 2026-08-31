@@ -11,9 +11,11 @@ if (connectionString) {
   pool = new Pool({
     connectionString,
     max: 3,
-    idleTimeoutMillis: 30000,
+    maxUses: 20,
+    idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 10000,
-    keepAlive: true
+    keepAlive: true,
+    allowExitOnIdle: true
   });
 }
 

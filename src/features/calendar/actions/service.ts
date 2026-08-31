@@ -18,6 +18,28 @@ export class EventServiceError extends Error {
   }
 }
 
+const TRANSIENT_DB_ERRORS = [
+  'Connection terminated unexpectedly',
+  'ECONNRESET',
+  'Connection terminated',
+  'server closed the connection unexpectedly'
+];
+
+function isTransientDbError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return TRANSIENT_DB_ERRORS.some((needle) => message.includes(needle));
+}
+
+async function withTransientDbRetry<T>(operation: () => Promise<T>) {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!isTransientDbError(error)) throw error;
+    await new Promise((resolve) => setTimeout(resolve, 120));
+    return operation();
+  }
+}
+
 const eventSelection = {
   id: events.id,
   organizationId: events.organizationId,
@@ -88,28 +110,30 @@ export async function getEvents(filters: EventFilters = {}) {
   const { organization } = await getAuthContext();
   const parsed = parseFilters(filters);
   const search = parsed.search?.trim();
-  return db
-    .select(eventSelection)
-    .from(events)
-    .leftJoin(customers, eq(customers.id, events.customerId))
-    .leftJoin(users, eq(users.id, events.assigneeId))
-    .where(
-      and(
-        eq(events.organizationId, organization.id),
-        parsed.startDate ? gte(events.startAt, parsed.startDate) : undefined,
-        parsed.endDate ? lte(events.startAt, parsed.endDate) : undefined,
-        parsed.customerId ? eq(events.customerId, parsed.customerId) : undefined,
-        parsed.assigneeId ? eq(events.assigneeId, parsed.assigneeId) : undefined,
-        search
-          ? or(
-              ilike(events.title, `%${search}%`),
-              ilike(events.description, `%${search}%`),
-              ilike(events.location, `%${search}%`)
-            )
-          : undefined
+  return withTransientDbRetry(() =>
+    db
+      .select(eventSelection)
+      .from(events)
+      .leftJoin(customers, eq(customers.id, events.customerId))
+      .leftJoin(users, eq(users.id, events.assigneeId))
+      .where(
+        and(
+          eq(events.organizationId, organization.id),
+          parsed.startDate ? gte(events.startAt, parsed.startDate) : undefined,
+          parsed.endDate ? lte(events.startAt, parsed.endDate) : undefined,
+          parsed.customerId ? eq(events.customerId, parsed.customerId) : undefined,
+          parsed.assigneeId ? eq(events.assigneeId, parsed.assigneeId) : undefined,
+          search
+            ? or(
+                ilike(events.title, `%${search}%`),
+                ilike(events.description, `%${search}%`),
+                ilike(events.location, `%${search}%`)
+              )
+            : undefined
+        )
       )
-    )
-    .orderBy(asc(events.startAt), desc(events.createdAt));
+      .orderBy(asc(events.startAt), desc(events.createdAt))
+  );
 }
 
 export async function getEvent(id: string) {
@@ -147,8 +171,13 @@ export async function createEvent(input: EventPayload) {
       updatedAt: now
     })
     .returning({ id: events.id });
-  if (parsed.data.customerId)
-    await recordSystemActivity(parsed.data.customerId, 'Evento creado', { eventId: created.id });
+  if (parsed.data.customerId) {
+    try {
+      await recordSystemActivity(parsed.data.customerId, 'Evento creado', { eventId: created.id });
+    } catch (error) {
+      console.warn('[events:activity] Activity logging failed after event creation', error);
+    }
+  }
   return getEvent(created.id);
 }
 

@@ -220,7 +220,7 @@ export function EventDialog({
       });
 
       if (!response.ok) {
-        throw new Error('Could not load customers');
+        return [];
       }
 
       return (await response.json()) as CustomerOption[];
@@ -236,7 +236,7 @@ export function EventDialog({
       });
 
       if (!response.ok) {
-        throw new Error('Could not load members');
+        return [];
       }
 
       return (await response.json()) as UserOption[];
