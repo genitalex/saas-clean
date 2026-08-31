@@ -2,9 +2,11 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDroppable } from '@dnd-kit/core';
 import { Kanban, KanbanBoard as KanbanBoardPrimitive, KanbanOverlay } from '@/components/ui/kanban';
 import { Button } from '@/components/ui/button';
-import { getTasks, taskKeys, updateTaskStatus } from '@/features/tasks/queries';
+import { Icons } from '@/components/icons';
+import { getTasks, taskKeys, updateTaskStatus, deleteTask } from '@/features/tasks/queries';
 import type { Task, TaskStatus } from '@/features/tasks/types';
 import { TaskColumn } from './board-column';
 import { TaskCard } from './task-card';
@@ -35,13 +37,17 @@ export function KanbanBoard() {
     queryKey: taskKeys.list(),
     queryFn: () => getTasks()
   });
-  const [mobileColumn, setMobileColumn] = useState<TaskStatus>('todo');
   const containerRef = useRef<HTMLDivElement>(null);
   const restrictToBoard = useCallback(
     createRestrictToContainer(() => containerRef.current),
     []
   );
   const columns = toColumns(tasks);
+  const [draggingTask, setDraggingTask] = useState<Task | null>(null);
+  const { setNodeRef: setTrashNodeRef, isOver: isTrashOver } = useDroppable({
+    id: 'kanban-trash',
+    data: { type: 'trash' }
+  });
 
   const handleValueChange = async (nextColumns: Record<string, Task[]>) => {
     const previousTasks = tasks;
@@ -68,6 +74,39 @@ export function KanbanBoard() {
     }
   };
 
+  const handleDragStart = useCallback(
+    (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragStart']>>[0]) => {
+      const task = tasks.find((item) => item.id === event.active.id);
+      setDraggingTask(task ?? null);
+    },
+    [tasks]
+  );
+
+  const handleDragCancel = useCallback(() => setDraggingTask(null), []);
+
+  const handleDragEnd = useCallback(
+    async (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragEnd']>>[0]) => {
+      setDraggingTask(null);
+      if (String(event.over?.id ?? '') !== 'kanban-trash' || !event.active.id) return;
+
+      const taskId = String(event.active.id);
+      const previousTasks = tasks;
+      queryClient.setQueryData<Task[]>(
+        taskKeys.list(),
+        previousTasks.filter((task) => task.id !== taskId)
+      );
+      try {
+        await deleteTask(taskId);
+        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        toast.success('Tarea eliminada');
+      } catch {
+        queryClient.setQueryData(taskKeys.list(), previousTasks);
+        toast.error('No se pudo eliminar la tarea.');
+      }
+    },
+    [queryClient, tasks]
+  );
+
   if (isLoading)
     return (
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
@@ -79,47 +118,61 @@ export function KanbanBoard() {
 
   return (
     <div ref={containerRef} className='min-w-0'>
-      <div
-        className='mb-4 flex min-h-12 gap-1 overflow-x-auto rounded-lg border bg-muted/30 p-1 md:hidden'
-        role='tablist'
-        aria-label='Columnas del tablero'
-      >
-        {COLUMN_ORDER.map((status) => (
-          <Button
-            key={status}
-            type='button'
-            size='sm'
-            variant={mobileColumn === status ? 'secondary' : 'ghost'}
-            className='min-h-10 shrink-0 flex-1 px-3'
-            role='tab'
-            aria-selected={mobileColumn === status}
-            tabIndex={0}
-            onClick={() => setMobileColumn(status)}
-          >
-            {COLUMN_LABELS[status]}{' '}
-            <span className='text-muted-foreground ml-1 text-xs'>{columns[status].length}</span>
-          </Button>
-        ))}
-      </div>
       <Kanban
         value={columns}
         onValueChange={(value) => void handleValueChange(value)}
         getItemValue={(item) => item.id}
         modifiers={[restrictToBoard]}
-        autoScroll={false}
+        autoScroll
+        onDragStart={handleDragStart}
+        onDragCancel={handleDragCancel}
+        onDragEnd={handleDragEnd}
       >
-        <div className='hidden w-full overflow-x-auto pb-4 md:block'>
-          <KanbanBoardPrimitive className='grid min-w-[860px] grid-cols-4 items-start gap-3 lg:gap-4'>
-            {Object.entries(columns).map(([columnValue, columnTasks]) => (
-              <TaskColumn key={columnValue} value={columnValue} tasks={columnTasks} />
-            ))}
-          </KanbanBoardPrimitive>
+        <div className='relative'>
+          <div className='w-full overflow-x-auto pb-4'>
+            <KanbanBoardPrimitive className='grid min-w-[860px] grid-cols-4 items-start gap-3 lg:gap-4 md:min-w-[860px] md:grid-cols-4'>
+              {Object.entries(columns).map(([columnValue, columnTasks]) => (
+                <TaskColumn key={columnValue} value={columnValue} tasks={columnTasks} />
+              ))}
+            </KanbanBoardPrimitive>
+          </div>
+
+          <div className='md:hidden'>
+            <KanbanBoardPrimitive className='grid min-w-0 grid-cols-1 items-start gap-4'>
+              {Object.entries(columns).map(([columnValue, columnTasks]) => (
+                <TaskColumn key={columnValue} value={columnValue} tasks={columnTasks} />
+              ))}
+            </KanbanBoardPrimitive>
+          </div>
+
+          {draggingTask && (
+            <div
+              ref={setTrashNodeRef}
+              className={`fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 flex min-h-16 items-center justify-center gap-2 rounded-2xl border px-5 shadow-2xl backdrop-blur-xl transition-all md:inset-x-1/2 md:bottom-10 md:w-[300px] md:-translate-x-1/2 ${
+                isTrashOver
+                  ? 'border-destructive bg-destructive/15 text-destructive scale-[1.03]'
+                  : 'border-border/70 bg-background/95 text-muted-foreground'
+              }`}
+              aria-label='Soltar para eliminar la tarea'
+            >
+              <Icons.trash className='size-5' />
+              <span className='text-sm font-semibold'>
+                {isTrashOver ? 'Suelta para eliminar' : 'Arrastra aquí para eliminar'}
+              </span>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon-sm'
+                className='ml-auto rounded-xl'
+                onClick={() => setDraggingTask(null)}
+                aria-label='Cancelar arrastre'
+              >
+                <Icons.x className='size-4' />
+              </Button>
+            </div>
+          )}
         </div>
-        <div className='md:hidden'>
-          <KanbanBoardPrimitive className='grid grid-cols-1 items-start'>
-            <TaskColumn value={mobileColumn} tasks={columns[mobileColumn]} />
-          </KanbanBoardPrimitive>
-        </div>
+
         <KanbanOverlay>
           {({ value, variant }) => {
             if (variant === 'column') {
