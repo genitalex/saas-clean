@@ -68,6 +68,9 @@ export function CalendarPage() {
   const [filters, setFilters] = useState<string[]>(
     defaultCategories.map((category) => category.id)
   );
+  // Mobile gets its own day-focused experience rather than a shrunk grid, so
+  // it tracks a selected day independently of the desktop cursor/view.
+  const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
   const {
     data: events = [],
@@ -80,6 +83,27 @@ export function CalendarPage() {
     }),
     queryFn: () =>
       getEvents({ startDate: range.start.toISOString(), endDate: range.end.toISOString() })
+  });
+
+  const mobileWeekStart = useMemo(
+    () => startOfWeek(selectedDate, { weekStartsOn: 1 }),
+    [selectedDate]
+  );
+  const mobileWeekEnd = useMemo(() => endOfWeek(selectedDate, { weekStartsOn: 1 }), [selectedDate]);
+  const {
+    data: mobileWeekEvents = [],
+    isLoading: isMobileLoading,
+    isError: isMobileError
+  } = useQuery({
+    queryKey: eventKeys.list({
+      startDate: mobileWeekStart.toISOString(),
+      endDate: mobileWeekEnd.toISOString()
+    }),
+    queryFn: () =>
+      getEvents({
+        startDate: mobileWeekStart.toISOString(),
+        endDate: mobileWeekEnd.toISOString()
+      })
   });
 
   useEffect(() => {
@@ -132,18 +156,21 @@ export function CalendarPage() {
   const visibleEvents = events.filter((event) =>
     filters.includes(categoryFor(event, categories).id)
   );
+  const visibleMobileEvents = mobileWeekEvents.filter((event) =>
+    filters.includes(categoryFor(event, categories).id)
+  );
 
   return (
     <main className='flex flex-col gap-5 pb-8'>
       <header className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
-        <div>
+        <div className='hidden md:block'>
           <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
           <h1 className='mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight capitalize'>
             {title}
           </h1>
         </div>
         <div className='flex flex-wrap items-center gap-2'>
-          <div className='bg-surface-subtle flex items-center gap-0.5 rounded-xl border p-1'>
+          <div className='bg-surface-subtle hidden items-center gap-0.5 rounded-xl border p-1 md:flex'>
             <Button
               variant='ghost'
               size='icon-sm'
@@ -172,7 +199,7 @@ export function CalendarPage() {
             </Button>
           </div>
           <div
-            className='bg-surface-subtle flex rounded-xl border p-1'
+            className='bg-surface-subtle hidden rounded-xl border p-1 md:flex'
             role='group'
             aria-label='Vista del calendario'
           >
@@ -201,8 +228,9 @@ export function CalendarPage() {
           >
             <Icons.settings className='size-[18px]' />
           </Button>
-          <Button onClick={() => openCreate()} className='gap-1.5'>
-            <Icons.add className='size-4' /> Nuevo evento
+          <Button onClick={() => openCreate(selectedDate)} className='gap-1.5'>
+            <Icons.add className='size-4' />
+            <span className='hidden sm:inline'>Nuevo evento</span>
           </Button>
         </div>
       </header>
@@ -243,13 +271,28 @@ export function CalendarPage() {
         </span>
       </div>
 
-      {isError && (
+      {(isError || isMobileError) && (
         <div className='border-destructive/25 bg-destructive/5 text-destructive rounded-xl border px-4 py-3 text-sm'>
           No se pudieron cargar los eventos. Intenta actualizar la vista.
         </div>
       )}
 
-      <Card className='min-w-0 overflow-hidden py-0 shadow-sm'>
+      {/* Mobile: a day-focused agenda, not the desktop grid squeezed down. */}
+      <div className='md:hidden'>
+        <MobileAgenda
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          weekStart={mobileWeekStart}
+          events={visibleMobileEvents}
+          categories={categories}
+          isLoading={isMobileLoading}
+          onOpenEvent={openEvent}
+          onCreate={openCreate}
+        />
+      </div>
+
+      {/* Desktop / tablet: month, week and day grid views. */}
+      <Card className='hidden min-w-0 overflow-hidden py-0 shadow-sm md:block'>
         {isLoading ? (
           <CalendarSkeleton />
         ) : view === 'month' ? (
@@ -287,6 +330,188 @@ export function CalendarPage() {
         onChange={setCategories}
       />
     </main>
+  );
+}
+
+/**
+ * Mobile calendar experience: a large day header, a compact week strip for
+ * quick navigation, and an agenda list for the selected day. Deliberately
+ * not the desktop grid at a smaller size — see CLAUDE.md Calendar Mobile.
+ */
+function MobileAgenda({
+  selectedDate,
+  onSelectDate,
+  weekStart,
+  events,
+  categories,
+  isLoading,
+  onOpenEvent,
+  onCreate
+}: {
+  selectedDate: Date;
+  onSelectDate: (date: Date) => void;
+  weekStart: Date;
+  events: Event[];
+  categories: Category[];
+  isLoading: boolean;
+  onOpenEvent: (event: Event) => void;
+  onCreate: (date: Date) => void;
+}) {
+  const today = new Date();
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const dayEvents = eventsForDay(events, selectedDate).sort(
+    (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+  );
+
+  return (
+    <div className='flex flex-col gap-3'>
+      <div className='flex items-end justify-between gap-2'>
+        <div>
+          <p className='text-muted-foreground text-sm capitalize'>
+            {format(selectedDate, 'EEEE', { locale: es })}
+          </p>
+          <p className='flex items-baseline gap-2'>
+            <span className='text-[2rem] leading-none font-semibold tracking-tight'>
+              {format(selectedDate, 'd')}
+            </span>
+            <span className='text-muted-foreground text-base font-medium capitalize'>
+              {format(selectedDate, 'MMMM yyyy', { locale: es })}
+            </span>
+          </p>
+        </div>
+        <div className='bg-surface-subtle flex shrink-0 items-center gap-0.5 rounded-xl border p-1'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onSelectDate(addDays(selectedDate, -1))}
+            aria-label='Día anterior'
+            className='rounded-lg'
+          >
+            <Icons.chevronLeft className='size-4' />
+          </Button>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={() => onSelectDate(startOfDay(new Date()))}
+            className='rounded-lg px-2.5 text-xs font-medium'
+          >
+            Hoy
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onSelectDate(addDays(selectedDate, 1))}
+            aria-label='Día siguiente'
+            className='rounded-lg'
+          >
+            <Icons.chevronRight className='size-4' />
+          </Button>
+        </div>
+      </div>
+
+      <div className='flex items-stretch justify-between gap-1'>
+        {days.map((day) => {
+          const isSelected = isSameDay(day, selectedDate);
+          const isToday = isSameDay(day, today);
+          const hasEvents = eventsForDay(events, day).length > 0;
+          return (
+            <button
+              key={day.toISOString()}
+              type='button'
+              onClick={() => onSelectDate(day)}
+              aria-pressed={isSelected}
+              aria-label={format(day, 'EEEE d MMMM', { locale: es })}
+              className={cn(
+                'flex flex-1 flex-col items-center gap-1.5 rounded-xl py-2 transition-colors',
+                isSelected ? 'bg-primary' : 'hover:bg-accent/40'
+              )}
+            >
+              <span
+                className={cn(
+                  'text-[10px] font-semibold tracking-wide uppercase',
+                  isSelected ? 'text-primary-foreground/75' : 'text-muted-foreground/70'
+                )}
+              >
+                {format(day, 'EEEEE', { locale: es })}
+              </span>
+              <span
+                className={cn(
+                  'flex size-8 items-center justify-center rounded-full text-sm font-semibold',
+                  isSelected
+                    ? 'text-primary-foreground'
+                    : isToday
+                      ? 'bg-accent text-foreground'
+                      : 'text-foreground/85'
+                )}
+              >
+                {format(day, 'd')}
+              </span>
+              <span
+                className={cn(
+                  'size-1 rounded-full',
+                  hasEvents
+                    ? isSelected
+                      ? 'bg-primary-foreground'
+                      : 'bg-primary'
+                    : 'bg-transparent'
+                )}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <Card className='min-w-0 overflow-hidden py-0 shadow-sm'>
+        {isLoading ? (
+          <div className='flex flex-col gap-2 p-4'>
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className='bg-muted h-14 animate-pulse rounded-lg' />
+            ))}
+          </div>
+        ) : dayEvents.length === 0 ? (
+          <div className='flex flex-col items-center gap-3 px-6 py-10 text-center'>
+            <p className='text-muted-foreground text-sm'>Nada por aquí. Un día tranquilo.</p>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onCreate(selectedDate)}
+              className='gap-1.5'
+            >
+              <Icons.add className='size-4' />
+              Añadir evento
+            </Button>
+          </div>
+        ) : (
+          <div className='divide-border/70 divide-y'>
+            {dayEvents.map((event) => {
+              const category = categoryFor(event, categories);
+              return (
+                <button
+                  key={event.id}
+                  type='button'
+                  onClick={() => onOpenEvent(event)}
+                  className='hover:bg-accent/20 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:not-aria-[haspopup]:translate-y-px'
+                >
+                  <span className='text-muted-foreground w-12 shrink-0 text-xs font-medium tabular-nums'>
+                    {format(new Date(event.startAt), 'HH:mm')}
+                  </span>
+                  <span
+                    className='h-8 w-[3px] shrink-0 rounded-full'
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <span className='min-w-0 flex-1'>
+                    <span className='block truncate text-sm font-medium'>{event.title}</span>
+                    <span className='text-muted-foreground block truncate text-xs'>
+                      {category.name}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }
 

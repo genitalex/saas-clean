@@ -14,14 +14,21 @@ import {
   SheetDescription
 } from '@/components/ui/sheet';
 import { authClient } from '@/lib/auth-client';
+import { useScrollDirection } from '@/hooks/use-scroll-direction';
 
 /**
  * A real mobile app-style bottom tab bar, not a shrunk-down desktop sidebar.
  * Four primary destinations plus a "More" sheet for everything else.
+ *
+ * Hides on scroll-down and reappears on scroll-up (always visible near the
+ * top), the way native mobile app chrome behaves. Purely transform-based so
+ * it never triggers layout/reflow, and disabled entirely when the user
+ * prefers reduced motion.
  */
 export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = React.useState(false);
+  const visible = useScrollDirection();
 
   const moreIsActive =
     !mobileNavItems.some((item) => item.url === pathname) && pathname !== '/dashboard';
@@ -30,7 +37,14 @@ export function MobileBottomNav() {
     <>
       <nav
         aria-label='Primary'
-        className='bg-background/85 fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-md md:hidden'
+        className={cn(
+          'bg-background/85 fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-md',
+          'transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none',
+          'md:hidden',
+          visible || moreOpen
+            ? 'translate-y-0'
+            : 'translate-y-[calc(100%+env(safe-area-inset-bottom))]'
+        )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <ul className='mx-auto flex max-w-md items-stretch justify-between px-1'>
