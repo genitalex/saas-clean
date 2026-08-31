@@ -513,48 +513,90 @@ function MobileYearView({
 }) {
   const today = new Date();
   return (
-    <div className='flex h-full flex-col justify-center gap-4 px-4 pt-1 pb-6'>
-      <div className='flex items-center justify-center gap-3'>
+    <div className='flex h-full min-h-0 flex-col px-3 pt-4 pb-3 sm:px-4'>
+      <div className='flex shrink-0 items-center justify-between px-1 pb-4'>
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={() => onYearChange(year - 1)}
           aria-label='Año anterior'
-          className='rounded-lg'
+          className='rounded-xl'
         >
           <Icons.chevronLeft className='size-4' />
         </Button>
-        <p className='min-w-16 text-center text-2xl font-semibold tracking-tight tabular-nums'>
-          {year}
-        </p>
+        <div className='text-center'>
+          <p className='text-2xl font-semibold tracking-tight tabular-nums'>{year}</p>
+          <p className='text-muted-foreground text-xs'>12 meses</p>
+        </div>
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={() => onYearChange(year + 1)}
           aria-label='Año siguiente'
-          className='rounded-lg'
+          className='rounded-xl'
         >
           <Icons.chevronRight className='size-4' />
         </Button>
       </div>
-      <div className='grid grid-cols-3 gap-2.5'>
-        {mobileMonthNames.map((name, index) => {
-          const isCurrent = today.getFullYear() === year && today.getMonth() === index;
-          return (
-            <button
-              key={name}
-              type='button'
-              onClick={() => onSelectMonth(new Date(year, index, 1))}
-              className={cn(
-                'border-border/50 bg-surface-subtle/60 flex flex-col items-center justify-center gap-1 rounded-2xl border py-4 text-sm font-medium backdrop-blur-sm transition-colors',
-                'hover:bg-accent/30 active:scale-[0.98]',
-                isCurrent && 'border-primary/40 text-primary bg-primary/10 font-semibold'
-              )}
-            >
-              {name}
-            </button>
-          );
-        })}
+
+      <div className='min-h-0 flex-1 overflow-y-auto pr-0.5'>
+        <div className='grid grid-cols-2 gap-3 pb-3'>
+          {mobileMonthNames.map((name, index) => {
+            const monthDate = new Date(year, index, 1);
+            const monthStart = startOfMonth(monthDate);
+            const monthGridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+            const firstWeekDays = Array.from({ length: 7 }, (_, offset) =>
+              addDays(monthGridStart, offset)
+            );
+            const isCurrent = today.getFullYear() === year && today.getMonth() === index;
+            return (
+              <button
+                key={name}
+                type='button'
+                onClick={() => onSelectMonth(monthDate)}
+                className={cn(
+                  'bg-surface-subtle/55 border-border/50 hover:bg-accent/30 flex min-w-0 flex-col rounded-2xl border p-3 text-left transition-all active:scale-[0.985]',
+                  isCurrent && 'border-primary/40 bg-primary/8 shadow-sm'
+                )}
+              >
+                <div className='mb-2 flex items-center justify-between'>
+                  <span
+                    className={cn(
+                      'text-sm font-semibold',
+                      isCurrent ? 'text-primary' : 'text-foreground'
+                    )}
+                  >
+                    {name}
+                  </span>
+                  {isCurrent && <span className='bg-primary size-1.5 rounded-full' />}
+                </div>
+                <div className='grid grid-cols-7 gap-x-0.5 text-center'>
+                  {mobileWeekDaysNarrow.map((d) => (
+                    <span key={d} className='text-[8px] font-medium text-muted-foreground/60'>
+                      {d}
+                    </span>
+                  ))}
+                  {firstWeekDays.map((day) => {
+                    const out = day.getMonth() !== index;
+                    const isToday = isSameDay(day, today);
+                    return (
+                      <span
+                        key={day.toISOString()}
+                        className={cn(
+                          'mt-1 flex aspect-square items-center justify-center text-[9px] tabular-nums',
+                          out ? 'text-muted-foreground/20' : 'text-muted-foreground/75',
+                          isToday && 'rounded-full bg-primary text-primary-foreground font-semibold'
+                        )}
+                      >
+                        {format(day, 'd')}
+                      </span>
+                    );
+                  })}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -685,6 +727,7 @@ function MobileMonthView({
             {days.map((day) => {
               const out = !isSameMonth(day, cursor);
               const weekend = day.getDay() === 0 || day.getDay() === 6;
+              const past = !out && day < startOfDay(today);
               const isToday = isSameDay(day, today);
               const isSelected = isSameDay(day, selectedDate);
               const dots = eventsForDay(events, day).slice(0, 3);
@@ -697,7 +740,8 @@ function MobileMonthView({
                   className={cn(
                     'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b transition-colors last:border-r-0 sm:min-h-[64px]',
                     'hover:bg-accent/25 active:scale-[0.97]',
-                    weekend && !out && 'bg-surface-subtle/50'
+                    weekend && !out && 'bg-surface-subtle/50',
+                    past && !isToday && 'bg-surface-subtle/45'
                   )}
                 >
                   <span
@@ -767,7 +811,13 @@ function MobileDayTimeline({
   return (
     <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
       <div className='flex shrink-0 items-center gap-2.5'>
-        <Button variant='ghost' size='icon-sm' onClick={onBack} aria-label='Volver al mes' className='shrink-0 rounded-xl'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={onBack}
+          aria-label='Volver al mes'
+          className='shrink-0 rounded-xl'
+        >
           <Icons.chevronLeft className='size-4' />
         </Button>
         <div className='min-w-0 flex-1'>
@@ -778,7 +828,13 @@ function MobileDayTimeline({
             {format(date, 'EEEE d', { locale: es })}
           </p>
         </div>
-        <Button variant='ghost' size='icon-sm' onClick={() => onCreate(date)} aria-label='Añadir evento' className='rounded-xl'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCreate(date)}
+          aria-label='Añadir evento'
+          className='rounded-xl'
+        >
           <Icons.add className='size-4' />
         </Button>
       </div>
@@ -791,7 +847,9 @@ function MobileDayTimeline({
               <button
                 key={hour}
                 type='button'
-                onClick={() => onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))}
+                onClick={() =>
+                  onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
+                }
                 className='absolute inset-x-0 border-b border-border/60 text-left transition-colors hover:bg-primary/[0.035]'
                 style={{ top: i * hourHeight, height: hourHeight }}
                 aria-label={`Crear evento a las ${String(hour).padStart(2, '0')}:00`}
@@ -826,7 +884,10 @@ function MobileDayTimeline({
                   borderColor: `${category.color}35`
                 }}
               >
-                <span className='absolute inset-y-0 left-0 w-1' style={{ backgroundColor: category.color }} />
+                <span
+                  className='absolute inset-y-0 left-0 w-1'
+                  style={{ backgroundColor: category.color }}
+                />
                 <span className='flex h-full min-w-0 flex-col justify-center px-3 pl-4'>
                   <span className='truncate text-sm font-semibold'>{event.title}</span>
                   <span className='mt-0.5 text-[11px] text-muted-foreground'>
@@ -838,7 +899,10 @@ function MobileDayTimeline({
           })}
 
           {showNowLine && (
-            <div className='pointer-events-none absolute left-16 right-3 z-20 flex items-center' style={{ top: nowOffset }}>
+            <div
+              className='pointer-events-none absolute left-16 right-3 z-20 flex items-center'
+              style={{ top: nowOffset }}
+            >
               <span className='bg-primary size-2 rounded-full' />
               <span className='bg-primary h-[2px] flex-1' />
             </div>
@@ -890,6 +954,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
             const out = !isSameMonth(day, cursor);
             const weekend = day.getDay() === 0 || day.getDay() === 6;
             const isToday = isSameDay(day, today);
+            const past = !out && day < startOfDay(today);
             const dayEvents = eventsForDay(events, day);
             const overflow = dayEvents.length - MONTH_CELL_EVENT_LIMIT;
             return (
@@ -900,6 +965,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                   'group border-border/70 relative min-h-32 cursor-pointer border-r border-b p-2.5 transition-colors last:border-r-0',
                   'hover:bg-accent/25',
                   weekend && !out && 'bg-surface-subtle/70',
+                  past && !isToday && 'bg-surface-subtle/55',
                   out && 'bg-surface-subtle/40'
                 )}
               >
@@ -916,7 +982,9 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                       ? 'bg-primary text-primary-foreground font-semibold'
                       : out
                         ? 'text-muted-foreground/45'
-                        : 'text-foreground/85 group-hover:bg-accent/60'
+                        : past
+                          ? 'text-muted-foreground/60'
+                          : 'text-foreground/85 group-hover:bg-accent/60'
                   )}
                 >
                   {format(day, 'd')}
@@ -993,7 +1061,10 @@ function TimelineView({
             {days.map((day) => {
               const isToday = isSameDay(day, today);
               return (
-                <div key={day.toISOString()} className='border-border/60 border-r px-4 py-3 last:border-r-0'>
+                <div
+                  key={day.toISOString()}
+                  className='border-border/60 border-r px-4 py-3 last:border-r-0'
+                >
                   <p className='text-muted-foreground text-xs font-medium capitalize'>
                     {format(day, 'EEEE', { locale: es })}
                   </p>
@@ -1048,7 +1119,9 @@ function TimelineView({
                       type='button'
                       aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
                       onClick={() =>
-                        onCreate(new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour + i))
+                        onCreate(
+                          new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour + i)
+                        )
                       }
                       className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
                       style={{ top: i * hourHeight, height: hourHeight }}
@@ -1060,7 +1133,7 @@ function TimelineView({
                     const startAt = new Date(event.startAt);
                     const endAt = new Date(event.endAt);
                     const minutesFromStart =
-                      (startAt.getHours() * 60 + startAt.getMinutes()) - startHour * 60;
+                      startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
                     const durationMinutes = Math.max(
                       30,
                       (endAt.getTime() - startAt.getTime()) / 60000
@@ -1080,7 +1153,10 @@ function TimelineView({
                           borderColor: `${category.color}35`
                         }}
                       >
-                        <span className='absolute inset-y-0 left-0 w-1' style={{ backgroundColor: category.color }} />
+                        <span
+                          className='absolute inset-y-0 left-0 w-1'
+                          style={{ backgroundColor: category.color }}
+                        />
                         <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
                           <span className='truncate text-sm font-semibold'>{event.title}</span>
                           <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
