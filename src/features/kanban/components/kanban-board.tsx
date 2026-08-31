@@ -1,10 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as React from 'react';
+import {
+  closestCorners,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core';
+import type { DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useDroppable } from '@dnd-kit/core';
 import { toast } from 'sonner';
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,15 +23,14 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Kanban, KanbanBoard as KanbanBoardPrimitive, KanbanOverlay } from '@/components/ui/kanban';
 import { deleteTask, getTasks, taskKeys, updateTaskStatus } from '@/features/tasks/queries';
 import type { Task, TaskStatus } from '@/features/tasks/types';
+import { cn } from '@/lib/utils';
 import { TaskColumn } from './board-column';
 import { TaskCard } from './task-card';
-import { cn } from '@/lib/utils';
 
 const COLUMN_ORDER: TaskStatus[] = ['todo', 'in_progress', 'waiting', 'done'];
-const KANBAN_TRASH_ID = 'kanban-trash';
+const TRASH_ID = 'kanban-trash';
 const COLUMN_LABELS: Record<TaskStatus, string> = {
   todo: 'Todo',
   in_progress: 'En curso',
@@ -30,13 +38,69 @@ const COLUMN_LABELS: Record<TaskStatus, string> = {
   done: 'Hecho'
 };
 
-function toColumns(tasks: Task[]): Record<TaskStatus, Task[]> {
-  return COLUMN_ORDER.reduce(
-    (columns, status) => {
-      columns[status] = tasks.filter((task) => task.status === status);
-      return columns;
-    },
-    {} as Record<TaskStatus, Task[]>
+type Columns = Record<TaskStatus, Task[]>;
+
+function toColumns(tasks: Task[]): Columns {
+  return COLUMN_ORDER.reduce((result, status) => {
+    result[status] = tasks.filter((task) => task.status === status);
+    return result;
+  }, {} as Columns);
+}
+
+function findTaskColumn(columns: Columns, taskId: string) {
+  return COLUMN_ORDER.find((status) => columns[status].some((task) => task.id === taskId)) ?? null;
+}
+
+function findTask(columns: Columns, taskId: string) {
+  for (const status of COLUMN_ORDER) {
+    const task = columns[status].find((item) => item.id === taskId);
+    if (task) return task;
+  }
+  return null;
+}
+
+function isTaskId(columns: Columns, id: string) {
+  return Boolean(findTask(columns, id));
+}
+
+function TrashDropZone({ active, over }: { active: boolean; over: boolean }) {
+  const { setNodeRef } = useDroppable({
+    id: TRASH_ID,
+    data: { type: 'trash' }
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'fixed bottom-5 left-1/2 z-[120] flex min-h-16 w-[min(92vw,340px)] -translate-x-1/2 items-center gap-3 rounded-2xl border-2 px-4 py-3 shadow-2xl backdrop-blur-xl transition-all duration-150',
+        active ? 'opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
+        over
+          ? 'scale-[1.03] border-destructive bg-destructive text-destructive-foreground'
+          : 'border-destructive/60 bg-background/95 text-destructive'
+      )}
+      aria-label='Papelera: suelta aquí para eliminar'
+    >
+      <span
+        className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-xl',
+          over ? 'bg-white/15' : 'bg-destructive/10'
+        )}
+      >
+        <span className='text-base'>⌫</span>
+      </span>
+      <div className='min-w-0'>
+        <p className='text-sm font-semibold'>{over ? 'Suelta para eliminar' : 'Papelera'}</p>
+        <p
+          className={cn(
+            'truncate text-xs',
+            over ? 'text-destructive-foreground/75' : 'text-destructive/70'
+          )}
+        >
+          {over ? 'Se pedirá confirmación antes de borrar' : 'Arrastra una tarea aquí'}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -51,142 +115,168 @@ export function KanbanBoard() {
     queryFn: () => getTasks(),
     retry: 4,
     retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 3000),
-    refetchOnWindowFocus: false,
-    refetchOnMount: 'always'
+    refetchOnWindowFocus: false
   });
 
-  const initialColumns = useMemo(() => toColumns(tasks), [tasks]);
-  const [columns, setColumns] = useState<Record<TaskStatus, Task[]>>(initialColumns);
-  const columnsRef = useRef(columns);
-  const tasksRef = useRef(tasks);
-  const [draggingTask, setDraggingTask] = useState<Task | null>(null);
-  const draggingTaskRef = useRef<Task | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<Task | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [isTrashOver, setIsTrashOver] = useState(false);
-  const [dragOverlayWidth, setDragOverlayWidth] = useState<number | null>(null);
-  const { setNodeRef: setTrashNodeRef } = useDroppable({
-    id: KANBAN_TRASH_ID,
-    data: { type: 'trash' }
-  });
+  const [columns, setColumns] = React.useState<Columns>(() => toColumns(tasks));
+  const [activeTask, setActiveTask] = React.useState<Task | null>(null);
+  const [overId, setOverId] = React.useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = React.useState<Task | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+  const tasksRef = React.useRef(tasks);
+  const columnsRef = React.useRef(columns);
+  const suppressClickRef = React.useRef(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     tasksRef.current = tasks;
-    setColumns((current) => {
-      const currentIds = Object.values(current)
-        .flat()
-        .map((task) => task.id)
-        .sort()
-        .join(',');
-      const nextIds = tasks
-        .map((task) => task.id)
-        .sort()
-        .join(',');
-      if (currentIds !== nextIds) {
-        const next = toColumns(tasks);
-        columnsRef.current = next;
-        return next;
-      }
-      return current;
-    });
+    const next = toColumns(tasks);
+    columnsRef.current = next;
+    setColumns(next);
   }, [tasks]);
 
-  const handleValueChange = useCallback((nextColumns: Record<string, Task[]>) => {
-    if (nextColumns[KANBAN_TRASH_ID]?.length) return;
-    const normalized = {
-      todo: nextColumns.todo ?? [],
-      in_progress: nextColumns.in_progress ?? [],
-      waiting: nextColumns.waiting ?? [],
-      done: nextColumns.done ?? []
-    } as Record<TaskStatus, Task[]>;
-    columnsRef.current = normalized;
-    setColumns(normalized);
-  }, []);
+  React.useEffect(() => {
+    columnsRef.current = columns;
+  }, [columns]);
 
-  const handleDragStart = useCallback(
-    (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragStart']>>[0]) => {
-      const task = tasksRef.current.find((item) => item.id === String(event.active.id));
-      draggingTaskRef.current = task ?? null;
-      setDraggingTask(task ?? null);
-      setIsTrashOver(false);
-      const node = event.active.node.current;
-      const width = node?.getBoundingClientRect().width ?? null;
-      setDragOverlayWidth(width);
-    },
-    []
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 }
+    })
   );
 
-  const handleDragOver = useCallback(
-    (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragOver']>>[0]) => {
-      setIsTrashOver(String(event.over?.id ?? '') === KANBAN_TRASH_ID);
-    },
-    []
-  );
-
-  const handleDragCancel = useCallback(() => {
-    draggingTaskRef.current = null;
-    setDraggingTask(null);
-    setIsTrashOver(false);
-    setDragOverlayWidth(null);
+  const handleDragStart = React.useCallback((event: DragStartEvent) => {
+    const task = findTask(columnsRef.current, String(event.active.id));
+    setActiveTask(task);
+    setOverId(String(event.active.id));
+    suppressClickRef.current = false;
   }, []);
 
-  const handleDragEnd = useCallback(
-    async (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragEnd']>>[0]) => {
-      const draggedTask = draggingTaskRef.current;
-      draggingTaskRef.current = null;
-      setDraggingTask(null);
-      setIsTrashOver(false);
-      setDragOverlayWidth(null);
+  const handleDragOver = React.useCallback((event: DragOverEvent) => {
+    const activeId = String(event.active.id);
+    const over = event.over;
+    setOverId(over ? String(over.id) : null);
+    if (!over || String(over.id) === TRASH_ID) return;
 
-      if (!draggedTask) return;
+    const current = columnsRef.current;
+    const activeColumn = findTaskColumn(current, activeId);
+    if (!activeColumn) return;
 
-      if (String(event.over?.id ?? '') === 'kanban-trash') {
-        setDeleteCandidate(draggedTask);
+    let overColumn: TaskStatus | null = null;
+    const overIdValue = String(over.id);
+    if (COLUMN_ORDER.includes(overIdValue as TaskStatus)) {
+      overColumn = overIdValue as TaskStatus;
+    } else {
+      overColumn = findTaskColumn(current, overIdValue);
+    }
+    if (!overColumn) return;
+
+    if (activeColumn === overColumn) {
+      const activeIndex = current[activeColumn].findIndex((task) => task.id === activeId);
+      const overIndex = current[overColumn].findIndex((task) => task.id === overIdValue);
+      if (activeIndex === -1) return;
+      if (overIndex >= 0 && activeIndex !== overIndex) {
+        const next = {
+          ...current,
+          [activeColumn]: arrayMove(current[activeColumn], activeIndex, overIndex)
+        };
+        columnsRef.current = next;
+        setColumns(next);
+        suppressClickRef.current = true;
+      }
+      return;
+    }
+
+    const activeIndex = current[activeColumn].findIndex((task) => task.id === activeId);
+    if (activeIndex === -1) return;
+    const moving = current[activeColumn][activeIndex];
+    if (!moving) return;
+    const movedTask = { ...moving, status: overColumn };
+    const next = {
+      ...current,
+      [activeColumn]: current[activeColumn].filter((task) => task.id !== activeId),
+      [overColumn]: [...current[overColumn], movedTask]
+    };
+    columnsRef.current = next;
+    setColumns(next);
+    setActiveTask(movedTask);
+    suppressClickRef.current = true;
+  }, []);
+
+  const handleDragCancel = React.useCallback(() => {
+    setActiveTask(null);
+    setOverId(null);
+    columnsRef.current = toColumns(tasksRef.current);
+    setColumns(columnsRef.current);
+    window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+  }, []);
+
+  const handleDragEnd = React.useCallback(
+    async (event: DragEndEvent) => {
+      const activeId = String(event.active.id);
+      const over = event.over;
+      const finalColumns = columnsRef.current;
+      const dragged = findTask(finalColumns, activeId);
+      const targetId = over ? String(over.id) : null;
+
+      setActiveTask(null);
+      setOverId(null);
+      window.setTimeout(() => {
+        suppressClickRef.current = Boolean(over);
+      }, 0);
+
+      if (!dragged || !targetId) {
+        const restored = toColumns(tasksRef.current);
+        columnsRef.current = restored;
+        setColumns(restored);
         return;
       }
 
-      const currentColumns = columnsRef.current;
-      const nextStatus = COLUMN_ORDER.find((status) =>
-        currentColumns[status].some((task) => task.id === draggedTask.id)
-      );
-      if (!nextStatus || nextStatus === draggedTask.status) return;
+      if (targetId === TRASH_ID) {
+        setDeleteCandidate(dragged);
+        return;
+      }
 
-      const previousTasks = tasksRef.current;
-      try {
-        await updateTaskStatus(draggedTask.id, nextStatus);
-        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
-        toast.success(`Tarea movida a ${COLUMN_LABELS[nextStatus].toLowerCase()}`);
-      } catch {
-        const restored = toColumns(previousTasks);
-        columnsRef.current = restored;
-        setColumns(restored);
-        toast.error('No se pudo mover la tarea.');
+      let targetColumn: TaskStatus | null = null;
+      if (COLUMN_ORDER.includes(targetId as TaskStatus)) {
+        targetColumn = targetId as TaskStatus;
+      } else {
+        targetColumn = findTaskColumn(finalColumns, targetId);
+      }
+      if (!targetColumn) return;
+
+      const sourceColumn = findTaskColumn(finalColumns, activeId);
+      if (!sourceColumn) return;
+
+      if (targetColumn !== dragged.status) {
+        try {
+          await updateTaskStatus(activeId, targetColumn);
+          await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+          toast.success(`Tarea movida a ${COLUMN_LABELS[targetColumn].toLowerCase()}`);
+        } catch {
+          const restored = toColumns(tasksRef.current);
+          columnsRef.current = restored;
+          setColumns(restored);
+          toast.error('No se pudo mover la tarea.');
+        }
       }
     },
     [queryClient]
   );
 
-  const confirmDelete = useCallback(async () => {
+  const confirmDelete = React.useCallback(async () => {
     if (!deleteCandidate) return;
     setDeleting(true);
-    const previousTasks = tasksRef.current;
-    const optimistic = Object.fromEntries(
-      COLUMN_ORDER.map((status) => [
-        status,
-        columnsRef.current[status].filter((task) => task.id !== deleteCandidate.id)
-      ])
-    ) as Record<TaskStatus, Task[]>;
-    columnsRef.current = optimistic;
-    setColumns(optimistic);
-
+    const snapshot = tasksRef.current;
     try {
       await deleteTask(deleteCandidate.id);
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
       toast.success('Tarea eliminada');
       setDeleteCandidate(null);
     } catch {
-      const restored = toColumns(previousTasks);
+      const restored = toColumns(snapshot);
       columnsRef.current = restored;
       setColumns(restored);
       toast.error('No se pudo eliminar la tarea.');
@@ -195,118 +285,55 @@ export function KanbanBoard() {
     }
   }, [deleteCandidate, queryClient]);
 
-  if (isError && tasks.length === 0)
+  if (isError && tasks.length === 0) {
     return (
       <div className='rounded-2xl border border-border/60 bg-muted/20 p-6 text-center'>
         <p className='text-sm font-medium'>No se pudo cargar el Kanban.</p>
         <p className='text-muted-foreground mt-1 text-xs'>Reintentando conexión…</p>
       </div>
     );
+  }
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
-        {COLUMN_ORDER.map((column) => (
-          <div key={column} className='h-48 rounded-xl border bg-muted/20' />
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
+        {COLUMN_ORDER.map((status) => (
+          <div key={status} className='h-48 rounded-xl border bg-muted/20' />
         ))}
       </div>
     );
+  }
+
+  const activeTarget = overId === TRASH_ID;
 
   return (
     <div className='min-w-0'>
-      <Kanban
-        value={{ ...columns, [KANBAN_TRASH_ID]: [] }}
-        onValueChange={handleValueChange}
-        getItemValue={(item) => item.id}
-        autoScroll
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        <div className='hidden w-full overflow-x-auto pb-6 md:block'>
-          <KanbanBoardPrimitive className='grid w-full grid-cols-4 items-start gap-4'>
-            {COLUMN_ORDER.map((status) => (
-              <TaskColumn
-                key={status}
-                value={status}
-                tasks={columns[status]}
-                onOpenTask={setSelectedTask}
-              />
-            ))}
-          </KanbanBoardPrimitive>
+        <div className='grid w-full grid-cols-1 gap-4 md:grid-cols-4'>
+          {COLUMN_ORDER.map((status) => (
+            <TaskColumn
+              key={status}
+              value={status}
+              tasks={columns[status]}
+              onOpenTask={setSelectedTask}
+              suppressClickRef={suppressClickRef}
+            />
+          ))}
         </div>
 
-        <div className='grid w-full grid-cols-1 gap-4 md:hidden'>
-          <KanbanBoardPrimitive className='grid w-full grid-cols-1 items-start gap-4'>
-            {COLUMN_ORDER.map((status) => (
-              <TaskColumn
-                key={status}
-                value={status}
-                tasks={columns[status]}
-                onOpenTask={setSelectedTask}
-              />
-            ))}
-          </KanbanBoardPrimitive>
-        </div>
+        <TrashDropZone active={Boolean(activeTask)} over={activeTarget} />
 
-        <div
-          ref={setTrashNodeRef}
-          className={cn(
-            'fixed bottom-5 left-1/2 z-[90] flex h-16 w-[min(92vw,320px)] -translate-x-1/2 items-center gap-3 rounded-2xl border-2 px-4 shadow-xl backdrop-blur-xl transition-all duration-200',
-            draggingTask ? 'opacity-100' : 'pointer-events-none invisible opacity-0',
-            isTrashOver
-              ? 'scale-[1.03] border-destructive bg-destructive text-destructive-foreground'
-              : 'border-destructive/55 bg-destructive/10 text-destructive'
-          )}
-          aria-label='Papelera: suelta aquí para eliminar'
-        >
-          <span className='flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/15'>
-            <Icons.trash className='size-5' />
-          </span>
-          <div className='min-w-0'>
-            <div className='text-sm font-semibold'>
-              {isTrashOver ? 'Suelta para eliminar' : 'Papelera'}
-            </div>
-            <div
-              className={cn(
-                'truncate text-xs',
-                isTrashOver ? 'text-destructive-foreground/75' : 'text-destructive/70'
-              )}
-            >
-              {isTrashOver
-                ? `Eliminar “${draggingTask?.title ?? ''}”`
-                : 'Arrastra la tarea aquí para borrarla'}
-            </div>
-          </div>
-        </div>
-
-        <KanbanOverlay>
-          {({ value, variant }) => {
-            if (variant === 'column') {
-              const columnValue = String(value) as TaskStatus;
-              return (
-                <TaskColumn
-                  value={columnValue}
-                  tasks={columns[columnValue] ?? []}
-                  onOpenTask={setSelectedTask}
-                />
-              );
-            }
-            const task = Object.values(columns)
-              .flat()
-              .find((item) => item.id === value);
-            return task ? (
-              <TaskCard
-                task={task}
-                onOpenTask={setSelectedTask}
-                presentationOnly
-                overlayWidth={dragOverlayWidth ?? undefined}
-              />
-            ) : null;
-          }}
-        </KanbanOverlay>
-      </Kanban>
+        <DragOverlay dropAnimation={null}>
+          {activeTask ? <TaskCard task={activeTask} presentationOnly /> : null}
+        </DragOverlay>
+      </DndContext>
 
       <Dialog open={Boolean(selectedTask)} onOpenChange={(open) => !open && setSelectedTask(null)}>
         <DialogContent className='w-[calc(100%-2rem)] max-w-lg rounded-[28px]'>

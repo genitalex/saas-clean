@@ -378,6 +378,10 @@ export function CalendarPage() {
             categories={categories}
             onCreate={openCreate}
             onOpenEvent={openEvent}
+            onOpenDay={(day) => {
+              setCursor(day);
+              setView('day');
+            }}
           />
         ) : (
           <TimelineView
@@ -1185,7 +1189,7 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-[min(96vw,1480px)] max-w-none rounded-[30px] p-6 sm:p-8 lg:p-10'>
+      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1200px] rounded-[30px] p-5 sm:p-7 lg:p-8'>
         <DialogHeader className='pb-3'>
           <div className='flex items-center justify-between gap-4'>
             <div>
@@ -1221,7 +1225,7 @@ function DesktopYearDialog({
             </div>
           </div>
         </DialogHeader>
-        <div className='max-h-[78vh] overflow-y-auto pr-1'>
+        <div className='max-h-[70vh] overflow-y-auto pr-1'>
           <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
             {mobileMonthNames.map((name, index) => {
               const monthDate = new Date(displayYear, index, 1);
@@ -1239,7 +1243,7 @@ function DesktopYearDialog({
                   type='button'
                   onClick={() => onChange(monthDate)}
                   className={cn(
-                    'min-h-[270px] rounded-2xl border p-5 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35 hover:shadow-md',
+                    'min-h-[210px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35 hover:shadow-md',
                     active
                       ? 'border-primary/45 bg-primary/[0.06] shadow-sm'
                       : 'border-border/60 bg-surface-subtle/45',
@@ -1274,7 +1278,7 @@ function DesktopYearDialog({
                         <span
                           key={day.toISOString()}
                           className={cn(
-                            'flex h-7 items-center justify-center text-[12px] tabular-nums',
+                            'flex h-6 items-center justify-center text-[11px] tabular-nums',
                             out
                               ? 'text-transparent'
                               : past && !isToday
@@ -1305,6 +1309,7 @@ type ViewProps = {
   categories: Category[];
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
+  onOpenDay?: (date: Date) => void;
 };
 function getSavedEventCategories(): Record<string, string> {
   try {
@@ -1327,7 +1332,7 @@ function categoryFor(event: Event, categories: Category[]) {
 
 const MONTH_CELL_EVENT_LIMIT = 3;
 
-function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewProps) {
+function MonthView({ cursor, events, categories, onOpenEvent, onCreate, onOpenDay }: ViewProps) {
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
   const days: Date[] = [];
@@ -1370,20 +1375,24 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
               >
                 <button
                   type='button'
-                  aria-label={`Crear evento el ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`}
+                  aria-label={`Ver día ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`}
                   onClick={(event) => {
                     event.stopPropagation();
-                    onCreate(day);
+                    onOpenDay?.(day);
                   }}
                   className={cn(
                     'mb-2 flex size-7 items-center justify-center rounded-full text-[13px] font-medium transition-colors',
                     isToday
                       ? 'bg-primary text-primary-foreground font-semibold'
                       : out
-                        ? 'text-muted-foreground/45'
-                        : past
-                          ? 'text-muted-foreground/60'
-                          : 'text-foreground/85 group-hover:bg-accent/60'
+                        ? 'text-transparent'
+                        : past && weekend
+                          ? 'text-muted-foreground/50'
+                          : past
+                            ? 'text-muted-foreground/65'
+                            : weekend
+                              ? 'text-muted-foreground/80'
+                              : 'text-foreground/90 group-hover:bg-accent/60'
                   )}
                 >
                   {out ? '' : format(day, 'd')}

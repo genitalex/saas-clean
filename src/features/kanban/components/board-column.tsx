@@ -1,53 +1,66 @@
 'use client';
 
-import { Icons } from '@/components/icons';
+import * as React from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { KanbanColumn, KanbanColumnHandle } from '@/components/ui/kanban';
-import type { Task } from '@/features/tasks/types';
+import { cn } from '@/lib/utils';
+import type { Task, TaskStatus } from '@/features/tasks/types';
 import { TaskCard } from './task-card';
 
-const COLUMN_TITLES: Record<string, string> = {
+const COLUMN_TITLES: Record<TaskStatus, string> = {
   todo: 'Todo',
   in_progress: 'En curso',
   waiting: 'Esperando',
   done: 'Hecho'
 };
 
-interface TaskColumnProps extends Omit<React.ComponentProps<typeof KanbanColumn>, 'children'> {
+interface TaskColumnProps {
+  value: TaskStatus;
   tasks: Task[];
   onOpenTask?: (task: Task) => void;
+  suppressClickRef?: React.MutableRefObject<boolean>;
 }
 
-export function TaskColumn({ value, tasks, onOpenTask, ...props }: TaskColumnProps) {
+export function TaskColumn({ value, tasks, onOpenTask, suppressClickRef }: TaskColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: value,
+    data: { type: 'column', status: value }
+  });
+
   return (
-    <KanbanColumn
-      value={value}
-      className='min-w-0 w-full shrink-0 rounded-xl border border-border/70 bg-muted/20 p-3 md:min-h-48'
-      {...props}
+    <section
+      ref={setNodeRef}
+      className={cn(
+        'min-w-0 rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors',
+        isOver && 'border-primary/40 bg-primary/[0.035]'
+      )}
     >
-      <div className='flex items-center justify-between'>
+      <div className='mb-3 flex items-center justify-between gap-2'>
         <div className='flex items-center gap-2'>
-          <span className='text-sm font-semibold'>{COLUMN_TITLES[value] ?? value}</span>
-          <Badge variant='secondary' className='pointer-events-none rounded-sm'>
+          <span className='text-sm font-semibold'>{COLUMN_TITLES[value]}</span>
+          <Badge variant='secondary' className='rounded-sm'>
             {tasks.length}
           </Badge>
         </div>
-        <KanbanColumnHandle render={<Button variant='ghost' size='icon' />}>
-          <Icons.gripVertical className='h-4 w-4' />
-        </KanbanColumnHandle>
+        <span className='text-muted-foreground text-[11px]'>Arrastra aquí</span>
       </div>
-      <div className='flex min-h-24 flex-col gap-2 p-0.5'>
+
+      <div className='min-h-24 space-y-2'>
         {tasks.length > 0 ? (
           tasks.map((task) => (
-            <TaskCard key={task.id} task={task} asHandle onOpenTask={onOpenTask} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              onOpenTask={onOpenTask}
+              suppressClickRef={suppressClickRef}
+            />
           ))
         ) : (
-          <div className='text-muted-foreground rounded-md border border-dashed p-4 text-center text-xs'>
+          <div className='text-muted-foreground flex min-h-20 items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs'>
             Sin tareas
           </div>
         )}
       </div>
-    </KanbanColumn>
+    </section>
   );
 }
