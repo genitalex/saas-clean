@@ -528,7 +528,7 @@ export function EventDialog({
               </div>
 
               <div className='grid gap-3 sm:grid-cols-2'>
-                <label className='flex min-w-0 flex-col gap-2'>
+                <div className='flex min-w-0 flex-col gap-2'>
                   <div className='flex items-center justify-between gap-3'>
                     <span className='text-sm font-medium'>Categoría</span>
                   </div>
@@ -564,7 +564,7 @@ export function EventDialog({
                       <Icons.add className='size-4' />
                     </button>
                   </div>
-                </label>
+                </div>
                 <label htmlFor='event-customer' className='flex min-w-0 flex-col gap-2'>
                   <span className='text-sm font-medium'>
                     Cliente <span className='text-muted-foreground font-normal'>(opcional)</span>
