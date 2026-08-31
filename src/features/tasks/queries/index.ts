@@ -16,6 +16,26 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+async function requestTaskList<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(input, { ...init, cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) return data as T;
+      if (response.status < 500 || attempt === 2) {
+        throw new Error(data.error || 'Task request failed');
+      }
+      lastError = new Error(data.error || 'Task request failed');
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2) throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+  }
+  throw lastError instanceof Error ? lastError : new Error('Task request failed');
+}
+
 export const taskKeys = {
   all: ['tasks'] as const,
   list: (filters: TaskFilters = {}) => [...taskKeys.all, 'list', filters] as const,
@@ -24,7 +44,7 @@ export const taskKeys = {
 
 export async function getTasks(filters: TaskFilters = {}) {
   const query = toSearchParams(filters);
-  return request<import('../types').Task[]>(`/api/tasks${query ? `?${query}` : ''}`);
+  return requestTaskList<import('../types').Task[]>(`/api/tasks${query ? `?${query}` : ''}`);
 }
 
 export async function getTask(id: string) {

@@ -35,6 +35,7 @@ type EventDialogProps = {
   onOpenChange: (open: boolean) => void;
   categories?: Category[];
   onCategoriesChange?: (categories: Category[]) => void;
+  onOpenCategorySettings?: () => void;
 };
 
 function toInputValue(value: Date) {
@@ -137,60 +138,10 @@ function WheelColumn({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const itemHeight = 34;
-  const animationFrameRef = useRef<number | null>(null);
-  const settleTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const userScrollingRef = useRef(false);
-  const lastReportedIndexRef = useRef(selectedIndex);
-  const [visualIndex, setVisualIndex] = useState(selectedIndex);
 
   useEffect(() => {
-    if (userScrollingRef.current) return;
-    if (lastReportedIndexRef.current === selectedIndex) return;
-    ref.current?.scrollTo({ top: selectedIndex * itemHeight, behavior: 'auto' });
-    lastReportedIndexRef.current = selectedIndex;
-    setVisualIndex(selectedIndex);
+    ref.current?.scrollTo({ top: selectedIndex * itemHeight, behavior: 'smooth' });
   }, [selectedIndex]);
-
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current !== null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (settleTimerRef.current !== null) {
-        window.clearTimeout(settleTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    userScrollingRef.current = true;
-    const target = event.currentTarget;
-
-    if (animationFrameRef.current === null) {
-      animationFrameRef.current = window.requestAnimationFrame(() => {
-        animationFrameRef.current = null;
-        const nextIndex = Math.max(
-          0,
-          Math.min(values.length - 1, Math.round(target.scrollTop / itemHeight))
-        );
-        setVisualIndex(nextIndex);
-      });
-    }
-
-    if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
-    settleTimerRef.current = window.setTimeout(() => {
-      const nextIndex = Math.max(
-        0,
-        Math.min(values.length - 1, Math.round(target.scrollTop / itemHeight))
-      );
-      target.scrollTo({ top: nextIndex * itemHeight, behavior: 'smooth' });
-      lastReportedIndexRef.current = nextIndex;
-      onSelect(nextIndex);
-      window.setTimeout(() => {
-        userScrollingRef.current = false;
-      }, 180);
-    }, 70);
-  };
 
   return (
     <div
@@ -198,25 +149,27 @@ function WheelColumn({
       role='listbox'
       aria-label={ariaLabel}
       className='no-scrollbar h-[118px] w-[72px] snap-y snap-mandatory overflow-y-auto overscroll-contain py-[42px] text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
-      style={{ touchAction: 'pan-y', scrollBehavior: 'auto' }}
-      onScroll={handleScroll}
+      onScroll={(event) => {
+        const nextIndex = Math.max(
+          0,
+          Math.min(values.length - 1, Math.round(event.currentTarget.scrollTop / itemHeight))
+        );
+        if (nextIndex !== selectedIndex) onSelect(nextIndex);
+      }}
     >
       {values.map((item, index) => (
         <button
           key={item}
           type='button'
           role='option'
-          aria-selected={index === visualIndex}
+          aria-selected={index === selectedIndex}
           onClick={() => {
-            userScrollingRef.current = false;
-            lastReportedIndexRef.current = index;
-            setVisualIndex(index);
             onSelect(index);
             ref.current?.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
           }}
           className={cn(
-            'flex h-[34px] w-full snap-center items-center justify-center rounded-lg text-lg tabular-nums transition-[transform,opacity,font-weight] duration-100',
-            index === visualIndex
+            'flex h-[34px] w-full snap-center items-center justify-center rounded-lg text-lg tabular-nums transition-all',
+            index === selectedIndex
               ? 'font-semibold text-foreground'
               : 'text-muted-foreground/45 scale-90'
           )}
@@ -313,7 +266,13 @@ export function EventDialog({
       const mapping = saved ? (JSON.parse(saved) as Record<string, string>) : {};
       setCategoryId(event ? (mapping[event.id] ?? '') : '');
     } catch {
-      setCategoryId('');
+      try {
+        const stored = window.localStorage.getItem('calendar-event-categories');
+        const mapping = stored ? (JSON.parse(stored) as Record<string, string>) : {};
+        setCategoryId(event?.id ? (mapping[event.id] ?? '') : '');
+      } catch {
+        setCategoryId('');
+      }
     }
   }, [event, initialCustomerId, initialDate, open]);
 
@@ -453,7 +412,7 @@ export function EventDialog({
 
         <form
           id='event-form'
-          className='min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
+          className='min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
           onSubmit={handleSubmit}
         >
           <div className='space-y-7'>
@@ -568,58 +527,43 @@ export function EventDialog({
               </div>
 
               <div className='grid gap-3 sm:grid-cols-2'>
-                <fieldset className='flex min-w-0 flex-col gap-2'>
-                  <legend className='text-sm font-medium'>Categoría</legend>
-                  <div className='grid grid-cols-2 gap-2 sm:grid-cols-3'>
+                <label className='flex min-w-0 flex-col gap-2'>
+                  <div className='flex items-center justify-between gap-3'>
+                    <span className='text-sm font-medium'>Categoría</span>
+                  </div>
+                  <div className='flex min-h-12 items-center gap-2 rounded-2xl border border-border/60 bg-muted/25 px-3 py-2 sm:min-h-11'>
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        type='button'
+                        aria-label={`Usar categoría ${category.name}`}
+                        aria-pressed={categoryId === category.id}
+                        onClick={() =>
+                          setCategoryId((current) => (current === category.id ? '' : category.id))
+                        }
+                        className={cn(
+                          'flex size-8 shrink-0 items-center justify-center rounded-full transition-all',
+                          categoryId === category.id
+                            ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-background'
+                            : 'hover:scale-105'
+                        )}
+                      >
+                        <span
+                          className='size-4 rounded-full'
+                          style={{ backgroundColor: category.color }}
+                        />
+                      </button>
+                    ))}
                     <button
                       type='button'
-                      aria-pressed={!categoryId}
-                      onClick={() => setCategoryId('')}
-                      className={cn(
-                        'flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-left text-sm font-medium transition-all',
-                        !categoryId
-                          ? 'border-primary/45 bg-primary/[0.07] text-foreground shadow-sm'
-                          : 'border-border/60 bg-muted/25 text-muted-foreground hover:bg-accent/40'
-                      )}
+                      onClick={onOpenCategorySettings}
+                      className='border-border/70 text-muted-foreground hover:border-primary/50 hover:text-foreground flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed transition-colors'
+                      aria-label='Añadir o configurar una categoría'
                     >
-                      <span className='size-3 rounded-full border border-current/30' />
-                      Sin categoría
+                      <Icons.add className='size-4' />
                     </button>
-                    {categories.map((category) => {
-                      const active = categoryId === category.id;
-                      return (
-                        <button
-                          key={category.id}
-                          type='button'
-                          aria-pressed={active}
-                          onClick={() => setCategoryId(category.id)}
-                          className={cn(
-                            'flex min-h-11 items-center gap-2 rounded-2xl border px-3 text-left text-sm font-medium transition-all',
-                            active
-                              ? 'shadow-sm'
-                              : 'border-border/60 bg-muted/25 text-muted-foreground hover:bg-accent/40'
-                          )}
-                          style={
-                            active
-                              ? {
-                                  borderColor: `${category.color}80`,
-                                  backgroundColor: `${category.color}12`,
-                                  color: category.color
-                                }
-                              : undefined
-                          }
-                        >
-                          <span
-                            className='size-3 shrink-0 rounded-full'
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span className='truncate'>{category.name}</span>
-                        </button>
-                      );
-                    })}
                   </div>
-                </fieldset>
-
+                </label>
                 <label htmlFor='event-customer' className='flex min-w-0 flex-col gap-2'>
                   <span className='text-sm font-medium'>
                     Cliente <span className='text-muted-foreground font-normal'>(opcional)</span>

@@ -7,11 +7,11 @@ import type { Task } from '@/features/tasks/types';
 interface TaskCardProps extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'onClick'> {
   task: Task;
   onOpenTask?: (task: Task) => void;
-  presentationOnly?: boolean;
+  overlay?: boolean;
 }
 
-function TaskCardContent({ task }: { task: Task }) {
-  return (
+export function TaskCard({ task, onOpenTask, overlay = false, ...props }: TaskCardProps) {
+  const content = (
     <div className='flex flex-col gap-2'>
       <div className='flex items-center justify-between gap-2'>
         <span className='line-clamp-2 text-sm font-medium'>{task.title}</span>
@@ -47,13 +47,11 @@ function TaskCardContent({ task }: { task: Task }) {
       </div>
     </div>
   );
-}
 
-export function TaskCard({ task, onOpenTask, presentationOnly = false, ...props }: TaskCardProps) {
-  if (presentationOnly) {
+  if (overlay) {
     return (
-      <div className='bg-card w-[280px] max-w-[calc(100vw-2rem)] rounded-lg border border-border/70 p-3 shadow-lg transition-colors'>
-        <TaskCardContent task={task} />
+      <div className='bg-card w-full rounded-lg border border-border/70 p-3 shadow-2xl'>
+        {content}
       </div>
     );
   }
@@ -65,10 +63,10 @@ export function TaskCard({ task, onOpenTask, presentationOnly = false, ...props 
       {...props}
       onClick={() => onOpenTask?.(task)}
       render={
-        <div className='bg-card w-full rounded-lg border border-border/70 p-3 shadow-none transition-colors hover:bg-muted/30' />
+        <div className='bg-card rounded-lg border border-border/70 p-3 shadow-none transition-colors hover:bg-muted/30' />
       }
     >
-      <TaskCardContent task={task} />
+      {content}
     </KanbanItem>
   );
 }

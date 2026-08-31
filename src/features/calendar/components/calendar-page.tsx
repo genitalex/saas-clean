@@ -399,6 +399,7 @@ export function CalendarPage() {
         onOpenChange={setDialogOpen}
         categories={categories}
         onCategoriesChange={setCategories}
+        onOpenCategorySettings={() => setSettingsOpen(true)}
       />
       <CategoryDialog
         open={settingsOpen}
@@ -792,10 +793,8 @@ function MobileMonthView({
                   className={cn(
                     'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b bg-background transition-colors last:border-r-0 sm:min-h-[64px]',
                     'hover:bg-accent/25 active:scale-[0.97]',
-                    weekend && !out && 'bg-muted/45',
-                    past && !isToday && !weekend && 'bg-muted/10',
-                    past && !isToday && weekend && 'bg-muted/55',
-                    out && 'bg-muted/70'
+                    weekend && !out && 'bg-muted/25',
+                    out && 'bg-muted/20'
                   )}
                 >
                   <span
@@ -809,11 +808,7 @@ function MobileMonthView({
                             ? 'ring-primary/60 text-primary font-semibold ring-2'
                             : out
                               ? 'text-transparent'
-                              : weekend
-                                ? 'text-muted-foreground/75'
-                                : past
-                                  ? 'text-muted-foreground/65'
-                                  : 'text-foreground/90'
+                              : 'text-foreground/85'
                     )}
                   >
                     {out ? '' : format(day, 'd')}
@@ -1184,7 +1179,7 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1200px] rounded-[30px] p-5 sm:p-7 lg:p-8'>
+      <DialogContent className='w-[min(96vw,1480px)] max-w-none rounded-[30px] p-6 sm:p-8 lg:p-10'>
         <DialogHeader className='pb-3'>
           <div className='flex items-center justify-between gap-4'>
             <div>
@@ -1220,7 +1215,7 @@ function DesktopYearDialog({
             </div>
           </div>
         </DialogHeader>
-        <div className='max-h-[70vh] overflow-y-auto pr-1'>
+        <div className='max-h-[78vh] overflow-y-auto pr-1'>
           <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
             {mobileMonthNames.map((name, index) => {
               const monthDate = new Date(displayYear, index, 1);
@@ -1238,7 +1233,7 @@ function DesktopYearDialog({
                   type='button'
                   onClick={() => onChange(monthDate)}
                   className={cn(
-                    'min-h-[210px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35 hover:shadow-md',
+                    'min-h-[270px] rounded-2xl border p-5 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35 hover:shadow-md',
                     active
                       ? 'border-primary/45 bg-primary/[0.06] shadow-sm'
                       : 'border-border/60 bg-surface-subtle/45',
@@ -1273,7 +1268,7 @@ function DesktopYearDialog({
                         <span
                           key={day.toISOString()}
                           className={cn(
-                            'flex h-6 items-center justify-center text-[11px] tabular-nums',
+                            'flex h-7 items-center justify-center text-[12px] tabular-nums',
                             out
                               ? 'text-transparent'
                               : past && !isToday
@@ -1364,8 +1359,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                   'group border-border/70 relative min-h-32 cursor-pointer border-r border-b bg-background p-2.5 transition-colors last:border-r-0',
                   'hover:bg-accent/25',
                   weekend && !out && 'bg-muted/45',
-                  past && !weekend && !out && 'bg-muted/12',
-                  out && 'bg-muted/65'
+                  out && 'bg-muted/30'
                 )}
               >
                 <button
@@ -1380,14 +1374,10 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                     isToday
                       ? 'bg-primary text-primary-foreground font-semibold'
                       : out
-                        ? 'text-transparent'
-                        : past && weekend
-                          ? 'text-muted-foreground/50'
-                          : past
-                            ? 'text-muted-foreground/65'
-                            : weekend
-                              ? 'text-muted-foreground/80'
-                              : 'text-foreground/90 group-hover:bg-accent/60'
+                        ? 'text-muted-foreground/45'
+                        : past
+                          ? 'text-muted-foreground/60'
+                          : 'text-foreground/85 group-hover:bg-accent/60'
                   )}
                 >
                   {out ? '' : format(day, 'd')}
@@ -1450,7 +1440,7 @@ function TimelineView({
   const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [start];
   const startHour = 7;
   const endHour = 21;
-  const hourHeight = 84;
+  const hourHeight = 72;
   const totalHeight = (endHour - startHour) * hourHeight;
   const today = new Date();
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
@@ -1672,6 +1662,7 @@ function CategoryDialog({
   const [editing, setEditing] = useState<string | null>(null);
   const save = () => {
     if (!name.trim()) return;
+    if (!editing && categories.length >= 15) return;
     onChange(
       editing
         ? categories.map((category) =>
@@ -1688,7 +1679,9 @@ function CategoryDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Configuración del calendario</DialogTitle>
-          <DialogDescription>Personaliza tus categorías de eventos sin límites.</DialogDescription>
+          <DialogDescription>
+            Personaliza tus categorías de eventos. Máximo 15 colores.
+          </DialogDescription>
         </DialogHeader>
         <div className='flex flex-col gap-3'>
           <p className='text-sm font-semibold'>Categorías de eventos</p>
@@ -1731,7 +1724,9 @@ function CategoryDialog({
                 onChange={(event) => setColor(event.target.value)}
               />
             </label>
-            <Button onClick={save}>{editing ? 'Guardar' : 'Añadir'}</Button>
+            <Button onClick={save} disabled={!editing && categories.length >= 15}>
+              {editing ? 'Guardar' : categories.length >= 15 ? 'Límite alcanzado' : 'Añadir'}
+            </Button>
           </div>
         </div>
         <DialogFooter>
