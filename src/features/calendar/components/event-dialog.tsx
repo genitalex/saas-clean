@@ -532,8 +532,8 @@ export function EventDialog({
                   <div className='flex items-center justify-between gap-3'>
                     <span className='text-sm font-medium'>Categoría</span>
                   </div>
-                  <div className='flex min-h-12 items-center gap-2 rounded-2xl border border-border/60 bg-muted/25 px-3 py-2 sm:min-h-11'>
-                    {categories.map((category) => (
+                  <div className='flex min-h-11 flex-wrap items-center gap-1.5 rounded-2xl border border-border/60 bg-muted/25 px-2.5 py-2 sm:min-h-11'>
+                    {categories.slice(0, 8).map((category) => (
                       <button
                         key={category.id}
                         type='button'
@@ -543,14 +543,14 @@ export function EventDialog({
                           setCategoryId((current) => (current === category.id ? '' : category.id))
                         }
                         className={cn(
-                          'flex size-8 shrink-0 items-center justify-center rounded-full transition-all',
+                          'flex size-7 shrink-0 items-center justify-center rounded-full transition-all',
                           categoryId === category.id
                             ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-background'
                             : 'hover:scale-105'
                         )}
                       >
                         <span
-                          className='size-4 rounded-full'
+                          className='size-3.5 rounded-full'
                           style={{ backgroundColor: category.color }}
                         />
                       </button>
@@ -558,7 +558,7 @@ export function EventDialog({
                     <button
                       type='button'
                       onClick={onOpenCategorySettings}
-                      className='border-border/70 text-muted-foreground hover:border-primary/50 hover:text-foreground flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed transition-colors'
+                      className='border-border/70 text-muted-foreground hover:border-primary/50 hover:text-foreground flex size-7 shrink-0 items-center justify-center rounded-full border border-dashed transition-colors'
                       aria-label='Añadir o configurar una categoría'
                     >
                       <Icons.add className='size-4' />

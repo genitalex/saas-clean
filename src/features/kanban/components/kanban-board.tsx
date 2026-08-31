@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDroppable } from '@dnd-kit/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Icons } from '@/components/icons';
@@ -14,13 +13,20 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { Kanban, KanbanBoard as KanbanBoardPrimitive, KanbanOverlay } from '@/components/ui/kanban';
+import {
+  Kanban,
+  KanbanBoard as KanbanBoardPrimitive,
+  KanbanColumn,
+  KanbanOverlay
+} from '@/components/ui/kanban';
 import { deleteTask, getTasks, taskKeys, updateTaskStatus } from '@/features/tasks/queries';
 import type { Task, TaskStatus } from '@/features/tasks/types';
 import { TaskColumn } from './board-column';
 import { TaskCard } from './task-card';
+import { cn } from '@/lib/utils';
 
 const COLUMN_ORDER: TaskStatus[] = ['todo', 'in_progress', 'waiting', 'done'];
+const KANBAN_TRASH_ID = 'kanban-trash';
 const COLUMN_LABELS: Record<TaskStatus, string> = {
   todo: 'Todo',
   in_progress: 'En curso',
@@ -62,6 +68,8 @@ export function KanbanBoard() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [isTrashOver, setIsTrashOver] = useState(false);
+  const [dragOverlayWidth, setDragOverlayWidth] = useState<number | null>(null);
 
   useEffect(() => {
     tasksRef.current = tasks;
@@ -84,12 +92,8 @@ export function KanbanBoard() {
     });
   }, [tasks]);
 
-  const { setNodeRef: setTrashNodeRef, isOver: isTrashOver } = useDroppable({
-    id: 'kanban-trash',
-    data: { type: 'trash' }
-  });
-
   const handleValueChange = useCallback((nextColumns: Record<string, Task[]>) => {
+    if (nextColumns[KANBAN_TRASH_ID]?.length) return;
     const normalized = {
       todo: nextColumns.todo ?? [],
       in_progress: nextColumns.in_progress ?? [],
@@ -105,6 +109,17 @@ export function KanbanBoard() {
       const task = tasksRef.current.find((item) => item.id === String(event.active.id));
       draggingTaskRef.current = task ?? null;
       setDraggingTask(task ?? null);
+      setIsTrashOver(false);
+      const node = event.active.node.current;
+      const width = node?.getBoundingClientRect().width ?? null;
+      setDragOverlayWidth(width);
+    },
+    []
+  );
+
+  const handleDragOver = useCallback(
+    (event: Parameters<NonNullable<React.ComponentProps<typeof Kanban>['onDragOver']>>[0]) => {
+      setIsTrashOver(String(event.over?.id ?? '') === KANBAN_TRASH_ID);
     },
     []
   );
@@ -112,6 +127,8 @@ export function KanbanBoard() {
   const handleDragCancel = useCallback(() => {
     draggingTaskRef.current = null;
     setDraggingTask(null);
+    setIsTrashOver(false);
+    setDragOverlayWidth(null);
   }, []);
 
   const handleDragEnd = useCallback(
@@ -119,6 +136,8 @@ export function KanbanBoard() {
       const draggedTask = draggingTaskRef.current;
       draggingTaskRef.current = null;
       setDraggingTask(null);
+      setIsTrashOver(false);
+      setDragOverlayWidth(null);
 
       if (!draggedTask) return;
 
@@ -196,11 +215,12 @@ export function KanbanBoard() {
   return (
     <div className='min-w-0'>
       <Kanban
-        value={columns}
+        value={{ ...columns, [KANBAN_TRASH_ID]: [] }}
         onValueChange={handleValueChange}
         getItemValue={(item) => item.id}
         autoScroll
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
@@ -214,6 +234,11 @@ export function KanbanBoard() {
                 onOpenTask={setSelectedTask}
               />
             ))}
+            <KanbanTrashDrop
+              visible={Boolean(draggingTask)}
+              isOver={isTrashOver}
+              task={draggingTask}
+            />
           </KanbanBoardPrimitive>
         </div>
 
@@ -227,36 +252,12 @@ export function KanbanBoard() {
                 onOpenTask={setSelectedTask}
               />
             ))}
+            <KanbanTrashDrop
+              visible={Boolean(draggingTask)}
+              isOver={isTrashOver}
+              task={draggingTask}
+            />
           </KanbanBoardPrimitive>
-        </div>
-
-        <div
-          ref={setTrashNodeRef}
-          className={`fixed left-1/2 z-[90] flex min-h-16 w-[min(92vw,360px)] -translate-x-1/2 items-center gap-3 rounded-2xl border px-5 shadow-2xl backdrop-blur-xl transition-all duration-200 ${
-            !draggingTask
-              ? 'pointer-events-none bottom-[-120px] opacity-0'
-              : isTrashOver
-                ? 'bottom-6 scale-[1.04] border-destructive bg-destructive text-destructive-foreground opacity-100'
-                : 'bottom-6 border-destructive/60 bg-destructive/10 text-destructive opacity-100'
-          }`}
-          aria-hidden={!draggingTask}
-          aria-label='Papelera: suelta aquí para eliminar'
-        >
-          <span className='flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/15'>
-            <Icons.trash className='size-5' />
-          </span>
-          <div className='min-w-0'>
-            <div className='text-sm font-semibold'>
-              {isTrashOver ? 'Suelta para eliminar' : 'Papelera'}
-            </div>
-            <div
-              className={`text-xs ${isTrashOver ? 'text-destructive-foreground/75' : 'text-destructive/70'}`}
-            >
-              {isTrashOver
-                ? `Eliminar “${draggingTask?.title ?? ''}”`
-                : 'Arrastra la tarea aquí para borrarla'}
-            </div>
-          </div>
         </div>
 
         <KanbanOverlay>
@@ -274,7 +275,14 @@ export function KanbanBoard() {
             const task = Object.values(columns)
               .flat()
               .find((item) => item.id === value);
-            return task ? <TaskCard task={task} onOpenTask={setSelectedTask} overlay /> : null;
+            return task ? (
+              <TaskCard
+                task={task}
+                onOpenTask={setSelectedTask}
+                overlay
+                overlayWidth={dragOverlayWidth ?? undefined}
+              />
+            ) : null;
           }}
         </KanbanOverlay>
       </Kanban>
@@ -373,5 +381,48 @@ export function KanbanBoard() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function KanbanTrashDrop({
+  visible,
+  isOver,
+  task
+}: {
+  visible: boolean;
+  isOver: boolean;
+  task: Task | null;
+}) {
+  return (
+    <KanbanColumn
+      value={KANBAN_TRASH_ID}
+      className={cn(
+        'pointer-events-none fixed bottom-5 left-1/2 z-[90] w-[min(92vw,360px)] -translate-x-1/2 rounded-2xl border-2 p-0 shadow-2xl backdrop-blur-xl transition-all duration-200',
+        visible ? 'opacity-100' : 'invisible opacity-0',
+        visible && 'pointer-events-auto',
+        isOver
+          ? 'border-destructive bg-destructive text-destructive-foreground scale-[1.04]'
+          : 'border-destructive/60 bg-destructive/10 text-destructive'
+      )}
+    >
+      <div className='flex min-h-16 items-center gap-3 px-5'>
+        <span className='flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/15'>
+          <Icons.trash className='size-5' />
+        </span>
+        <div className='min-w-0'>
+          <div className='text-sm font-semibold'>
+            {isOver ? 'Suelta para eliminar' : 'Papelera'}
+          </div>
+          <div
+            className={cn(
+              'text-xs',
+              isOver ? 'text-destructive-foreground/75' : 'text-destructive/70'
+            )}
+          >
+            {isOver ? `Eliminar “${task?.title ?? ''}”` : 'Arrastra la tarea aquí para borrarla'}
+          </div>
+        </div>
+      </div>
+    </KanbanColumn>
   );
 }
