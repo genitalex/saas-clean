@@ -26,20 +26,22 @@ export function TaskColumn({ value, tasks, onOpenTask, ...props }: TaskColumnPro
       className='min-w-0 w-full shrink-0 rounded-xl border border-border/70 bg-muted/20 p-3 md:min-h-48'
       {...props}
     >
-      <div className='flex items-center justify-between gap-2'>
-        <div className='flex min-w-0 items-center gap-2'>
-          <span className='truncate text-sm font-semibold'>{COLUMN_TITLES[value] ?? value}</span>
-          <Badge variant='secondary' className='pointer-events-none shrink-0 rounded-sm'>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-2'>
+          <span className='text-sm font-semibold'>{COLUMN_TITLES[value] ?? value}</span>
+          <Badge variant='secondary' className='pointer-events-none rounded-sm'>
             {tasks.length}
           </Badge>
         </div>
-        <KanbanColumnHandle render={<Button variant='ghost' size='icon' className='shrink-0' />}>
+        <KanbanColumnHandle render={<Button variant='ghost' size='icon' />}>
           <Icons.gripVertical className='h-4 w-4' />
         </KanbanColumnHandle>
       </div>
       <div className='flex min-h-24 flex-col gap-2 p-0.5'>
         {tasks.length > 0 ? (
-          tasks.map((task) => <TaskCard key={task.id} task={task} asHandle onOpen={onOpenTask} />)
+          tasks.map((task) => (
+            <TaskCard key={task.id} task={task} asHandle onOpenTask={onOpenTask} />
+          ))
         ) : (
           <div className='text-muted-foreground rounded-md border border-dashed p-4 text-center text-xs'>
             Sin tareas

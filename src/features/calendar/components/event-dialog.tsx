@@ -260,7 +260,13 @@ export function EventDialog({
     setLocation(event?.location ?? '');
     setCustomerId(event?.customerId ?? initialCustomerId ?? '');
     setAssigneeId(event?.assigneeId ?? '');
-    setCategoryId('');
+    try {
+      const saved = window.localStorage.getItem('calendar-event-categories');
+      const mapping = saved ? (JSON.parse(saved) as Record<string, string>) : {};
+      setCategoryId(event ? (mapping[event.id] ?? '') : '');
+    } catch {
+      setCategoryId('');
+    }
   }, [event, initialCustomerId, initialDate, open]);
 
   async function handleSubmit(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -291,10 +297,21 @@ export function EventDialog({
         endAt: parsed.data.endAt.toISOString()
       };
 
+      let savedEvent: Event;
       if (event) {
-        await updateEvent(event.id, payload);
+        savedEvent = await updateEvent(event.id, payload);
       } else {
-        await createEvent(payload);
+        savedEvent = await createEvent(payload);
+      }
+
+      try {
+        const stored = window.localStorage.getItem('calendar-event-categories');
+        const mapping = stored ? (JSON.parse(stored) as Record<string, string>) : {};
+        if (categoryId) mapping[savedEvent.id] = categoryId;
+        else delete mapping[savedEvent.id];
+        window.localStorage.setItem('calendar-event-categories', JSON.stringify(mapping));
+      } catch {
+        /* visual category preference is optional */
       }
 
       await queryClient.invalidateQueries({
@@ -317,6 +334,14 @@ export function EventDialog({
 
     try {
       await deleteEvent(event.id);
+      try {
+        const stored = window.localStorage.getItem('calendar-event-categories');
+        const mapping = stored ? (JSON.parse(stored) as Record<string, string>) : {};
+        delete mapping[event.id];
+        window.localStorage.setItem('calendar-event-categories', JSON.stringify(mapping));
+      } catch {
+        /* visual category preference is optional */
+      }
 
       await queryClient.invalidateQueries({
         queryKey: eventKeys.all
@@ -574,14 +599,37 @@ export function EventDialog({
 
               <label htmlFor='event-location' className='flex flex-col gap-2'>
                 <span className='text-sm font-medium'>Ubicación</span>
-                <Input
-                  id='event-location'
-                  value={location}
-                  onChange={(inputEvent) => setLocation(inputEvent.target.value)}
-                  maxLength={500}
-                  placeholder='Lugar, enlace o videollamada'
-                  className='h-12 rounded-2xl px-4 text-[16px] sm:h-11 sm:text-sm'
-                />
+                <div className='flex gap-2'>
+                  <Input
+                    id='event-location'
+                    value={location}
+                    onChange={(inputEvent) => setLocation(inputEvent.target.value)}
+                    maxLength={500}
+                    placeholder='Dirección, lugar o enlace…'
+                    className='h-12 min-w-0 flex-1 rounded-2xl px-4 text-[16px] sm:h-11 sm:text-sm'
+                  />
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || ' ')}`}
+                    target='_blank'
+                    rel='noreferrer'
+                    aria-disabled={!location}
+                    onClick={(clickEvent) => {
+                      if (!location.trim()) clickEvent.preventDefault();
+                    }}
+                    className={cn(
+                      'inline-flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-border/60 bg-muted/25 px-3 text-sm font-medium transition-colors sm:h-11',
+                      location.trim() ? 'hover:bg-accent/50' : 'pointer-events-none opacity-40'
+                    )}
+                  >
+                    <Icons.externalLink className='size-4' />
+                    <span className='hidden sm:inline'>Maps</span>
+                  </a>
+                </div>
+                {location.trim() && (
+                  <span className='text-muted-foreground text-xs'>
+                    Se abrirá esta ubicación en Google Maps.
+                  </span>
+                )}
               </label>
 
               <label htmlFor='event-description' className='flex flex-col gap-2'>

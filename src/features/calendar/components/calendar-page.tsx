@@ -793,7 +793,6 @@ function MobileMonthView({
                     'border-border/60 relative flex min-h-[58px] flex-col items-center justify-center gap-1.5 border-r border-b bg-background transition-colors last:border-r-0 sm:min-h-[64px]',
                     'hover:bg-accent/25 active:scale-[0.97]',
                     weekend && !out && 'bg-muted/25',
-                    past && !isToday && 'bg-muted/55',
                     out && 'bg-muted/20'
                   )}
                 >
@@ -807,11 +806,11 @@ function MobileMonthView({
                           : isToday
                             ? 'ring-primary/60 text-primary font-semibold ring-2'
                             : out
-                              ? 'text-muted-foreground/35'
+                              ? 'text-transparent'
                               : 'text-foreground/85'
                     )}
                   >
-                    {format(day, 'd')}
+                    {out ? '' : format(day, 'd')}
                   </span>
                   <span className='flex h-1.5 items-center gap-0.5'>
                     {dots.map((event) => {
@@ -1179,16 +1178,16 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='w-[min(1120px,calc(100vw-48px))] max-w-none rounded-[28px] p-6 sm:p-7'>
+      <DialogContent className='w-[min(94vw,1180px)] max-w-none rounded-[30px] p-6 sm:p-8'>
         <DialogHeader className='pb-3'>
           <div className='flex items-center justify-between gap-4'>
             <div>
-              <DialogTitle className='text-2xl tracking-tight'>
+              <DialogTitle className='text-3xl tracking-tight'>
                 Calendario {displayYear}
               </DialogTitle>
-              <DialogDescription>
-                Elige un mes para abrirlo. La vista mantiene la misma jerarquía visual que el
-                calendario móvil.
+              <DialogDescription className='mt-1 text-sm'>
+                Elige un mes para abrirlo. La vista mantiene el mismo calendario completo que en
+                móvil.
               </DialogDescription>
             </div>
             <div className='flex items-center gap-1'>
@@ -1215,68 +1214,78 @@ function DesktopYearDialog({
             </div>
           </div>
         </DialogHeader>
-
-        <div className='grid max-h-[min(68dvh,680px)] grid-cols-3 gap-3 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-4'>
-          {mobileMonthNames.map((name, index) => {
-            const monthDate = new Date(displayYear, index, 1);
-            const monthStart = startOfMonth(monthDate);
-            const monthEnd = endOfMonth(monthDate);
-            const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-            const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-            const days: Date[] = [];
-            for (let day = gridStart; day <= gridEnd; day = addDays(day, 1)) days.push(day);
-            const active = index === selectedMonth && displayYear === year;
-            const current = today.getFullYear() === displayYear && today.getMonth() === index;
-
-            return (
-              <button
-                key={name}
-                type='button'
-                onClick={() => onChange(monthDate)}
-                className={cn(
-                  'group min-w-0 rounded-2xl border p-3 text-left transition-all hover:bg-accent/35 active:scale-[0.985]',
-                  active
-                    ? 'border-primary/40 bg-primary/10 shadow-sm'
-                    : 'border-border/60 bg-muted/20'
-                )}
-              >
-                <div className='mb-2 flex items-center justify-between gap-2'>
-                  <span
-                    className={cn(
-                      'text-sm font-semibold',
-                      active || current ? 'text-primary' : 'text-foreground'
-                    )}
-                  >
-                    {name}
-                  </span>
-                  {(active || current) && <span className='bg-primary size-1.5 rounded-full' />}
-                </div>
-                <div className='grid grid-cols-7 gap-x-0.5 text-center'>
-                  {mobileWeekDaysNarrow.map((day) => (
-                    <span key={day} className='text-[8px] font-medium text-muted-foreground/60'>
-                      {day}
+        <div className='max-h-[70vh] overflow-y-auto pr-1'>
+          <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
+            {mobileMonthNames.map((name, index) => {
+              const monthDate = new Date(displayYear, index, 1);
+              const monthStart = startOfMonth(monthDate);
+              const monthGridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+              const monthGridEnd = endOfWeek(endOfMonth(monthDate), { weekStartsOn: 1 });
+              const monthDays: Date[] = [];
+              for (let day = monthGridStart; day <= monthGridEnd; day = addDays(day, 1))
+                monthDays.push(day);
+              const active = index === selectedMonth && displayYear === year;
+              const isCurrent = today.getFullYear() === displayYear && today.getMonth() === index;
+              return (
+                <button
+                  key={name}
+                  type='button'
+                  onClick={() => onChange(monthDate)}
+                  className={cn(
+                    'min-h-[210px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35 hover:shadow-md',
+                    active
+                      ? 'border-primary/45 bg-primary/[0.06] shadow-sm'
+                      : 'border-border/60 bg-surface-subtle/45',
+                    isCurrent && 'ring-1 ring-primary/30'
+                  )}
+                >
+                  <div className='mb-3 flex items-center justify-between'>
+                    <span
+                      className={cn(
+                        'text-base font-semibold',
+                        (active || isCurrent) && 'text-primary'
+                      )}
+                    >
+                      {name}
                     </span>
-                  ))}
-                  {days.map((day) => {
-                    const out = day.getMonth() !== index;
-                    const isToday = isSameDay(day, today);
-                    return (
+                    {isCurrent && <span className='bg-primary size-2 rounded-full' />}
+                  </div>
+                  <div className='grid grid-cols-7 gap-y-1 text-center'>
+                    {mobileWeekDaysNarrow.map((day) => (
                       <span
-                        key={day.toISOString()}
-                        className={cn(
-                          'mt-1 flex aspect-square items-center justify-center text-[9px] tabular-nums',
-                          out ? 'text-muted-foreground/20' : 'text-muted-foreground/75',
-                          isToday && 'rounded-full bg-primary font-semibold text-primary-foreground'
-                        )}
+                        key={day}
+                        className='text-[10px] font-semibold text-muted-foreground/55'
                       >
-                        {format(day, 'd')}
+                        {day}
                       </span>
-                    );
-                  })}
-                </div>
-              </button>
-            );
-          })}
+                    ))}
+                    {monthDays.map((day) => {
+                      const out = day.getMonth() !== index;
+                      const past = day < startOfDay(today);
+                      const isToday = isSameDay(day, today);
+                      return (
+                        <span
+                          key={day.toISOString()}
+                          className={cn(
+                            'flex h-6 items-center justify-center text-[11px] tabular-nums',
+                            out
+                              ? 'text-transparent'
+                              : past && !isToday
+                                ? 'text-muted-foreground/45'
+                                : 'text-foreground/80',
+                            isToday &&
+                              'mx-auto size-6 rounded-full bg-primary font-semibold text-primary-foreground'
+                          )}
+                        >
+                          {out ? '' : format(day, 'd')}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -1290,7 +1299,21 @@ type ViewProps = {
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
 };
+function getSavedEventCategories(): Record<string, string> {
+  try {
+    const saved = window.localStorage.getItem('calendar-event-categories');
+    return saved ? (JSON.parse(saved) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
 function categoryFor(event: Event, categories: Category[]) {
+  if (!categories.length) return defaultCategories[0];
+  const saved = getSavedEventCategories();
+  const savedId = saved[event.id];
+  const savedCategory = categories.find((category) => category.id === savedId);
+  if (savedCategory) return savedCategory;
   const index = Math.abs(event.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0));
   return categories[index % categories.length] ?? defaultCategories[0];
 }
@@ -1335,7 +1358,6 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                   'group border-border/70 relative min-h-32 cursor-pointer border-r border-b bg-background p-2.5 transition-colors last:border-r-0',
                   'hover:bg-accent/25',
                   weekend && !out && 'bg-muted/25',
-                  past && !isToday && 'bg-muted/55',
                   out && 'bg-muted/20'
                 )}
               >
@@ -1357,7 +1379,7 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate }: ViewPr
                           : 'text-foreground/85 group-hover:bg-accent/60'
                   )}
                 >
-                  {format(day, 'd')}
+                  {out ? '' : format(day, 'd')}
                 </button>
                 <div className='flex flex-col gap-1'>
                   {dayEvents.slice(0, MONTH_CELL_EVENT_LIMIT).map((event) => {
@@ -1562,6 +1584,19 @@ function TimelineView({
                           <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
                             {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
                           </span>
+                          {event.location && (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                              target='_blank'
+                              rel='noreferrer'
+                              onPointerDown={(pointerEvent) => pointerEvent.stopPropagation()}
+                              onClick={(clickEvent) => clickEvent.stopPropagation()}
+                              className='mt-0.5 flex min-w-0 items-center gap-1 truncate text-[11px] underline-offset-2 hover:underline'
+                            >
+                              <Icons.externalLink className='size-3 shrink-0' />
+                              <span className='truncate'>{event.location}</span>
+                            </a>
+                          )}
                         </span>
                       </button>
                     );
