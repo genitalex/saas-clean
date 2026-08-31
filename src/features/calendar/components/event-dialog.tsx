@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Icons } from '@/components/icons';
 import { createEvent, deleteEvent, eventKeys, updateEvent } from '../queries';
 import { eventPayloadSchema } from '../schemas/event';
 import type { Event, CustomerOption, UserOption } from '../types';
