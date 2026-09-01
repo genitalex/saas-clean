@@ -3,6 +3,8 @@ import { TodayPage } from '@/features/today/components/today-page';
 
 export const metadata = { title: 'Dashboard: Hoy' };
 
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
   const { membership, user } = await getAuthContext();
   const role =

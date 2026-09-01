@@ -53,13 +53,6 @@ export function TodayPage({
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  useEffect(() => {
-    const value = new URLSearchParams(window.location.search).get('date');
-    if (!value) return;
-    const parsed = startOfDay(new Date(`${value}T00:00:00`));
-    if (!Number.isNaN(parsed.getTime())) setSelectedDate(parsed);
-  }, []);
   const today = startOfDay(now);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
@@ -120,18 +113,6 @@ export function TodayPage({
   const greeting =
     now.getHours() < 12 ? 'Buenos días' : now.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches';
   const attentionCount = attention.length;
-
-  if (selectedDate) {
-    return (
-      <DayFocusView
-        date={selectedDate}
-        today={today}
-        tasks={tasks}
-        events={events}
-        onBackHref='/dashboard/today'
-      />
-    );
-  }
 
   return (
     <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 pb-10 sm:gap-8'>
