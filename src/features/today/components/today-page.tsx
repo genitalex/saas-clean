@@ -53,11 +53,13 @@ export function TodayPage({
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const searchParams = useSearchParams();
-  const selectedDateParam = searchParams.get('date');
-  const selectedDate = selectedDateParam
-    ? startOfDay(new Date(`${selectedDateParam}T00:00:00`))
-    : null;
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get('date');
+    if (!value) return;
+    const parsed = startOfDay(new Date(`${value}T00:00:00`));
+    if (!Number.isNaN(parsed.getTime())) setSelectedDate(parsed);
+  }, []);
   const today = startOfDay(now);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
