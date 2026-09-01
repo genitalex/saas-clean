@@ -1,9 +1,11 @@
 import { getAuthContext } from '@/lib/db/organization-context';
-import TodayScreen from '@/features/today/components/today-screen';
+import { TodayPage } from '@/features/today/components/today-page';
 
 export const metadata = { title: 'Dashboard: Hoy' };
 
 export default async function Page() {
-  const { membership } = await getAuthContext();
-  return <TodayScreen role={membership.role as 'owner' | 'manager' | 'member'} />;
+  const { membership, user } = await getAuthContext();
+  const role =
+    membership.role === 'owner' || membership.role === 'manager' ? membership.role : 'member';
+  return <TodayPage role={role} userName={user.name.split(' ')[0] || user.name} />;
 }

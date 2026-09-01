@@ -2,7 +2,7 @@ import { NavGroup } from '@/types';
 
 export const navGroups: NavGroup[] = [
   {
-    label: 'Principal',
+    label: 'Core',
     variant: 'primary',
     items: [
       { title: 'Today', url: '/dashboard/today', icon: 'clock', shortcut: ['g', 't'], items: [] },
@@ -27,25 +27,33 @@ export const navGroups: NavGroup[] = [
         icon: 'teams',
         shortcut: ['c', 'u'],
         items: []
+      },
+      {
+        title: 'Opportunities',
+        url: '/dashboard/opportunities',
+        icon: 'opportunities',
+        shortcut: ['o', 'p'],
+        items: []
       }
     ]
   },
   {
-    label: 'Trabajo',
+    label: 'Workspace',
     variant: 'primary',
     items: [
       { title: 'Inbox', url: '/dashboard/inbox', icon: 'inbox', shortcut: ['g', 'i'], items: [] },
       { title: 'Activity', url: '/dashboard/activity', icon: 'trendingUp', items: [] },
-      { title: 'Opportunities', url: '/dashboard/opportunities', icon: 'opportunities', items: [] },
       { title: 'Business Pulse', url: '/dashboard/business-pulse', icon: 'pulse', items: [] },
       { title: 'Automations', url: '/dashboard/automations', icon: 'automations', items: [] },
       { title: 'Goals', url: '/dashboard/goals', icon: 'goals', items: [] },
       { title: 'Documents', url: '/dashboard/documents', icon: 'documents', items: [] },
-      { title: 'Proposals', url: '/dashboard/proposals', icon: 'proposals', items: [] }
+      { title: 'Proposals', url: '/dashboard/proposals', icon: 'proposals', items: [] },
+      { title: 'Plantillas', url: '/dashboard/templates', icon: 'send', items: [] },
+      { title: 'Presupuestos', url: '/dashboard/quotes', icon: 'post', items: [] }
     ]
   },
   {
-    label: 'Organización',
+    label: 'System',
     variant: 'secondary',
     items: [
       { title: 'Team', url: '/dashboard/team', icon: 'teams', items: [] },
@@ -56,11 +64,19 @@ export const navGroups: NavGroup[] = [
 ];
 
 export const mobileNavItems = [
-  navGroups[0].items[0], // Today
-  navGroups[0].items[1], // Tasks
-  navGroups[0].items[2], // Kanban
-  navGroups[0].items[3], // Calendar
-  navGroups[0].items[4] // Customers
+  navGroups[0].items[0],
+  navGroups[0].items[1],
+  navGroups[0].items[2],
+  navGroups[0].items[3],
+  navGroups[0].items[4]
 ];
-
-export const desktopNavItems = mobileNavItems;
+export const desktopNavItems = [
+  navGroups[0].items[0],
+  navGroups[0].items[1],
+  navGroups[0].items[2],
+  navGroups[0].items[3],
+  navGroups[0].items[4],
+  navGroups[0].items[5],
+  navGroups[1].items[0],
+  navGroups[1].items[1]
+];

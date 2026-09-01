@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default async function Dashboard() {
+export default function Dashboard() {
   redirect('/dashboard/today');
 }
