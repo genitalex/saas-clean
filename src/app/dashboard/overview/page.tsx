@@ -1,5 +1,5 @@
-import { DashboardHome } from '@/features/overview/components/dashboard-home';
+import { redirect } from 'next/navigation';
 
 export default function OverviewPage() {
-  return <DashboardHome />;
+  redirect('/dashboard/today');
 }
