@@ -28,14 +28,15 @@ export function BottomNavigation() {
       <nav
         aria-label='Primary navigation'
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 flex justify-center px-2 sm:px-4 transition-transform duration-300 ease-out will-change-transform',
+          'fixed inset-x-0 bottom-0 z-40 flex justify-center px-2 sm:px-4',
+          'transition-transform duration-300 ease-out will-change-transform',
           visible || moreOpen || createOpen ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='mb-2 w-max max-w-[calc(100vw-20px)] rounded-[22px] border border-border/60 bg-background/78 p-1.5 shadow-[0_22px_70px_-36px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:mb-4 md:mb-5'>
+        <div className='mb-2 w-full max-w-[980px] rounded-[24px] border border-border/60 bg-background/78 p-1.5 shadow-[0_22px_70px_-36px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:mb-4 md:mb-5'>
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
-            {primaryItems.map((item) => {
+            {primaryItems.slice(0, 5).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
               const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
               return (
@@ -43,14 +44,14 @@ export function BottomNavigation() {
                   key={item.url}
                   href={item.url}
                   className={cn(
-                    'flex min-w-0 min-h-[56px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2',
+                    'group flex min-w-0 min-h-[54px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2',
                     active
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   )}
                 >
-                  <Icon className='size-[20px] shrink-0' />
-                  <span className='truncate text-[10px] font-medium leading-none'>
+                  <Icon className='size-[20px] shrink-0 transition-transform group-hover:scale-105' />
+                  <span className='max-w-full truncate text-[10px] font-medium leading-none'>
                     {item.title}
                   </span>
                 </Link>
@@ -61,10 +62,10 @@ export function BottomNavigation() {
               aria-expanded={createOpen}
               onClick={() => {
                 setMoreOpen(false);
-                setCreateOpen((v) => !v);
+                setCreateOpen((value) => !value);
               }}
               className={cn(
-                'flex min-w-0 min-h-[56px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2',
+                'flex min-w-0 min-h-[54px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
                 createOpen
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted/70'
@@ -88,7 +89,7 @@ export function BottomNavigation() {
                 setMoreOpen(true);
               }}
               className={cn(
-                'flex min-w-0 min-h-[56px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2',
+                'flex min-w-0 min-h-[54px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
                 moreOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/70'
               )}
             >
@@ -96,7 +97,8 @@ export function BottomNavigation() {
               <span className='text-[10px] font-medium leading-none'>Más</span>
             </button>
           </div>
-          <div className='hidden items-stretch justify-center gap-1 md:flex'>
+
+          <div className='hidden grid-cols-10 gap-0.5 md:grid'>
             {primaryItems.map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
               const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
@@ -105,27 +107,28 @@ export function BottomNavigation() {
                   key={item.url}
                   href={item.url}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-[16px] px-3.5 py-2.5 text-sm font-medium',
+                    'group flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition-all duration-200',
                     active
                       ? 'bg-primary/10 text-primary shadow-sm'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   )}
                 >
-                  <Icon className='size-[18px] shrink-0' />
-                  <span className='whitespace-nowrap'>{item.title}</span>
+                  <Icon className='size-[18px] shrink-0 transition-transform group-hover:scale-105' />
+                  <span className='max-w-full truncate text-[10px] font-medium leading-none'>
+                    {item.title}
+                  </span>
                 </Link>
               );
             })}
-            <div className='mx-1 my-2 w-px bg-border/60' />
             <button
               type='button'
               aria-expanded={createOpen}
               onClick={() => {
                 setMoreOpen(false);
-                setCreateOpen((v) => !v);
+                setCreateOpen((value) => !value);
               }}
               className={cn(
-                'flex items-center gap-2 rounded-[16px] px-3.5 py-2.5 text-sm font-medium',
+                'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
                 createOpen
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted/70'
@@ -133,13 +136,13 @@ export function BottomNavigation() {
             >
               <span
                 className={cn(
-                  'flex size-7 items-center justify-center rounded-full',
+                  'flex size-6.5 items-center justify-center rounded-full',
                   createOpen ? 'bg-primary-foreground/15' : 'bg-primary text-primary-foreground'
                 )}
               >
-                <Icons.add className='size-4' />
+                <Icons.add className='size-3.5' />
               </span>
-              Nuevo
+              <span className='text-[10px] font-medium leading-none'>Nuevo</span>
             </button>
             <button
               type='button'
@@ -148,14 +151,20 @@ export function BottomNavigation() {
                 setCreateOpen(false);
                 setMoreOpen(true);
               }}
-              className='flex items-center gap-2 rounded-[16px] px-3.5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+              className={cn(
+                'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
+                moreOpen
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+              )}
             >
               <Icons.moreHorizontal className='size-[18px]' />
-              Más
+              <span className='text-[10px] font-medium leading-none'>Más</span>
             </button>
           </div>
         </div>
       </nav>
+
       {createOpen && <QuickCreate onClose={() => setCreateOpen(false)} />}
       {moreOpen && (
         <MoreSheet
@@ -181,9 +190,7 @@ function QuickCreate({ onClose }: { onClose: () => void }) {
   return (
     <div
       className='fixed inset-0 z-40 flex items-end justify-center bg-black/8 p-3 backdrop-blur-[2px]'
-      onMouseDown={(e) => {
-        if (e.currentTarget === e.target) onClose();
-      }}
+      onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
       <div className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg rounded-[24px] border border-border/60 bg-background/94 p-3 shadow-[0_26px_80px_-36px_rgba(0,0,0,0.5)] backdrop-blur-2xl'>
         <p className='text-muted-foreground px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]'>
@@ -217,13 +224,10 @@ function MoreSheet({
   onClose: () => void;
   primaryUrls: Set<string>;
 }) {
-  const primary = isMobile ? mobileNavItems : desktopNavItems;
   return (
     <div
       className='fixed inset-0 z-50 flex items-end justify-center bg-black/10 p-3 backdrop-blur-[2px]'
-      onMouseDown={(e) => {
-        if (e.currentTarget === e.target) onClose();
-      }}
+      onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
       <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-border/60 bg-background/95 shadow-[0_30px_90px_-38px_rgba(0,0,0,0.5)] backdrop-blur-2xl'>
         <div className='flex items-center justify-between border-b border-border/60 px-5 py-4'>

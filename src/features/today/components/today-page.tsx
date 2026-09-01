@@ -1,27 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 import { getEvents, eventKeys } from '@/features/calendar/queries';
 import type { Event } from '@/features/calendar/types';
 
-function useClock() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-  return now;
-}
+const glass =
+  'rounded-[26px] border border-border/55 bg-card/60 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] backdrop-blur-xl';
+const softButton =
+  'transition-all duration-200 hover:-translate-y-px hover:border-primary/20 hover:bg-card/80 active:translate-y-0';
 
 function priorityLabel(priority: Task['priority']) {
   if (priority === 'high') return 'Alta';
@@ -29,12 +25,19 @@ function priorityLabel(priority: Task['priority']) {
   return 'Media';
 }
 
+function priorityTone(priority: Task['priority']) {
+  if (priority === 'high')
+    return 'border-rose-300/60 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200';
+  if (priority === 'low') return 'border-border/60 bg-muted/50 text-muted-foreground';
+  return 'border-amber-300/60 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200';
+}
+
 function taskNeedsAttention(task: Task, now: Date) {
   return (
     task.status !== 'done' &&
     (task.priority === 'high' ||
       task.status === 'waiting' ||
-      (task.dueAt ? new Date(task.dueAt) < now : false))
+      Boolean(task.dueAt && new Date(task.dueAt) < now))
   );
 }
 
@@ -45,9 +48,19 @@ export function TodayPage({
   role: 'owner' | 'manager' | 'member';
   userName: string;
 }) {
-  const now = useClock();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const searchParams = useSearchParams();
+  const selectedDateParam = searchParams.get('date');
+  const selectedDate = selectedDateParam
+    ? startOfDay(new Date(`${selectedDateParam}T00:00:00`))
+    : null;
   const today = startOfDay(now);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
   const weekEnd = addDays(weekStart, 7);
 
   const tasksQuery = useQuery({
@@ -86,106 +99,114 @@ export function TodayPage({
   const events = eventsQuery.data ?? [];
   const customers = customersQuery.data ?? [];
 
-  const ownAttention = useMemo(
-    () => tasks.filter((task) => taskNeedsAttention(task, now)),
-    [tasks, now]
+  const attention = tasks.filter((task) => taskNeedsAttention(task, now));
+  const dueToday = tasks.filter(
+    (task) => task.status !== 'done' && task.dueAt && isSameDay(new Date(task.dueAt), today)
   );
-  const dueToday = useMemo(
-    () =>
-      tasks.filter(
-        (task) => task.status !== 'done' && task.dueAt && isSameDay(new Date(task.dueAt), today)
-      ),
-    [tasks, today]
-  );
-  const todayEvents = useMemo(
-    () => events.filter((event) => isSameDay(new Date(event.startAt), today)),
-    [events, today]
-  );
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, index) => addDays(weekStart, index)),
-    [weekStart]
-  );
-  const waitingTasks = tasks.filter((task) => task.status === 'waiting' && task.status !== 'done');
+  const upcomingEvents = events
+    .filter((event) => new Date(event.endAt) >= now)
+    .toSorted((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   const staleFollowUps = customers
     .filter(
       (customer) => customer.nextActionAt && new Date(customer.nextActionAt) < addDays(today, -7)
     )
-    .sort(
+    .toSorted(
       (a, b) => new Date(a.nextActionAt ?? 0).getTime() - new Date(b.nextActionAt ?? 0).getTime()
     )
     .slice(0, 3);
 
-  const attentionCount = ownAttention.length + waitingTasks.length;
   const greeting =
     now.getHours() < 12 ? 'Buenos días' : now.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const attentionCount = attention.length;
+
+  if (selectedDate) {
+    return (
+      <DayFocusView
+        date={selectedDate}
+        today={today}
+        tasks={tasks}
+        events={events}
+        onBackHref='/dashboard/today'
+      />
+    );
+  }
 
   return (
-    <main className='mx-auto flex w-full max-w-[1180px] min-w-0 flex-1 flex-col gap-8 pb-10 sm:gap-10 lg:gap-12'>
-      <header className='flex flex-col gap-6 border-b border-border/60 pb-7 sm:flex-row sm:items-end sm:justify-between'>
-        <div className='min-w-0'>
-          <p className='text-primary mb-2 text-xs font-semibold uppercase tracking-[0.22em]'>Hoy</p>
-          <h1 className='text-balance text-4xl font-semibold tracking-[-0.035em] sm:text-6xl'>
-            {greeting}, {userName}.
-          </h1>
-          <p className='text-muted-foreground mt-2 text-lg'>
-            {attentionCount > 0
-              ? `${attentionCount} cosas necesitan tu atención.`
-              : 'Todo bajo control.'}
-          </p>
-        </div>
-        <div className='shrink-0 text-left sm:text-right'>
-          <time className='block text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl'>
-            {format(now, 'HH:mm')}
-          </time>
-          <span className='text-muted-foreground mt-1 block text-sm capitalize'>
-            {format(now, "EEEE d 'de' MMMM yyyy", { locale: es })}
-          </span>
-        </div>
-      </header>
-
-      <div className='flex flex-wrap gap-2'>
-        <Button asChild>
-          <Link href='/dashboard/tasks'>
-            <Icons.add data-icon='inline-start' />
-            Nueva tarea
-          </Link>
-        </Button>
-        <Button variant='outline' asChild>
-          <Link href='/dashboard/calendar'>
-            <Icons.calendar data-icon='inline-start' />
-            Nuevo evento
-          </Link>
-        </Button>
-        <Button variant='outline' asChild>
-          <Link href='/dashboard/customers'>
-            <Icons.user data-icon='inline-start' />
-            Nuevo cliente
-          </Link>
-        </Button>
-      </div>
-
-      <section className='grid gap-5 lg:grid-cols-[1.35fr_0.65fr]'>
-        <section
-          className='rounded-[28px] border border-border/60 bg-card/75 p-5 shadow-[0_18px_45px_-34px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-6'
-          aria-labelledby='work-today'
-        >
-          <div className='flex items-start justify-between gap-4'>
-            <div>
-              <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                Mi trabajo
+    <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 pb-10 sm:gap-8'>
+      <section className='relative overflow-hidden rounded-[30px] border border-border/55 bg-background/55 p-5 shadow-[0_24px_70px_-48px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-7 lg:p-8'>
+        <div className='pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/[0.07] blur-3xl' />
+        <div className='relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
+          <div className='min-w-0'>
+            <div className='mb-2 flex items-center gap-2'>
+              <span className='size-1.5 rounded-full bg-primary' />
+              <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.22em]'>
+                Hoy
               </p>
-              <h2 id='work-today' className='mt-1 text-xl font-semibold tracking-tight'>
-                Para hoy
-              </h2>
             </div>
-            <Link
-              href='/dashboard/tasks'
-              className='text-muted-foreground text-sm hover:text-foreground'
-            >
-              Ver todo
-            </Link>
+            <h1 className='max-w-[760px] text-balance text-3xl font-semibold tracking-[-0.04em] sm:text-[2.9rem] lg:text-5xl'>
+              {greeting}, {userName}.
+            </h1>
+            <p className='text-muted-foreground mt-2 text-base sm:text-lg'>
+              {attentionCount > 0
+                ? `${attentionCount} ${attentionCount === 1 ? 'cosa necesita' : 'cosas necesitan'} tu atención.`
+                : 'Todo bajo control.'}
+            </p>
           </div>
-          <div className='mt-5 flex flex-col divide-y divide-border/60'>
+
+          <div className='flex shrink-0 items-center justify-between gap-6 rounded-2xl border border-border/45 bg-background/45 px-4 py-3 backdrop-blur-md lg:min-w-[220px]'>
+            <div>
+              <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.18em]'>
+                Ahora
+              </p>
+              <time className='mt-1 block text-3xl font-semibold tracking-tight tabular-nums'>
+                {format(now, 'HH:mm')}
+              </time>
+            </div>
+            <div className='text-right'>
+              <p className='text-muted-foreground text-xs capitalize'>
+                {format(now, 'EEEE', { locale: es })}
+              </p>
+              <p className='mt-0.5 text-sm font-medium tabular-nums'>
+                {format(now, "d 'de' MMMM", { locale: es })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        className='grid grid-cols-3 gap-2 sm:max-w-[720px] sm:gap-3'
+        aria-label='Acciones rápidas'
+      >
+        <QuickAction
+          href='/dashboard/tasks'
+          icon={Icons.check}
+          label='Nueva tarea'
+          hint='Organiza trabajo'
+        />
+        <QuickAction
+          href='/dashboard/calendar'
+          icon={Icons.calendar}
+          label='Nuevo evento'
+          hint='Reserva tiempo'
+        />
+        <QuickAction
+          href='/dashboard/customers'
+          icon={Icons.user}
+          label='Nuevo cliente'
+          hint='Añade contexto'
+        />
+      </section>
+
+      <section className='grid gap-4 lg:grid-cols-[1.4fr_0.8fr]'>
+        <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='work-today'>
+          <SectionHeader
+            eyebrow='Mi trabajo'
+            title='Para hoy'
+            href='/dashboard/tasks'
+            action='Ver tareas'
+          />
+          <div className='mt-4 divide-y divide-border/50'>
             {tasks
               .filter((task) => task.status !== 'done')
               .slice(0, 6)
@@ -193,122 +214,123 @@ export function TodayPage({
                 <Link
                   key={task.id}
                   href={`/dashboard/tasks?task=${task.id}`}
-                  className='flex items-center gap-3 py-3.5 transition-colors hover:bg-muted/30'
+                  className='flex min-w-0 items-center gap-3 py-3 transition-colors hover:bg-muted/25'
                 >
                   <span
                     className={cn(
-                      'flex size-8 shrink-0 items-center justify-center rounded-full border bg-background/70',
-                      taskNeedsAttention(task, now) && 'border-primary/30 bg-primary/5'
+                      'flex size-8 shrink-0 items-center justify-center rounded-full border',
+                      taskNeedsAttention(task, now)
+                        ? 'border-primary/30 bg-primary/[0.06]'
+                        : 'border-border/60 bg-background/60'
                     )}
                   >
                     <Icons.check className='size-4' />
                   </span>
                   <span className='min-w-0 flex-1'>
                     <span className='block truncate text-sm font-medium'>{task.title}</span>
-                    <span className='text-muted-foreground mt-0.5 block text-xs'>
-                      {task.customer?.name ?? 'Trabajo interno'} · {priorityLabel(task.priority)}
+                    <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
+                      {task.customer?.name ?? 'Trabajo interno'}
+                      {task.dueAt
+                        ? ` · ${format(new Date(task.dueAt), 'd MMM', { locale: es })}`
+                        : ''}
                     </span>
                   </span>
-                  <span className='text-muted-foreground shrink-0 text-xs'>
-                    {task.dueAt
-                      ? format(new Date(task.dueAt), 'd MMM', { locale: es })
-                      : 'Sin fecha'}
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold',
+                      priorityTone(task.priority)
+                    )}
+                  >
+                    {priorityLabel(task.priority)}
                   </span>
                 </Link>
               ))}
             {tasks.filter((task) => task.status !== 'done').length === 0 && (
-              <div className='text-muted-foreground py-8 text-center text-sm'>
-                No hay tareas pendientes.
+              <div className='py-8 text-center'>
+                <p className='text-sm font-medium'>Todo despejado.</p>
+                <p className='text-muted-foreground mt-1 text-xs'>
+                  Buen momento para avanzar sin ruido.
+                </p>
               </div>
             )}
           </div>
         </section>
 
         <section
-          className='rounded-[28px] border border-border/60 bg-background/45 p-5 backdrop-blur-xl sm:p-6'
+          className={cn(glass, 'bg-primary/[0.025] p-5 sm:p-6')}
           aria-labelledby='attention-now'
         >
-          <div className='flex items-start justify-between gap-4'>
-            <div>
-              <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                Atención
-              </p>
-              <h2 id='attention-now' className='mt-1 text-xl font-semibold tracking-tight'>
-                Lo que no conviene dejar pasar
-              </h2>
-            </div>
-            <span className='bg-muted flex size-8 items-center justify-center rounded-full text-xs font-semibold'>
-              {attentionCount}
-            </span>
-          </div>
-          <div className='mt-5 flex flex-col gap-2'>
-            {ownAttention.slice(0, 3).map((task) => (
+          <SectionHeader eyebrow='Atención' title='Lo que no conviene dejar pasar' />
+          <div className='mt-4 space-y-2'>
+            {attention.slice(0, 4).map((task) => (
               <Link
                 key={task.id}
-                href='/dashboard/tasks'
-                className='rounded-2xl border border-border/50 bg-card/70 px-4 py-3 transition-colors hover:bg-card'
+                href={`/dashboard/tasks?task=${task.id}`}
+                className={cn(
+                  'block rounded-2xl border border-border/45 bg-background/45 p-3.5',
+                  softButton
+                )}
               >
-                <p className='truncate text-sm font-medium'>{task.title}</p>
-                <p className='text-muted-foreground mt-1 text-xs'>
-                  {task.status === 'waiting'
-                    ? 'Esperando respuesta'
-                    : task.dueAt && new Date(task.dueAt) < now
-                      ? 'Vencida'
-                      : 'Prioridad alta'}
-                </p>
+                <div className='flex items-start gap-3'>
+                  <span className='mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/[0.08] text-primary'>
+                    <Icons.warning className='size-3.5' />
+                  </span>
+                  <div className='min-w-0 flex-1'>
+                    <p className='truncate text-sm font-medium'>{task.title}</p>
+                    <p className='text-muted-foreground mt-1 text-xs'>
+                      {task.status === 'waiting'
+                        ? 'Esperando respuesta'
+                        : task.dueAt && new Date(task.dueAt) < now
+                          ? 'Vencida'
+                          : 'Prioridad alta'}
+                    </p>
+                  </div>
+                  <Icons.chevronRight className='text-muted-foreground mt-1 size-4 shrink-0' />
+                </div>
               </Link>
             ))}
-            {ownAttention.length === 0 && (
-              <p className='text-muted-foreground py-5 text-sm'>Nada urgente por ahora.</p>
+            {attention.length === 0 && (
+              <p className='text-muted-foreground py-6 text-sm'>Nada urgente por ahora.</p>
             )}
           </div>
         </section>
       </section>
 
-      <section
-        className='rounded-[28px] border border-border/60 bg-card/55 p-5 backdrop-blur-xl sm:p-6'
-        aria-labelledby='week-ahead'
-      >
-        <div className='flex items-start justify-between gap-4'>
-          <div>
-            <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-              Agenda
-            </p>
-            <h2 id='week-ahead' className='mt-1 text-xl font-semibold tracking-tight'>
-              Esta semana
-            </h2>
-          </div>
-          <Link
-            href='/dashboard/calendar'
-            className='text-muted-foreground text-sm hover:text-foreground'
-          >
-            Calendario
-          </Link>
-        </div>
-        <div className='mt-5 grid grid-cols-7 gap-1.5 overflow-x-auto sm:gap-2'>
+      <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='week-ahead'>
+        <SectionHeader
+          eyebrow='Agenda'
+          title='Esta semana'
+          href='/dashboard/calendar'
+          action='Calendario'
+        />
+        <div className='mt-5 grid grid-cols-7 gap-1.5 sm:gap-2'>
           {weekDays.map((day) => {
             const selected = isSameDay(day, today);
             const dayEvents = events
               .filter((event) => isSameDay(new Date(event.startAt), day))
               .slice(0, 3);
+            const dayKey = format(day, 'yyyy-MM-dd');
             return (
               <Link
-                key={day.toISOString()}
-                href='/dashboard/calendar'
+                key={dayKey}
+                href={`/dashboard/today?date=${dayKey}`}
+                aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
-                  'min-w-0 rounded-2xl border p-2.5 text-center transition-colors hover:bg-muted/40 sm:p-3',
+                  'group min-w-0 rounded-2xl border p-2 text-center transition-all duration-200 hover:-translate-y-px hover:bg-card/80 sm:p-3',
                   selected
-                    ? 'border-primary/30 bg-primary/[0.06]'
-                    : 'border-border/50 bg-background/40'
+                    ? 'border-primary/25 bg-primary/[0.06] shadow-sm'
+                    : 'border-border/45 bg-background/35'
                 )}
               >
-                <span className='text-muted-foreground block text-[10px] font-medium uppercase'>
+                <span className='text-muted-foreground block text-[10px] font-semibold uppercase tracking-wide'>
                   {format(day, 'EEE', { locale: es })}
                 </span>
                 <span
                   className={cn(
                     'mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold',
-                    selected && 'bg-primary text-primary-foreground'
+                    selected
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'group-hover:bg-muted/70'
                   )}
                 >
                   {format(day, 'd')}
@@ -326,147 +348,316 @@ export function TodayPage({
             );
           })}
         </div>
-        <div className='mt-5 flex flex-col divide-y divide-border/60'>
-          {events
-            .filter((event) => new Date(event.endAt) >= today)
-            .slice(0, 4)
-            .map((event: Event) => (
-              <Link
-                key={event.id}
-                href='/dashboard/calendar'
-                className='flex items-center gap-3 py-3.5'
-              >
-                <span className='bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-semibold'>
-                  {format(new Date(event.startAt), 'd')}
+        <div className='mt-5 grid gap-2 sm:grid-cols-2'>
+          {upcomingEvents.slice(0, 4).map((event) => (
+            <Link
+              key={event.id}
+              href={`/dashboard/today?date=${format(new Date(event.startAt), 'yyyy-MM-dd')}`}
+              className={cn(
+                'flex items-center gap-3 rounded-2xl border border-border/45 bg-background/35 px-3.5 py-3',
+                softButton
+              )}
+            >
+              <span className='bg-primary/[0.08] text-primary flex size-9 shrink-0 items-center justify-center rounded-xl'>
+                <Icons.calendar className='size-4' />
+              </span>
+              <span className='min-w-0 flex-1'>
+                <span className='block truncate text-sm font-medium'>{event.title}</span>
+                <span className='text-muted-foreground mt-0.5 block text-xs'>
+                  {format(
+                    new Date(event.startAt),
+                    "EEE d · ${event.allDay ? 'Todo el día' : 'HH:mm'}",
+                    { locale: es }
+                  )}
                 </span>
-                <span className='min-w-0 flex-1 truncate text-sm font-medium'>{event.title}</span>
-                <span className='text-muted-foreground shrink-0 text-xs'>
-                  {event.allDay ? 'Todo el día' : format(new Date(event.startAt), 'HH:mm')}
-                </span>
-              </Link>
-            ))}
-          {todayEvents.length === 0 && (
-            <p className='text-muted-foreground py-4 text-sm'>No hay reuniones hoy.</p>
+              </span>
+            </Link>
+          ))}
+          {upcomingEvents.length === 0 && (
+            <p className='text-muted-foreground text-sm'>No hay reuniones próximas.</p>
           )}
         </div>
       </section>
 
-      <section className='grid gap-5 lg:grid-cols-3'>
-        <section
-          className='rounded-[28px] border border-border/60 bg-background/45 p-5 backdrop-blur-xl'
-          aria-labelledby='follow-up-heading'
-        >
-          <div className='flex items-start justify-between gap-3'>
-            <div>
-              <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                Seguimiento
-              </p>
-              <h2 id='follow-up-heading' className='mt-1 text-lg font-semibold'>
-                No dejes enfriar oportunidades
-              </h2>
-            </div>
-            <Icons.clock className='text-muted-foreground size-5' />
+      <section className='grid gap-4 lg:grid-cols-3'>
+        <section className={cn(glass, 'p-5')} aria-labelledby='deadlines-heading'>
+          <SectionHeader eyebrow='Prioridades' title='Lo que vence hoy' />
+          <div className='mt-4 space-y-2'>
+            {dueToday.slice(0, 4).map((task) => (
+              <Link
+                key={task.id}
+                href={`/dashboard/tasks?task=${task.id}`}
+                className={cn(
+                  'flex items-center gap-3 rounded-2xl border border-border/45 bg-background/35 px-3.5 py-3',
+                  softButton
+                )}
+              >
+                <span className='bg-amber-500/10 text-amber-600 flex size-8 items-center justify-center rounded-full dark:text-amber-300'>
+                  <Icons.clock className='size-4' />
+                </span>
+                <span className='min-w-0 flex-1 truncate text-sm'>{task.title}</span>
+              </Link>
+            ))}
+            {dueToday.length === 0 && (
+              <p className='text-muted-foreground text-sm'>Nada vence hoy.</p>
+            )}
           </div>
-          <div className='mt-4 flex flex-col gap-2'>
-            {staleFollowUps.length ? (
-              staleFollowUps.map((customer) => (
-                <a
-                  key={customer.id}
-                  href={`tel:${customer.phone ?? ''}`}
-                  className='flex items-center justify-between rounded-2xl border border-border/50 bg-card/60 px-3.5 py-3'
-                >
-                  <span className='min-w-0'>
-                    <strong className='block truncate text-sm'>{customer.name}</strong>
-                    <span className='text-muted-foreground text-xs'>
-                      Más de 7 días sin seguimiento
-                    </span>
+        </section>
+
+        <section className={cn(glass, 'p-5')} aria-labelledby='followup-heading'>
+          <SectionHeader
+            eyebrow='Seguimiento'
+            title='No dejes enfriar oportunidades'
+            href='/dashboard/customers'
+            action='Clientes'
+          />
+          <div className='mt-4 space-y-2'>
+            {staleFollowUps.map((customer) => (
+              <a
+                key={customer.id}
+                href={
+                  customer.phone ? `tel:${customer.phone}` : `/dashboard/customers/${customer.id}`
+                }
+                className={cn(
+                  'flex items-center gap-3 rounded-2xl border border-border/45 bg-background/35 px-3.5 py-3',
+                  softButton
+                )}
+              >
+                <span className='bg-primary/[0.08] text-primary flex size-8 items-center justify-center rounded-full'>
+                  <Icons.phone className='size-4' />
+                </span>
+                <span className='min-w-0 flex-1'>
+                  <strong className='block truncate text-sm'>{customer.name}</strong>
+                  <span className='text-muted-foreground text-xs'>
+                    Más de 7 días sin seguimiento
                   </span>
-                  <Icons.phone className='text-primary size-4 shrink-0' />
-                </a>
-              ))
-            ) : (
+                </span>
+              </a>
+            ))}
+            {staleFollowUps.length === 0 && (
               <p className='text-muted-foreground text-sm'>No hay seguimientos caducados.</p>
             )}
           </div>
         </section>
 
-        <section
-          className='rounded-[28px] border border-border/60 bg-background/45 p-5 backdrop-blur-xl'
-          aria-labelledby='tools-heading'
-        >
-          <div className='flex items-start justify-between gap-3'>
-            <div>
-              <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                Herramientas
-              </p>
-              <h2 id='tools-heading' className='mt-1 text-lg font-semibold'>
-                Copia, pega y avanza
-              </h2>
-            </div>
-            <Icons.sparkles className='text-muted-foreground size-5' />
-          </div>
-          <div className='mt-4 grid gap-2'>
-            <Link
-              href='/dashboard/templates'
-              className='rounded-2xl border border-border/50 bg-card/60 px-4 py-3 text-sm font-medium transition-colors hover:bg-card'
-            >
-              Plantillas de texto rápidas
-            </Link>
-            <Link
-              href='/dashboard/quotes'
-              className='rounded-2xl border border-border/50 bg-card/60 px-4 py-3 text-sm font-medium transition-colors hover:bg-card'
-            >
-              Crear presupuesto
-            </Link>
-          </div>
-        </section>
-
-        <section
-          className='rounded-[28px] border border-border/60 bg-background/45 p-5 backdrop-blur-xl'
-          aria-labelledby='team-layer-heading'
-        >
-          <div className='flex items-start justify-between gap-3'>
-            <div>
-              <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                Equipo
-              </p>
-              <h2 id='team-layer-heading' className='mt-1 text-lg font-semibold'>
-                {role === 'member' ? 'Tu jornada' : 'Tu equipo, sin perder tu foco'}
-              </h2>
-            </div>
-            <Icons.teams className='text-muted-foreground size-5' />
-          </div>
+        <section className={cn(glass, 'p-5')} aria-labelledby='team-heading'>
+          <SectionHeader
+            eyebrow='Equipo'
+            title={role === 'member' ? 'Tu espacio de trabajo' : 'Tu equipo, sin perder tu foco'}
+          />
           {role === 'member' ? (
-            <p className='text-muted-foreground mt-4 text-sm leading-6'>
-              Aquí ves tu trabajo y tus próximos pasos. El resto de la organización permanece fuera
-              de tu vista.
-            </p>
+            <div className='mt-4 rounded-2xl border border-border/45 bg-background/35 p-4'>
+              <p className='text-sm leading-6'>
+                Tu espacio muestra únicamente lo que necesitas para sacar adelante tu trabajo.
+              </p>
+            </div>
           ) : (
             <div className='mt-4 space-y-2'>
               <Link
                 href='/dashboard/team'
-                className='flex items-center justify-between rounded-2xl border border-border/50 bg-card/60 px-4 py-3 text-sm font-medium'
+                className={cn(
+                  'flex items-center justify-between rounded-2xl border border-border/45 bg-background/35 px-3.5 py-3 text-sm font-medium',
+                  softButton
+                )}
               >
-                <span>Revisar equipo</span>
-                <Icons.chevronRight className='size-4' />
+                <span>Revisar el equipo</span>
+                <Icons.chevronRight className='size-4 text-muted-foreground' />
               </Link>
-              <p className='text-muted-foreground px-1 text-xs'>
-                Además de esto, sigues viendo tu propio trabajo arriba.
+              <p className='text-muted-foreground px-1 text-xs leading-5'>
+                Puedes revisar al equipo sin perder de vista tu propio trabajo.
               </p>
             </div>
           )}
         </section>
       </section>
 
-      <section className='flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-5'>
-        <p className='text-muted-foreground text-sm'>Un momento para trabajar con calma.</p>
-        <div className='flex gap-2'>
-          <Button variant='ghost' size='sm' asChild>
-            <Link href='/dashboard/calendar'>Ver agenda</Link>
-          </Button>
-          <Button variant='ghost' size='sm' asChild>
-            <Link href='/dashboard/tasks'>Ver tareas</Link>
-          </Button>
+      <footer className='flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-5'>
+        <p className='text-muted-foreground text-xs'>
+          Trabaja con calma. El sistema se ocupa del ruido.
+        </p>
+        <div className='flex items-center gap-1'>
+          <Link
+            href='/dashboard/templates'
+            className='text-muted-foreground rounded-lg px-2.5 py-1.5 text-xs transition hover:bg-muted/60 hover:text-foreground'
+          >
+            Plantillas
+          </Link>
+          <Link
+            href='/dashboard/quotes'
+            className='text-muted-foreground rounded-lg px-2.5 py-1.5 text-xs transition hover:bg-muted/60 hover:text-foreground'
+          >
+            Presupuestos
+          </Link>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+  hint
+}: {
+  href: string;
+  icon: typeof Icons.check;
+  label: string;
+  hint: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(glass, 'group flex min-w-0 items-center gap-3 px-3.5 py-3', softButton)}
+    >
+      <span className='bg-primary/[0.08] text-primary flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105'>
+        <Icon className='size-4.5' />
+      </span>
+      <span className='min-w-0'>
+        <span className='block truncate text-sm font-medium'>{label}</span>
+        <span className='text-muted-foreground block truncate text-[10px]'>{hint}</span>
+      </span>
+    </Link>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  href,
+  action
+}: {
+  eyebrow: string;
+  title: string;
+  href?: string;
+  action?: string;
+}) {
+  return (
+    <div className='flex items-start justify-between gap-3'>
+      <div className='min-w-0'>
+        <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
+          {eyebrow}
+        </p>
+        <h2 className='mt-1 text-lg font-semibold tracking-tight sm:text-xl'>{title}</h2>
+      </div>
+      {href && action && (
+        <Link
+          href={href}
+          className='text-muted-foreground shrink-0 rounded-lg px-2 py-1 text-xs font-medium transition hover:bg-muted/60 hover:text-foreground'
+        >
+          {action}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function DayFocusView({
+  date,
+  today,
+  tasks,
+  events,
+  onBackHref
+}: {
+  date: Date;
+  today: Date;
+  tasks: Task[];
+  events: Event[];
+  onBackHref: string;
+}) {
+  const dayEvents = events
+    .filter((event) => isSameDay(new Date(event.startAt), date))
+    .toSorted((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  const dayTasks = tasks
+    .filter((task) => task.dueAt && isSameDay(new Date(task.dueAt), date) && task.status !== 'done')
+    .slice(0, 8);
+
+  return (
+    <main className='mx-auto flex w-full max-w-[960px] min-w-0 flex-1 flex-col gap-6 pb-10'>
+      <header className='flex items-center gap-3'>
+        <Link
+          href={onBackHref}
+          className='flex size-10 items-center justify-center rounded-xl border border-border/55 bg-background/60 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground'
+        >
+          <Icons.chevronLeft className='size-5' />
+        </Link>
+        <div className='min-w-0'>
+          <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
+            Hoy · Día
+          </p>
+          <h1 className='truncate text-2xl font-semibold tracking-tight capitalize'>
+            {format(date, "EEEE d 'de' MMMM", { locale: es })}
+          </h1>
+        </div>
+        {isSameDay(date, today) && (
+          <span className='ml-auto rounded-full bg-primary/[0.08] px-3 py-1 text-xs font-semibold text-primary'>
+            Hoy
+          </span>
+        )}
+      </header>
+
+      <section className={cn(glass, 'p-5 sm:p-6')}>
+        <SectionHeader
+          eyebrow='Agenda'
+          title={`${dayEvents.length} ${dayEvents.length === 1 ? 'evento' : 'eventos'}`}
+        />
+        <div className='mt-5 space-y-2'>
+          {dayEvents.map((event) => (
+            <div
+              key={event.id}
+              className='flex items-center gap-3 rounded-2xl border border-border/45 bg-background/35 px-4 py-3'
+            >
+              <span className='text-muted-foreground w-14 shrink-0 text-xs font-semibold tabular-nums'>
+                {event.allDay ? 'Todo el día' : format(new Date(event.startAt), 'HH:mm')}
+              </span>
+              <span className='h-8 w-1 shrink-0 rounded-full bg-primary' />
+              <div className='min-w-0 flex-1'>
+                <p className='truncate text-sm font-medium'>{event.title}</p>
+                {event.location && (
+                  <p className='text-muted-foreground mt-0.5 truncate text-xs'>{event.location}</p>
+                )}
+              </div>
+            </div>
+          ))}
+          {dayEvents.length === 0 && (
+            <p className='text-muted-foreground py-5 text-sm'>No hay eventos para este día.</p>
+          )}
+        </div>
+      </section>
+
+      <section className={cn(glass, 'p-5 sm:p-6')}>
+        <SectionHeader
+          eyebrow='Trabajo'
+          title={`${dayTasks.length} ${dayTasks.length === 1 ? 'tarea con fecha' : 'tareas con fecha'}`}
+          href='/dashboard/tasks'
+          action='Ver tareas'
+        />
+        <div className='mt-5 divide-y divide-border/50'>
+          {dayTasks.map((task) => (
+            <Link
+              key={task.id}
+              href={`/dashboard/tasks?task=${task.id}`}
+              className='flex items-center gap-3 py-3'
+            >
+              <span className='flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background/60'>
+                <Icons.check className='size-4' />
+              </span>
+              <span className='min-w-0 flex-1 truncate text-sm font-medium'>{task.title}</span>
+              <span
+                className={cn(
+                  'rounded-full border px-2 py-1 text-[10px] font-semibold',
+                  priorityTone(task.priority)
+                )}
+              >
+                {priorityLabel(task.priority)}
+              </span>
+            </Link>
+          ))}
+          {dayTasks.length === 0 && (
+            <p className='text-muted-foreground py-5 text-sm'>
+              No hay tareas con deadline para este día.
+            </p>
+          )}
         </div>
       </section>
     </main>
