@@ -3,7 +3,6 @@
 import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -144,7 +143,7 @@ export function TodayPage({
                 Hoy
               </p>
             </div>
-            <h1 className='max-w-[760px] text-balance text-3xl font-semibold tracking-[-0.04em] sm:text-[2.9rem] lg:text-5xl'>
+            <h1 className='max-w-[760px] text-balance text-2xl font-semibold tracking-[-0.035em] sm:text-[2.4rem] lg:text-4xl'>
               {greeting}, {userName}.
             </h1>
             <p className='text-muted-foreground mt-2 text-base sm:text-lg'>
