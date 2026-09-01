@@ -429,6 +429,7 @@ const mobileWeekDaysNarrow = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const MOBILE_DAY_START_HOUR = 0;
 const MOBILE_DAY_END_HOUR = 24;
 const MOBILE_HOUR_ROW_PX = 60;
+const ALL_DAY_ROW_PX = 58;
 
 /**
  * Mobile calendar experience: a real month overview you can tap into a
@@ -1007,6 +1008,7 @@ function MobileDayTimeline({
   const hourHeight = MOBILE_HOUR_ROW_PX;
   const totalHeight = (endHour - startHour) * hourHeight;
   const dayEvents = eventsForDay(events, date).filter((event) => !event.allDay);
+  const allDayEvents = eventsForDay(events, date).filter((event) => event.allDay);
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
   const nowOffset = ((nowMinutes - startHour * 60) / 60) * hourHeight;
   const showNowLine = isToday && nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
@@ -1053,6 +1055,35 @@ function MobileDayTimeline({
       </div>
 
       <div className='bg-card/75 border-border/50 min-h-0 flex-1 overflow-y-auto rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+        {allDayEvents.length > 0 && (
+          <div className='border-border/60 bg-surface-subtle/45 flex min-h-[58px] flex-wrap items-center gap-2 border-b px-3 py-2'>
+            <span className='text-muted-foreground shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em]'>
+              Todo el día
+            </span>
+            {allDayEvents.map((event) => {
+              const category = categoryFor(event, categories);
+              return (
+                <button
+                  key={event.id}
+                  type='button'
+                  onClick={() => onOpenEvent(event)}
+                  className='min-w-0 truncate rounded-lg border px-2.5 py-1.5 text-xs font-medium shadow-sm'
+                  style={{
+                    backgroundColor: `${category.color}14`,
+                    borderColor: `${category.color}35`
+                  }}
+                  title={event.title}
+                >
+                  <span
+                    className='mr-1 inline-block size-1.5 rounded-full align-middle'
+                    style={{ backgroundColor: category.color }}
+                  />
+                  {event.title}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <div
           data-calendar-day={format(date, 'yyyy-MM-dd')}
           className='relative'
@@ -1513,145 +1544,182 @@ function TimelineView({
             className='grid'
             style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(0, 1fr))` }}
           >
-            <div className='relative' style={{ height: totalHeight }}>
-              {Array.from({ length: endHour - startHour }, (_, i) => {
-                const hour = startHour + i;
-                return (
-                  <div
-                    key={hour}
-                    className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
-                    style={{ top: i * hourHeight, height: hourHeight }}
-                  >
-                    {formatHourLabel(hour)}
-                    {[1, 2, 3].map((quarter) => (
-                      <span
-                        key={quarter}
-                        className='pointer-events-none absolute left-[72px] right-0 h-px bg-border/20'
-                        style={{ top: quarter * (hourHeight / 4) }}
-                      />
-                    ))}
-                  </div>
-                );
-              })}
+            <div className='relative' style={{ height: totalHeight + ALL_DAY_ROW_PX }}>
+              <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
+              <div className='relative' style={{ height: totalHeight }}>
+                {Array.from({ length: endHour - startHour }, (_, i) => {
+                  const hour = startHour + i;
+                  return (
+                    <div
+                      key={hour}
+                      className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
+                      style={{ top: i * hourHeight, height: hourHeight }}
+                    >
+                      {formatHourLabel(hour)}
+                      {[1, 2, 3].map((quarter) => (
+                        <span
+                          key={quarter}
+                          className='pointer-events-none absolute left-[72px] right-0 h-px bg-border/20'
+                          style={{ top: quarter * (hourHeight / 4) }}
+                        />
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {days.map((day) => {
               const dayEvents = eventsForDay(events, day).filter((event) => !event.allDay);
+              const allDayEvents = eventsForDay(events, day).filter((event) => event.allDay);
               return (
                 <div
                   key={day.toISOString()}
-                  data-calendar-day={format(day, 'yyyy-MM-dd')}
                   className='border-border/60 relative border-r last:border-r-0'
-                  style={{ height: totalHeight }}
                 >
-                  {Array.from({ length: endHour - startHour }, (_, i) => (
-                    <button
-                      key={i}
-                      type='button'
-                      aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
-                      onClick={() =>
-                        onCreate(
-                          new Date(day.getFullYear(), day.getMonth(), day.getDate(), startHour + i)
-                        )
-                      }
-                      className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
-                      style={{ top: i * hourHeight, height: hourHeight }}
-                    />
-                  ))}
-
-                  {dayEvents.map((event) => {
-                    const category = categoryFor(event, categories);
-                    const startAt = new Date(event.startAt);
-                    const endAt = new Date(event.endAt);
-                    const minutesFromStart =
-                      startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
-                    const durationMinutes = Math.max(
-                      30,
-                      (endAt.getTime() - startAt.getTime()) / 60000
-                    );
-                    const clampedTop = Math.max(0, (minutesFromStart / 60) * hourHeight);
-                    const height = Math.max(34, (durationMinutes / 60) * hourHeight - 6);
-                    return (
-                      <button
-                        key={event.id}
-                        type='button'
-                        onPointerDown={(pointerEvent) => startDrag(pointerEvent, event)}
-                        title='Arrastra para cambiar de hora o día'
-                        onClick={() => {
-                          if (!suppressClickRef.current) onOpenEvent(event);
-                        }}
-                        className={cn(
-                          'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
-                          dragPreview?.event.id === event.id && 'opacity-35'
-                        )}
-                        style={{
-                          top: clampedTop,
-                          height,
-                          backgroundColor: `${category.color}12`,
-                          borderColor: `${category.color}35`
-                        }}
-                      >
-                        <span
-                          className='absolute inset-y-0 left-0 w-1'
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
-                          <span className='truncate text-sm font-semibold'>{event.title}</span>
-                          <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
-                            {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
-                          </span>
-                          {event.location && (
-                            <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
-                              target='_blank'
-                              rel='noreferrer'
-                              onPointerDown={(pointerEvent) => pointerEvent.stopPropagation()}
-                              onClick={(clickEvent) => clickEvent.stopPropagation()}
-                              className='mt-0.5 flex min-w-0 items-center gap-1 truncate text-[11px] underline-offset-2 hover:underline'
-                            >
-                              <Icons.externalLink className='size-3 shrink-0' />
-                              <span className='truncate'>{event.location}</span>
-                            </a>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-
-                  {dragPreview?.dateKey === format(day, 'yyyy-MM-dd') &&
-                    (() => {
-                      const ghostEvent = dragPreview.event;
-                      const ghostCategory = categoryFor(ghostEvent, categories);
-                      const ghostStart = new Date(ghostEvent.startAt);
-                      const ghostEnd = new Date(ghostEvent.endAt);
-                      const ghostDuration = Math.max(
-                        15,
-                        (ghostEnd.getTime() - ghostStart.getTime()) / 60000
-                      );
-                      const ghostTop = ((dragPreview.minutes - startHour * 60) / 60) * hourHeight;
-                      const ghostHeight = Math.max(34, (ghostDuration / 60) * hourHeight - 6);
+                  <div className='border-border/60 bg-surface-subtle/45 flex h-[58px] flex-wrap items-center gap-1.5 overflow-hidden border-b px-2 py-1.5'>
+                    {allDayEvents.map((event) => {
+                      const category = categoryFor(event, categories);
                       return (
-                        <div
-                          className='pointer-events-none absolute left-1.5 right-1.5 z-30 overflow-hidden rounded-xl border border-dashed'
+                        <button
+                          key={event.id}
+                          type='button'
+                          onClick={() => onOpenEvent(event)}
+                          className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium shadow-sm'
                           style={{
-                            top: ghostTop,
-                            height: ghostHeight,
-                            backgroundColor: `${ghostCategory.color}18`,
-                            borderColor: `${ghostCategory.color}65`
+                            backgroundColor: `${category.color}14`,
+                            borderColor: `${category.color}35`
                           }}
-                        />
+                          title={event.title}
+                        >
+                          <span
+                            className='mr-1 inline-block size-1.5 rounded-full align-middle'
+                            style={{ backgroundColor: category.color }}
+                          />
+                          {event.title}
+                        </button>
                       );
-                    })()}
+                    })}
+                  </div>
+                  <div
+                    data-calendar-day={format(day, 'yyyy-MM-dd')}
+                    className='relative'
+                    style={{ height: totalHeight }}
+                  >
+                    {Array.from({ length: endHour - startHour }, (_, i) => (
+                      <button
+                        key={i}
+                        type='button'
+                        aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
+                        onClick={() =>
+                          onCreate(
+                            new Date(
+                              day.getFullYear(),
+                              day.getMonth(),
+                              day.getDate(),
+                              startHour + i
+                            )
+                          )
+                        }
+                        className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
+                        style={{ top: i * hourHeight, height: hourHeight }}
+                      />
+                    ))}
 
-                  {showNow && isSameDay(day, today) && (
-                    <div
-                      className='pointer-events-none absolute inset-x-0 z-20 flex items-center'
-                      style={{ top: nowOffset }}
-                    >
-                      <span className='bg-primary size-2 rounded-full' />
-                      <span className='bg-primary h-[2px] flex-1' />
-                    </div>
-                  )}
+                    {dayEvents.map((event) => {
+                      const category = categoryFor(event, categories);
+                      const startAt = new Date(event.startAt);
+                      const endAt = new Date(event.endAt);
+                      const minutesFromStart =
+                        startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
+                      const durationMinutes = Math.max(
+                        30,
+                        (endAt.getTime() - startAt.getTime()) / 60000
+                      );
+                      const clampedTop = Math.max(0, (minutesFromStart / 60) * hourHeight);
+                      const height = Math.max(34, (durationMinutes / 60) * hourHeight - 6);
+                      return (
+                        <button
+                          key={event.id}
+                          type='button'
+                          onPointerDown={(pointerEvent) => startDrag(pointerEvent, event)}
+                          title='Arrastra para cambiar de hora o día'
+                          onClick={() => {
+                            if (!suppressClickRef.current) onOpenEvent(event);
+                          }}
+                          className={cn(
+                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
+                            dragPreview?.event.id === event.id && 'opacity-35'
+                          )}
+                          style={{
+                            top: clampedTop,
+                            height,
+                            backgroundColor: `${category.color}12`,
+                            borderColor: `${category.color}35`
+                          }}
+                        >
+                          <span
+                            className='absolute inset-y-0 left-0 w-1'
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
+                            <span className='truncate text-sm font-semibold'>{event.title}</span>
+                            <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
+                              {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                            </span>
+                            {event.location && (
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`}
+                                target='_blank'
+                                rel='noreferrer'
+                                onPointerDown={(pointerEvent) => pointerEvent.stopPropagation()}
+                                onClick={(clickEvent) => clickEvent.stopPropagation()}
+                                className='mt-0.5 flex min-w-0 items-center gap-1 truncate text-[11px] underline-offset-2 hover:underline'
+                              >
+                                <Icons.externalLink className='size-3 shrink-0' />
+                                <span className='truncate'>{event.location}</span>
+                              </a>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
+
+                    {dragPreview?.dateKey === format(day, 'yyyy-MM-dd') &&
+                      (() => {
+                        const ghostEvent = dragPreview.event;
+                        const ghostCategory = categoryFor(ghostEvent, categories);
+                        const ghostStart = new Date(ghostEvent.startAt);
+                        const ghostEnd = new Date(ghostEvent.endAt);
+                        const ghostDuration = Math.max(
+                          15,
+                          (ghostEnd.getTime() - ghostStart.getTime()) / 60000
+                        );
+                        const ghostTop = ((dragPreview.minutes - startHour * 60) / 60) * hourHeight;
+                        const ghostHeight = Math.max(34, (ghostDuration / 60) * hourHeight - 6);
+                        return (
+                          <div
+                            className='pointer-events-none absolute left-1.5 right-1.5 z-30 overflow-hidden rounded-xl border border-dashed'
+                            style={{
+                              top: ghostTop,
+                              height: ghostHeight,
+                              backgroundColor: `${ghostCategory.color}18`,
+                              borderColor: `${ghostCategory.color}65`
+                            }}
+                          />
+                        );
+                      })()}
+
+                    {showNow && isSameDay(day, today) && (
+                      <div
+                        className='pointer-events-none absolute inset-x-0 z-20 flex items-center'
+                        style={{ top: nowOffset }}
+                      >
+                        <span className='bg-primary size-2 rounded-full' />
+                        <span className='bg-primary h-[2px] flex-1' />
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
