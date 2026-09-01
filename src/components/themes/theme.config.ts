@@ -1,10 +1,13 @@
 /**
  * Default theme that loads when no user preference is set
- * Change this value to set a different default theme
  */
-export const DEFAULT_THEME = 'premium';
+export const DEFAULT_THEME = 'glass';
 
 export const THEMES = [
+  {
+    name: 'Glass',
+    value: 'glass'
+  },
   {
     name: 'Premium',
     value: 'premium'
