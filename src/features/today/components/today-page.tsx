@@ -145,7 +145,7 @@ export function TodayPage({
                 Hoy
               </p>
             </div>
-            <h1 className='max-w-[760px] text-balance text-2xl font-semibold tracking-[-0.035em] sm:text-[2.4rem] lg:text-4xl'>
+            <h1 className='max-w-[760px] text-balance text-xl font-semibold tracking-[-0.03em] sm:text-2xl lg:text-3xl'>
               {greeting}, {userName}.
             </h1>
             <p className='text-muted-foreground mt-2 text-base sm:text-lg'>
