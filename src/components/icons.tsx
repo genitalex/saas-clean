@@ -65,6 +65,7 @@ import {
   IconPaperclip,
   IconPhone,
   IconPhoto,
+  IconPin,
   IconPizza,
   IconPlug,
   IconPlus,
@@ -171,6 +172,7 @@ export const Icons = {
   // Actions
   add: IconPlus,
   edit: IconEdit,
+  pin: IconPin,
   upload: IconUpload,
   share: IconShare,
   login: IconLogin,

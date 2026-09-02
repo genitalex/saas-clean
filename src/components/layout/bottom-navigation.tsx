@@ -184,7 +184,7 @@ function QuickCreate({ onClose }: { onClose: () => void }) {
     ['Nuevo evento', '/dashboard/calendar'],
     ['Nuevo cliente', '/dashboard/customers'],
     ['Nueva oportunidad', '/dashboard/opportunities'],
-    ['Nota rápida', '/dashboard/customers'],
+    ['Nota rápida', '/dashboard/notes'],
     ['Presupuesto', '/dashboard/quotes']
   ];
   return (

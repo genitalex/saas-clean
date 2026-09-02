@@ -6,14 +6,22 @@ import { cn } from '@/lib/utils';
 
 type Note = {
   id: string;
+  organizationId: string;
+  userId: string;
   title: string;
   content: string;
-  tag: string;
+  tag: string | null;
   pinned: boolean;
-  updatedAt: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const STORAGE_KEY = 'saas-clean-notes';
+async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const response = await fetch(input, { ...init, cache: 'no-store' });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'No se pudo guardar la nota');
+  return data as T;
+}
 
 export default function NotesPage() {
   const [notes, setNotes] = React.useState<Note[]>([]);
@@ -22,56 +30,90 @@ export default function NotesPage() {
   const [tag, setTag] = React.useState('');
   const [query, setQuery] = React.useState('');
   const [editorOpen, setEditorOpen] = React.useState(false);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   React.useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) setNotes(JSON.parse(saved) as Note[]);
-    } catch {
-      /* Local notes are best-effort. */
-    }
+    request<Note[]>('/api/notes')
+      .then(setNotes)
+      .catch((requestError: Error) => setError(requestError.message))
+      .finally(() => setLoading(false));
   }, []);
 
-  React.useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  }, [notes]);
-
-  const createNote = () => {
-    if (!title.trim() && !content.trim()) return;
-    setNotes((current) => [
-      {
-        id: crypto.randomUUID(),
-        title: title.trim() || 'Sin título',
-        content: content.trim(),
-        tag: tag.trim(),
-        pinned: false,
-        updatedAt: Date.now()
-      },
-      ...current
-    ]);
+  const resetEditor = () => {
     setTitle('');
     setContent('');
     setTag('');
+    setEditingId(null);
     setEditorOpen(false);
   };
 
-  const togglePin = (id: string) => {
-    setNotes((current) =>
-      current.map((note) =>
-        note.id === id ? { ...note, pinned: !note.pinned, updatedAt: Date.now() } : note
-      )
-    );
+  const saveNote = async () => {
+    if (!title.trim()) return;
+    setSaving(true);
+    setError('');
+    try {
+      const note = await request<Note>(editingId ? `/api/notes/${editingId}` : '/api/notes', {
+        method: editingId ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, tag: tag || null })
+      });
+      setNotes((current) =>
+        editingId ? current.map((item) => (item.id === note.id ? note : item)) : [note, ...current]
+      );
+      resetEditor();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'No se pudo guardar la nota');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeNote = (id: string) => {
-    setNotes((current) => current.filter((note) => note.id !== id));
+  const editNote = (note: Note) => {
+    setEditingId(note.id);
+    setTitle(note.title);
+    setContent(note.content);
+    setTag(note.tag || '');
+    setEditorOpen(true);
+  };
+
+  const togglePin = async (note: Note) => {
+    try {
+      const updated = await request<Note>(`/api/notes/${note.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned: !note.pinned })
+      });
+      setNotes((current) => current.map((item) => (item.id === note.id ? updated : item)));
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error ? requestError.message : 'No se pudo actualizar la nota'
+      );
+    }
+  };
+
+  const removeNote = async (id: string) => {
+    try {
+      await request(`/api/notes/${id}`, { method: 'DELETE' });
+      setNotes((current) => current.filter((note) => note.id !== id));
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error ? requestError.message : 'No se pudo eliminar la nota'
+      );
+    }
   };
 
   const visible = notes
     .filter((note) =>
       `${note.title} ${note.content} ${note.tag}`.toLowerCase().includes(query.toLowerCase())
     )
-    .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt - a.updatedAt);
+    .toSorted(
+      (a, b) =>
+        Number(b.pinned) - Number(a.pinned) ||
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 
   return (
     <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-5 pb-10'>
@@ -98,7 +140,10 @@ export default function NotesPage() {
           </div>
           <button
             type='button'
-            onClick={() => setEditorOpen(true)}
+            onClick={() => {
+              resetEditor();
+              setEditorOpen(true);
+            }}
             className='flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm'
           >
             <Icons.add className='size-4' /> Nueva nota
@@ -106,20 +151,27 @@ export default function NotesPage() {
         </div>
       </header>
 
+      {error && (
+        <p className='text-destructive text-sm' role='alert'>
+          {error}
+        </p>
+      )}
+
       {editorOpen && (
         <section className='rounded-[24px] border border-border/55 bg-card/65 p-4 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] backdrop-blur-xl sm:p-5'>
           <div className='grid gap-3'>
             <input
-              autoFocus
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder='Título'
+              aria-label='Título de la nota'
               className='bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground'
             />
             <textarea
               value={content}
               onChange={(event) => setContent(event.target.value)}
               placeholder='Escribe lo que tengas en la cabeza…'
+              aria-label='Contenido de la nota'
               rows={6}
               className='resize-none rounded-2xl border border-border/45 bg-background/40 p-3 text-sm outline-none focus:border-primary/35'
             />
@@ -128,22 +180,25 @@ export default function NotesPage() {
                 value={tag}
                 onChange={(event) => setTag(event.target.value)}
                 placeholder='Etiqueta opcional'
+                aria-label='Etiqueta opcional'
                 className='rounded-xl border border-border/45 bg-background/40 px-3 py-2 text-sm outline-none'
               />
               <div className='flex gap-2'>
                 <button
                   type='button'
-                  onClick={() => setEditorOpen(false)}
+                  onClick={resetEditor}
                   className='rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/60'
                 >
                   Cancelar
                 </button>
                 <button
                   type='button'
-                  onClick={createNote}
+                  onClick={saveNote}
+                  disabled={saving || !title.trim()}
+                  aria-busy={saving}
                   className='rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground'
                 >
-                  Guardar nota
+                  {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Guardar nota'}
                 </button>
               </div>
             </div>
@@ -157,7 +212,11 @@ export default function NotesPage() {
             <Icons.post className='size-5' />
           </span>
           <p className='mt-3 text-sm font-semibold'>
-            {query ? 'No hay notas que coincidan.' : 'Todavía no hay notas.'}
+            {loading
+              ? 'Cargando notas...'
+              : query
+                ? 'No hay notas que coincidan.'
+                : 'Todavía no hay notas.'}
           </p>
           <p className='text-muted-foreground mt-1 text-xs'>
             Deja aquí ideas, apuntes o contexto para retomarlo después.
@@ -179,14 +238,14 @@ export default function NotesPage() {
                 </div>
                 <button
                   type='button'
-                  onClick={() => togglePin(note.id)}
+                  onClick={() => togglePin(note)}
                   aria-label={note.pinned ? 'Desfijar nota' : 'Fijar nota'}
                   className={cn(
                     'rounded-lg p-1.5 transition-colors hover:bg-muted/60',
                     note.pinned ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
-                  <Icons.star className='size-4' />
+                  <Icons.pin className='size-4' />
                 </button>
               </div>
               <div className='mt-4 flex items-center justify-between gap-2'>
@@ -197,6 +256,14 @@ export default function NotesPage() {
                 ) : (
                   <span />
                 )}
+                <button
+                  type='button'
+                  onClick={() => editNote(note)}
+                  className='rounded-lg p-1.5 text-muted-foreground opacity-70 transition hover:bg-muted/60 hover:text-foreground'
+                  aria-label='Editar nota'
+                >
+                  <Icons.edit className='size-3.5' />
+                </button>
                 <button
                   type='button'
                   onClick={() => removeNote(note.id)}

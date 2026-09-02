@@ -372,3 +372,31 @@ export const activities = pgTable(
     index('activities_organization_customer_idx').on(table.organizationId, table.customerId)
   ]
 );
+
+export const notes = pgTable(
+  'notes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    content: text('content').notNull(),
+    tag: text('tag'),
+    pinned: boolean('pinned').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('notes_organization_id_idx').on(table.organizationId),
+    index('notes_user_id_idx').on(table.userId),
+    index('notes_organization_user_updated_idx').on(
+      table.organizationId,
+      table.userId,
+      table.updatedAt
+    )
+  ]
+);
