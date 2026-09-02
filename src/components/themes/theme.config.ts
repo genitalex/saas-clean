@@ -9,6 +9,10 @@ export const THEMES = [
     value: 'glass'
   },
   {
+    name: 'Mac / iOS',
+    value: 'mac'
+  },
+  {
     name: 'Premium',
     value: 'premium'
   },

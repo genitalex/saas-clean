@@ -12,6 +12,7 @@
 @import './themes/astro-vista.css';
 @import './themes/whatsapp.css';
 @import './themes/glass.css';
+@import './themes/mac.css';
 
 body {
   @apply overscroll-none;
