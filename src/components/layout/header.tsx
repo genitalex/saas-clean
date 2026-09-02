@@ -9,8 +9,11 @@ import { ThemeModeToggle } from '../themes/theme-mode-toggle';
 import { NotificationCenter } from '@/features/notifications/components/notification-center';
 import { UserNav } from './user-nav';
 import { useShellMetric } from '@/hooks/use-shell-metric';
+import { useKBar } from 'kbar';
+import { Icons } from '@/components/icons';
 
 export default function Header() {
+  const { query } = useKBar();
   const headerRef = React.useRef<HTMLElement>(null);
   useShellMetric(headerRef, '--app-header-height');
 
@@ -24,6 +27,14 @@ export default function Header() {
       </div>
 
       <div className='flex shrink-0 items-center gap-1.5 sm:gap-2'>
+        <button
+          type='button'
+          aria-label='Abrir búsqueda'
+          onClick={query.toggle}
+          className='text-muted-foreground hover:bg-muted hover:text-foreground flex size-9 items-center justify-center rounded-xl md:hidden'
+        >
+          <Icons.search className='size-4' />
+        </button>
         <div className='hidden md:flex'>
           <SearchInput />
         </div>

@@ -2,7 +2,7 @@ import PageContainer from '@/components/layout/page-container';
 import CustomerListing from '@/features/customers/components/customer-listing';
 import CustomerFormSheet from '@/features/customers/components/customer-form-sheet';
 
-export const metadata = { title: 'Customers' };
+export const metadata = { title: 'Clientes' };
 
 export default async function CustomersPage({
   searchParams
@@ -12,8 +12,8 @@ export default async function CustomersPage({
   const params = await searchParams;
   return (
     <PageContainer
-      pageTitle='Customers'
-      pageDescription='Manage customers in the active workspace.'
+      pageTitle='Clientes'
+      pageDescription='Tu lista de trabajo con el contexto de cada cliente.'
       pageHeaderAction={<CustomerFormSheet initialOpen={params.create === '1'} />}
     >
       <CustomerListing />

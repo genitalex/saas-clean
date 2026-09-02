@@ -15,6 +15,7 @@ export default function CustomerListing() {
   const [rows, setRows] = useState<Customer[]>([]);
   const [q, setQ] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deepLinkId, setDeepLinkId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/customers?search=${encodeURIComponent(q)}`, { cache: 'no-store' });
@@ -27,6 +28,52 @@ export default function CustomerListing() {
     window.addEventListener('customers:refresh', fn);
     return () => window.removeEventListener('customers:refresh', fn);
   }, [load]);
+
+  useEffect(() => {
+    const syncDeepLink = () => {
+      setDeepLinkId(new URLSearchParams(window.location.search).get('customer'));
+    };
+
+    syncDeepLink();
+    window.addEventListener('popstate', syncDeepLink);
+    return () => window.removeEventListener('popstate', syncDeepLink);
+  }, []);
+
+  useEffect(() => {
+    if (deepLinkId && rows.length > 0) {
+      const matchedCustomer = rows.find((customer) => customer.id === deepLinkId);
+      setSelectedId(matchedCustomer?.id ?? null);
+      return;
+    }
+
+    if (!deepLinkId) {
+      setSelectedId(null);
+    }
+  }, [deepLinkId, rows]);
+
+  const openCustomer = (customer: Customer) => {
+    setSelectedId(customer.id);
+    const params = new URLSearchParams(window.location.search);
+    params.set('customer', customer.id);
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      '',
+      query ? `${window.location.pathname}?${query}` : window.location.pathname
+    );
+  };
+
+  const closeCustomer = () => {
+    setSelectedId(null);
+    const params = new URLSearchParams(window.location.search);
+    params.delete('customer');
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      '',
+      query ? `${window.location.pathname}?${query}` : window.location.pathname
+    );
+  };
 
   return (
     <div className='space-y-4'>
@@ -51,7 +98,7 @@ export default function CustomerListing() {
           <button
             key={customer.id}
             type='button'
-            onClick={() => setSelectedId(customer.id)}
+            onClick={() => openCustomer(customer)}
             className='grid w-full gap-2 border-b border-border/60 px-4 py-4 text-left transition-colors hover:bg-muted/35 last:border-0 md:grid-cols-[2fr_1fr_2fr_auto] md:items-center md:gap-4'
           >
             <span className='min-w-0 font-medium'>{customer.name}</span>
@@ -73,7 +120,7 @@ export default function CustomerListing() {
       <CustomerInspector
         customerId={selectedId}
         open={Boolean(selectedId)}
-        onOpenChange={(open) => !open && setSelectedId(null)}
+        onOpenChange={(open) => !open && closeCustomer()}
       />
     </div>
   );

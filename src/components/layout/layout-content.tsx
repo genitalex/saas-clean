@@ -39,7 +39,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
       <main
         id='main-content'
         tabIndex={-1}
-        className='flex min-h-0 flex-1 min-w-0 flex-col pb-[calc(var(--mobile-nav-height,72px)+env(safe-area-inset-bottom))]'
+        className='flex min-h-0 flex-1 min-w-0 flex-col pb-[calc(7rem+env(safe-area-inset-bottom))]'
       >
         {children}
       </main>
@@ -57,7 +57,7 @@ export function LayoutContent({ children }: LayoutContentProps) {
       className={cn(
         'flex-1 min-w-0 scroll-mt-16',
         // Padding for bottom nav + safe area inset on mobile
-        'pb-[calc(var(--mobile-nav-height,72px)+env(safe-area-inset-bottom))] md:pb-6'
+        'pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6'
       )}
     >
       <Header />
