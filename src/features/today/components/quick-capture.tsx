@@ -55,22 +55,48 @@ export function QuickCapture() {
   const [value, setValue] = useState('');
   const [pending, setPending] = useState(false);
 
+  async function matchCustomerId(text: string) {
+    const filteredWords = text
+      .split(/\s+/)
+      .map((word) => word.replace(/[^a-zA-ZÁÉÍÓÚáéíóúñÑ\s]/g, ''))
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(' ');
+
+    if (!filteredWords) return null;
+
+    const response = await fetch(`/api/customers?search=${encodeURIComponent(filteredWords)}`, {
+      cache: 'no-store'
+    });
+    if (!response.ok) return null;
+
+    const customers = (await response.json()) as Array<{ id: string; name: string }>;
+    const normalizedText = text.toLowerCase();
+    const match = customers.find((customer) =>
+      normalizedText.includes(customer.name.toLowerCase())
+    );
+    return match?.id ?? null;
+  }
+
   async function submit() {
     if (!value.trim()) return;
     const capture = parseCapture(value.trim());
     const start = new Date(capture.date);
     start.setHours(capture.hour, 0, 0, 0);
+    const customerId = await matchCustomerId(value.trim());
+
     try {
       setPending(true);
       if (capture.type === 'event') {
         await createEvent({
           title: capture.title,
           startAt: start.toISOString(),
-          endAt: new Date(start.getTime() + 60 * 60 * 1000).toISOString()
+          endAt: new Date(start.getTime() + 60 * 60 * 1000).toISOString(),
+          customerId
         });
         toast.success('Evento creado');
       } else {
-        await createTask({ title: capture.title, dueAt: start.toISOString() });
+        await createTask({ title: capture.title, dueAt: start.toISOString(), customerId });
         await queryClient.invalidateQueries({ queryKey: taskKeys.all });
         toast.success('Tarea creada');
       }

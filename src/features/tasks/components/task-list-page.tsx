@@ -18,6 +18,7 @@ import {
 import { Icons } from '@/components/icons';
 import { getTasks, taskKeys } from '../queries';
 import { updateTask } from '../queries';
+import { createEvent } from '@/features/calendar/queries';
 import type { Task, TaskPriority, TaskStatus } from '../types';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 
@@ -201,6 +202,47 @@ function TaskInspector({
     }
   };
 
+  const scheduleTask = async (when: 'today' | 'tomorrow' | 'nextWeek') => {
+    const base = new Date(task.dueAt ?? new Date());
+    const next = new Date(base);
+
+    if (when === 'today') {
+      next.setHours(9, 0, 0, 0);
+    } else if (when === 'tomorrow') {
+      next.setDate(next.getDate() + 1);
+      next.setHours(9, 0, 0, 0);
+    } else {
+      next.setDate(next.getDate() + 7);
+      next.setHours(9, 0, 0, 0);
+    }
+
+    await save({ dueAt: next.toISOString() });
+  };
+
+  const planInCalendar = async () => {
+    const anchor = task.dueAt ? new Date(task.dueAt) : new Date();
+    const start = new Date(anchor);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+    try {
+      const created = await createEvent({
+        title: task.title,
+        description: task.description ?? undefined,
+        startAt: start.toISOString(),
+        endAt: end.toISOString(),
+        customerId: task.customerId,
+        assigneeId: task.assigneeId,
+        status: 'planned'
+      });
+
+      await save({ eventId: created.id, dueAt: start.toISOString() });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Tarea planificada en calendario');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo planificar en calendario.');
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side='right' className='w-full gap-0 overflow-y-auto p-0 sm:max-w-[460px]'>
@@ -279,6 +321,20 @@ function TaskInspector({
           <Separator />
           <section className='space-y-3'>
             <h3 className='text-sm font-semibold'>Siguiente decisión</h3>
+            <div className='flex flex-wrap gap-2'>
+              <Button variant='outline' size='sm' onClick={() => void scheduleTask('today')}>
+                Hoy
+              </Button>
+              <Button variant='outline' size='sm' onClick={() => void scheduleTask('tomorrow')}>
+                Mañana
+              </Button>
+              <Button variant='outline' size='sm' onClick={() => void scheduleTask('nextWeek')}>
+                Próxima semana
+              </Button>
+              <Button variant='secondary' size='sm' onClick={() => void planInCalendar()}>
+                Planificar en calendario
+              </Button>
+            </div>
             <div className='flex flex-wrap gap-2'>
               {(Object.keys(priorityLabels) as TaskPriority[]).map((value) => (
                 <Button

@@ -103,6 +103,53 @@ export function CustomerInspector({
     }
   };
 
+  const createFollowUp = async (type: 'task' | 'event') => {
+    if (!customer) return;
+
+    try {
+      const start = new Date();
+      start.setDate(start.getDate() + 1);
+      start.setHours(10, 0, 0, 0);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+      if (type === 'task') {
+        await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `Seguimiento · ${customer.name}`,
+            description: customer.nextAction || 'Seguimiento del cliente',
+            dueAt: start.toISOString(),
+            customerId: customer.id,
+            priority: 'medium'
+          })
+        });
+        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        toast.success('Tarea de seguimiento creada');
+      } else {
+        await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `Seguimiento · ${customer.name}`,
+            description: customer.nextAction || 'Seguimiento del cliente',
+            startAt: start.toISOString(),
+            endAt: end.toISOString(),
+            customerId: customer.id,
+            status: 'planned'
+          })
+        });
+        await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+        toast.success('Evento de seguimiento creado');
+      }
+
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
+      await queryClient.invalidateQueries({ queryKey: ['customer', customer.id] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo crear el seguimiento.');
+    }
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -147,6 +194,12 @@ export function CustomerInspector({
                 <div className='flex flex-wrap gap-2 pt-2'>
                   <AddNoteDialog customerId={customer.id} />
                   <NewTaskDialog customerId={customer.id} />
+                  <Button size='sm' variant='outline' onClick={() => void createFollowUp('task')}>
+                    <Icons.check data-icon='inline-start' /> Seguimiento
+                  </Button>
+                  <Button size='sm' variant='outline' onClick={() => void createFollowUp('event')}>
+                    <Icons.calendar data-icon='inline-start' /> Reunión
+                  </Button>
                   <Button size='sm' onClick={() => setEventDialogOpen(true)}>
                     <Icons.calendar data-icon='inline-start' /> Evento
                   </Button>
