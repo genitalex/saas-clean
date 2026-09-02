@@ -403,6 +403,10 @@ export function CalendarPage({
             categories={categories}
             onCreate={openCreate}
             onOpenEvent={openEvent}
+            onOpenDay={(day) => {
+              setCursor(day);
+              setView('day');
+            }}
             onMoveEvent={moveEvent}
           />
         )}
@@ -1869,6 +1873,7 @@ function WeekTimeline({
   categories,
   onOpenEvent,
   onCreate,
+  onOpenDay,
   onMoveEvent
 }: ViewProps & {
   view: 'week' | 'day';
@@ -1907,9 +1912,16 @@ function WeekTimeline({
             {days.map((day) => {
               const isToday = isSameDay(day, today);
               return (
-                <div
+                <button
                   key={day.toISOString()}
-                  className='border-border/60 border-r px-4 py-3 last:border-r-0'
+                  type='button'
+                  onClick={() => view === 'week' && onOpenDay?.(day)}
+                  className='border-border/60 hover:bg-surface-subtle/60 focus-visible:bg-surface-subtle/60 border-r px-4 py-3 text-left transition-colors last:border-r-0'
+                  aria-label={
+                    view === 'week'
+                      ? `Ver día ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`
+                      : undefined
+                  }
                 >
                   <p className='text-muted-foreground text-xs font-medium capitalize'>
                     {format(day, 'EEEE', { locale: es })}
@@ -1927,7 +1939,7 @@ function WeekTimeline({
                       {format(day, 'MMM', { locale: es })}
                     </span>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
