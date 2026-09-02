@@ -17,10 +17,10 @@
   --background: oklch(0.975 0.006 250);
   --foreground: oklch(0.2 0.015 260);
 
-  --card: color-mix(in srgb, white 56%, transparent);
+  --card: color-mix(in srgb, white 82%, var(--background));
   --card-foreground: oklch(0.2 0.015 260);
 
-  --popover: color-mix(in srgb, white 68%, transparent);
+  --popover: color-mix(in srgb, white 90%, var(--background));
   --popover-foreground: oklch(0.2 0.015 260);
 
   --primary: oklch(0.58 0.13 250);
@@ -32,7 +32,7 @@
   --muted: color-mix(in srgb, white 48%, transparent);
   --muted-foreground: oklch(0.49 0.018 260);
 
-  --accent: color-mix(in srgb, #8c7cff 15%, white);
+  --accent: color-mix(in srgb, var(--primary) 9%, white);
   --accent-foreground: oklch(0.24 0.02 260);
 
   --destructive: oklch(0.64 0.17 20);
@@ -55,9 +55,9 @@
   --glass-blur: 24px;
   --glass-saturation: 180%;
 
-  --glass-shadow: 0 10px 34px rgba(35, 46, 68, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  --glass-shadow: 0 6px 20px rgba(35, 46, 68, 0.055), inset 0 1px 0 rgba(255, 255, 255, 0.86);
 
-  --glass-shadow-hover: 0 18px 46px rgba(35, 46, 68, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  --glass-shadow-hover: 0 10px 28px rgba(35, 46, 68, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.94);
 
   --glass-shadow-floating:
     0 24px 64px rgba(35, 46, 68, 0.16), 0 4px 14px rgba(35, 46, 68, 0.05),
@@ -79,7 +79,7 @@
     'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
     monospace;
 
-  --radius: 0.75rem;
+  --radius: 0.625rem;
   --tracking-normal: 0em;
 
   /* Shared shadows become softer and layered */
@@ -113,9 +113,7 @@
 /* Ambient canvas behind the whole application */
 [data-theme='glass'] body {
   background:
-    radial-gradient(circle at 8% 5%, rgba(91, 143, 249, 0.1), transparent 25rem),
-    radial-gradient(circle at 92% 76%, rgba(83, 216, 232, 0.08), transparent 26rem),
-    radial-gradient(circle at 60% 28%, rgba(155, 130, 243, 0.06), transparent 24rem),
+    radial-gradient(circle at 10% 0%, rgba(91, 143, 249, 0.055), transparent 28rem),
     var(--background);
   background-attachment: fixed;
 }
@@ -169,6 +167,10 @@
   pointer-events: none;
 }
 
+[data-theme='glass'] [data-slot='card']::before {
+  opacity: 0.38;
+}
+
 /* Cards respond subtly instead of becoming neon toys. */
 [data-theme='glass'] [data-slot='card'] {
   transition:
@@ -204,10 +206,8 @@
 /* Button family: glass by default, stronger primary, quiet ghost. */
 [data-theme='glass'] [data-slot='button'][data-variant='outline'],
 [data-theme='glass'] [data-slot='button'][data-variant='secondary'] {
-  background: rgba(255, 255, 255, 0.38) !important;
+  background: color-mix(in srgb, var(--background) 78%, white) !important;
   border-color: var(--glass-border-soft) !important;
-  backdrop-filter: blur(18px) saturate(165%);
-  -webkit-backdrop-filter: blur(18px) saturate(165%);
   box-shadow: var(--glass-shadow) !important;
 }
 [data-theme='glass'] [data-slot='button'][data-variant='outline']:hover,
@@ -229,16 +229,12 @@
 [data-theme='glass'] [data-slot='card-footer'] {
   background: rgba(255, 255, 255, 0.24) !important;
   border-color: var(--glass-border-soft) !important;
-  backdrop-filter: blur(16px) saturate(155%);
-  -webkit-backdrop-filter: blur(16px) saturate(155%);
 }
 
 /* Tabs / segmented controls */
 [data-theme='glass'] [role='tablist'] {
   background: rgba(255, 255, 255, 0.3);
   border: 1px solid var(--glass-border-soft);
-  backdrop-filter: blur(18px) saturate(165%);
-  -webkit-backdrop-filter: blur(18px) saturate(165%);
   box-shadow: var(--glass-shadow);
 }
 [data-theme='glass'] [role='tab'][aria-selected='true'] {
@@ -412,11 +408,7 @@
 }
 
 [data-theme='glass'].dark body {
-  background:
-    radial-gradient(circle at 8% 5%, rgba(91, 143, 249, 0.11), transparent 24rem),
-    radial-gradient(circle at 88% 76%, rgba(83, 216, 232, 0.07), transparent 25rem),
-    radial-gradient(circle at 60% 30%, rgba(155, 130, 243, 0.08), transparent 24rem),
-    var(--background);
+  background: var(--background);
 }
 [data-theme='glass'].dark [data-slot='card'],
 [data-theme='glass'].dark [data-slot='popover-content'],
@@ -427,14 +419,20 @@
 [data-theme='glass'].dark [data-slot='select-content'],
 [data-theme='glass'].dark [data-slot='command'],
 [data-theme='glass'].dark [data-slot='tooltip-content'] {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.045) 54%,
-    rgba(255, 255, 255, 0.025)
-  ) !important;
+  background: var(--card) !important;
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
+}
+
+[data-theme='glass'].dark [data-slot='popover-content'],
+[data-theme='glass'].dark [data-slot='dialog-content'],
+[data-theme='glass'].dark [data-slot='sheet-content'],
+[data-theme='glass'].dark [data-slot='dropdown-menu-content'],
+[data-theme='glass'].dark [data-slot='context-menu-content'],
+[data-theme='glass'].dark [data-slot='select-content'],
+[data-theme='glass'].dark [data-slot='command'],
+[data-theme='glass'].dark [data-slot='tooltip-content'] {
+  background: var(--popover) !important;
 }
 [data-theme='glass'].dark input,
 [data-theme='glass'].dark textarea,
@@ -452,7 +450,7 @@
   background: rgba(255, 255, 255, 0.09) !important;
 }
 [data-theme='glass'].dark [data-slot='button'][data-variant='default'] {
-  background: linear-gradient(135deg, var(--glass-blue), var(--glass-violet)) !important;
+  background: var(--primary) !important;
   color: #fff !important;
 }
 [data-theme='glass'].dark [role='tablist'] {
@@ -461,6 +459,23 @@
 }
 [data-theme='glass'].dark [role='tab'][aria-selected='true'] {
   background: rgba(255, 255, 255, 0.075) !important;
+}
+
+@media (max-width: 639px) {
+  [data-theme='glass'] [data-slot='card'] {
+    border-radius: 0.75rem;
+  }
+
+  [data-theme='glass'] input,
+  [data-theme='glass'] textarea,
+  [data-theme='glass'] [data-slot='select-trigger'] {
+    min-height: 2.75rem;
+  }
+
+  [data-theme='glass'] [data-slot='button'][data-size='default'],
+  [data-theme='glass'] [data-slot='button'][data-size='lg'] {
+    min-height: 2.75rem;
+  }
 }
 
 /* Reduced motion */
