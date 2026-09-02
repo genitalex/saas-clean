@@ -5,6 +5,11 @@ export type Activity = InferSelectModel<typeof activities> & {
   user: { id: string; name: string } | null;
 };
 
+export type GlobalActivity = Activity & {
+  customer: { id: string; name: string };
+  event: { id: string; title: string } | null;
+};
+
 export type ActivityType = Activity['type'];
 
 export type ActivityPayload = {

@@ -32,7 +32,7 @@ export function AddNoteDialog({ customerId }: { customerId: string }) {
         title: 'Nota añadida',
         content: content.trim()
       });
-      await queryClient.invalidateQueries({ queryKey: activityKeys.customer(customerId) });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       setContent('');
       setOpen(false);
       toast.success('Nota añadida');

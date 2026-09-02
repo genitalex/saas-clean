@@ -1,4 +1,4 @@
-import type { Activity, ActivityPayload } from '../types';
+import type { Activity, ActivityPayload, GlobalActivity } from '../types';
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, { ...init, cache: 'no-store' });
@@ -9,9 +9,14 @@ async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 
 export const activityKeys = {
   all: ['activities'] as const,
+  global: () => [...activityKeys.all, 'global'] as const,
   customer: (customerId: string) => [...activityKeys.all, 'customer', customerId] as const,
   detail: (id: string) => [...activityKeys.all, 'detail', id] as const
 };
+
+export async function getActivities() {
+  return request<GlobalActivity[]>('/api/activities');
+}
 
 export async function getCustomerActivities(customerId: string) {
   return request<Activity[]>(`/api/customers/${customerId}/activities`);

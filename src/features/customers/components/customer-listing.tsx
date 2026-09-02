@@ -40,7 +40,6 @@ export default function CustomerListing() {
   }, [load]);
 
   const openContext = async (customer: Customer) => {
-    if (!customer.phone) return;
     if (contextId === customer.id) {
       setContextId(null);
       return;

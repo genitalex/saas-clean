@@ -95,7 +95,7 @@ export function CalendarPage({
   // tracks its own month cursor, selected day and year/month/day mode.
   const [mobileCursor, setMobileCursor] = useState(initialCursor);
   const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>(
-    initialView === 'agenda' ? 'month' : (initialView ?? 'month')
+    initialView === 'agenda' || initialView === 'week' ? 'month' : (initialView ?? 'month')
   );
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(initialCursor));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
@@ -1827,7 +1827,12 @@ function TimelineView(
     onResizeEvent?: (event: Event, nextEnd: Date) => Promise<void>;
   }
 ) {
-  return props.view === 'day' ? <CompressedDayTimeline {...props} /> : <WeekTimeline {...props} />;
+  const { view, ...timelineProps } = props;
+  return view === 'day' ? (
+    <CompressedDayTimeline {...timelineProps} view='day' />
+  ) : (
+    <WeekTimeline {...timelineProps} view={view} />
+  );
 }
 
 function CompressedDayTimeline({

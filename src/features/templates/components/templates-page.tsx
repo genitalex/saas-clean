@@ -145,7 +145,7 @@ export default function TemplatesPage() {
                     void copy({ ...selectedTemplate, text: resolve(selectedTemplate.text, 'Luis') })
                   }
                 >
-                  <Icons.copy className='size-4' />
+                  <Icons.page className='size-4' />
                   Copiar con “Luis”
                 </Button>
               </div>

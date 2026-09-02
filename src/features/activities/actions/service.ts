@@ -64,6 +64,23 @@ export async function getCustomerActivities(customerId: string) {
     .orderBy(desc(activities.createdAt));
 }
 
+export async function getActivities(limit = 100) {
+  const { organization } = await getAuthContext();
+  return db
+    .select({
+      ...activitySelection,
+      customer: { id: customers.id, name: customers.name },
+      event: { id: events.id, title: events.title }
+    })
+    .from(activities)
+    .innerJoin(customers, eq(customers.id, activities.customerId))
+    .leftJoin(events, eq(events.id, activities.eventId))
+    .leftJoin(users, eq(users.id, activities.userId))
+    .where(eq(activities.organizationId, organization.id))
+    .orderBy(desc(activities.createdAt))
+    .limit(Math.min(Math.max(limit, 1), 200));
+}
+
 export async function getActivity(id: string) {
   const { organization } = await getAuthContext();
   const [activity] = await db

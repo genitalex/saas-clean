@@ -100,7 +100,7 @@ export function TodayScreen({ role }: { role: Role }) {
   const overdue = useMemo(() => myTasks.filter((task) => taskIsOverdue(task, now)), [myTasks, now]);
 
   const waiting = useMemo(
-    () => myTasks.filter((task) => task.status === 'waiting' && task.status !== 'done').slice(0, 4),
+    () => myTasks.filter((task) => task.status === 'waiting').slice(0, 4),
     [myTasks]
   );
 

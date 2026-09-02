@@ -13,6 +13,8 @@ import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 import { getEvents, eventKeys } from '@/features/calendar/queries';
 import type { Event } from '@/features/calendar/types';
+import { getActivities, activityKeys } from '@/features/activities/queries';
+import type { GlobalActivity } from '@/features/activities/types';
 
 const glass =
   'rounded-[26px] border border-border/55 bg-card/60 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] backdrop-blur-xl';
@@ -91,10 +93,16 @@ export function TodayPage({
     },
     staleTime: 30_000
   });
+  const activityQuery = useQuery({
+    queryKey: activityKeys.global(),
+    queryFn: getActivities,
+    staleTime: 20_000
+  });
 
   const tasks = tasksQuery.data ?? [];
   const events = eventsQuery.data ?? [];
   const customers = customersQuery.data ?? [];
+  const recentActivity = (activityQuery.data ?? []).slice(0, 4);
 
   const attention = tasks.filter((task) => taskNeedsAttention(task, now));
   const dueToday = tasks.filter(
@@ -376,6 +384,24 @@ export function TodayPage({
         </div>
       </section>
 
+      <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='recent-activity'>
+        <SectionHeader
+          eyebrow='Memoria'
+          title='Lo que ha ocurrido'
+          href='/dashboard/activity'
+          action='Ver actividad'
+        />
+        <div className='mt-4 grid gap-2 sm:grid-cols-2'>
+          {recentActivity.map((activity) => (
+            <ActivityPreview key={activity.id} activity={activity} />
+          ))}
+          {!activityQuery.isLoading && recentActivity.length === 0 && (
+            <p className='text-muted-foreground text-sm'>Todavía no hay actividad reciente.</p>
+          )}
+          {activityQuery.isLoading && <ActivityPreviewLoading />}
+        </div>
+      </section>
+
       <section className='grid gap-4 lg:grid-cols-3'>
         <section className={cn(glass, 'p-5')} aria-labelledby='deadlines-heading'>
           <SectionHeader eyebrow='Prioridades' title='Lo que vence hoy' />
@@ -489,6 +515,33 @@ export function TodayPage({
       </footer>
     </main>
   );
+}
+
+function ActivityPreview({ activity }: { activity: GlobalActivity }) {
+  return (
+    <Link
+      href={`/dashboard/customers/${activity.customer.id}`}
+      className={cn(
+        'flex min-w-0 items-center gap-3 rounded-2xl border border-border/45 bg-background/35 px-3.5 py-3',
+        softButton
+      )}
+    >
+      <span className='bg-primary/[0.08] text-primary flex size-8 shrink-0 items-center justify-center rounded-full'>
+        <Icons.clock className='size-4' />
+      </span>
+      <span className='min-w-0 flex-1'>
+        <span className='block truncate text-sm font-medium'>{activity.title}</span>
+        <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
+          {activity.customer.name}
+          {activity.user?.name ? ` · ${activity.user.name}` : ''}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+function ActivityPreviewLoading() {
+  return <div className='bg-muted/50 h-14 animate-pulse rounded-2xl sm:col-span-2' />;
 }
 
 function QuickAction({

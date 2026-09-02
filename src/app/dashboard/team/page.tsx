@@ -9,7 +9,7 @@ export default async function Page() {
   const canManage = membership.role === 'owner' || membership.role === 'manager';
 
   if (!canManage) {
-    return <PageContainer access={false} />;
+    return <PageContainer access={false}> </PageContainer>;
   }
 
   return <WorkspacePlaceholder section='team' />;
