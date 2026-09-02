@@ -21,10 +21,7 @@ body {
   --header-height: calc(var(--spacing, 0.25rem) * 12 + 1px);
 }
 
-/* Apply theme fonts to body for all themes */
+/* Keep the loaded font variables active across every theme. */
 [data-theme] body {
-  --font-sans: initial;
-  --font-mono: initial;
-  --font-serif: initial;
   font-family: var(--font-sans);
 }
