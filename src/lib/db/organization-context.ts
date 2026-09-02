@@ -40,6 +40,47 @@ async function withTransientDbRetry<T>(operation: () => Promise<T>) {
   throw new Error('Database request failed');
 }
 
+const membershipSelection = {
+  organizationId: organizationMembers.organizationId,
+  userId: organizationMembers.userId,
+  role: organizationMembers.role,
+  createdAt: organizationMembers.createdAt
+} as const;
+
+async function findMembership(userId: string, organizationId: string) {
+  return db
+    .select({
+      user: users,
+      organization: organizations,
+      membership: membershipSelection
+    })
+    .from(organizationMembers)
+    .innerJoin(users, eq(users.id, organizationMembers.userId))
+    .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
+    .where(
+      and(
+        eq(organizationMembers.userId, userId),
+        eq(organizationMembers.organizationId, organizationId)
+      )
+    )
+    .limit(1);
+}
+
+async function findFirstMembership(userId: string) {
+  return db
+    .select({
+      user: users,
+      organization: organizations,
+      membership: membershipSelection
+    })
+    .from(organizationMembers)
+    .innerJoin(users, eq(users.id, organizationMembers.userId))
+    .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
+    .where(eq(organizationMembers.userId, userId))
+    .orderBy(organizationMembers.createdAt)
+    .limit(1);
+}
+
 export async function getAuthContext(requestHeaders?: Headers) {
   return withTransientDbRetry(async () => {
     const session = await auth.api.getSession({ headers: requestHeaders ?? (await headers()) });
@@ -47,8 +88,6 @@ export async function getAuthContext(requestHeaders?: Headers) {
 
     let activeOrganizationId = session.session.activeOrganizationId;
 
-    // Self-heal stale sessions: if a valid membership exists but the session
-    // has no active organization, select the first organization the user belongs to.
     if (!activeOrganizationId) {
       const [membership] = await db
         .select({ organizationId: organizationMembers.organizationId })
@@ -70,34 +109,10 @@ export async function getAuthContext(requestHeaders?: Headers) {
     if (!activeOrganizationId)
       throw new AuthContextError('An active organization is required', 'NO_ACTIVE_ORGANIZATION');
 
-    let [context] = await db
-      .select({ user: users, organization: organizations, membership: organizationMembers })
-      .from(organizationMembers)
-      .innerJoin(users, eq(users.id, organizationMembers.userId))
-      .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-      .where(
-        and(
-          eq(organizationMembers.userId, session.user.id),
-          eq(organizationMembers.organizationId, activeOrganizationId)
-        )
-      )
-      .limit(1);
+    let [context] = await findMembership(session.user.id, activeOrganizationId);
 
-    // Recover from a stale session pointing at an organization the user no longer
-    // belongs to. Prefer another real membership instead of failing every query.
     if (!context) {
-      const [fallback] = await db
-        .select({
-          user: users,
-          organization: organizations,
-          membership: organizationMembers
-        })
-        .from(organizationMembers)
-        .innerJoin(users, eq(users.id, organizationMembers.userId))
-        .innerJoin(organizations, eq(organizations.id, organizationMembers.organizationId))
-        .where(eq(organizationMembers.userId, session.user.id))
-        .orderBy(organizationMembers.createdAt)
-        .limit(1);
+      const [fallback] = await findFirstMembership(session.user.id);
 
       if (fallback) {
         context = fallback;
