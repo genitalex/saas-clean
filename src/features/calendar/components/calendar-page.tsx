@@ -1004,6 +1004,10 @@ function useEventDrag({
   return { dragPreview, startDrag, suppressClickRef };
 }
 
+function withLocalTime(date: Date, hour: number, minute = 0) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
+}
+
 function formatHourLabel(hour: number) {
   const suffix = hour < 12 ? 'AM' : 'PM';
   const displayHour = hour % 12 || 12;
@@ -1098,9 +1102,7 @@ function MobileDayTimeline({
         <button
           type='button'
           onClick={() => {
-            const next = new Date(date);
-            next.setHours(hour, 0, 0, 0);
-            onCreate(next);
+            onCreate(withLocalTime(date, hour));
           }}
           className='absolute inset-0 text-left transition-colors hover:bg-primary/[0.035]'
           aria-label={`Crear evento a las ${formatHourLabel(hour)}`}
@@ -1652,9 +1654,7 @@ function CompressedDayTimeline({
         <button
           type='button'
           onClick={() => {
-            const next = new Date(cursor);
-            next.setHours(hour, 0, 0, 0);
-            onCreate(next);
+            onCreate(withLocalTime(cursor, hour));
           }}
           className='absolute inset-0 text-left transition-colors hover:bg-primary/[0.035]'
           aria-label={`Crear evento a las ${formatHourLabel(hour)}`}
@@ -2020,16 +2020,7 @@ function WeekTimeline({
                         key={i}
                         type='button'
                         aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
-                        onClick={() =>
-                          onCreate(
-                            new Date(
-                              day.getFullYear(),
-                              day.getMonth(),
-                              day.getDate(),
-                              startHour + i
-                            )
-                          )
-                        }
+                        onClick={() => onCreate(withLocalTime(day, startHour + i))}
                         className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
                         style={{ top: i * hourHeight, height: hourHeight }}
                       />
