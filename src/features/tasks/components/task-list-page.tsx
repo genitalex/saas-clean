@@ -16,7 +16,7 @@ import {
   SheetTitle
 } from '@/components/ui/sheet';
 import { Icons } from '@/components/icons';
-import { getTasks, taskKeys } from '../queries';
+import { deleteTask, getTasks, taskKeys } from '../queries';
 import { updateTask } from '../queries';
 import { createEvent } from '@/features/calendar/queries';
 import type { Task, TaskPriority, TaskStatus } from '../types';
@@ -37,7 +37,11 @@ export function TaskListPage() {
   const [status, setStatus] = useState<TaskStatus | ''>('');
   const [priority, setPriority] = useState<TaskPriority | ''>('');
   const [selected, setSelected] = useState<Task | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkAssigneeId, setBulkAssigneeId] = useState('');
+  const [bulkDate, setBulkDate] = useState('');
   const [deepLinkId, setDeepLinkId] = useState<string | null>(null);
+
   const {
     data: tasks = [],
     isPending,
@@ -46,7 +50,22 @@ export function TaskListPage() {
     queryKey: taskKeys.list({ search, status: status || undefined }),
     queryFn: () => getTasks({ search, status: status || undefined })
   });
+
+  const { data: assignees = [] } = useQuery({
+    queryKey: ['task-assignee-options'],
+    queryFn: async () => {
+      const response = await fetch('/api/users?limit=20', { cache: 'no-store' });
+      if (!response.ok) return [] as Array<{ id: string; name: string }>;
+      const payload = (await response.json()) as { users?: Array<{ id: string; name: string }> };
+      return payload.users ?? [];
+    },
+    staleTime: 60_000
+  });
+
   const filteredTasks = priority ? tasks.filter((task) => task.priority === priority) : tasks;
+  const selectedTasks = tasks.filter((task) => selectedIds.includes(task.id));
+  const allVisibleSelected =
+    filteredTasks.length > 0 && filteredTasks.every((task) => selectedIds.includes(task.id));
 
   useEffect(() => {
     const syncDeepLink = () =>
@@ -70,6 +89,83 @@ export function TaskListPage() {
   const closeTask = () => {
     setSelected(null);
     window.history.replaceState(null, '', '/dashboard/tasks');
+  };
+
+  const toggleTaskSelection = (taskId: string) => {
+    setSelectedIds((current) =>
+      current.includes(taskId) ? current.filter((id) => id !== taskId) : [...current, taskId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedIds((current) =>
+        current.filter((id) => !filteredTasks.some((task) => task.id === id))
+      );
+      return;
+    }
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      filteredTasks.forEach((task) => next.add(task.id));
+      return [...next];
+    });
+  };
+
+  const bulkUpdate = async (patch: Parameters<typeof updateTask>[1]) => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      await Promise.all(selectedIds.map((taskId) => updateTask(taskId, patch)));
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      setSelectedIds([]);
+      toast.success(selectedIds.length > 1 ? 'Tareas actualizadas' : 'Tarea actualizada');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo actualizar el lote.');
+    }
+  };
+
+  const bulkSchedule = async (when: 'today' | 'tomorrow' | 'nextWeek') => {
+    const reference = new Date();
+    const base = new Date(reference);
+    const next = new Date(base);
+
+    if (when === 'today') {
+      next.setHours(9, 0, 0, 0);
+    } else if (when === 'tomorrow') {
+      next.setDate(next.getDate() + 1);
+      next.setHours(9, 0, 0, 0);
+    } else {
+      next.setDate(next.getDate() + 7);
+      next.setHours(9, 0, 0, 0);
+    }
+
+    await bulkUpdate({ dueAt: next.toISOString() });
+  };
+
+  const bulkAssign = async () => {
+    if (!bulkAssigneeId) return;
+    await bulkUpdate({ assigneeId: bulkAssigneeId });
+    setBulkAssigneeId('');
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const confirmed = window.confirm(
+      `Eliminar ${selectedIds.length} tarea${selectedIds.length > 1 ? 's' : ''}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await Promise.all(selectedIds.map((taskId) => deleteTask(taskId)));
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      setSelectedIds([]);
+      toast.success(
+        selectedIds.length > 1 ? `${selectedIds.length} tareas eliminadas` : 'Tarea eliminada'
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo eliminar el lote.');
+    }
   };
 
   return (
@@ -110,6 +206,107 @@ export function TaskListPage() {
           </select>
         </div>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className='sticky top-3 z-10 rounded-[22px] border border-primary/20 bg-background/80 p-3 shadow-sm backdrop-blur-md'>
+          <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+            <div className='flex items-center gap-3'>
+              <span className='text-sm font-medium'>
+                {selectedIds.length} tarea{selectedIds.length > 1 ? 's' : ''} seleccionada
+                {selectedIds.length > 1 ? 's' : ''}
+              </span>
+              <button
+                type='button'
+                className='text-muted-foreground text-xs underline-offset-2 hover:underline'
+                onClick={() => setSelectedIds([])}
+              >
+                Limpiar
+              </button>
+            </div>
+
+            <div className='flex flex-wrap items-center gap-2'>
+              <Button variant='outline' size='sm' onClick={() => void bulkSchedule('today')}>
+                Hoy
+              </Button>
+              <Button variant='outline' size='sm' onClick={() => void bulkSchedule('tomorrow')}>
+                Mañana
+              </Button>
+              <Button variant='outline' size='sm' onClick={() => void bulkSchedule('nextWeek')}>
+                Próxima semana
+              </Button>
+              <Input
+                type='datetime-local'
+                value={bulkDate}
+                onChange={(event) => setBulkDate(event.target.value)}
+                className='h-9 w-44 rounded-lg'
+                aria-label='Elegir fecha para tareas seleccionadas'
+              />
+              {bulkDate && (
+                <Button
+                  variant='secondary'
+                  size='sm'
+                  onClick={() => {
+                    void bulkUpdate({ dueAt: new Date(bulkDate).toISOString() });
+                    setBulkDate('');
+                  }}
+                >
+                  Guardar fecha
+                </Button>
+              )}
+              <select
+                aria-label='Asignar a'
+                className='h-9 rounded-lg border border-input bg-transparent px-2 text-sm'
+                value={bulkAssigneeId}
+                onChange={(event) => setBulkAssigneeId(event.target.value)}
+              >
+                <option value=''>Asignar a…</option>
+                {assignees.map((assignee) => (
+                  <option key={assignee.id} value={assignee.id}>
+                    {assignee.name}
+                  </option>
+                ))}
+              </select>
+              {bulkAssigneeId && (
+                <Button variant='secondary' size='sm' onClick={() => void bulkAssign()}>
+                  Asignar
+                </Button>
+              )}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => void bulkUpdate({ priority: 'high' })}
+              >
+                Alta
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => void bulkUpdate({ priority: 'medium' })}
+              >
+                Media
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => void bulkUpdate({ priority: 'low' })}
+              >
+                Baja
+              </Button>
+              <Button
+                variant='secondary'
+                size='sm'
+                onClick={() => void bulkUpdate({ status: 'done' })}
+              >
+                Completar
+              </Button>
+              <Button variant='destructive' size='sm' onClick={() => void bulkDelete()}>
+                Eliminar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isPending ? (
         <div className='bg-muted h-48 animate-pulse rounded-xl' />
       ) : isError ? (
@@ -117,42 +314,67 @@ export function TaskListPage() {
       ) : (
         <div className='overflow-hidden rounded-[26px] border border-border/60 bg-card/45'>
           <div className='flex items-center justify-between border-b border-border/50 px-4 py-3 sm:px-5'>
-            <div>
-              <p className='text-sm font-semibold'>Trabajo</p>
-              <p className='text-muted-foreground mt-0.5 text-xs'>
-                Selecciona una tarea para abrir su contexto.
-              </p>
+            <div className='flex items-center gap-3'>
+              <input
+                type='checkbox'
+                aria-label='Seleccionar todas las tareas visibles'
+                checked={allVisibleSelected}
+                onChange={() => toggleSelectAll()}
+                className='size-4 rounded border-border'
+              />
+              <div>
+                <p className='text-sm font-semibold'>Trabajo</p>
+                <p className='text-muted-foreground mt-0.5 text-xs'>
+                  Selecciona tareas para actuar con contexto.
+                </p>
+              </div>
             </div>
             <span className='text-muted-foreground text-xs tabular-nums'>
               {filteredTasks.length} tareas
             </span>
           </div>
           <div>
-            {filteredTasks.map((task) => (
-              <button
-                key={task.id}
-                type='button'
-                className='hover:bg-muted/40 flex w-full items-center gap-3 border-b p-4 text-left last:border-0'
-                onClick={() => openTask(task)}
-              >
-                <span
-                  className={`size-2 shrink-0 rounded-full ${task.status === 'done' ? 'bg-emerald-500' : task.status === 'in_progress' ? 'bg-blue-500' : task.status === 'waiting' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`}
-                />
-                <span className='min-w-0 flex-1'>
-                  <span className='block truncate text-sm font-medium'>{task.title}</span>
-                  <span className='text-muted-foreground mt-1 block text-xs'>
-                    {task.customer?.name ?? 'Sin cliente'}
-                    {task.dueAt ? ` · ${new Date(task.dueAt).toLocaleDateString()}` : ''}
-                  </span>
-                </span>
-                <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
-                  {priorityLabels[task.priority]}
-                </Badge>
-                <span className='text-muted-foreground hidden text-xs sm:block'>
-                  {statusLabels[task.status]}
-                </span>
-              </button>
-            ))}
+            {filteredTasks.map((task) => {
+              const isSelected = selectedIds.includes(task.id);
+
+              return (
+                <div
+                  key={task.id}
+                  className={`flex w-full items-center gap-3 border-b p-3 text-left last:border-0 ${isSelected ? 'bg-primary/[0.03]' : 'hover:bg-muted/35'}`}
+                >
+                  <input
+                    type='checkbox'
+                    aria-label={`Seleccionar ${task.title}`}
+                    checked={isSelected}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={() => toggleTaskSelection(task.id)}
+                    className='size-4 rounded border-border'
+                  />
+                  <button
+                    type='button'
+                    className='flex min-w-0 flex-1 items-center gap-3 text-left'
+                    onClick={() => openTask(task)}
+                  >
+                    <span
+                      className={`size-2 shrink-0 rounded-full ${task.status === 'done' ? 'bg-emerald-500' : task.status === 'in_progress' ? 'bg-blue-500' : task.status === 'waiting' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`}
+                    />
+                    <span className='min-w-0 flex-1'>
+                      <span className='block truncate text-sm font-medium'>{task.title}</span>
+                      <span className='text-muted-foreground mt-1 block text-xs'>
+                        {task.customer?.name ?? 'Sin cliente'}
+                        {task.dueAt ? ` · ${new Date(task.dueAt).toLocaleDateString()}` : ''}
+                      </span>
+                    </span>
+                    <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
+                      {priorityLabels[task.priority]}
+                    </Badge>
+                    <span className='text-muted-foreground hidden text-xs sm:block'>
+                      {statusLabels[task.status]}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
             {filteredTasks.length === 0 && (
               <div className='text-muted-foreground p-14 text-center text-sm'>
                 No hay tareas con estos filtros.
