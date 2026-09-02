@@ -43,12 +43,14 @@ function taskNeedsAttention(task: Task, now: Date) {
 
 export function TodayPage({
   role,
-  userName
+  userName,
+  initialNow
 }: {
   role: 'owner' | 'manager' | 'member';
   userName: string;
+  initialNow: string;
 }) {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState(() => new Date(initialNow));
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
@@ -349,7 +351,7 @@ export function TodayPage({
                 <span className='text-muted-foreground mt-0.5 block text-xs'>
                   {format(
                     new Date(event.startAt),
-                    "EEE d · ${event.allDay ? 'Todo el día' : 'HH:mm'}",
+                    event.allDay ? "EEE d · 'Todo el día'" : 'EEE d · HH:mm',
                     { locale: es }
                   )}
                 </span>
