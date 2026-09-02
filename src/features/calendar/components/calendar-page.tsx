@@ -167,7 +167,7 @@ export function CalendarPage({
     });
   const openCreate = (date = cursor) => {
     setSelectedEvent(null);
-    setInitialDate(date);
+    setInitialDate(new Date(date));
     setDialogOpen(true);
   };
   const openEvent = (event: Event) => {
