@@ -1128,22 +1128,6 @@ function MobileDayTimeline({
     );
   };
 
-  const collapseButton = (early: boolean) => {
-    const top = early ? 6 : earlyHeight + workHeight + 6;
-    return (
-      <button
-        type='button'
-        onClick={() => (early ? setEarlyExpanded(false) : setLateExpanded(false))}
-        className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
-        style={{ top }}
-        aria-label={`Contraer ${early ? 'madrugada' : 'noche'}`}
-      >
-        Contraer
-        <Icons.chevronUp className='size-3' />
-      </button>
-    );
-  };
-
   return (
     <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
       <div className='flex shrink-0 items-center gap-2.5'>
@@ -1213,6 +1197,30 @@ function MobileDayTimeline({
           {!hasLate && !lateExpanded
             ? band(false)
             : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
+
+          {!hasEarly && earlyExpanded && (
+            <button
+              type='button'
+              onClick={() => setEarlyExpanded(false)}
+              className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+              aria-label='Contraer madrugada'
+            >
+              Contraer
+              <Icons.chevronUp className='size-3' />
+            </button>
+          )}
+          {!hasLate && lateExpanded && (
+            <button
+              type='button'
+              onClick={() => setLateExpanded(false)}
+              className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+              style={{ top: earlyHeight + workHeight + 6 }}
+              aria-label='Contraer noche'
+            >
+              Contraer
+              <Icons.chevronUp className='size-3' />
+            </button>
+          )}
 
           {dayEvents.map((event) => {
             const category = categoryFor(event, categories);
@@ -1714,13 +1722,23 @@ function CompressedDayTimeline({
                 <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
               )}
               <div className='relative' style={{ height: totalHeight }}>
-                {!hasEarlyEvents && !earlyExpanded
-                  ? band(true)
-                  : Array.from({ length: 5 }, (_, i) => renderHour(i))}
+                {!hasEarlyEvents && !earlyExpanded ? (
+                  <div
+                    className='absolute inset-x-0 border-b border-border/50'
+                    style={{ top: 0, height: earlyHeight }}
+                  />
+                ) : (
+                  Array.from({ length: 5 }, (_, i) => renderHour(i))
+                )}
                 {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
-                {!hasLateEvents && !lateExpanded
-                  ? band(false)
-                  : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
+                {!hasLateEvents && !lateExpanded ? (
+                  <div
+                    className='absolute inset-x-0 border-b border-border/50'
+                    style={{ top: earlyHeight + workHeight, height: lateHeight }}
+                  />
+                ) : (
+                  Array.from({ length: 3 }, (_, i) => renderHour(i + 21))
+                )}
               </div>
             </div>
 
@@ -1763,8 +1781,29 @@ function CompressedDayTimeline({
                 {!hasLateEvents && !lateExpanded
                   ? band(false)
                   : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
-                {!hasEarlyEvents && earlyExpanded && collapseButton(true)}
-                {!hasLateEvents && lateExpanded && collapseButton(false)}
+                {!hasEarlyEvents && earlyExpanded && (
+                  <button
+                    type='button'
+                    onClick={() => setEarlyExpanded(false)}
+                    className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+                    aria-label='Contraer madrugada'
+                  >
+                    Contraer
+                    <Icons.chevronUp className='size-3' />
+                  </button>
+                )}
+                {!hasLateEvents && lateExpanded && (
+                  <button
+                    type='button'
+                    onClick={() => setLateExpanded(false)}
+                    className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+                    style={{ top: earlyHeight + workHeight + 6 }}
+                    aria-label='Contraer noche'
+                  >
+                    Contraer
+                    <Icons.chevronUp className='size-3' />
+                  </button>
+                )}
 
                 {dayEvents.map((event) => {
                   const category = categoryFor(event, categories);
