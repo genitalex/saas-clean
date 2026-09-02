@@ -3,19 +3,31 @@
 import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getTasks, taskKeys } from '@/features/tasks/queries';
+import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
-import { getEvents, eventKeys } from '@/features/calendar/queries';
+import {
+  createEvent,
+  getEvent,
+  getEvents,
+  eventKeys,
+  updateEvent
+} from '@/features/calendar/queries';
 import type { Event } from '@/features/calendar/types';
 import { getActivities, activityKeys } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
 import { QuickCapture } from './quick-capture';
+import { toast } from 'sonner';
+
+type TodayPlanItem =
+  | { type: 'task'; task: Task; at: Date }
+  | { type: 'event'; event: Event; at: Date };
 
 const glass =
   'rounded-[26px] border border-border/55 bg-card/60 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] backdrop-blur-xl';
@@ -53,6 +65,7 @@ export function TodayPage({
   userName: string;
   initialNow: string;
 }) {
+  const queryClient = useQueryClient();
   const [now, setNow] = useState(() => new Date(initialNow));
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -383,41 +396,46 @@ export function TodayPage({
               const title = isTask ? item.task.title : item.event.title;
               const customerName = isTask ? item.task.customer?.name : item.event.customer?.name;
               return (
-                <Link
+                <div
                   key={`${item.type}-${isTask ? item.task.id : item.event.id}`}
-                  href={
-                    isTask
-                      ? `/dashboard/tasks?task=${item.task.id}`
-                      : `/dashboard/calendar?event=${item.event.id}`
-                  }
-                  className='flex items-center gap-3 py-3 transition-colors hover:bg-background/35'
+                  className='flex flex-wrap items-center gap-3 py-3 transition-colors hover:bg-background/35'
                 >
-                  <span className='text-muted-foreground w-12 shrink-0 text-xs font-semibold tabular-nums'>
-                    {format(item.at, 'HH:mm')}
-                  </span>
-                  <span
-                    className={cn(
-                      'flex size-7 shrink-0 items-center justify-center rounded-lg',
+                  <Link
+                    href={
                       isTask
-                        ? 'bg-primary/[0.10] text-primary'
-                        : 'bg-background/70 text-muted-foreground'
-                    )}
+                        ? `/dashboard/tasks?task=${item.task.id}`
+                        : `/dashboard/calendar?event=${item.event.id}`
+                    }
+                    className='flex min-w-0 flex-1 items-center gap-3'
                   >
-                    {isTask ? (
-                      <Icons.check className='size-3.5' />
-                    ) : (
-                      <Icons.calendar className='size-3.5' />
-                    )}
-                  </span>
-                  <span className='min-w-0 flex-1'>
-                    <span className='block truncate text-sm font-medium'>{title}</span>
-                    <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
-                      {isTask ? 'Tarea planificada' : 'Evento'}
-                      {customerName ? ` · ${customerName}` : ''}
+                    <span className='text-muted-foreground w-12 shrink-0 text-xs font-semibold tabular-nums'>
+                      {format(item.at, 'HH:mm')}
                     </span>
-                  </span>
-                  <Icons.chevronRight className='text-muted-foreground size-4 shrink-0' />
-                </Link>
+                    <span
+                      className={cn(
+                        'flex size-7 shrink-0 items-center justify-center rounded-lg',
+                        isTask
+                          ? 'bg-primary/[0.10] text-primary'
+                          : 'bg-background/70 text-muted-foreground'
+                      )}
+                    >
+                      {isTask ? (
+                        <Icons.check className='size-3.5' />
+                      ) : (
+                        <Icons.calendar className='size-3.5' />
+                      )}
+                    </span>
+                    <span className='min-w-0 flex-1'>
+                      <span className='block truncate text-sm font-medium'>{title}</span>
+                      <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
+                        {isTask ? 'Tarea planificada' : 'Evento'}
+                        {customerName ? ` · ${customerName}` : ''}
+                      </span>
+                    </span>
+                    <Icons.chevronRight className='text-muted-foreground size-4 shrink-0' />
+                  </Link>
+                  <TodayPlanActions item={item} queryClient={queryClient} />
+                </div>
               );
             })}
             {todayPlan.length === 0 && (
@@ -616,6 +634,115 @@ function ActivityPreview({ activity }: { activity: GlobalActivity }) {
 
 function ActivityPreviewLoading() {
   return <div className='bg-muted/50 h-14 animate-pulse rounded-2xl sm:col-span-2' />;
+}
+
+function TodayPlanActions({
+  item,
+  queryClient
+}: {
+  item: TodayPlanItem;
+  queryClient: ReturnType<typeof useQueryClient>;
+}) {
+  const [pending, setPending] = useState(false);
+  const isTask = item.type === 'task';
+
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: taskKeys.all }),
+      queryClient.invalidateQueries({ queryKey: eventKeys.all }),
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
+    ]);
+  };
+
+  const complete = async () => {
+    setPending(true);
+    try {
+      if (isTask) await updateTask(item.task.id, { status: 'done' });
+      else await updateEvent(item.event.id, { status: 'done' });
+      await refresh();
+      toast.success(isTask ? 'Tarea completada' : 'Evento completado');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo completar.');
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const postpone = async () => {
+    setPending(true);
+    try {
+      const nextStart = new Date(item.at);
+      nextStart.setDate(nextStart.getDate() + 1);
+      if (isTask && item.task.eventId) {
+        const linkedEvent = await getEvent(item.task.eventId);
+        const duration = Math.max(
+          15 * 60 * 1000,
+          new Date(linkedEvent.endAt).getTime() - new Date(linkedEvent.startAt).getTime()
+        );
+        await updateEvent(linkedEvent.id, {
+          startAt: nextStart.toISOString(),
+          endAt: new Date(nextStart.getTime() + duration).toISOString()
+        });
+      } else if (isTask) {
+        await updateTask(item.task.id, { dueAt: nextStart.toISOString() });
+      } else {
+        const duration = Math.max(
+          15 * 60 * 1000,
+          new Date(item.event.endAt).getTime() - new Date(item.event.startAt).getTime()
+        );
+        await updateEvent(item.event.id, {
+          startAt: nextStart.toISOString(),
+          endAt: new Date(nextStart.getTime() + duration).toISOString()
+        });
+      }
+      await refresh();
+      toast.success('Pasado a mañana');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo posponer.');
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const plan = async () => {
+    if (!isTask || item.task.eventId) return;
+    setPending(true);
+    try {
+      const start = new Date(item.at);
+      const created = await createEvent({
+        title: item.task.title,
+        description: item.task.description ?? undefined,
+        startAt: start.toISOString(),
+        endAt: new Date(start.getTime() + 60 * 60 * 1000).toISOString(),
+        customerId: item.task.customerId,
+        assigneeId: item.task.assigneeId,
+        status: 'planned'
+      });
+      await updateTask(item.task.id, { eventId: created.id, dueAt: start.toISOString() });
+      await refresh();
+      toast.success('Tarea planificada');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo planificar.');
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className='flex shrink-0 items-center gap-1'>
+      <Button variant='ghost' size='sm' disabled={pending} onClick={() => void complete()}>
+        Hecho
+      </Button>
+      <Button variant='ghost' size='sm' disabled={pending} onClick={() => void postpone()}>
+        Mañana
+      </Button>
+      {isTask && !item.task.eventId && (
+        <Button variant='ghost' size='sm' disabled={pending} onClick={() => void plan()}>
+          Planificar
+        </Button>
+      )}
+    </div>
+  );
 }
 
 function QuickAction({

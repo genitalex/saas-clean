@@ -18,7 +18,7 @@ import {
 import { Icons } from '@/components/icons';
 import { deleteTask, getTasks, taskKeys } from '../queries';
 import { updateTask } from '../queries';
-import { createEvent, updateEvent } from '@/features/calendar/queries';
+import { createEvent, getEvent, getEvents, updateEvent } from '@/features/calendar/queries';
 import type { Task, TaskPriority, TaskStatus } from '../types';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 
@@ -40,6 +40,9 @@ export function TaskListPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAssigneeId, setBulkAssigneeId] = useState('');
   const [bulkDate, setBulkDate] = useState('');
+  const [bulkPlanOpen, setBulkPlanOpen] = useState(false);
+  const [bulkPlanStart, setBulkPlanStart] = useState('');
+  const [bulkPlanDuration, setBulkPlanDuration] = useState('30');
   const [deepLinkId, setDeepLinkId] = useState<string | null>(null);
 
   const {
@@ -142,6 +145,73 @@ export function TaskListPage() {
     await bulkUpdate({ dueAt: next.toISOString() });
   };
 
+  const bulkPlan = async () => {
+    if (!bulkPlanStart || selectedTasks.length === 0) return;
+    const start = new Date(bulkPlanStart);
+    const duration = Number(bulkPlanDuration) * 60 * 1000;
+    if (Number.isNaN(start.getTime()) || !Number.isFinite(duration)) return;
+
+    try {
+      const dayStart = new Date(start);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const dayEvents = await getEvents({
+        startDate: dayStart.toISOString(),
+        endDate: dayEnd.toISOString()
+      });
+      const selectedEventIds = new Set(
+        selectedTasks.flatMap((task) => (task.event ? [task.event.id] : []))
+      );
+      const hasConflict = dayEvents.some((event) => {
+        if (selectedEventIds.has(event.id)) return false;
+        const eventStart = new Date(event.startAt).getTime();
+        const eventEnd = new Date(event.endAt).getTime();
+        return selectedTasks.some((_, index) => {
+          const taskStart = start.getTime() + index * duration;
+          return taskStart < eventEnd && taskStart + duration > eventStart;
+        });
+      });
+      if (hasConflict) {
+        const continuePlanning = window.confirm(
+          'Ya tienes una reunión a esta hora. ¿Quieres colocar las tareas de todos modos?'
+        );
+        if (!continuePlanning) return;
+      }
+
+      for (const [index, task] of selectedTasks.entries()) {
+        const taskStart = new Date(start.getTime() + index * duration);
+        const taskEnd = new Date(taskStart.getTime() + duration);
+        if (task.event) {
+          await updateEvent(task.event.id, {
+            startAt: taskStart.toISOString(),
+            endAt: taskEnd.toISOString()
+          });
+        } else {
+          const created = await createEvent({
+            title: task.title,
+            description: task.description ?? undefined,
+            startAt: taskStart.toISOString(),
+            endAt: taskEnd.toISOString(),
+            customerId: task.customerId,
+            assigneeId: task.assigneeId,
+            status: 'planned'
+          });
+          await updateTask(task.id, { eventId: created.id, dueAt: taskStart.toISOString() });
+        }
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: taskKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['events'] })
+      ]);
+      setSelectedIds([]);
+      setBulkPlanOpen(false);
+      toast.success(`${selectedTasks.length} tareas colocadas en calendario`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo planificar el lote.');
+    }
+  };
+
   const bulkAssign = async () => {
     if (!bulkAssigneeId) return;
     await bulkUpdate({ assigneeId: bulkAssigneeId });
@@ -234,6 +304,13 @@ export function TaskListPage() {
               <Button variant='outline' size='sm' onClick={() => void bulkSchedule('nextWeek')}>
                 Próxima semana
               </Button>
+              <Button
+                variant={bulkPlanOpen ? 'secondary' : 'outline'}
+                size='sm'
+                onClick={() => setBulkPlanOpen((open) => !open)}
+              >
+                Planificar
+              </Button>
               <Input
                 type='datetime-local'
                 value={bulkDate}
@@ -303,6 +380,32 @@ export function TaskListPage() {
                 Eliminar
               </Button>
             </div>
+            {bulkPlanOpen && (
+              <div className='flex flex-wrap items-center gap-2 border-t border-border/50 pt-3'>
+                <Input
+                  type='datetime-local'
+                  value={bulkPlanStart}
+                  onChange={(event) => setBulkPlanStart(event.target.value)}
+                  aria-label='Inicio del plan de tareas'
+                  className='h-9 w-48 rounded-lg'
+                />
+                <select
+                  value={bulkPlanDuration}
+                  onChange={(event) => setBulkPlanDuration(event.target.value)}
+                  aria-label='Duración de cada tarea'
+                  className='h-9 rounded-lg border border-input bg-transparent px-2 text-sm'
+                >
+                  <option value='15'>15 min</option>
+                  <option value='30'>30 min</option>
+                  <option value='45'>45 min</option>
+                  <option value='60'>1 h</option>
+                  <option value='120'>2 h</option>
+                </select>
+                <Button variant='secondary' size='sm' onClick={() => void bulkPlan()}>
+                  Colocar consecutivamente
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -408,6 +511,7 @@ function TaskInspector({
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const [title, setTitle] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
 
   useEffect(() => setTitle(task?.title ?? ''), [task]);
 
@@ -424,21 +528,58 @@ function TaskInspector({
     }
   };
 
-  const scheduleTask = async (when: 'today' | 'tomorrow' | 'nextWeek') => {
+  const rescheduleTask = async (next: Date) => {
+    try {
+      if (task.event) {
+        const linkedEvent = await getEvent(task.event.id);
+        const duration = Math.max(
+          15 * 60 * 1000,
+          new Date(linkedEvent.endAt).getTime() - new Date(linkedEvent.startAt).getTime()
+        );
+        await updateEvent(task.event.id, {
+          startAt: next.toISOString(),
+          endAt: new Date(next.getTime() + duration).toISOString()
+        });
+        onTaskUpdated({ ...task, dueAt: next });
+        await queryClient.invalidateQueries({ queryKey: ['events'] });
+        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        toast.success('Trabajo reprogramado');
+      } else {
+        await save({ dueAt: next.toISOString() });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo reprogramar la tarea.');
+    }
+  };
+
+  const scheduleTask = async (when: 'later' | 'today' | 'tomorrow' | 'thisWeek' | 'nextWeek') => {
     const base = new Date(task.dueAt ?? new Date());
     const next = new Date(base);
 
-    if (when === 'today') {
+    if (when === 'later') {
+      next.setTime(Math.max(Date.now() + 30 * 60 * 1000, next.getTime() + 30 * 60 * 1000));
+    } else if (when === 'today') {
       next.setHours(9, 0, 0, 0);
     } else if (when === 'tomorrow') {
       next.setDate(next.getDate() + 1);
+      next.setHours(9, 0, 0, 0);
+    } else if (when === 'thisWeek') {
+      next.setDate(next.getDate() + (next.getDay() === 0 ? 1 : 0));
       next.setHours(9, 0, 0, 0);
     } else {
       next.setDate(next.getDate() + 7);
       next.setHours(9, 0, 0, 0);
     }
 
-    await save({ dueAt: next.toISOString() });
+    await rescheduleTask(next);
+  };
+
+  const scheduleOnDate = async () => {
+    if (!scheduleDate) return;
+    const selectedDate = new Date(`${scheduleDate}T09:00:00`);
+    if (Number.isNaN(selectedDate.getTime())) return;
+    await rescheduleTask(selectedDate);
+    setScheduleDate('');
   };
 
   const planInCalendar = async () => {
@@ -551,6 +692,9 @@ function TaskInspector({
           <section className='space-y-3'>
             <h3 className='text-sm font-semibold'>Siguiente decisión</h3>
             <div className='flex flex-wrap gap-2'>
+              <Button variant='outline' size='sm' onClick={() => void scheduleTask('later')}>
+                Más tarde
+              </Button>
               <Button variant='outline' size='sm' onClick={() => void scheduleTask('today')}>
                 Hoy
               </Button>
@@ -560,9 +704,26 @@ function TaskInspector({
               <Button variant='outline' size='sm' onClick={() => void scheduleTask('nextWeek')}>
                 Próxima semana
               </Button>
+              <Button variant='outline' size='sm' onClick={() => void scheduleTask('thisWeek')}>
+                Esta semana
+              </Button>
               <Button variant='secondary' size='sm' onClick={() => void planInCalendar()}>
                 Planificar en calendario
               </Button>
+            </div>
+            <div className='flex flex-wrap items-center gap-2'>
+              <Input
+                type='date'
+                value={scheduleDate}
+                onChange={(event) => setScheduleDate(event.target.value)}
+                aria-label='Elegir fecha de la tarea'
+                className='h-9 w-40 rounded-xl'
+              />
+              {scheduleDate && (
+                <Button variant='outline' size='sm' onClick={() => void scheduleOnDate()}>
+                  Elegir fecha
+                </Button>
+              )}
             </div>
             <div className='flex flex-wrap gap-2'>
               {(Object.keys(priorityLabels) as TaskPriority[]).map((value) => (
