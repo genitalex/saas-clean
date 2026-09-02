@@ -59,15 +59,15 @@ function rangeForView(cursor: Date, view: CalendarView) {
 }
 
 export function CalendarPage({
-  initialDate,
+  initialDate: initialDateParam,
   initialView
 }: {
   initialDate?: string;
   initialView?: CalendarView;
 }) {
   const parseInitialDate = () => {
-    if (!initialDate) return new Date();
-    const parsed = new Date(`${initialDate}T00:00:00`);
+    if (!initialDateParam) return new Date();
+    const parsed = new Date(`${initialDateParam}T00:00:00`);
     return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   };
   const initialCursor = parseInitialDate();
