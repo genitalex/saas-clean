@@ -6,6 +6,8 @@ type CalendarRouteProps = {
   searchParams: Promise<{
     date?: string;
     view?: string;
+    event?: string;
+    create?: string;
   }>;
 };
 
@@ -19,5 +21,12 @@ export default async function CalendarRoute({ searchParams }: CalendarRouteProps
       ? params.view
       : undefined;
 
-  return <CalendarPageWrapper initialDate={params.date} initialView={view} />;
+  return (
+    <CalendarPageWrapper
+      initialDate={params.date}
+      initialView={view}
+      initialEventId={params.event}
+      initialCreate={params.create === '1'}
+    />
+  );
 }

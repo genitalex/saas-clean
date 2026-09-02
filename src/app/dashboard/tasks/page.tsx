@@ -3,12 +3,17 @@ import { TaskListPage, TasksHeaderAction } from '@/features/tasks/components/tas
 
 export const metadata = { title: 'Tasks' };
 
-export default function TasksPage() {
+export default async function TasksPage({
+  searchParams
+}: {
+  searchParams: Promise<{ create?: string }>;
+}) {
+  const params = await searchParams;
   return (
     <PageContainer
       pageTitle='Tasks'
       pageDescription='Organiza el trabajo de tu equipo.'
-      pageHeaderAction={<TasksHeaderAction />}
+      pageHeaderAction={<TasksHeaderAction initialOpen={params.create === '1'} />}
     >
       <TaskListPage />
     </PageContainer>

@@ -15,6 +15,7 @@ import { getEvents, eventKeys } from '@/features/calendar/queries';
 import type { Event } from '@/features/calendar/types';
 import { getActivities, activityKeys } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
+import { QuickCapture } from './quick-capture';
 
 const glass =
   'rounded-[26px] border border-border/55 bg-card/60 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] backdrop-blur-xl';
@@ -166,6 +167,8 @@ export function TodayPage({
           </div>
         </div>
       </section>
+
+      <QuickCapture />
 
       <section
         className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5'
@@ -357,7 +360,7 @@ export function TodayPage({
           {upcomingEvents.slice(0, 4).map((event) => (
             <Link
               key={event.id}
-              href={`/dashboard/today?date=${format(new Date(event.startAt), 'yyyy-MM-dd')}`}
+              href={`/dashboard/calendar?event=${event.id}&date=${format(new Date(event.startAt), 'yyyy-MM-dd')}`}
               className={cn(
                 'flex items-center gap-3 rounded-2xl border border-border/45 bg-background/35 px-3.5 py-3',
                 softButton

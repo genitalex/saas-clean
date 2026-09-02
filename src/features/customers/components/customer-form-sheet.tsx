@@ -1,11 +1,14 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-export default function CustomerFormSheet() {
+export default function CustomerFormSheet({ initialOpen = false }: { initialOpen?: boolean }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [kind, setKind] = useState<'person' | 'company'>('person');
   const [pending, setPending] = useState(false);
+  useEffect(() => {
+    if (initialOpen) setOpen(true);
+  }, [initialOpen]);
   async function create() {
     setPending(true);
     const r = await fetch('/api/customers', {

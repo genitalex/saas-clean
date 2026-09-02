@@ -8,6 +8,8 @@ import RenderResults from './render-result';
 import useThemeSwitching from './use-theme-switching';
 import { useFilteredNavGroups } from '@/hooks/use-nav';
 import { useModeStore } from '@/features/modes/store';
+import GlobalActions from './global-actions';
+import { Icons } from '@/components/icons';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -26,6 +28,45 @@ export default function KBar({ children }: { children: React.ReactNode }) {
     const allItems = filteredGroups
       .flatMap((group) => group.items)
       .filter((item) => !item.disabled);
+
+    const createActions = [
+      {
+        id: 'create-task',
+        name: 'Crear tarea',
+        keywords: 'crear nueva tarea task',
+        section: 'Crear',
+        subtitle: 'Abrir una captura de tarea',
+        icon: <Icons.check className='size-4' />,
+        perform: () => navigateTo('/dashboard/tasks?create=1')
+      },
+      {
+        id: 'create-event',
+        name: 'Crear evento',
+        keywords: 'crear nuevo evento reunión calendario',
+        section: 'Crear',
+        subtitle: 'Abrir el formulario rápido de eventos',
+        icon: <Icons.calendar className='size-4' />,
+        perform: () => navigateTo('/dashboard/calendar?create=1')
+      },
+      {
+        id: 'create-customer',
+        name: 'Crear cliente',
+        keywords: 'crear nuevo cliente customer',
+        section: 'Crear',
+        subtitle: 'Añadir contexto al espacio',
+        icon: <Icons.user className='size-4' />,
+        perform: () => navigateTo('/dashboard/customers?create=1')
+      },
+      {
+        id: 'create-note',
+        name: 'Abrir notas',
+        keywords: 'crear nota rápida notes',
+        section: 'Crear',
+        subtitle: 'Capturar una idea en Notas',
+        icon: <Icons.post className='size-4' />,
+        perform: () => navigateTo('/dashboard/notes')
+      }
+    ];
 
     const modeActions = [
       {
@@ -62,6 +103,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
     ];
 
     return [
+      ...createActions,
       ...modeActions,
       ...allItems.flatMap((navItem) => {
         // Only include base action if the navItem has a real URL and is not just a container
@@ -107,6 +149,7 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
+      <GlobalActions />
       <KBarPortal>
         <KBarPositioner className='bg-black/10 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 z-99999 flex items-start! justify-center p-4! pt-[14vh]!'>
           <KBarAnimator className='bg-popover text-popover-foreground ring-foreground/10 relative mx-auto w-full max-w-[600px] overflow-hidden rounded-xl shadow-lg ring-1'>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -254,6 +255,16 @@ function TaskInspector({
               <Detail label='Cliente' value={task.customer?.name ?? 'Trabajo interno'} />
               <Detail label='Responsable' value={task.assignee?.name ?? 'Sin asignar'} />
             </div>
+            {task.customer && (
+              <Link
+                href={`/dashboard/customers/${task.customer.id}`}
+                className='flex items-center gap-3 rounded-2xl border border-border/60 px-3 py-3 text-sm hover:bg-muted/40'
+              >
+                <Icons.user className='text-primary size-4' />
+                <span className='min-w-0 flex-1 truncate'>{task.customer.name}</span>
+                <Icons.chevronRight className='text-muted-foreground size-4' />
+              </Link>
+            )}
             {task.event && (
               <a
                 href={`/dashboard/calendar?event=${task.event.id}`}
@@ -308,6 +319,6 @@ function Detail({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function TasksHeaderAction() {
-  return <NewTaskDialog />;
+export function TasksHeaderAction({ initialOpen = false }: { initialOpen?: boolean }) {
+  return <NewTaskDialog initialOpen={initialOpen} />;
 }

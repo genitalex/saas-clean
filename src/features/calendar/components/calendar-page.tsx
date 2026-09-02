@@ -65,10 +65,14 @@ function rangeForView(cursor: Date, view: CalendarView) {
 
 export function CalendarPage({
   initialDate: initialDateParam,
-  initialView
+  initialView,
+  initialEventId,
+  initialCreate
 }: {
   initialDate?: string;
   initialView?: CalendarView;
+  initialEventId?: string;
+  initialCreate?: boolean;
 }) {
   const parseInitialDate = () => {
     if (!initialDateParam) return new Date();
@@ -196,6 +200,17 @@ export function CalendarPage({
     setInitialDate(undefined);
     setDialogOpen(true);
   };
+  useEffect(() => {
+    if (initialCreate) openCreate(initialCursor);
+  }, [initialCreate]);
+
+  useEffect(() => {
+    if (initialEventId && events.length > 0) {
+      const linkedEvent = events.find((event) => event.id === initialEventId);
+      if (linkedEvent) openEvent(linkedEvent);
+    }
+  }, [events, initialEventId]);
+
   useEffect(() => {
     const handleKeyDown = (keyboardEvent: KeyboardEvent) => {
       const target = keyboardEvent.target as HTMLElement | null;

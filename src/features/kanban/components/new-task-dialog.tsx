@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -16,11 +16,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { createTask, taskKeys } from '@/features/tasks/queries';
+import { activityKeys } from '@/features/activities/queries';
 import { taskPayloadSchema } from '@/features/tasks/schemas/task';
 import type { CustomerOption, TaskPriority } from '@/features/tasks/types';
 import { authClient } from '@/lib/auth-client';
 
-export default function NewTaskDialog({ customerId }: { customerId?: string } = {}) {
+export default function NewTaskDialog({
+  customerId,
+  eventId,
+  initialOpen = false
+}: { customerId?: string; eventId?: string; initialOpen?: boolean } = {}) {
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const [open, setOpen] = useState(false);
@@ -31,6 +36,9 @@ export default function NewTaskDialog({ customerId }: { customerId?: string } = 
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerId ?? '');
   const [assigneeId, setAssigneeId] = useState('');
   const [pending, setPending] = useState(false);
+  useEffect(() => {
+    if (initialOpen) setOpen(true);
+  }, [initialOpen]);
   const { data: customers = [] } = useQuery({
     queryKey: ['customers', 'task-options'],
     queryFn: async () => {
@@ -58,6 +66,7 @@ export default function NewTaskDialog({ customerId }: { customerId?: string } = 
       priority,
       dueAt: dueAt || null,
       customerId: selectedCustomerId || null,
+      eventId: eventId || null,
       assigneeId: assigneeId || null
     });
     if (!parsed.success) {
@@ -68,6 +77,7 @@ export default function NewTaskDialog({ customerId }: { customerId?: string } = 
     try {
       await createTask(parsed.data);
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       toast.success('Tarea creada');
       reset();
       setOpen(false);

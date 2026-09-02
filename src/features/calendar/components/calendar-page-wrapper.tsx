@@ -6,14 +6,25 @@ import { CalendarPage } from './calendar-page';
 
 export function CalendarPageWrapper({
   initialDate,
-  initialView
+  initialView,
+  initialEventId,
+  initialCreate
 }: {
   initialDate?: string;
   initialView?: 'month' | 'week' | 'day' | 'agenda';
+  initialEventId?: string;
+  initialCreate?: boolean;
 }) {
   const isMobile = useIsMobile();
 
-  const calendar = <CalendarPage initialDate={initialDate} initialView={initialView} />;
+  const calendar = (
+    <CalendarPage
+      initialDate={initialDate}
+      initialView={initialView}
+      initialEventId={initialEventId}
+      initialCreate={initialCreate}
+    />
+  );
 
   if (isMobile) {
     return calendar;
