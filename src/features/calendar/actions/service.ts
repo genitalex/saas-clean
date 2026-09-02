@@ -206,6 +206,12 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
     endAt: input.endAt ?? existing.endAt,
     allDay: input.allDay ?? existing.allDay,
     location: input.location !== undefined ? input.location : existing.location,
+    url: input.url !== undefined ? input.url : existing.url,
+    status: input.status ?? existing.status,
+    color: input.color !== undefined ? input.color : existing.color,
+    reminderMinutes:
+      input.reminderMinutes !== undefined ? input.reminderMinutes : existing.reminderMinutes,
+    repeatRule: input.repeatRule !== undefined ? input.repeatRule : existing.repeatRule,
     customerId: input.customerId !== undefined ? input.customerId : existing.customerId,
     assigneeId: input.assigneeId !== undefined ? input.assigneeId : existing.assigneeId
   });

@@ -163,7 +163,12 @@ export async function createTask(input: TaskPayload) {
     })
     .returning({ id: tasks.id });
   if (parsed.data.customerId)
-    await recordSystemActivity(parsed.data.customerId, 'Tarea creada', { taskId: created.id });
+    await recordSystemActivity(
+      parsed.data.customerId,
+      'Tarea creada',
+      { taskId: created.id },
+      parsed.data.eventId
+    );
   return getTask(created.id);
 }
 
@@ -208,7 +213,12 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
     previous.status !== 'done' &&
     previous.customerId
   ) {
-    await recordSystemActivity(previous.customerId, 'Tarea completada', { taskId: id });
+    await recordSystemActivity(
+      previous.customerId,
+      'Tarea completada',
+      { taskId: id },
+      previous.eventId
+    );
   }
   return getTask(updated.id);
 }

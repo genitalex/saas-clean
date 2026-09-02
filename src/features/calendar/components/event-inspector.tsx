@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/sheet';
 import { Icons } from '@/components/icons';
 import { cn } from '@/lib/utils';
-import { createActivity } from '@/features/activities/queries';
+import { activityKeys, createActivity } from '@/features/activities/queries';
 import { createTask, updateTask } from '@/features/tasks/queries';
 import { taskKeys } from '@/features/tasks/queries';
 import { createEvent, deleteEvent, eventKeys, getEventWorkspace, updateEvent } from '../queries';
@@ -133,6 +133,7 @@ export function EventInspector({
     try {
       await updateEvent(currentEvent.id, patch);
       await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       await queryClient.invalidateQueries({
         queryKey: [...eventKeys.detail(currentEvent.id), 'workspace']
       });
@@ -170,6 +171,7 @@ export function EventInspector({
     try {
       await updateTask(taskId, { status: nextStatus });
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       await queryClient.invalidateQueries({
         queryKey: [...eventKeys.detail(currentEvent.id), 'workspace']
       });
@@ -189,6 +191,7 @@ export function EventInspector({
         priority: 'medium'
       });
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       await queryClient.invalidateQueries({
         queryKey: [...eventKeys.detail(currentEvent.id), 'workspace']
       });
@@ -218,6 +221,7 @@ export function EventInspector({
         reminderMinutes: currentEvent.reminderMinutes
       });
       await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       toast.success('Seguimiento creado');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo crear el seguimiento.');
@@ -245,6 +249,7 @@ export function EventInspector({
         status: 'planned'
       });
       await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       toast.success('Evento duplicado');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo duplicar el evento.');
@@ -264,6 +269,7 @@ export function EventInspector({
       await queryClient.invalidateQueries({
         queryKey: [...eventKeys.detail(currentEvent.id), 'workspace']
       });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       toast.success('Nota añadida');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo añadir la nota.');
@@ -274,6 +280,7 @@ export function EventInspector({
     try {
       await deleteEvent(currentEvent.id);
       await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
       onOpenChange(false);
       toast.success('Evento eliminado');
     } catch (error) {
@@ -362,6 +369,14 @@ export function EventInspector({
 
         <div className='min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5'>
           <div className='space-y-6'>
+            {workspaceQuery.isError && (
+              <div className='flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm'>
+                <span className='text-destructive'>No se pudo cargar el contexto del evento.</span>
+                <Button variant='outline' size='sm' onClick={() => void workspaceQuery.refetch()}>
+                  Reintentar
+                </Button>
+              </div>
+            )}
             <section className='space-y-3'>
               <div className='flex items-center justify-between'>
                 <div>
