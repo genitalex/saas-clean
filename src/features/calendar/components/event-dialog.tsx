@@ -137,10 +137,21 @@ function WheelColumn({
   ariaLabel: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const programmaticScrollRef = useRef(false);
   const itemHeight = 34;
 
   useEffect(() => {
-    ref.current?.scrollTo({ top: selectedIndex * itemHeight, behavior: 'smooth' });
+    const element = ref.current;
+    if (!element) return;
+
+    programmaticScrollRef.current = true;
+    element.scrollTo({ top: selectedIndex * itemHeight, behavior: 'auto' });
+
+    const frame = window.requestAnimationFrame(() => {
+      programmaticScrollRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [selectedIndex]);
 
   return (
@@ -150,6 +161,8 @@ function WheelColumn({
       aria-label={ariaLabel}
       className='no-scrollbar h-[118px] w-[72px] snap-y snap-mandatory overflow-y-auto overscroll-contain py-[42px] text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
       onScroll={(event) => {
+        if (programmaticScrollRef.current) return;
+
         const nextIndex = Math.max(
           0,
           Math.min(values.length - 1, Math.round(event.currentTarget.scrollTop / itemHeight))
@@ -250,11 +263,7 @@ export function EventDialog({
   useEffect(() => {
     if (!open) return;
 
-    const start = event?.startAt
-      ? new Date(event.startAt)
-      : initialDate && !Number.isNaN(initialDate.getTime())
-        ? new Date(initialDate)
-        : new Date();
+    const start = event?.startAt ? new Date(event.startAt) : (initialDate ?? new Date());
 
     const end = event?.endAt ? new Date(event.endAt) : new Date(start.getTime() + 60 * 60 * 1000);
 
