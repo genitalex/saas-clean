@@ -117,7 +117,7 @@ export function TodayPage({
   const attentionCount = attention.length;
 
   return (
-    <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 pb-10 sm:gap-8'>
+    <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 pb-10 pt-4 sm:gap-8 sm:pt-5'>
       <section className='relative overflow-hidden rounded-[30px] border border-border/55 bg-background/55 p-5 shadow-[0_24px_70px_-48px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-7 lg:p-8'>
         <div className='pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/[0.07] blur-3xl' />
         <div className='relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
@@ -298,7 +298,7 @@ export function TodayPage({
             return (
               <Link
                 key={dayKey}
-                href={`/dashboard/today?date=${dayKey}`}
+                href={`/dashboard/calendar?date=${dayKey}&view=day`}
                 aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
                   'group min-w-0 rounded-2xl border p-2 text-center transition-all duration-200 hover:-translate-y-px hover:bg-card/80 sm:p-3',

@@ -58,9 +58,21 @@ function rangeForView(cursor: Date, view: CalendarView) {
   };
 }
 
-export function CalendarPage() {
-  const [cursor, setCursor] = useState(new Date());
-  const [view, setView] = useState<CalendarView>('month');
+export function CalendarPage({
+  initialDate,
+  initialView
+}: {
+  initialDate?: string;
+  initialView?: CalendarView;
+}) {
+  const parseInitialDate = () => {
+    if (!initialDate) return new Date();
+    const parsed = new Date(`${initialDate}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  };
+  const initialCursor = parseInitialDate();
+  const [cursor, setCursor] = useState(initialCursor);
+  const [view, setView] = useState<CalendarView>(initialView ?? 'month');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
@@ -74,9 +86,9 @@ export function CalendarPage() {
   // Mobile gets its own composition: a full month overview you can tap into
   // a day's hourly timeline, rather than the desktop grid shrunk down. It
   // tracks its own month cursor, selected day and year/month/day mode.
-  const [mobileCursor, setMobileCursor] = useState(new Date());
-  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>('month');
-  const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
+  const [mobileCursor, setMobileCursor] = useState(initialCursor);
+  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>(initialView ?? 'month');
+  const [selectedDate, setSelectedDate] = useState(() => startOfDay(initialCursor));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
   const {
     data: events = [],

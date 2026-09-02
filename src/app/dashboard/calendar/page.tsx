@@ -2,8 +2,19 @@ import { CalendarPageWrapper } from '@/features/calendar/components/calendar-pag
 
 export const metadata = { title: 'Calendar' };
 
-export default function CalendarRoute() {
-  // LayoutContent handles stripping the shell on mobile.
-  // CalendarPageWrapper handles conditional PageContainer wrapping.
-  return <CalendarPageWrapper />;
+type CalendarRouteProps = {
+  searchParams: Promise<{
+    date?: string;
+    view?: string;
+  }>;
+};
+
+export default async function CalendarRoute({ searchParams }: CalendarRouteProps) {
+  const params = await searchParams;
+  const view =
+    params.view === 'day' || params.view === 'week' || params.view === 'month'
+      ? params.view
+      : undefined;
+
+  return <CalendarPageWrapper initialDate={params.date} initialView={view} />;
 }
