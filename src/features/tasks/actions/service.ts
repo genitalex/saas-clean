@@ -33,6 +33,7 @@ const taskSelection = {
   updatedAt: tasks.updatedAt,
   completedAt: tasks.completedAt,
   customer: { id: customers.id, name: customers.name },
+  event: { id: events.id, title: events.title },
   assignee: { id: users.id, name: users.name }
 };
 
@@ -107,6 +108,7 @@ export async function getTasks(filters: TaskFilters = {}) {
     .select(taskSelection)
     .from(tasks)
     .leftJoin(customers, eq(customers.id, tasks.customerId))
+    .leftJoin(events, eq(events.id, tasks.eventId))
     .leftJoin(users, eq(users.id, tasks.assigneeId))
     .where(
       and(
@@ -129,6 +131,7 @@ export async function getTask(id: string) {
     .select(taskSelection)
     .from(tasks)
     .leftJoin(customers, eq(customers.id, tasks.customerId))
+    .leftJoin(events, eq(events.id, tasks.eventId))
     .leftJoin(users, eq(users.id, tasks.assigneeId))
     .where(and(eq(tasks.id, id), eq(tasks.organizationId, organization.id)))
     .limit(1);

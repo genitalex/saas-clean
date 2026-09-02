@@ -3,6 +3,7 @@ import type { customers, tasks, users } from '@/lib/db/schema';
 
 export type Task = InferSelectModel<typeof tasks> & {
   customer: { id: string; name: string } | null;
+  event: { id: string; title: string } | null;
   assignee: { id: string; name: string } | null;
 };
 

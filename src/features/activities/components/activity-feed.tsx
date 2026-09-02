@@ -25,6 +25,14 @@ function formatDate(value: Date) {
   }).format(value);
 }
 
+function activityIcon(type: GlobalActivity['type']) {
+  if (type === 'note') return <Icons.edit className='size-4' />;
+  if (type === 'call') return <Icons.phone className='size-4' />;
+  if (type === 'email') return <Icons.send className='size-4' />;
+  if (type === 'status_change') return <Icons.goals className='size-4' />;
+  return <Icons.sparkles className='size-4' />;
+}
+
 export default function ActivityFeed() {
   const { data, error, isLoading, refetch, isFetching } = useQuery({
     queryKey: activityKeys.global(),
@@ -71,17 +79,21 @@ export default function ActivityFeed() {
 function ActivityRow({ activity }: { activity: GlobalActivity }) {
   return (
     <article className='flex gap-4 border-b border-border/50 px-4 py-4 last:border-0 sm:px-6'>
-      <div className='bg-primary/10 text-primary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl'>
-        <Icons.clock className='size-4' />
+      <div className='bg-primary/10 text-primary relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl'>
+        {activityIcon(activity.type)}
       </div>
       <div className='min-w-0 flex-1'>
         <div className='flex flex-wrap items-center gap-2'>
           <p className='font-medium'>{activity.title}</p>
           <Badge variant='secondary'>{activityLabels[activity.type]}</Badge>
         </div>
-        <p className='text-muted-foreground mt-1 text-sm'>
-          {activity.user?.name || 'Sistema'} · {formatDate(new Date(activity.createdAt))}
-        </p>
+        <div className='text-muted-foreground mt-1 flex flex-wrap gap-x-2 text-sm'>
+          <span>{activity.user?.name || 'Sistema'}</span>
+          <span aria-hidden='true'>·</span>
+          <time dateTime={new Date(activity.createdAt).toISOString()}>
+            {formatDate(new Date(activity.createdAt))}
+          </time>
+        </div>
         {activity.content && <p className='mt-2 text-sm leading-6'>{activity.content}</p>}
         <div className='mt-3 flex flex-wrap gap-2 text-xs'>
           <Link
