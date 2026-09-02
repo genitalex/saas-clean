@@ -1044,6 +1044,7 @@ function MobileDayTimeline({
   const lateHeight = hasLate || lateExpanded ? 3 * hourHeight : compactLateHeight;
   const workHeight = 16 * hourHeight;
   const totalHeight = earlyHeight + workHeight + lateHeight;
+  const allDayRowHeight = allDayEvents.length > 0 ? ALL_DAY_ROW_PX : 0;
 
   const offset = useCallback(
     (minutes: number) => {
@@ -1124,6 +1125,22 @@ function MobileDayTimeline({
             <Icons.chevronDown className='size-3' />
           )}
         </span>
+      </button>
+    );
+  };
+
+  const collapseButton = (early: boolean) => {
+    const top = early ? 6 : earlyHeight + workHeight + 6;
+    return (
+      <button
+        type='button'
+        onClick={() => (early ? setEarlyExpanded(false) : setLateExpanded(false))}
+        className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+        style={{ top }}
+        aria-label={`Contraer ${early ? 'madrugada' : 'noche'}`}
+      >
+        Contraer
+        <Icons.chevronUp className='size-3' />
       </button>
     );
   };
@@ -1692,9 +1709,11 @@ function CompressedDayTimeline({
           <div className='grid' style={{ gridTemplateColumns: '72px minmax(0, 1fr)' }}>
             <div
               className='relative border-r border-border/60'
-              style={{ height: totalHeight + ALL_DAY_ROW_PX }}
+              style={{ height: totalHeight + allDayRowHeight }}
             >
-              <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
+              {allDayEvents.length > 0 && (
+                <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
+              )}
               <div className='relative' style={{ height: totalHeight }}>
                 {!hasEarlyEvents && !earlyExpanded
                   ? band(true)
@@ -1707,29 +1726,31 @@ function CompressedDayTimeline({
             </div>
 
             <div className='border-border/60 relative border-r'>
-              <div className='border-border/60 bg-surface-subtle/45 flex h-[58px] flex-wrap items-center gap-1.5 overflow-hidden border-b px-2 py-1.5'>
-                {allDayEvents.map((event) => {
-                  const category = categoryFor(event, categories);
-                  return (
-                    <button
-                      key={event.id}
-                      type='button'
-                      onClick={() => onOpenEvent(event)}
-                      className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium shadow-sm'
-                      style={{
-                        backgroundColor: `${category.color}14`,
-                        borderColor: `${category.color}35`
-                      }}
-                    >
-                      <span
-                        className='mr-1 inline-block size-1.5 rounded-full align-middle'
-                        style={{ backgroundColor: category.color }}
-                      />
-                      {event.title}
-                    </button>
-                  );
-                })}
-              </div>
+              {allDayEvents.length > 0 && (
+                <div className='border-border/60 bg-surface-subtle/45 flex h-[58px] flex-wrap items-center gap-1.5 overflow-hidden border-b px-2 py-1.5'>
+                  {allDayEvents.map((event) => {
+                    const category = categoryFor(event, categories);
+                    return (
+                      <button
+                        key={event.id}
+                        type='button'
+                        onClick={() => onOpenEvent(event)}
+                        className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium shadow-sm'
+                        style={{
+                          backgroundColor: `${category.color}14`,
+                          borderColor: `${category.color}35`
+                        }}
+                      >
+                        <span
+                          className='mr-1 inline-block size-1.5 rounded-full align-middle'
+                          style={{ backgroundColor: category.color }}
+                        />
+                        {event.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               <div
                 data-calendar-day={format(cursor, 'yyyy-MM-dd')}
@@ -1743,6 +1764,8 @@ function CompressedDayTimeline({
                 {!hasLateEvents && !lateExpanded
                   ? band(false)
                   : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
+                {!hasEarlyEvents && earlyExpanded && collapseButton(true)}
+                {!hasLateEvents && lateExpanded && collapseButton(false)}
 
                 {dayEvents.map((event) => {
                   const category = categoryFor(event, categories);
