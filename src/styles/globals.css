@@ -85,6 +85,35 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+  }
+
+  input,
+  textarea,
+  button,
+  select {
+    font: inherit;
+  }
+
+  [data-slot='card-title'] {
+    letter-spacing: -0.012em;
+  }
+
+  [data-slot='card-content'],
+  [data-slot='card-footer'] {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Global scrollbar styling to match ScrollArea */

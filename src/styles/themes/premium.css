@@ -1,48 +1,45 @@
-/* Premium SaaS Theme - Sophisticated, calm, elegant productivity application */
+/* Premium SaaS Theme - Native-inspired, calm, precise productivity application */
 
 [data-theme='premium'] {
   /* Light mode palette */
-  /* Background: Clean, refined white with a hint of warmth */
-  --background: oklch(0.98 0.0008 70);
-  --foreground: oklch(0.2 0.008 280);
+  /* A cool neutral canvas keeps elevation legible without heavy borders. */
+  --background: oklch(0.965 0.006 260);
+  --foreground: oklch(0.205 0.018 260);
 
   /* Card and surfaces */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.008 280);
-  --popover: oklch(0.99 0.0008 70);
-  --popover-foreground: oklch(0.2 0.008 280);
+  --card: oklch(0.995 0.002 260);
+  --card-foreground: oklch(0.205 0.018 260);
+  --popover: oklch(0.99 0.003 260);
+  --popover-foreground: oklch(0.205 0.018 260);
 
-  /* Primary: Deep, sophisticated teal/cyan - premium but not harsh */
-  --primary: oklch(0.52 0.12 200);
-  --primary-foreground: oklch(0.98 0 0);
+  /* One controlled system-blue accent, inspired by native controls. */
+  --primary: oklch(0.56 0.17 255);
+  --primary-foreground: oklch(0.99 0.002 260);
 
-  /* Secondary: Soft, sophisticated purple - complements primary */
-  --secondary: oklch(0.92 0.015 280);
-  --secondary-foreground: oklch(0.25 0.01 280);
+  --secondary: oklch(0.92 0.012 260);
+  --secondary-foreground: oklch(0.28 0.018 260);
 
-  /* Muted: Refined grays for secondary content */
-  --muted: oklch(0.94 0.008 280);
-  --muted-foreground: oklch(0.5 0.006 280);
+  --muted: oklch(0.935 0.009 260);
+  --muted-foreground: oklch(0.49 0.018 260);
 
-  /* Accent: Warm, sophisticated gold/amber for highlights */
-  --accent: oklch(0.85 0.08 60);
-  --accent-foreground: oklch(0.2 0.008 280);
+  --accent: oklch(0.93 0.025 255);
+  --accent-foreground: oklch(0.25 0.06 255);
 
   /* Destructive: Refined red, not harsh */
   --destructive: oklch(0.62 0.15 30);
   --destructive-foreground: oklch(0.98 0 0);
 
   /* Borders and inputs */
-  --border: oklch(0.92 0.01 280);
-  --input: oklch(0.96 0.01 280);
-  --ring: oklch(0.52 0.12 200);
+  --border: oklch(0.89 0.012 260);
+  --input: oklch(0.985 0.004 260);
+  --ring: oklch(0.56 0.17 255);
 
   /* Chart colors: Harmonious, sophisticated palette */
-  --chart-1: oklch(0.52 0.12 200); /* Primary teal */
-  --chart-2: oklch(0.6 0.12 320); /* Sophisticated purple */
-  --chart-3: oklch(0.78 0.12 80); /* Golden yellow */
-  --chart-4: oklch(0.68 0.1 140); /* Teal-green */
-  --chart-5: oklch(0.55 0.14 30); /* Warm coral */
+  --chart-1: oklch(0.56 0.17 255);
+  --chart-2: oklch(0.62 0.13 220);
+  --chart-3: oklch(0.68 0.13 180);
+  --chart-4: oklch(0.7 0.12 145);
+  --chart-5: oklch(0.64 0.14 30);
 
   /* Typography */
   --font-sans: Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -52,27 +49,27 @@
     monospace;
 
   /* Layout */
-  --radius: 0.625rem;
+  --radius: 0.75rem;
 
   /* Shadows: Refined, subtle depth */
-  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.1);
+  --shadow-2xs: 0 1px 2px 0 oklch(0.25 0.02 260 / 0.05);
+  --shadow-xs: 0 1px 3px 0 oklch(0.25 0.02 260 / 0.06), 0 1px 2px -1px oklch(0.25 0.02 260 / 0.04);
+  --shadow-sm: 0 2px 8px -4px oklch(0.25 0.02 260 / 0.14);
+  --shadow: 0 3px 12px -6px oklch(0.25 0.02 260 / 0.16);
+  --shadow-md: 0 8px 20px -10px oklch(0.25 0.02 260 / 0.18);
+  --shadow-lg: 0 16px 34px -18px oklch(0.25 0.02 260 / 0.2);
+  --shadow-xl: 0 24px 48px -24px oklch(0.25 0.02 260 / 0.22);
+  --shadow-2xl: 0 32px 64px -32px oklch(0.25 0.02 260 / 0.24);
 
   /* Sidebar (if used) */
-  --sidebar: oklch(0.985 0.0005 70);
-  --sidebar-foreground: oklch(0.2 0.008 280);
-  --sidebar-primary: oklch(0.52 0.12 200);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.92 0.015 280);
-  --sidebar-accent-foreground: oklch(0.2 0.008 280);
-  --sidebar-border: oklch(0.94 0.008 280);
-  --sidebar-ring: oklch(0.52 0.12 200);
+  --sidebar: oklch(0.975 0.005 260);
+  --sidebar-foreground: oklch(0.205 0.018 260);
+  --sidebar-primary: oklch(0.56 0.17 255);
+  --sidebar-primary-foreground: oklch(0.99 0.002 260);
+  --sidebar-accent: oklch(0.92 0.018 255);
+  --sidebar-accent-foreground: oklch(0.25 0.06 255);
+  --sidebar-border: oklch(0.91 0.01 260);
+  --sidebar-ring: oklch(0.56 0.17 255);
 
   /* Spacing */
   --spacing: 0.25rem;

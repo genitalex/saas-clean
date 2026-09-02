@@ -17,7 +17,7 @@ export default function Header() {
   return (
     <header
       ref={headerRef}
-      className='bg-background/85 sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b px-3 backdrop-blur-md sm:px-4'
+      className='bg-background/88 sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/70 px-3 backdrop-blur-md sm:px-5'
     >
       <div className='flex min-w-0 items-center gap-2'>
         <Breadcrumbs />
