@@ -250,7 +250,11 @@ export function EventDialog({
   useEffect(() => {
     if (!open) return;
 
-    const start = event?.startAt ? new Date(event.startAt) : (initialDate ?? new Date());
+    const start = event?.startAt
+      ? new Date(event.startAt)
+      : initialDate && !Number.isNaN(initialDate.getTime())
+        ? new Date(initialDate)
+        : new Date();
 
     const end = event?.endAt ? new Date(event.endAt) : new Date(start.getTime() + 60 * 60 * 1000);
 

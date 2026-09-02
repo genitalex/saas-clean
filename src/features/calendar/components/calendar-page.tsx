@@ -167,7 +167,9 @@ export function CalendarPage({
     });
   const openCreate = (date = cursor) => {
     setSelectedEvent(null);
-    setInitialDate(new Date(date));
+    const start = new Date(date);
+    start.setSeconds(0, 0);
+    setInitialDate(start);
     setDialogOpen(true);
   };
   const openEvent = (event: Event) => {
@@ -413,6 +415,9 @@ export function CalendarPage({
       </Card>
 
       <EventDialog
+        key={
+          selectedEvent ? `edit-${selectedEvent.id}` : `create-${initialDate?.getTime() ?? 'now'}`
+        }
         open={dialogOpen}
         event={selectedEvent}
         initialDate={initialDate}
