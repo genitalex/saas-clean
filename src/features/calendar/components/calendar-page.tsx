@@ -1020,58 +1020,51 @@ function MobileDayTimeline({
 }) {
   const today = new Date();
   const isToday = isSameDay(date, today);
-  const HOUR = MOBILE_HOUR_ROW_PX;
-  const COMPACT = 22;
-  const EARLY = 5 * 60;
-  const LATE = 21 * 60;
+  const hourHeight = MOBILE_HOUR_ROW_PX;
+  const earlyEnd = 300;
+  const lateStart = 1260;
+  const compactEarlyHeight = 30;
+  const compactLateHeight = 26;
   const dayEvents = eventsForDay(events, date).filter((event) => !event.allDay);
   const allDayEvents = eventsForDay(events, date).filter((event) => event.allDay);
 
-  const hasEarlyEvents = dayEvents.some((event) => {
-    const start = new Date(event.startAt);
-    const end = new Date(event.endAt);
-    return (
-      start.getHours() * 60 + start.getMinutes() < EARLY &&
-      end.getHours() * 60 + end.getMinutes() > 0
-    );
-  });
-  const hasLateEvents = dayEvents.some((event) => {
-    const start = new Date(event.startAt);
-    const end = new Date(event.endAt);
-    return (
-      start.getHours() * 60 + start.getMinutes() < 24 * 60 &&
-      end.getHours() * 60 + end.getMinutes() > LATE
-    );
-  });
-
+  const overlap = (event: Event, start: number, end: number) => {
+    const a = new Date(event.startAt),
+      b = new Date(event.endAt);
+    const s = a.getHours() * 60 + a.getMinutes(),
+      e = b.getHours() * 60 + b.getMinutes();
+    return s < end && e > start;
+  };
+  const hasEarly = dayEvents.some((e) => overlap(e, 0, earlyEnd));
+  const hasLate = dayEvents.some((e) => overlap(e, lateStart, 1440));
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [lateExpanded, setLateExpanded] = useState(false);
-  const earlyHeight = hasEarlyEvents || earlyExpanded ? 5 * HOUR : COMPACT;
-  const lateHeight = hasLateEvents || lateExpanded ? 3 * HOUR : COMPACT;
-  const workHeight = 16 * HOUR;
+
+  const earlyHeight = hasEarly || earlyExpanded ? 5 * hourHeight : compactEarlyHeight;
+  const lateHeight = hasLate || lateExpanded ? 3 * hourHeight : compactLateHeight;
+  const workHeight = 16 * hourHeight;
   const totalHeight = earlyHeight + workHeight + lateHeight;
 
-  const offsetFromMinutes = useCallback(
+  const offset = useCallback(
     (minutes: number) => {
-      const value = Math.max(0, Math.min(24 * 60, minutes));
-      if (value <= EARLY) return (value / EARLY) * earlyHeight;
-      if (value <= LATE) return earlyHeight + ((value - EARLY) / 60) * HOUR;
-      return earlyHeight + workHeight + ((value - LATE) / 60) * (lateHeight / 3);
+      const m = Math.max(0, Math.min(1440, minutes));
+      if (m <= earlyEnd) return (m / earlyEnd) * earlyHeight;
+      if (m <= lateStart) return earlyHeight + ((m - earlyEnd) / 60) * hourHeight;
+      return earlyHeight + workHeight + ((m - lateStart) / 60) * (lateHeight / 3);
     },
-    [earlyHeight, lateHeight, workHeight]
+    [earlyHeight, lateHeight]
   );
 
-  const minutesFromPointer = useCallback(
+  const fromPointer = useCallback(
     (clientY: number, rect: DOMRect) => {
       const y = Math.max(0, Math.min(totalHeight, clientY - rect.top));
-      if (y <= earlyHeight) return (y / Math.max(1, earlyHeight)) * EARLY;
-      if (y <= earlyHeight + workHeight) return EARLY + ((y - earlyHeight) / HOUR) * 60;
-      return LATE + ((y - earlyHeight - workHeight) / Math.max(1, lateHeight / 3)) * 60;
+      if (y <= earlyHeight) return (y / earlyHeight) * earlyEnd;
+      if (y <= earlyHeight + workHeight) return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
+      return lateStart + ((y - earlyHeight - workHeight) / (lateHeight / 3)) * 60;
     },
-    [earlyHeight, lateHeight, totalHeight, workHeight]
+    [earlyHeight, lateHeight, totalHeight]
   );
 
-  const todayMinutes = today.getHours() * 60 + today.getMinutes();
   const moveEvent = useCallback(
     async (event: Event, nextStart: Date) => onMoveEvent(event, nextStart),
     [onMoveEvent]
@@ -1079,88 +1072,59 @@ function MobileDayTimeline({
   const { dragPreview, startDrag, suppressClickRef } = useEventDrag({
     startHour: 0,
     endHour: 24,
-    hourHeight: HOUR,
+    hourHeight,
     onMove: moveEvent,
-    minutesFromPointer
+    minutesFromPointer: fromPointer
   });
 
-  const toggleEarly = () => {
-    if (!hasEarlyEvents) setEarlyExpanded((value) => !value);
-  };
-  const toggleLate = () => {
-    if (!hasLateEvents) setLateExpanded((value) => !value);
-  };
-
-  const renderRangeControl = (early: boolean) => {
-    const hasEvents = early ? hasEarlyEvents : hasLateEvents;
-    const expanded = early ? hasEvents || earlyExpanded : hasEvents || lateExpanded;
-    const label = early ? '12 AM – 5 AM' : '9 PM – 12 AM';
-    const toggle = early ? toggleEarly : toggleLate;
-    const rangeTop = early ? 0 : earlyHeight + workHeight;
-    const rangeHeight = early ? earlyHeight : lateHeight;
-    const canToggle = !hasEvents;
-
-    return (
-      <button
-        type='button'
-        onClick={toggle}
-        disabled={!canToggle}
-        aria-label={
-          canToggle
-            ? `${expanded ? 'Contraer' : 'Expandir'} ${label}`
-            : `${label}, contiene eventos`
-        }
-        className={cn(
-          'absolute inset-x-0 z-40 flex items-center justify-center border-b border-border/55 bg-background/72 px-3 text-[10px] font-medium text-muted-foreground backdrop-blur-md transition-colors',
-          canToggle && 'hover:bg-primary/[0.045] hover:text-foreground',
-          !canToggle && 'cursor-default'
-        )}
-        style={{
-          top: rangeTop,
-          height: expanded ? 28 : rangeHeight
-        }}
-      >
-        <span className='inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card/65 px-2.5 py-1 shadow-sm'>
-          <span>{label}</span>
-          {canToggle && (
-            <>
-              <Icons.chevronDown
-                className={cn('size-3 transition-transform', expanded && 'rotate-180')}
-              />
-              <span>{expanded ? 'Contraer' : 'Expandir'}</span>
-            </>
-          )}
-        </span>
-      </button>
-    );
-  };
-
   const renderHour = (hour: number) => {
-    const top =
-      hour < 5
-        ? (hour / 5) * earlyHeight
-        : hour < 21
-          ? earlyHeight + (hour - 5) * HOUR
-          : earlyHeight + workHeight + (hour - 21) * (lateHeight / 3);
-    const height = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : HOUR;
+    const top = offset(hour * 60);
+    const h = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : hourHeight;
     return (
       <div
         key={hour}
         className='absolute inset-x-0 border-b border-border/60'
-        style={{ top, height }}
+        style={{ top, height: h }}
       >
         <button
           type='button'
-          onClick={() =>
-            onCreate(new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour))
-          }
+          onClick={() => {
+            const next = new Date(date);
+            next.setHours(hour, 0, 0, 0);
+            onCreate(next);
+          }}
           className='absolute inset-0 text-left transition-colors hover:bg-primary/[0.035]'
           aria-label={`Crear evento a las ${formatHourLabel(hour)}`}
         />
-        <span className='text-muted-foreground pointer-events-none absolute left-3 top-2 w-12 text-[11px] font-medium tabular-nums'>
+        <span className='text-muted-foreground pointer-events-none absolute left-3 top-2 w-14 text-[10px] font-medium tabular-nums'>
           {formatHourLabel(hour)}
         </span>
       </div>
+    );
+  };
+
+  const band = (early: boolean) => {
+    const locked = early ? hasEarly : hasLate;
+    if (locked) return null;
+    const expanded = early ? earlyExpanded : lateExpanded;
+    const top = early ? 0 : earlyHeight + workHeight;
+    const height = early ? earlyHeight : lateHeight;
+    return (
+      <button
+        type='button'
+        onClick={() => (early ? setEarlyExpanded((v) => !v) : setLateExpanded((v) => !v))}
+        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle/50 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle/80 hover:text-foreground'
+        style={{ top, height }}
+      >
+        <span className='inline-flex items-center gap-1.5'>
+          {early ? '12 AM – 5 AM' : '9 PM – 12 AM'}
+          {expanded ? (
+            <Icons.chevronUp className='size-3' />
+          ) : (
+            <Icons.chevronDown className='size-3' />
+          )}
+        </span>
+      </button>
     );
   };
 
@@ -1226,34 +1190,30 @@ function MobileDayTimeline({
           className='relative'
           style={{ height: totalHeight }}
         >
-          {!hasEarlyEvents && !earlyExpanded
-            ? renderRangeControl(true)
+          {!hasEarly && !earlyExpanded
+            ? band(true)
             : Array.from({ length: 5 }, (_, i) => renderHour(i))}
           {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
-          {!hasLateEvents && !lateExpanded
-            ? renderRangeControl(false)
+          {!hasLate && !lateExpanded
+            ? band(false)
             : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
-          {earlyExpanded && !hasEarlyEvents && renderRangeControl(true)}
-          {lateExpanded && !hasLateEvents && renderRangeControl(false)}
 
           {dayEvents.map((event) => {
             const category = categoryFor(event, categories);
-            const startAt = new Date(event.startAt);
-            const endAt = new Date(event.endAt);
-            const startMinutes = startAt.getHours() * 60 + startAt.getMinutes();
-            const durationMinutes = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
-            const top = Math.max(3, offsetFromMinutes(startMinutes) + 3);
-            const bottom = offsetFromMinutes(Math.min(24 * 60, startMinutes + durationMinutes));
+            const startAt = new Date(event.startAt),
+              endAt = new Date(event.endAt);
+            const start = startAt.getHours() * 60 + startAt.getMinutes();
+            const duration = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
+            const top = offset(start) + 3,
+              bottom = offset(Math.min(1440, start + duration));
             return (
               <button
                 key={event.id}
                 type='button'
-                onPointerDown={(pointerEvent) => startDrag(pointerEvent, event)}
-                onClick={() => {
-                  if (!suppressClickRef.current) onOpenEvent(event);
-                }}
+                onPointerDown={(e) => startDrag(e, event)}
+                onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                 className={cn(
-                  'absolute left-16 right-3 z-30 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
+                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
                   dragPreview?.event.id === event.id && 'opacity-35'
                 )}
                 style={{
@@ -1277,34 +1237,10 @@ function MobileDayTimeline({
             );
           })}
 
-          {dragPreview?.dateKey === format(date, 'yyyy-MM-dd') &&
-            (() => {
-              const event = dragPreview.event;
-              const category = categoryFor(event, categories);
-              const startAt = new Date(event.startAt);
-              const endAt = new Date(event.endAt);
-              const durationMinutes = Math.max(15, (endAt.getTime() - startAt.getTime()) / 60000);
-              const top = offsetFromMinutes(dragPreview.minutes);
-              const bottom = offsetFromMinutes(
-                Math.min(24 * 60, dragPreview.minutes + durationMinutes)
-              );
-              return (
-                <div
-                  className='pointer-events-none absolute left-16 right-3 z-40 rounded-xl border border-dashed'
-                  style={{
-                    top,
-                    height: Math.max(42, bottom - top - 6),
-                    backgroundColor: `${category.color}1c`,
-                    borderColor: `${category.color}60`
-                  }}
-                />
-              );
-            })()}
-
           {isToday && (
             <div
               className='pointer-events-none absolute left-16 right-3 z-20 flex items-center'
-              style={{ top: offsetFromMinutes(todayMinutes) }}
+              style={{ top: offset(today.getHours() * 60 + today.getMinutes()) }}
             >
               <span className='bg-primary size-2 rounded-full' />
               <span className='bg-primary h-[2px] flex-1' />
@@ -1598,8 +1534,7 @@ function TimelineView(
     onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
   }
 ) {
-  if (props.view === 'day') return <CompressedDayTimeline {...props} />;
-  return <WeekTimeline {...props} />;
+  return props.view === 'day' ? <CompressedDayTimeline {...props} /> : <WeekTimeline {...props} />;
 }
 
 function CompressedDayTimeline({
@@ -1610,63 +1545,53 @@ function CompressedDayTimeline({
   onCreate,
   onMoveEvent
 }: ViewProps & { view: 'day'; onMoveEvent: (event: Event, nextStart: Date) => Promise<void> }) {
-  const HOUR = 72;
-  const COMPACT = 26;
-  const earlyMinutes = 5 * 60;
-  const lateStartMinutes = 21 * 60;
-  const lateMinutes = 3 * 60;
+  const hourHeight = 72;
+  const compactEarlyHeight = 34;
+  const compactLateHeight = 30;
+  const earlyEnd = 5 * 60;
+  const lateStart = 21 * 60;
+
   const dayEvents = eventsForDay(events, cursor).filter((event) => !event.allDay);
   const allDayEvents = eventsForDay(events, cursor).filter((event) => event.allDay);
-  const hasEarlyEvents = dayEvents.some((event) => {
-    const start = new Date(event.startAt);
-    const end = new Date(event.endAt);
-    return (
-      start.getHours() * 60 + start.getMinutes() < earlyMinutes &&
-      end.getHours() * 60 + end.getMinutes() > 0
-    );
-  });
-  const hasLateEvents = dayEvents.some((event) => {
-    const start = new Date(event.startAt);
-    const end = new Date(event.endAt);
-    return (
-      start.getHours() * 60 + start.getMinutes() < 24 * 60 &&
-      end.getHours() * 60 + end.getMinutes() > lateStartMinutes
-    );
-  });
 
+  const overlap = (event: Event, start: number, end: number) => {
+    const a = new Date(event.startAt);
+    const b = new Date(event.endAt);
+    const s = a.getHours() * 60 + a.getMinutes();
+    const e = b.getHours() * 60 + b.getMinutes();
+    return s < end && e > start;
+  };
+
+  const hasEarlyEvents = dayEvents.some((event) => overlap(event, 0, earlyEnd));
+  const hasLateEvents = dayEvents.some((event) => overlap(event, lateStart, 1440));
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [lateExpanded, setLateExpanded] = useState(false);
-  const earlyHeight = hasEarlyEvents || earlyExpanded ? 5 * HOUR : COMPACT;
-  const lateHeight = hasLateEvents || lateExpanded ? 3 * HOUR : COMPACT;
-  const workHeight = 16 * HOUR;
+
+  const earlyHeight = hasEarlyEvents || earlyExpanded ? 5 * hourHeight : compactEarlyHeight;
+  const lateHeight = hasLateEvents || lateExpanded ? 3 * hourHeight : compactLateHeight;
+  const workHeight = 16 * hourHeight;
   const totalHeight = earlyHeight + workHeight + lateHeight;
 
-  const offsetFromMinutes = useCallback(
+  const offset = useCallback(
     (minutes: number) => {
-      const value = Math.max(0, Math.min(24 * 60, minutes));
-      if (value <= earlyMinutes) return (value / earlyMinutes) * earlyHeight;
-      if (value <= lateStartMinutes) return earlyHeight + ((value - earlyMinutes) / 60) * HOUR;
-      return earlyHeight + workHeight + ((value - lateStartMinutes) / 60) * (lateHeight / 3);
+      const m = Math.max(0, Math.min(1440, minutes));
+      if (m <= earlyEnd) return (m / earlyEnd) * earlyHeight;
+      if (m <= lateStart) return earlyHeight + ((m - earlyEnd) / 60) * hourHeight;
+      return earlyHeight + workHeight + ((m - lateStart) / 60) * (lateHeight / 3);
     },
-    [earlyHeight, lateHeight, workHeight]
+    [earlyHeight, lateHeight]
   );
 
-  const minutesFromPointer = useCallback(
+  const fromPointer = useCallback(
     (clientY: number, rect: DOMRect) => {
       const y = Math.max(0, Math.min(totalHeight, clientY - rect.top));
-      if (y <= earlyHeight) return (y / Math.max(1, earlyHeight)) * earlyMinutes;
-      if (y <= earlyHeight + workHeight) return earlyMinutes + ((y - earlyHeight) / HOUR) * 60;
-      return lateStartMinutes + ((y - earlyHeight - workHeight) / Math.max(1, lateHeight / 3)) * 60;
+      if (y <= earlyHeight) return (y / earlyHeight) * earlyEnd;
+      if (y <= earlyHeight + workHeight) return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
+      return lateStart + ((y - earlyHeight - workHeight) / (lateHeight / 3)) * 60;
     },
-    [earlyHeight, lateHeight, totalHeight, workHeight]
+    [earlyHeight, lateHeight, totalHeight]
   );
 
-  const hourTop = (hour: number) => offsetFromMinutes(hour * 60);
-  const hourHeight = (hour: number) =>
-    hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : HOUR;
-
-  const today = new Date();
-  const nowMinutes = today.getHours() * 60 + today.getMinutes();
   const moveEvent = useCallback(
     async (event: Event, nextStart: Date) => onMoveEvent(event, nextStart),
     [onMoveEvent]
@@ -1674,63 +1599,22 @@ function CompressedDayTimeline({
   const { dragPreview, startDrag, suppressClickRef } = useEventDrag({
     startHour: 0,
     endHour: 24,
-    hourHeight: HOUR,
+    hourHeight,
     onMove: moveEvent,
-    minutesFromPointer
+    minutesFromPointer: fromPointer
   });
 
-  const toggleEarly = () => {
-    if (!hasEarlyEvents) setEarlyExpanded((value) => !value);
-  };
-  const toggleLate = () => {
-    if (!hasLateEvents) setLateExpanded((value) => !value);
-  };
+  const today = new Date();
+  const nowMinutes = today.getHours() * 60 + today.getMinutes();
 
-  const renderRangeControl = (early: boolean) => {
-    const hasEvents = early ? hasEarlyEvents : hasLateEvents;
-    const expanded = early ? hasEvents || earlyExpanded : hasEvents || lateExpanded;
-    const label = early ? '12 AM – 5 AM' : '9 PM – 12 AM';
-    const toggle = early ? toggleEarly : toggleLate;
-    const canToggle = !hasEvents;
-    return (
-      <button
-        type='button'
-        onClick={toggle}
-        disabled={!canToggle}
-        aria-label={
-          canToggle
-            ? `${expanded ? 'Contraer' : 'Expandir'} ${label}`
-            : `${label}, contiene eventos`
-        }
-        className={cn(
-          'absolute inset-x-0 z-20 flex items-center justify-center border-b border-border/55 bg-surface-subtle/45 text-[10px] font-medium text-muted-foreground transition-colors',
-          canToggle && 'cursor-pointer hover:bg-primary/[0.04] hover:text-foreground',
-          !canToggle && 'cursor-default'
-        )}
-        style={{
-          top: early ? 0 : earlyHeight + workHeight,
-          height: early ? earlyHeight : lateHeight
-        }}
-      >
-        <span className='inline-flex items-center gap-1.5'>
-          <span>{label}</span>
-          <Icons.chevronDown
-            className={cn('size-3 transition-transform', expanded && 'rotate-180')}
-          />
-          <span className='sr-only'>{expanded ? 'Contraer' : 'Expandir'}</span>
-        </span>
-      </button>
-    );
-  };
-
-  const renderHourRow = (hour: number) => {
-    const rowTop = hourTop(hour);
-    const rowHeight = hourHeight(hour);
+  const renderHour = (hour: number) => {
+    const top = offset(hour * 60);
+    const h = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : hourHeight;
     return (
       <div
         key={hour}
-        className='absolute inset-x-0 border-b border-border/60'
-        style={{ top: rowTop, height: rowHeight }}
+        className='absolute inset-x-0 border-b border-border/55'
+        style={{ top, height: h }}
       >
         <button
           type='button'
@@ -1749,76 +1633,30 @@ function CompressedDayTimeline({
     );
   };
 
-  const renderEvents = () =>
-    dayEvents.map((event) => {
-      const category = categoryFor(event, categories);
-      const startAt = new Date(event.startAt);
-      const endAt = new Date(event.endAt);
-      const startMinutes = startAt.getHours() * 60 + startAt.getMinutes();
-      const durationMinutes = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
-      const top = offsetFromMinutes(startMinutes) + 3;
-      const bottom = offsetFromMinutes(Math.min(24 * 60, startMinutes + durationMinutes));
-      return (
-        <button
-          key={event.id}
-          type='button'
-          onPointerDown={(pointerEvent) => startDrag(pointerEvent, event)}
-          onClick={() => {
-            if (!suppressClickRef.current) onOpenEvent(event);
-          }}
-          className={cn(
-            'absolute left-1.5 right-1.5 z-30 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
-            dragPreview?.event.id === event.id && 'opacity-35'
+  const band = (early: boolean) => {
+    const top = early ? 0 : earlyHeight + workHeight;
+    const height = early ? earlyHeight : lateHeight;
+    const expanded = early ? earlyExpanded : lateExpanded;
+    if (early ? hasEarlyEvents : hasLateEvents) return null;
+    return (
+      <button
+        type='button'
+        onClick={() => (early ? setEarlyExpanded((v) => !v) : setLateExpanded((v) => !v))}
+        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle/50 text-[11px] font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-surface-subtle/75 hover:text-foreground'
+        style={{ top, height }}
+        aria-label={`${expanded ? 'Contraer' : 'Expandir'} ${early ? 'madrugada' : 'noche'}`}
+      >
+        <span className='inline-flex items-center gap-1.5'>
+          {early ? '12 AM – 5 AM' : '9 PM – 12 AM'}
+          {expanded ? (
+            <Icons.chevronUp className='size-3.5' />
+          ) : (
+            <Icons.chevronDown className='size-3.5' />
           )}
-          style={{
-            top,
-            height: Math.max(34, bottom - top - 6),
-            backgroundColor: `${category.color}12`,
-            borderColor: `${category.color}35`
-          }}
-          title='Arrastra para cambiar de hora'
-        >
-          <span
-            className='absolute inset-y-0 left-0 w-1'
-            style={{ backgroundColor: category.color }}
-          />
-          <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
-            <span className='truncate text-sm font-semibold'>{event.title}</span>
-            <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
-              {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
-            </span>
-            {event.location && (
-              <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
-                {event.location}
-              </span>
-            )}
-          </span>
-        </button>
-      );
-    });
-
-  const dragGhost = dragPreview
-    ? (() => {
-        const event = dragPreview.event;
-        const category = categoryFor(event, categories);
-        const startAt = new Date(event.startAt);
-        const endAt = new Date(event.endAt);
-        const durationMinutes = Math.max(15, (endAt.getTime() - startAt.getTime()) / 60000);
-        const top = offsetFromMinutes(dragPreview.minutes);
-        const bottom = offsetFromMinutes(Math.min(24 * 60, dragPreview.minutes + durationMinutes));
-        return (
-          <div
-            className='pointer-events-none absolute left-1.5 right-1.5 z-40 rounded-xl border border-dashed'
-            style={{
-              top,
-              height: Math.max(34, bottom - top - 6),
-              backgroundColor: `${category.color}18`,
-              borderColor: `${category.color}65`
-            }}
-          />
-        );
-      })()
-    : null;
+        </span>
+      </button>
+    );
+  };
 
   return (
     <div className='min-w-0 overflow-hidden'>
@@ -1826,7 +1664,7 @@ function CompressedDayTimeline({
         <div className='min-w-[680px]'>
           <div
             className='bg-surface-subtle/70 sticky top-0 z-10 grid border-b backdrop-blur-sm'
-            style={{ gridTemplateColumns: '72px minmax(0,1fr)' }}
+            style={{ gridTemplateColumns: '72px minmax(0, 1fr)' }}
           >
             <div className='border-border/60 border-r' />
             <div className='border-border/60 border-r px-4 py-3'>
@@ -1851,7 +1689,7 @@ function CompressedDayTimeline({
             </div>
           </div>
 
-          <div className='grid' style={{ gridTemplateColumns: '72px minmax(0,1fr)' }}>
+          <div className='grid' style={{ gridTemplateColumns: '72px minmax(0, 1fr)' }}>
             <div
               className='relative border-r border-border/60'
               style={{ height: totalHeight + ALL_DAY_ROW_PX }}
@@ -1859,20 +1697,16 @@ function CompressedDayTimeline({
               <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
               <div className='relative' style={{ height: totalHeight }}>
                 {!hasEarlyEvents && !earlyExpanded
-                  ? renderRangeControl(true)
-                  : hasEarlyEvents
-                    ? renderRangeControl(true)
-                    : Array.from({ length: 5 }, (_, i) => renderHourRow(i))}
-                {Array.from({ length: 16 }, (_, i) => renderHourRow(i + 5))}
+                  ? band(true)
+                  : Array.from({ length: 5 }, (_, i) => renderHour(i))}
+                {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
                 {!hasLateEvents && !lateExpanded
-                  ? renderRangeControl(false)
-                  : hasLateEvents
-                    ? renderRangeControl(false)
-                    : Array.from({ length: 3 }, (_, i) => renderHourRow(i + 21))}
+                  ? band(false)
+                  : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
               </div>
             </div>
 
-            <div className='relative border-r border-border/60'>
+            <div className='border-border/60 relative border-r'>
               <div className='border-border/60 bg-surface-subtle/45 flex h-[58px] flex-wrap items-center gap-1.5 overflow-hidden border-b px-2 py-1.5'>
                 {allDayEvents.map((event) => {
                   const category = categoryFor(event, categories);
@@ -1887,6 +1721,10 @@ function CompressedDayTimeline({
                         borderColor: `${category.color}35`
                       }}
                     >
+                      <span
+                        className='mr-1 inline-block size-1.5 rounded-full align-middle'
+                        style={{ backgroundColor: category.color }}
+                      />
                       {event.title}
                     </button>
                   );
@@ -1899,20 +1737,56 @@ function CompressedDayTimeline({
                 style={{ height: totalHeight }}
               >
                 {!hasEarlyEvents && !earlyExpanded
-                  ? renderRangeControl(true)
-                  : Array.from({ length: 5 }, (_, i) => renderHourRow(i))}
-                {Array.from({ length: 16 }, (_, i) => renderHourRow(i + 5))}
+                  ? band(true)
+                  : Array.from({ length: 5 }, (_, i) => renderHour(i))}
+                {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
                 {!hasLateEvents && !lateExpanded
-                  ? renderRangeControl(false)
-                  : Array.from({ length: 3 }, (_, i) => renderHourRow(i + 21))}
-                {renderEvents()}
-                {dragGhost}
+                  ? band(false)
+                  : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
+
+                {dayEvents.map((event) => {
+                  const category = categoryFor(event, categories);
+                  const startAt = new Date(event.startAt);
+                  const endAt = new Date(event.endAt);
+                  const start = startAt.getHours() * 60 + startAt.getMinutes();
+                  const duration = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
+                  const top = offset(start) + 3;
+                  const bottom = offset(Math.min(1440, start + duration));
+                  return (
+                    <button
+                      key={event.id}
+                      type='button'
+                      onPointerDown={(e) => startDrag(e, event)}
+                      onClick={() => !suppressClickRef.current && onOpenEvent(event)}
+                      className={cn(
+                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
+                        dragPreview?.event.id === event.id && 'opacity-35'
+                      )}
+                      style={{
+                        top,
+                        height: Math.max(34, bottom - top - 6),
+                        backgroundColor: `${category.color}12`,
+                        borderColor: `${category.color}35`
+                      }}
+                    >
+                      <span
+                        className='absolute inset-y-0 left-0 w-1'
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
+                        <span className='truncate text-sm font-semibold'>{event.title}</span>
+                        <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
+                          {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+
                 {isSameDay(cursor, today) && (
                   <div
                     className='pointer-events-none absolute inset-x-0 z-20 flex items-center'
-                    style={{
-                      top: nowMinutes >= 0 ? nowOffsetSafe(nowMinutes, offsetFromMinutes) : 0
-                    }}
+                    style={{ top: offset(nowMinutes) }}
                   >
                     <span className='bg-primary size-2 rounded-full' />
                     <span className='bg-primary h-[2px] flex-1' />
@@ -1925,10 +1799,6 @@ function CompressedDayTimeline({
       </div>
     </div>
   );
-}
-
-function nowOffsetSafe(minutes: number, offset: (m: number) => number) {
-  return Math.max(0, Math.min(offset(24 * 60), offset(minutes)));
 }
 
 function WeekTimeline({
