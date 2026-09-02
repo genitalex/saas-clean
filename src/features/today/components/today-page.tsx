@@ -188,8 +188,8 @@ export function TodayPage({
           hint='Haz crecer el negocio'
         />
         <QuickAction
-          href='/dashboard/customers'
-          icon={Icons.sparkles}
+          href='/dashboard/notes'
+          icon={Icons.post}
           label='Nota rápida'
           hint='Guarda una idea'
         />
