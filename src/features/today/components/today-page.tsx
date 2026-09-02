@@ -160,7 +160,7 @@ export function TodayPage({
       </section>
 
       <section
-        className='grid grid-cols-3 gap-2 sm:max-w-[720px] sm:gap-3'
+        className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5'
         aria-label='Acciones rápidas'
       >
         <QuickAction
@@ -180,6 +180,18 @@ export function TodayPage({
           icon={Icons.user}
           label='Nuevo cliente'
           hint='Añade contexto'
+        />
+        <QuickAction
+          href='/dashboard/opportunities'
+          icon={Icons.opportunities}
+          label='Nueva oportunidad'
+          hint='Haz crecer el negocio'
+        />
+        <QuickAction
+          href='/dashboard/customers'
+          icon={Icons.sparkles}
+          label='Nota rápida'
+          hint='Guarda una idea'
         />
       </section>
 
