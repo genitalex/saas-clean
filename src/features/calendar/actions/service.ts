@@ -243,10 +243,17 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
     .returning({ id: events.id });
   if (!updated) throw new EventServiceError('Event not found', 'NOT_FOUND');
 
+  const timeChanged =
+    existing.startAt.getTime() !== parsed.data.startAt?.getTime() ||
+    existing.endAt.getTime() !== parsed.data.endAt?.getTime();
+  if (timeChanged) {
+    await db
+      .update(tasks)
+      .set({ dueAt: parsed.data.startAt, updatedAt: new Date() })
+      .where(and(eq(tasks.organizationId, organization.id), eq(tasks.eventId, id)));
+  }
+
   if (existing.customerId) {
-    const timeChanged =
-      existing.startAt.getTime() !== parsed.data.startAt?.getTime() ||
-      existing.endAt.getTime() !== parsed.data.endAt?.getTime();
     const statusChanged = existing.status !== parsed.data.status;
     if (timeChanged) {
       await recordSystemActivity(

@@ -33,6 +33,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { getEvents, eventKeys, updateEvent } from '../queries';
+import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Event } from '../types';
 import { EventDialog } from './event-dialog';
 import { EventInspector } from './event-inspector';
@@ -118,6 +119,16 @@ export function CalendarPage({
     retryDelay: (attempt: number) => Math.min(400 * 2 ** attempt, 1600),
     refetchOnWindowFocus: false
   });
+  const { data: linkedTasks = [] } = useQuery({
+    queryKey: taskKeys.list(),
+    queryFn: () => getTasks(),
+    staleTime: 20_000,
+    refetchOnWindowFocus: false
+  });
+  const linkedEventIds = useMemo(
+    () => linkedTasks.flatMap((task) => (task.eventId ? [task.eventId] : [])),
+    [linkedTasks]
+  );
 
   const mobileRange = useMemo(
     () => ({
@@ -235,20 +246,46 @@ export function CalendarPage({
     async (event: Event, nextStart: Date) => {
       const duration = new Date(event.endAt).getTime() - new Date(event.startAt).getTime();
       const nextEnd = new Date(nextStart.getTime() + duration);
-      await updateEvent(event.id, {
-        startAt: nextStart.toISOString(),
-        endAt: nextEnd.toISOString()
-      });
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-      toast.success('Evento reprogramado');
+      const snapshots = queryClient.getQueriesData<Event[]>({ queryKey: eventKeys.all });
+      const updateCachedEvent = (events: Event[] | undefined) =>
+        events?.map((cachedEvent) =>
+          cachedEvent.id === event.id
+            ? { ...cachedEvent, startAt: nextStart, endAt: nextEnd }
+            : cachedEvent
+        );
+      queryClient.setQueriesData<Event[]>({ queryKey: eventKeys.all }, updateCachedEvent);
+      try {
+        await updateEvent(event.id, {
+          startAt: nextStart.toISOString(),
+          endAt: nextEnd.toISOString()
+        });
+        await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        toast.success('Bloque reprogramado');
+      } catch (error) {
+        snapshots.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
+        toast.error(error instanceof Error ? error.message : 'No se pudo reprogramar el bloque.');
+      }
     },
     [queryClient]
   );
   const resizeEvent = useCallback(
     async (event: Event, nextEnd: Date) => {
-      await updateEvent(event.id, { endAt: nextEnd.toISOString() });
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-      toast.success('Duración actualizada');
+      const snapshots = queryClient.getQueriesData<Event[]>({ queryKey: eventKeys.all });
+      queryClient.setQueriesData<Event[]>({ queryKey: eventKeys.all }, (events) =>
+        events?.map((cachedEvent) =>
+          cachedEvent.id === event.id ? { ...cachedEvent, endAt: nextEnd } : cachedEvent
+        )
+      );
+      try {
+        await updateEvent(event.id, { endAt: nextEnd.toISOString() });
+        await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        toast.success('Duración actualizada');
+      } catch (error) {
+        snapshots.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
+        toast.error(error instanceof Error ? error.message : 'No se pudo cambiar la duración.');
+      }
     },
     [queryClient]
   );
@@ -480,6 +517,7 @@ export function CalendarPage({
             cursor={cursor}
             events={visibleEvents}
             categories={categories}
+            linkedEventIds={linkedEventIds}
             onCreate={openCreate}
             onOpenEvent={openEvent}
             onOpenDay={(day) => {
@@ -492,6 +530,7 @@ export function CalendarPage({
             cursor={cursor}
             events={visibleEvents}
             categories={categories}
+            linkedEventIds={linkedEventIds}
             onOpenEvent={openEvent}
             onCreate={openCreate}
           />
@@ -501,6 +540,7 @@ export function CalendarPage({
             view={view}
             events={visibleEvents}
             categories={categories}
+            linkedEventIds={linkedEventIds}
             onCreate={openCreate}
             onOpenEvent={openEvent}
             onOpenDay={(day) => {
@@ -1609,7 +1649,14 @@ function DesktopYearDialog({
   );
 }
 
-function AgendaView({ cursor, events, categories, onOpenEvent, onCreate }: ViewProps) {
+function AgendaView({
+  cursor,
+  events,
+  categories,
+  onOpenEvent,
+  onCreate,
+  linkedEventIds = []
+}: ViewProps) {
   const days = Array.from({ length: 30 }, (_, index) => addDays(startOfDay(cursor), index));
   return (
     <div className='min-w-0'>
@@ -1663,6 +1710,11 @@ function AgendaView({ cursor, events, categories, onOpenEvent, onCreate }: ViewP
                               {event.customer ? ` · ${event.customer.name}` : ''}
                             </span>
                           </span>
+                          {linkedEventIds.includes(event.id) && (
+                            <span className='text-primary shrink-0 text-[10px] font-semibold'>
+                              Tarea
+                            </span>
+                          )}
                           <span className='text-muted-foreground text-xs'>
                             {statusLabelForEvent(event.status)}
                           </span>
@@ -1702,6 +1754,7 @@ type ViewProps = {
   onCreate: (date: Date) => void;
   onOpenDay?: (date: Date) => void;
   onResizeEvent?: (event: Event, nextEnd: Date) => Promise<void>;
+  linkedEventIds?: string[];
 };
 function getSavedEventCategories(): Record<string, string> {
   try {
@@ -1724,7 +1777,15 @@ function categoryFor(event: Event, categories: Category[]) {
 
 const MONTH_CELL_EVENT_LIMIT = 3;
 
-function MonthView({ cursor, events, categories, onOpenEvent, onCreate, onOpenDay }: ViewProps) {
+function MonthView({
+  cursor,
+  events,
+  categories,
+  onOpenEvent,
+  onCreate,
+  onOpenDay,
+  linkedEventIds = []
+}: ViewProps) {
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
   const days: Date[] = [];
@@ -1811,7 +1872,10 @@ function MonthView({ cursor, events, categories, onOpenEvent, onCreate, onOpenDa
                           color: category.color
                         }}
                       >
-                        <span className='truncate'>{event.title}</span>
+                        <span className='min-w-0 truncate'>{event.title}</span>
+                        {linkedEventIds.includes(event.id) && (
+                          <Icons.check className='size-3 shrink-0' aria-label='Tarea planificada' />
+                        )}
                       </button>
                     );
                   })}
@@ -1854,6 +1918,7 @@ function CompressedDayTimeline({
   cursor,
   events,
   categories,
+  linkedEventIds = [],
   onOpenEvent,
   onCreate,
   onMoveEvent,
@@ -2133,7 +2198,15 @@ function CompressedDayTimeline({
                         style={{ backgroundColor: category.color }}
                       />
                       <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
-                        <span className='truncate text-sm font-semibold'>{event.title}</span>
+                        <span className='flex min-w-0 items-center gap-1.5'>
+                          <span className='truncate text-sm font-semibold'>{event.title}</span>
+                          {linkedEventIds.includes(event.id) && (
+                            <Icons.check
+                              className='text-primary size-3 shrink-0'
+                              aria-label='Tarea planificada'
+                            />
+                          )}
+                        </span>
                         <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
                           {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
                         </span>
@@ -2166,6 +2239,7 @@ function WeekTimeline({
   view,
   events,
   categories,
+  linkedEventIds = [],
   onOpenEvent,
   onCreate,
   onOpenDay,
@@ -2361,7 +2435,15 @@ function WeekTimeline({
                             style={{ backgroundColor: category.color }}
                           />
                           <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
-                            <span className='truncate text-sm font-semibold'>{event.title}</span>
+                            <span className='flex min-w-0 items-center gap-1.5'>
+                              <span className='truncate text-sm font-semibold'>{event.title}</span>
+                              {linkedEventIds.includes(event.id) && (
+                                <Icons.check
+                                  className='text-primary size-3 shrink-0'
+                                  aria-label='Tarea planificada'
+                                />
+                              )}
+                            </span>
                             <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
                               {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
                             </span>

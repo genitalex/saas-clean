@@ -18,7 +18,7 @@ import {
 import { Icons } from '@/components/icons';
 import { deleteTask, getTasks, taskKeys } from '../queries';
 import { updateTask } from '../queries';
-import { createEvent } from '@/features/calendar/queries';
+import { createEvent, updateEvent } from '@/features/calendar/queries';
 import type { Task, TaskPriority, TaskStatus } from '../types';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 
@@ -447,18 +447,25 @@ function TaskInspector({
     const end = new Date(start.getTime() + 60 * 60 * 1000);
 
     try {
-      const created = await createEvent({
-        title: task.title,
-        description: task.description ?? undefined,
-        startAt: start.toISOString(),
-        endAt: end.toISOString(),
-        customerId: task.customerId,
-        assigneeId: task.assigneeId,
-        status: 'planned'
-      });
-
-      await save({ eventId: created.id, dueAt: start.toISOString() });
+      if (task.event) {
+        await updateEvent(task.event.id, {
+          startAt: start.toISOString(),
+          endAt: end.toISOString()
+        });
+      } else {
+        const created = await createEvent({
+          title: task.title,
+          description: task.description ?? undefined,
+          startAt: start.toISOString(),
+          endAt: end.toISOString(),
+          customerId: task.customerId,
+          assigneeId: task.assigneeId,
+          status: 'planned'
+        });
+        await save({ eventId: created.id, dueAt: start.toISOString() });
+      }
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: ['events'] });
       toast.success('Tarea planificada en calendario');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo planificar en calendario.');

@@ -112,6 +112,17 @@ export function TodayPage({
   const upcomingEvents = events
     .filter((event) => new Date(event.endAt) >= now)
     .toSorted((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  const linkedEventIds = new Set(tasks.flatMap((task) => (task.eventId ? [task.eventId] : [])));
+  const todayPlan = [
+    ...tasks
+      .filter(
+        (task) => task.status !== 'done' && task.dueAt && isSameDay(new Date(task.dueAt), today)
+      )
+      .map((task) => ({ type: 'task' as const, task, at: new Date(task.dueAt!) })),
+    ...events
+      .filter((event) => isSameDay(new Date(event.startAt), today) && !linkedEventIds.has(event.id))
+      .map((event) => ({ type: 'event' as const, event, at: new Date(event.startAt) }))
+  ].toSorted((a, b) => a.at.getTime() - b.at.getTime());
   const staleFollowUps = customers
     .filter(
       (customer) => customer.nextActionAt && new Date(customer.nextActionAt) < addDays(today, -7)
@@ -355,6 +366,66 @@ export function TodayPage({
               </Link>
             );
           })}
+        </div>
+        <div className='mt-5 rounded-2xl border border-primary/15 bg-primary/[0.035] p-4'>
+          <div className='flex items-center justify-between gap-3'>
+            <div>
+              <p className='text-sm font-semibold'>Plan de hoy</p>
+              <p className='text-muted-foreground mt-0.5 text-xs'>Trabajo y bloques en orden.</p>
+            </div>
+            <span className='text-muted-foreground text-xs tabular-nums'>
+              {todayPlan.length} {todayPlan.length === 1 ? 'elemento' : 'elementos'}
+            </span>
+          </div>
+          <div className='mt-3 divide-y divide-border/45'>
+            {todayPlan.slice(0, 6).map((item) => {
+              const isTask = item.type === 'task';
+              const title = isTask ? item.task.title : item.event.title;
+              const customerName = isTask ? item.task.customer?.name : item.event.customer?.name;
+              return (
+                <Link
+                  key={`${item.type}-${isTask ? item.task.id : item.event.id}`}
+                  href={
+                    isTask
+                      ? `/dashboard/tasks?task=${item.task.id}`
+                      : `/dashboard/calendar?event=${item.event.id}`
+                  }
+                  className='flex items-center gap-3 py-3 transition-colors hover:bg-background/35'
+                >
+                  <span className='text-muted-foreground w-12 shrink-0 text-xs font-semibold tabular-nums'>
+                    {format(item.at, 'HH:mm')}
+                  </span>
+                  <span
+                    className={cn(
+                      'flex size-7 shrink-0 items-center justify-center rounded-lg',
+                      isTask
+                        ? 'bg-primary/[0.10] text-primary'
+                        : 'bg-background/70 text-muted-foreground'
+                    )}
+                  >
+                    {isTask ? (
+                      <Icons.check className='size-3.5' />
+                    ) : (
+                      <Icons.calendar className='size-3.5' />
+                    )}
+                  </span>
+                  <span className='min-w-0 flex-1'>
+                    <span className='block truncate text-sm font-medium'>{title}</span>
+                    <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
+                      {isTask ? 'Tarea planificada' : 'Evento'}
+                      {customerName ? ` · ${customerName}` : ''}
+                    </span>
+                  </span>
+                  <Icons.chevronRight className='text-muted-foreground size-4 shrink-0' />
+                </Link>
+              );
+            })}
+            {todayPlan.length === 0 && (
+              <p className='text-muted-foreground py-3 text-sm'>
+                No hay trabajo planificado para hoy.
+              </p>
+            )}
+          </div>
         </div>
         <div className='mt-5 grid gap-2 sm:grid-cols-2'>
           {upcomingEvents.slice(0, 4).map((event) => (
