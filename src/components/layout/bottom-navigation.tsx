@@ -34,7 +34,7 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='mb-2 w-full max-w-[980px] rounded-[24px] border border-border/60 bg-background/78 p-1.5 shadow-[0_22px_70px_-36px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:mb-4 md:mb-5'>
+        <div className='mb-2 w-full max-w-[980px] rounded-[24px] border border-border/60 bg-background/78 p-1.5 shadow-none backdrop-blur-2xl sm:mb-4 md:mb-5'>
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
             {primaryItems.slice(0, 5).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
@@ -192,7 +192,7 @@ function QuickCreate({ onClose }: { onClose: () => void }) {
       className='fixed inset-0 z-40 flex items-end justify-center bg-black/8 p-3 backdrop-blur-[2px]'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <div className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg rounded-[24px] border border-border/60 bg-background/94 p-3 shadow-[0_26px_80px_-36px_rgba(0,0,0,0.5)] backdrop-blur-2xl'>
+      <div className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg rounded-[24px] border border-border/60 bg-background/94 p-3 shadow-none backdrop-blur-2xl'>
         <p className='text-muted-foreground px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]'>
           Crear rápidamente
         </p>
@@ -229,7 +229,7 @@ function MoreSheet({
       className='fixed inset-0 z-50 flex items-end justify-center bg-black/10 p-3 backdrop-blur-[2px]'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-border/60 bg-background/95 shadow-[0_30px_90px_-38px_rgba(0,0,0,0.5)] backdrop-blur-2xl'>
+      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-border/60 bg-background/95 shadow-none backdrop-blur-2xl'>
         <div className='flex items-center justify-between border-b border-border/60 px-5 py-4'>
           <div>
             <h2 className='text-lg font-semibold'>Más</h2>
