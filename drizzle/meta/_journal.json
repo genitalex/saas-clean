@@ -64,6 +64,13 @@
       "when": 1788340075448,
       "tag": "0008_independent_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788371040533,
+      "tag": "0009_event_workflow",
+      "breakpoints": true
     }
   ]
 }

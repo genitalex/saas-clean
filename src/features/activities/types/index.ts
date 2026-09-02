@@ -11,5 +11,6 @@ export type ActivityPayload = {
   type: ActivityType;
   title: string;
   content?: string | null;
+  eventId?: string | null;
   metadata?: Record<string, unknown> | null;
 };

@@ -51,3 +51,27 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
 export async function deleteEvent(id: string) {
   return request<{ id: string }>(`/api/events/${id}`, { method: 'DELETE' });
 }
+
+export type EventWorkspace = {
+  event: Event;
+  tasks: Array<{
+    id: string;
+    title: string;
+    status: 'todo' | 'in_progress' | 'waiting' | 'done';
+    priority: 'low' | 'medium' | 'high';
+    dueAt: Date | null;
+    assigneeId: string | null;
+  }>;
+  activities: Array<{
+    id: string;
+    type: 'note' | 'call' | 'email' | 'status_change' | 'system';
+    title: string;
+    content: string | null;
+    createdAt: Date;
+    user: { id: string; name: string } | null;
+  }>;
+};
+
+export async function getEventWorkspace(id: string) {
+  return request<EventWorkspace>(`/api/events/${id}/workspace`);
+}

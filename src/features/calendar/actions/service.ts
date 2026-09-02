@@ -3,7 +3,7 @@ import 'server-only';
 import { and, asc, desc, eq, gte, ilike, lte, or } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { getAuthContext } from '@/lib/db/organization-context';
-import { customers, events, organizationMembers, users } from '@/lib/db/schema';
+import { activities, customers, events, organizationMembers, tasks, users } from '@/lib/db/schema';
 import { eventFiltersSchema, eventPayloadSchema, eventUpdateSchema } from '../schemas/event';
 import type { EventFilters, EventPayload, EventUpdatePayload } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
@@ -51,6 +51,11 @@ const eventSelection = {
   endAt: events.endAt,
   allDay: events.allDay,
   location: events.location,
+  url: events.url,
+  status: events.status,
+  color: events.color,
+  reminderMinutes: events.reminderMinutes,
+  repeatRule: events.repeatRule,
   createdAt: events.createdAt,
   updatedAt: events.updatedAt,
   customer: { id: customers.id, name: customers.name },
@@ -165,6 +170,11 @@ export async function createEvent(input: EventPayload) {
       endAt: parsed.data.endAt,
       allDay: parsed.data.allDay,
       location: parsed.data.location || null,
+      url: parsed.data.url || null,
+      status: parsed.data.status ?? 'planned',
+      color: parsed.data.color || null,
+      reminderMinutes: parsed.data.reminderMinutes ?? null,
+      repeatRule: parsed.data.repeatRule || null,
       customerId: parsed.data.customerId || null,
       assigneeId: parsed.data.assigneeId || null,
       createdAt: now,
@@ -173,7 +183,12 @@ export async function createEvent(input: EventPayload) {
     .returning({ id: events.id });
   if (parsed.data.customerId) {
     try {
-      await recordSystemActivity(parsed.data.customerId, 'Evento creado', { eventId: created.id });
+      await recordSystemActivity(
+        parsed.data.customerId,
+        'Evento creado',
+        { eventId: created.id },
+        created.id
+      );
     } catch (error) {
       console.warn('[events:activity] Activity logging failed after event creation', error);
     }
@@ -207,6 +222,13 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
       ...(parsed.data.endAt !== undefined && { endAt: parsed.data.endAt }),
       ...(parsed.data.allDay !== undefined && { allDay: parsed.data.allDay }),
       ...(parsed.data.location !== undefined && { location: parsed.data.location || null }),
+      ...(parsed.data.url !== undefined && { url: parsed.data.url || null }),
+      ...(parsed.data.status !== undefined && { status: parsed.data.status }),
+      ...(parsed.data.color !== undefined && { color: parsed.data.color || null }),
+      ...(parsed.data.reminderMinutes !== undefined && {
+        reminderMinutes: parsed.data.reminderMinutes ?? null
+      }),
+      ...(parsed.data.repeatRule !== undefined && { repeatRule: parsed.data.repeatRule || null }),
       ...(parsed.data.customerId !== undefined && { customerId: parsed.data.customerId || null }),
       ...(parsed.data.assigneeId !== undefined && { assigneeId: parsed.data.assigneeId || null }),
       updatedAt: new Date()
@@ -214,6 +236,29 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
     .where(and(eq(events.id, id), eq(events.organizationId, organization.id)))
     .returning({ id: events.id });
   if (!updated) throw new EventServiceError('Event not found', 'NOT_FOUND');
+
+  if (existing.customerId) {
+    const timeChanged =
+      existing.startAt.getTime() !== parsed.data.startAt?.getTime() ||
+      existing.endAt.getTime() !== parsed.data.endAt?.getTime();
+    const statusChanged = existing.status !== parsed.data.status;
+    if (timeChanged) {
+      await recordSystemActivity(
+        existing.customerId,
+        'Evento reprogramado',
+        { eventId: id, startAt: parsed.data.startAt, endAt: parsed.data.endAt },
+        id
+      );
+    }
+    if (statusChanged) {
+      await recordSystemActivity(
+        existing.customerId,
+        `Estado del evento: ${parsed.data.status}`,
+        { eventId: id, status: parsed.data.status },
+        id
+      );
+    }
+  }
   return getEvent(updated.id);
 }
 
@@ -239,4 +284,39 @@ export async function getEventsForDay(day: Date) {
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 1);
   return getEvents({ startDate: startDate.toISOString(), endDate: endDate.toISOString() });
+}
+
+export async function getEventWorkspace(id: string) {
+  const { organization } = await getAuthContext();
+  const event = await getEvent(id);
+  const eventTasks = await db
+    .select({
+      id: tasks.id,
+      title: tasks.title,
+      status: tasks.status,
+      priority: tasks.priority,
+      dueAt: tasks.dueAt,
+      assigneeId: tasks.assigneeId
+    })
+    .from(tasks)
+    .where(and(eq(tasks.organizationId, organization.id), eq(tasks.eventId, id)))
+    .orderBy(asc(tasks.dueAt), asc(tasks.createdAt));
+
+  const eventActivities = event.customerId
+    ? await db
+        .select({
+          id: activities.id,
+          type: activities.type,
+          title: activities.title,
+          content: activities.content,
+          createdAt: activities.createdAt,
+          user: { id: users.id, name: users.name }
+        })
+        .from(activities)
+        .leftJoin(users, eq(users.id, activities.userId))
+        .where(and(eq(activities.organizationId, organization.id), eq(activities.eventId, id)))
+        .orderBy(desc(activities.createdAt))
+    : [];
+
+  return { event, tasks: eventTasks, activities: eventActivities };
 }

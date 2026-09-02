@@ -3,7 +3,7 @@ import 'server-only';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { getAuthContext } from '@/lib/db/organization-context';
-import { activities, customers, users } from '@/lib/db/schema';
+import { activities, customers, events, users } from '@/lib/db/schema';
 import { activityPayloadSchema } from '../schemas/activity';
 import type { ActivityPayload } from '../types';
 
@@ -21,6 +21,7 @@ const activitySelection = {
   id: activities.id,
   organizationId: activities.organizationId,
   customerId: activities.customerId,
+  eventId: activities.eventId,
   userId: activities.userId,
   type: activities.type,
   title: activities.title,
@@ -81,11 +82,25 @@ export async function createActivity(customerId: string, input: ActivityPayload)
   const parsed = activityPayloadSchema.safeParse(input);
   if (!parsed.success)
     throw new ActivityServiceError('Invalid activity payload', 'INVALID_PAYLOAD');
+  if (parsed.data.eventId) {
+    const [event] = await db
+      .select({ id: events.id, customerId: events.customerId })
+      .from(events)
+      .where(and(eq(events.id, parsed.data.eventId), eq(events.organizationId, organization.id)))
+      .limit(1);
+    if (!event || (event.customerId && event.customerId !== customerId)) {
+      throw new ActivityServiceError(
+        'Event is not available for this customer',
+        'INVALID_CUSTOMER'
+      );
+    }
+  }
   const [created] = await db
     .insert(activities)
     .values({
       organizationId: organization.id,
       customerId,
+      eventId: parsed.data.eventId || null,
       userId: user.id,
       type: parsed.data.type,
       title: parsed.data.title,
@@ -99,13 +114,15 @@ export async function createActivity(customerId: string, input: ActivityPayload)
 export async function recordSystemActivity(
   customerId: string,
   title: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  eventId?: string | null
 ) {
   try {
     return await createActivity(customerId, {
       type: 'system',
       title,
-      metadata: metadata ?? null
+      metadata: metadata ?? null,
+      eventId: eventId ?? null
     });
   } catch (error) {
     console.error('[activities:system]', error);

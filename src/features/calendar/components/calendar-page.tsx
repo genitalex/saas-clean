@@ -35,8 +35,9 @@ import { cn } from '@/lib/utils';
 import { getEvents, eventKeys, updateEvent } from '../queries';
 import type { Event } from '../types';
 import { EventDialog } from './event-dialog';
+import { EventInspector } from './event-inspector';
 
-type CalendarView = 'month' | 'week' | 'day';
+type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 type Category = { id: string; name: string; color: string };
 const defaultCategories: Category[] = [
   { id: 'work', name: 'Trabajo', color: '#4f39c9' },
@@ -46,6 +47,10 @@ const defaultCategories: Category[] = [
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 function rangeForView(cursor: Date, view: CalendarView) {
+  if (view === 'agenda') {
+    const start = startOfDay(cursor);
+    return { start, end: addDays(start, 30) };
+  }
   if (view === 'week')
     return {
       start: startOfWeek(cursor, { weekStartsOn: 1 }),
@@ -74,6 +79,8 @@ export function CalendarPage({
   const [cursor, setCursor] = useState(initialCursor);
   const [view, setView] = useState<CalendarView>(initialView ?? 'month');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -87,7 +94,9 @@ export function CalendarPage({
   // a day's hourly timeline, rather than the desktop grid shrunk down. It
   // tracks its own month cursor, selected day and year/month/day mode.
   const [mobileCursor, setMobileCursor] = useState(initialCursor);
-  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>(initialView ?? 'month');
+  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>(
+    initialView === 'agenda' ? 'month' : (initialView ?? 'month')
+  );
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(initialCursor));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
   const {
@@ -158,14 +167,18 @@ export function CalendarPage({
       ? format(cursor, 'LLLL yyyy', { locale: es })
       : view === 'week'
         ? `${format(range.start, 'd MMM', { locale: es })} – ${format(addDays(range.end, -1), 'd MMM yyyy', { locale: es })}`
-        : format(cursor, "EEEE d 'de' MMMM", { locale: es });
+        : view === 'agenda'
+          ? `Agenda · ${format(range.start, 'd MMM', { locale: es })} – ${format(addDays(range.end, -1), 'd MMM yyyy', { locale: es })}`
+          : format(cursor, "EEEE d 'de' MMMM", { locale: es });
   const shift = (direction: 1 | -1) =>
     setCursor((current) => {
       if (view === 'month') return direction === 1 ? addMonths(current, 1) : subMonths(current, 1);
+      if (view === 'agenda') return direction === 1 ? addDays(current, 30) : addDays(current, -30);
       if (view === 'week') return direction === 1 ? addWeeks(current, 1) : subWeeks(current, 1);
       return direction === 1 ? addDays(current, 1) : addDays(current, -1);
     });
   const openCreate = (date = cursor) => {
+    setInspectorOpen(false);
     setSelectedEvent(null);
     const start = new Date(date);
     start.setSeconds(0, 0);
@@ -175,8 +188,34 @@ export function CalendarPage({
   const openEvent = (event: Event) => {
     setSelectedEvent(event);
     setInitialDate(undefined);
+    setInspectorOpen(true);
+  };
+  const editEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setInspectorOpen(false);
+    setInitialDate(undefined);
     setDialogOpen(true);
   };
+  useEffect(() => {
+    const handleKeyDown = (keyboardEvent: KeyboardEvent) => {
+      const target = keyboardEvent.target as HTMLElement | null;
+      const typing =
+        target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+      if (typing) return;
+      if (keyboardEvent.key.toLowerCase() === 'n') {
+        keyboardEvent.preventDefault();
+        openCreate(selectedDate);
+      } else if (keyboardEvent.key === 'Escape') {
+        setInspectorOpen(false);
+        setDialogOpen(false);
+      } else if (keyboardEvent.key === '/') {
+        keyboardEvent.preventDefault();
+        document.getElementById('calendar-search')?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDate, cursor]);
   const moveEvent = useCallback(
     async (event: Event, nextStart: Date) => {
       const duration = new Date(event.endAt).getTime() - new Date(event.startAt).getTime();
@@ -190,11 +229,29 @@ export function CalendarPage({
     },
     [queryClient]
   );
-  const visibleEvents = events.filter((event) =>
-    filters.includes(categoryFor(event, categories).id)
+  const resizeEvent = useCallback(
+    async (event: Event, nextEnd: Date) => {
+      await updateEvent(event.id, { endAt: nextEnd.toISOString() });
+      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      toast.success('Duración actualizada');
+    },
+    [queryClient]
   );
-  const visibleMobileEvents = mobileMonthEvents.filter((event) =>
-    filters.includes(categoryFor(event, categories).id)
+  const visibleEvents = events.filter(
+    (event) =>
+      filters.includes(categoryFor(event, categories).id) &&
+      (!calendarSearch.trim() ||
+        `${event.title} ${event.description ?? ''} ${event.location ?? ''}`
+          .toLowerCase()
+          .includes(calendarSearch.trim().toLowerCase()))
+  );
+  const visibleMobileEvents = mobileMonthEvents.filter(
+    (event) =>
+      filters.includes(categoryFor(event, categories).id) &&
+      (!calendarSearch.trim() ||
+        `${event.title} ${event.description ?? ''} ${event.location ?? ''}`
+          .toLowerCase()
+          .includes(calendarSearch.trim().toLowerCase()))
   );
 
   return (
@@ -221,6 +278,19 @@ export function CalendarPage({
           )}
         </div>
         <div className='flex flex-wrap items-center gap-2'>
+          <div className='relative hidden min-w-[220px] md:block lg:min-w-[280px]'>
+            <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
+            <Input
+              id='calendar-search'
+              value={calendarSearch}
+              onChange={(event) => setCalendarSearch(event.target.value)}
+              placeholder='Buscar en el calendario…'
+              className='h-9 rounded-xl border-border/60 bg-muted/25 pl-9 shadow-none'
+            />
+            <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
+              /
+            </kbd>
+          </div>
           <div className='bg-surface-subtle/70 border-border/50 hidden items-center gap-0.5 rounded-xl border p-1 backdrop-blur-sm md:flex'>
             <Button
               variant='ghost'
@@ -254,7 +324,7 @@ export function CalendarPage({
             role='group'
             aria-label='Vista del calendario'
           >
-            {(['month', 'week', 'day'] as CalendarView[]).map((option) => (
+            {(['month', 'week', 'day', 'agenda'] as CalendarView[]).map((option) => (
               <button
                 key={option}
                 onClick={() => setView(option)}
@@ -262,11 +332,17 @@ export function CalendarPage({
                 className={cn(
                   'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
                   view === option
-                    ? 'bg-card text-foreground shadow-sm'
+                    ? 'bg-card text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                {option === 'month' ? 'Mes' : option === 'week' ? 'Semana' : 'Día'}
+                {option === 'month'
+                  ? 'Mes'
+                  : option === 'week'
+                    ? 'Semana'
+                    : option === 'day'
+                      ? 'Día'
+                      : 'Agenda'}
               </button>
             ))}
           </div>
@@ -379,8 +455,7 @@ export function CalendarPage({
       {/* Desktop / tablet: month, week and day grid views. */}
       <Card
         className={cn(
-          'border-border/60 bg-card/95 hidden min-w-0 overflow-hidden py-0 backdrop-blur-sm md:block',
-          'shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.35)]'
+          'border-border/60 bg-card/95 hidden min-w-0 overflow-hidden py-0 backdrop-blur-sm md:block'
         )}
       >
         {isLoading ? (
@@ -397,6 +472,14 @@ export function CalendarPage({
               setView('day');
             }}
           />
+        ) : view === 'agenda' ? (
+          <AgendaView
+            cursor={cursor}
+            events={visibleEvents}
+            categories={categories}
+            onOpenEvent={openEvent}
+            onCreate={openCreate}
+          />
         ) : (
           <TimelineView
             cursor={cursor}
@@ -410,6 +493,7 @@ export function CalendarPage({
               setView('day');
             }}
             onMoveEvent={moveEvent}
+            onResizeEvent={resizeEvent}
           />
         )}
       </Card>
@@ -421,10 +505,23 @@ export function CalendarPage({
         open={dialogOpen}
         event={selectedEvent}
         initialDate={initialDate}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelectedEvent(null);
+        }}
         categories={categories}
         onCategoriesChange={setCategories}
         onOpenCategorySettings={() => setSettingsOpen(true)}
+      />
+      <EventInspector
+        event={selectedEvent}
+        open={inspectorOpen}
+        onOpenChange={(open) => {
+          setInspectorOpen(open);
+          if (!open) setSelectedEvent(null);
+        }}
+        onEditFull={editEvent}
+        onCreateAt={(date) => openCreate(date)}
       />
       <CategoryDialog
         open={settingsOpen}
@@ -630,7 +727,7 @@ function MobileYearView({
                 onClick={() => onSelectMonth(monthDate)}
                 className={cn(
                   'bg-surface-subtle/55 border-border/50 hover:bg-accent/30 flex min-w-0 flex-col rounded-2xl border p-3 text-left transition-all active:scale-[0.985]',
-                  isCurrent && 'border-primary/40 bg-primary/8 shadow-sm'
+                  isCurrent && 'border-primary/40 bg-primary/8'
                 )}
               >
                 <div className='mb-2 flex items-center justify-between'>
@@ -770,7 +867,7 @@ function MobileMonthView({
         </Button>
       </div>
 
-      <div className='border-border/50 bg-card/70 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-20px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+      <div className='border-border/50 bg-card/70 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border backdrop-blur-sm'>
         <div className='bg-surface-subtle/70 grid shrink-0 grid-cols-7 border-b'>
           {mobileWeekDaysNarrow.map((day, index) => (
             <div
@@ -827,7 +924,7 @@ function MobileMonthView({
                     className={cn(
                       'flex size-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
                       isSelected && isToday
-                        ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                        ? 'bg-primary text-primary-foreground font-semibold'
                         : isSelected
                           ? 'bg-accent text-foreground font-semibold'
                           : isToday
@@ -1004,6 +1101,81 @@ function useEventDrag({
   return { dragPreview, startDrag, suppressClickRef };
 }
 
+function useEventResize({
+  hourHeight,
+  onResize
+}: {
+  hourHeight: number;
+  onResize: (event: Event, nextEnd: Date) => Promise<void> | void;
+}) {
+  const resizingRef = useRef<{ event: Event; startY: number; startEnd: number } | null>(null);
+  const lastEndMinutesRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const move = (pointerEvent: PointerEvent) => {
+      const resize = resizingRef.current;
+      if (!resize) return;
+      const rawMinutes =
+        resize.startEnd + ((pointerEvent.clientY - resize.startY) / hourHeight) * 60;
+      const snapped = Math.round(rawMinutes / 15) * 15;
+      const start = new Date(resize.event.startAt);
+      const startMinutes = start.getHours() * 60 + start.getMinutes();
+      lastEndMinutesRef.current = Math.max(startMinutes + 15, Math.min(24 * 60, snapped));
+    };
+
+    const up = async () => {
+      const resize = resizingRef.current;
+      const endMinutes = lastEndMinutesRef.current;
+      resizingRef.current = null;
+      lastEndMinutesRef.current = null;
+      if (!resize || endMinutes == null) return;
+      const nextEnd = new Date(resize.event.startAt);
+      nextEnd.setHours(0, endMinutes, 0, 0);
+      await onResize(resize.event, nextEnd);
+    };
+
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
+  }, [hourHeight, onResize]);
+
+  const startResize = (pointerEvent: React.PointerEvent, event: Event) => {
+    pointerEvent.preventDefault();
+    pointerEvent.stopPropagation();
+    const end = new Date(event.endAt);
+    resizingRef.current = {
+      event,
+      startY: pointerEvent.clientY,
+      startEnd: end.getHours() * 60 + end.getMinutes()
+    };
+    lastEndMinutesRef.current = end.getHours() * 60 + end.getMinutes();
+  };
+
+  return { startResize };
+}
+
+function EventResizeHandle({
+  event,
+  startResize
+}: {
+  event: Event;
+  startResize: (event: React.PointerEvent, calendarEvent: Event) => void;
+}) {
+  return (
+    <span
+      role='separator'
+      aria-label={`Cambiar duración de ${event.title}`}
+      onPointerDown={(pointerEvent) => startResize(pointerEvent, event)}
+      className='absolute inset-x-2 bottom-0 z-20 h-2 cursor-ns-resize rounded-full bg-foreground/20 opacity-0 transition-opacity hover:opacity-100 group-hover:opacity-100'
+    />
+  );
+}
+
 function withLocalTime(date: Date, hour: number, minute = 0) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0, 0);
 }
@@ -1089,7 +1261,6 @@ function MobileDayTimeline({
     onMove: moveEvent,
     minutesFromPointer: fromPointer
   });
-
   const renderHour = (hour: number) => {
     const top = offset(hour * 60);
     const h = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : hourHeight;
@@ -1170,7 +1341,7 @@ function MobileDayTimeline({
         </Button>
       </div>
 
-      <div className='bg-card/75 border-border/50 min-h-0 flex-1 overflow-y-auto rounded-2xl border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.35)] backdrop-blur-sm'>
+      <div className='bg-card/75 border-border/50 min-h-0 flex-1 overflow-y-auto rounded-2xl border backdrop-blur-sm'>
         {allDayEvents.length > 0 && (
           <div className='border-border/60 bg-surface-subtle/45 flex min-h-[58px] flex-wrap items-center gap-2 border-b px-3 py-2'>
             <span className='text-muted-foreground shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em]'>
@@ -1183,7 +1354,7 @@ function MobileDayTimeline({
                   key={event.id}
                   type='button'
                   onClick={() => onOpenEvent(event)}
-                  className='min-w-0 truncate rounded-lg border px-2.5 py-1.5 text-xs font-medium shadow-sm'
+                  className='min-w-0 truncate rounded-lg border px-2.5 py-1.5 text-xs font-medium'
                   style={{
                     backgroundColor: `${category.color}14`,
                     borderColor: `${category.color}35`
@@ -1213,7 +1384,7 @@ function MobileDayTimeline({
             <button
               type='button'
               onClick={() => setEarlyExpanded(false)}
-              className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+              className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
               aria-label='Contraer madrugada'
             >
               Contraer
@@ -1224,7 +1395,7 @@ function MobileDayTimeline({
             <button
               type='button'
               onClick={() => setLateExpanded(false)}
-              className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+              className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
               style={{ top: earlyHeight + workHeight + 6 }}
               aria-label='Contraer noche'
             >
@@ -1248,7 +1419,7 @@ function MobileDayTimeline({
                 onPointerDown={(e) => startDrag(e, event)}
                 onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                 className={cn(
-                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
+                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
                   dragPreview?.event.id === event.id && 'opacity-35'
                 )}
                 style={{
@@ -1363,9 +1534,9 @@ function DesktopYearDialog({
                   type='button'
                   onClick={() => onChange(monthDate)}
                   className={cn(
-                    'min-h-[210px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35 hover:shadow-md',
+                    'min-h-[210px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35',
                     active
-                      ? 'border-primary/45 bg-primary/[0.06] shadow-sm'
+                      ? 'border-primary/45 bg-primary/[0.06]'
                       : 'border-border/60 bg-surface-subtle/45',
                     isCurrent && 'ring-1 ring-primary/30'
                   )}
@@ -1423,6 +1594,91 @@ function DesktopYearDialog({
   );
 }
 
+function AgendaView({ cursor, events, categories, onOpenEvent, onCreate }: ViewProps) {
+  const days = Array.from({ length: 30 }, (_, index) => addDays(startOfDay(cursor), index));
+  return (
+    <div className='min-w-0'>
+      <div className='divide-y divide-border/60'>
+        {days.map((day) => {
+          const dayEvents = eventsForDay(events, day).sort(
+            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+          );
+          return (
+            <section
+              key={day.toISOString()}
+              className='grid gap-3 px-4 py-4 sm:grid-cols-[140px_minmax(0,1fr)]'
+            >
+              <div className='pt-1'>
+                <div
+                  className={cn(
+                    'text-xs font-semibold capitalize',
+                    isSameDay(day, new Date()) && 'text-primary'
+                  )}
+                >
+                  {format(day, 'EEEE', { locale: es })}
+                </div>
+                <div className='text-muted-foreground mt-1 text-sm tabular-nums'>
+                  {format(day, 'd MMM yyyy', { locale: es })}
+                </div>
+              </div>
+              <div className='min-w-0'>
+                {dayEvents.length ? (
+                  <div className='space-y-1.5'>
+                    {dayEvents.map((event) => {
+                      const category = categoryFor(event, categories);
+                      return (
+                        <button
+                          key={event.id}
+                          type='button'
+                          onClick={() => onOpenEvent(event)}
+                          className='flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-3 text-left transition-colors hover:bg-muted/35'
+                        >
+                          <span
+                            className='size-2 shrink-0 rounded-full'
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className='min-w-0 flex-1'>
+                            <span className='block truncate text-sm font-semibold'>
+                              {event.title}
+                            </span>
+                            <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
+                              {event.allDay
+                                ? 'Todo el día'
+                                : `${format(new Date(event.startAt), 'HH:mm')} – ${format(new Date(event.endAt), 'HH:mm')}`}
+                              {event.customer ? ` · ${event.customer.name}` : ''}
+                            </span>
+                          </span>
+                          <span className='text-muted-foreground text-xs'>
+                            {statusLabelForEvent(event.status)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <button
+                    type='button'
+                    onClick={() => onCreate(withLocalTime(day, 9))}
+                    className='text-muted-foreground w-full rounded-xl border border-dashed border-border/60 px-3 py-3 text-left text-xs hover:bg-muted/25'
+                  >
+                    Sin eventos · añadir uno
+                  </button>
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function statusLabelForEvent(status: Event['status']) {
+  return { planned: 'Planeado', in_progress: 'En curso', done: 'Hecho', cancelled: 'Cancelado' }[
+    status
+  ];
+}
+
 type ViewProps = {
   cursor: Date;
   events: Event[];
@@ -1430,6 +1686,7 @@ type ViewProps = {
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
   onOpenDay?: (date: Date) => void;
+  onResizeEvent?: (event: Event, nextEnd: Date) => Promise<void>;
 };
 function getSavedEventCategories(): Record<string, string> {
   try {
@@ -1567,6 +1824,7 @@ function TimelineView(
   props: ViewProps & {
     view: 'week' | 'day';
     onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
+    onResizeEvent?: (event: Event, nextEnd: Date) => Promise<void>;
   }
 ) {
   return props.view === 'day' ? <CompressedDayTimeline {...props} /> : <WeekTimeline {...props} />;
@@ -1578,8 +1836,13 @@ function CompressedDayTimeline({
   categories,
   onOpenEvent,
   onCreate,
-  onMoveEvent
-}: ViewProps & { view: 'day'; onMoveEvent: (event: Event, nextStart: Date) => Promise<void> }) {
+  onMoveEvent,
+  onResizeEvent
+}: ViewProps & {
+  view: 'day';
+  onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
+  onResizeEvent?: (event: Event, nextEnd: Date) => Promise<void>;
+}) {
   const hourHeight = 72;
   const compactEarlyHeight = 34;
   const compactLateHeight = 30;
@@ -1637,6 +1900,12 @@ function CompressedDayTimeline({
     hourHeight,
     onMove: moveEvent,
     minutesFromPointer: fromPointer
+  });
+  const resize = useEventResize({
+    hourHeight,
+    onResize: async (event, nextEnd) => {
+      if (onResizeEvent) await onResizeEvent(event, nextEnd);
+    }
   });
 
   const today = new Date();
@@ -1761,7 +2030,7 @@ function CompressedDayTimeline({
                         key={event.id}
                         type='button'
                         onClick={() => onOpenEvent(event)}
-                        className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium shadow-sm'
+                        className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium'
                         style={{
                           backgroundColor: `${category.color}14`,
                           borderColor: `${category.color}35`
@@ -1794,7 +2063,7 @@ function CompressedDayTimeline({
                   <button
                     type='button'
                     onClick={() => setEarlyExpanded(false)}
-                    className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+                    className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
                     aria-label='Contraer madrugada'
                   >
                     Contraer
@@ -1805,7 +2074,7 @@ function CompressedDayTimeline({
                   <button
                     type='button'
                     onClick={() => setLateExpanded(false)}
-                    className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+                    className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
                     style={{ top: earlyHeight + workHeight + 6 }}
                     aria-label='Contraer noche'
                   >
@@ -1829,7 +2098,7 @@ function CompressedDayTimeline({
                       onPointerDown={(e) => startDrag(e, event)}
                       onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                       className={cn(
-                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
+                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
                         dragPreview?.event.id === event.id && 'opacity-35'
                       )}
                       style={{
@@ -1849,6 +2118,7 @@ function CompressedDayTimeline({
                           {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
                         </span>
                       </span>
+                      <EventResizeHandle event={event} startResize={resize.startResize} />
                     </button>
                   );
                 })}
@@ -1879,10 +2149,12 @@ function WeekTimeline({
   onOpenEvent,
   onCreate,
   onOpenDay,
-  onMoveEvent
+  onMoveEvent,
+  onResizeEvent
 }: ViewProps & {
   view: 'week' | 'day';
   onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
+  onResizeEvent?: (event: Event, nextEnd: Date) => Promise<void>;
 }) {
   const start = view === 'week' ? startOfWeek(cursor, { weekStartsOn: 1 }) : cursor;
   const days = view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(start, i)) : [start];
@@ -1903,6 +2175,12 @@ function WeekTimeline({
     endHour,
     hourHeight,
     onMove: moveEvent
+  });
+  const resize = useEventResize({
+    hourHeight,
+    onResize: async (event, nextEnd) => {
+      if (onResizeEvent) await onResizeEvent(event, nextEnd);
+    }
   });
 
   return (
@@ -1994,7 +2272,7 @@ function WeekTimeline({
                           key={event.id}
                           type='button'
                           onClick={() => onOpenEvent(event)}
-                          className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium shadow-sm'
+                          className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium'
                           style={{
                             backgroundColor: `${category.color}14`,
                             borderColor: `${category.color}35`
@@ -2048,7 +2326,7 @@ function WeekTimeline({
                             if (!suppressClickRef.current) onOpenEvent(event);
                           }}
                           className={cn(
-                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left shadow-sm backdrop-blur-sm transition-transform hover:-translate-y-px hover:shadow-md active:cursor-grabbing',
+                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
                             dragPreview?.event.id === event.id && 'opacity-35'
                           )}
                           style={{
@@ -2081,6 +2359,7 @@ function WeekTimeline({
                               </a>
                             )}
                           </span>
+                          <EventResizeHandle event={event} startResize={resize.startResize} />
                         </button>
                       );
                     })}

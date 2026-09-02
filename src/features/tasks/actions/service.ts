@@ -3,7 +3,7 @@ import 'server-only';
 import { and, desc, eq, ilike, or } from 'drizzle-orm';
 import { getAuthContext } from '@/lib/db/organization-context';
 import { db } from '@/lib/db';
-import { customers, organizationMembers, tasks, users } from '@/lib/db/schema';
+import { customers, events, organizationMembers, tasks, users } from '@/lib/db/schema';
 import { taskPayloadSchema, taskUpdateSchema } from '../schemas/task';
 import type { TaskFilters, TaskPayload, TaskUpdatePayload } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
@@ -22,6 +22,7 @@ const taskSelection = {
   id: tasks.id,
   organizationId: tasks.organizationId,
   customerId: tasks.customerId,
+  eventId: tasks.eventId,
   assigneeId: tasks.assigneeId,
   title: tasks.title,
   description: tasks.description,
@@ -38,6 +39,7 @@ const taskSelection = {
 async function validateReferences(
   organizationId: string,
   customerId?: string | null,
+  eventId?: string | null,
   assigneeId?: string | null
 ) {
   if (customerId) {
@@ -57,6 +59,26 @@ async function validateReferences(
         'Customer does not belong to the active organization',
         'INVALID_REFERENCE'
       );
+  }
+
+  if (eventId) {
+    const [event] = await db
+      .select({ id: events.id, customerId: events.customerId })
+      .from(events)
+      .where(and(eq(events.id, eventId), eq(events.organizationId, organizationId)))
+      .limit(1);
+    if (!event) {
+      throw new TaskServiceError(
+        'Event does not belong to the active organization',
+        'INVALID_REFERENCE'
+      );
+    }
+    if (customerId && event.customerId && event.customerId !== customerId) {
+      throw new TaskServiceError(
+        'Task customer does not match the linked event',
+        'INVALID_REFERENCE'
+      );
+    }
   }
 
   if (assigneeId) {
@@ -91,6 +113,7 @@ export async function getTasks(filters: TaskFilters = {}) {
         eq(tasks.organizationId, organization.id),
         filters.status ? eq(tasks.status, filters.status) : undefined,
         filters.customerId ? eq(tasks.customerId, filters.customerId) : undefined,
+        filters.eventId ? eq(tasks.eventId, filters.eventId) : undefined,
         filters.assigneeId ? eq(tasks.assigneeId, filters.assigneeId) : undefined,
         search
           ? or(ilike(tasks.title, `%${search}%`), ilike(tasks.description, `%${search}%`))
@@ -117,7 +140,12 @@ export async function createTask(input: TaskPayload) {
   const { organization } = await getAuthContext();
   const parsed = taskPayloadSchema.safeParse(input);
   if (!parsed.success) throw new TaskServiceError('Invalid task payload', 'INVALID_PAYLOAD');
-  await validateReferences(organization.id, parsed.data.customerId, parsed.data.assigneeId);
+  await validateReferences(
+    organization.id,
+    parsed.data.customerId,
+    parsed.data.eventId,
+    parsed.data.assigneeId
+  );
   const now = new Date();
   const [created] = await db
     .insert(tasks)
@@ -128,6 +156,7 @@ export async function createTask(input: TaskPayload) {
       priority: parsed.data.priority,
       dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
       customerId: parsed.data.customerId || null,
+      eventId: parsed.data.eventId || null,
       assigneeId: parsed.data.assigneeId || null,
       createdAt: now,
       updatedAt: now
@@ -143,7 +172,12 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
   const parsed = taskUpdateSchema.safeParse(input);
   if (!parsed.success) throw new TaskServiceError('Invalid task payload', 'INVALID_PAYLOAD');
   const previous = parsed.data.status === 'done' ? await getTask(id) : null;
-  await validateReferences(organization.id, parsed.data.customerId, parsed.data.assigneeId);
+  await validateReferences(
+    organization.id,
+    parsed.data.customerId,
+    parsed.data.eventId,
+    parsed.data.assigneeId
+  );
   const now = new Date();
   const [updated] = await db
     .update(tasks)
@@ -157,6 +191,7 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
         dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null
       }),
       ...(parsed.data.customerId !== undefined && { customerId: parsed.data.customerId || null }),
+      ...(parsed.data.eventId !== undefined && { eventId: parsed.data.eventId || null }),
       ...(parsed.data.assigneeId !== undefined && { assigneeId: parsed.data.assigneeId || null }),
       ...(parsed.data.status !== undefined && {
         status: parsed.data.status,

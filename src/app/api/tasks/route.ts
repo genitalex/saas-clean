@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     const filters: TaskFilters = {
       status: status ? (status as TaskFilters['status']) : undefined,
       customerId: params.get('customerId') || undefined,
+      eventId: params.get('eventId') || undefined,
       assigneeId: params.get('assigneeId') || undefined,
       search: params.get('search') || undefined
     };

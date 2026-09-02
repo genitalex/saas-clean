@@ -12,7 +12,10 @@ type CalendarRouteProps = {
 export default async function CalendarRoute({ searchParams }: CalendarRouteProps) {
   const params = await searchParams;
   const view =
-    params.view === 'day' || params.view === 'week' || params.view === 'month'
+    params.view === 'day' ||
+    params.view === 'agenda' ||
+    params.view === 'week' ||
+    params.view === 'month'
       ? params.view
       : undefined;
 

@@ -9,7 +9,7 @@ export function CalendarPageWrapper({
   initialView
 }: {
   initialDate?: string;
-  initialView?: 'month' | 'week' | 'day';
+  initialView?: 'month' | 'week' | 'day' | 'agenda';
 }) {
   const isMobile = useIsMobile();
 

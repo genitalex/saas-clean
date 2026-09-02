@@ -7,7 +7,8 @@ import {
   text,
   timestamp,
   uniqueIndex,
-  uuid
+  uuid,
+  integer
 } from 'drizzle-orm/pg-core';
 
 /* -------------------------------------------------------------------------- */
@@ -214,6 +215,8 @@ export const taskStatus = pgEnum('task_status', ['todo', 'in_progress', 'waiting
 
 export const taskPriority = pgEnum('task_priority', ['low', 'medium', 'high']);
 
+export const eventStatus = pgEnum('event_status', ['planned', 'in_progress', 'done', 'cancelled']);
+
 export const customers = pgTable(
   'customers',
   {
@@ -270,39 +273,6 @@ export const customers = pgTable(
   ]
 );
 
-export const tasks = pgTable(
-  'tasks',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-
-    organizationId: uuid('organization_id')
-      .notNull()
-      .references(() => organizations.id, { onDelete: 'cascade' }),
-
-    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
-
-    assigneeId: uuid('assignee_id').references(() => users.id, { onDelete: 'set null' }),
-
-    title: text('title').notNull(),
-    description: text('description'),
-    status: taskStatus('status').notNull().default('todo'),
-    priority: taskPriority('priority').notNull().default('medium'),
-    dueAt: timestamp('due_at', { withTimezone: true }),
-
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-    completedAt: timestamp('completed_at', { withTimezone: true })
-  },
-  (table) => [
-    index('tasks_organization_id_idx').on(table.organizationId),
-    index('tasks_customer_id_idx').on(table.customerId),
-    index('tasks_assignee_id_idx').on(table.assigneeId),
-    index('tasks_status_idx').on(table.status),
-    index('tasks_due_at_idx').on(table.dueAt),
-    index('tasks_organization_status_idx').on(table.organizationId, table.status)
-  ]
-);
-
 export const events = pgTable(
   'events',
   {
@@ -322,6 +292,11 @@ export const events = pgTable(
     endAt: timestamp('end_at', { withTimezone: true }).notNull(),
     allDay: boolean('all_day').notNull().default(false),
     location: text('location'),
+    url: text('url'),
+    status: eventStatus('status').notNull().default('planned'),
+    color: text('color'),
+    reminderMinutes: integer('reminder_minutes'),
+    repeatRule: text('repeat_rule'),
 
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
@@ -331,7 +306,44 @@ export const events = pgTable(
     index('events_customer_id_idx').on(table.customerId),
     index('events_assignee_id_idx').on(table.assigneeId),
     index('events_start_at_idx').on(table.startAt),
+    index('events_status_idx').on(table.status),
     index('events_organization_start_at_idx').on(table.organizationId, table.startAt)
+  ]
+);
+
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+
+    eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
+
+    assigneeId: uuid('assignee_id').references(() => users.id, { onDelete: 'set null' }),
+
+    title: text('title').notNull(),
+    description: text('description'),
+    status: taskStatus('status').notNull().default('todo'),
+    priority: taskPriority('priority').notNull().default('medium'),
+    dueAt: timestamp('due_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp('completed_at', { withTimezone: true })
+  },
+  (table) => [
+    index('tasks_organization_id_idx').on(table.organizationId),
+    index('tasks_customer_id_idx').on(table.customerId),
+    index('tasks_event_id_idx').on(table.eventId),
+    index('tasks_assignee_id_idx').on(table.assigneeId),
+    index('tasks_status_idx').on(table.status),
+    index('tasks_due_at_idx').on(table.dueAt),
+    index('tasks_organization_status_idx').on(table.organizationId, table.status)
   ]
 );
 
@@ -356,6 +368,8 @@ export const activities = pgTable(
       .notNull()
       .references(() => customers.id, { onDelete: 'cascade' }),
 
+    eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
+
     userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
 
     type: activityType('type').notNull(),
@@ -367,6 +381,7 @@ export const activities = pgTable(
   (table) => [
     index('activities_organization_id_idx').on(table.organizationId),
     index('activities_customer_id_idx').on(table.customerId),
+    index('activities_event_id_idx').on(table.eventId),
     index('activities_user_id_idx').on(table.userId),
     index('activities_created_at_idx').on(table.createdAt),
     index('activities_organization_customer_idx').on(table.organizationId, table.customerId)

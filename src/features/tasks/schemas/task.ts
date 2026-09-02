@@ -9,6 +9,7 @@ export const taskPayloadSchema = z.object({
   priority: taskPrioritySchema.optional().default('medium'),
   dueAt: z.string().datetime({ local: true }).nullable().optional(),
   customerId: z.string().uuid().nullable().optional(),
+  eventId: z.string().uuid().nullable().optional(),
   assigneeId: z.string().uuid().nullable().optional()
 });
 

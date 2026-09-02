@@ -21,6 +21,11 @@ export type EventPayload = {
   endAt: string;
   allDay?: boolean;
   location?: string | null;
+  url?: string | null;
+  status?: 'planned' | 'in_progress' | 'done' | 'cancelled';
+  color?: string | null;
+  reminderMinutes?: number | null;
+  repeatRule?: string | null;
   customerId?: string | null;
   assigneeId?: string | null;
 };

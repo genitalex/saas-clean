@@ -11,6 +11,7 @@ export type TaskPriority = Task['priority'];
 export type TaskFilters = {
   status?: TaskStatus;
   customerId?: string;
+  eventId?: string;
   assigneeId?: string;
   search?: string;
 };
@@ -21,6 +22,7 @@ export type TaskPayload = {
   priority?: TaskPriority;
   dueAt?: string | null;
   customerId?: string | null;
+  eventId?: string | null;
   assigneeId?: string | null;
 };
 
