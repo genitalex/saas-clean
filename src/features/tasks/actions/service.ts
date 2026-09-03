@@ -217,6 +217,7 @@ export async function createTask(input: TaskPayload) {
       description: parsed.data.description || null,
       priority: parsed.data.priority,
       dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null,
+      recurrenceRule: parsed.data.recurrenceRule || null,
       customerId: parsed.data.customerId || null,
       eventId: parsed.data.eventId || null,
       assigneeId: parsed.data.assigneeId || null,
@@ -267,6 +268,15 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
     parsed.data.followUpForTaskId,
     id
   );
+  const nextDueAt = parsed.data.dueAt ? new Date(parsed.data.dueAt) : null;
+  let linkedEvent: { id: string; startAt: Date; endAt: Date } | null = null;
+  if (parsed.data.dueAt !== undefined && previous.eventId && nextDueAt) {
+    [linkedEvent] = await db
+      .select({ id: events.id, startAt: events.startAt, endAt: events.endAt })
+      .from(events)
+      .where(and(eq(events.id, previous.eventId), eq(events.organizationId, organization.id)))
+      .limit(1);
+  }
   const now = new Date();
   const [updated] = await db
     .update(tasks)
@@ -277,7 +287,7 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
       }),
       ...(parsed.data.priority !== undefined && { priority: parsed.data.priority }),
       ...(parsed.data.dueAt !== undefined && {
-        dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null
+        dueAt: nextDueAt
       }),
       ...(parsed.data.waitingOn !== undefined && {
         waitingOn: parsed.data.waitingOn || null
@@ -303,6 +313,17 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
     .where(and(eq(tasks.id, id), eq(tasks.organizationId, organization.id)))
     .returning({ id: tasks.id });
   if (!updated) throw new TaskServiceError('Task not found', 'NOT_FOUND');
+  if (linkedEvent && nextDueAt) {
+    const durationMs = linkedEvent.endAt.getTime() - linkedEvent.startAt.getTime();
+    await db
+      .update(events)
+      .set({
+        startAt: nextDueAt,
+        endAt: new Date(nextDueAt.getTime() + durationMs),
+        updatedAt: now
+      })
+      .where(and(eq(events.id, linkedEvent.id), eq(events.organizationId, organization.id)));
+  }
   if (
     parsed.data.status === 'done' &&
     previous &&

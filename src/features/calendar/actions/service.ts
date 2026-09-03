@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, asc, desc, eq, gte, ilike, lte, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ilike, lt, or } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { getAuthContext } from '@/lib/db/organization-context';
 import { activities, customers, events, organizationMembers, tasks, users } from '@/lib/db/schema';
@@ -124,8 +124,8 @@ export async function getEvents(filters: EventFilters = {}) {
       .where(
         and(
           eq(events.organizationId, organization.id),
-          parsed.startDate ? gte(events.startAt, parsed.startDate) : undefined,
-          parsed.endDate ? lte(events.startAt, parsed.endDate) : undefined,
+          parsed.startDate ? gt(events.endAt, parsed.startDate) : undefined,
+          parsed.endDate ? lt(events.startAt, parsed.endDate) : undefined,
           parsed.customerId ? eq(events.customerId, parsed.customerId) : undefined,
           parsed.assigneeId ? eq(events.assigneeId, parsed.assigneeId) : undefined,
           search

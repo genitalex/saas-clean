@@ -32,8 +32,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { getEvents, eventKeys, updateEvent } from '../queries';
-import { getTasks, taskKeys } from '@/features/tasks/queries';
+import { createEvent, getEvents, eventKeys, updateEvent } from '../queries';
+import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
+import type { Task } from '@/features/tasks/types';
 import type { Event } from '../types';
 import {
   CALENDAR_SNAP_MINUTES,
@@ -69,6 +70,32 @@ function rangeForView(cursor: Date, view: CalendarView) {
     start: startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 }),
     end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 })
   };
+}
+
+function taskToCalendarBlock(task: Task): Event {
+  const startAt = task.dueAt ?? new Date();
+  const endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+  return {
+    id: `task:${task.id}`,
+    organizationId: task.organizationId,
+    title: task.title,
+    description: task.description,
+    startAt,
+    endAt,
+    allDay: false,
+    location: null,
+    url: null,
+    status: 'planned',
+    color: null,
+    reminderMinutes: null,
+    repeatRule: null,
+    customerId: task.customerId,
+    assigneeId: task.assigneeId,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+    customer: task.customer,
+    assignee: task.assignee
+  } as Event;
 }
 
 export function CalendarPage({
@@ -135,6 +162,40 @@ export function CalendarPage({
   const linkedEventIds = useMemo(
     () => linkedTasks.flatMap((task) => (task.eventId ? [task.eventId] : [])),
     [linkedTasks]
+  );
+  const projectedTaskBlocks = useMemo(
+    () => linkedTasks.filter((task) => task.dueAt && !task.eventId).map(taskToCalendarBlock),
+    [linkedTasks]
+  );
+  const unplannedTasks = useMemo(
+    () => linkedTasks.filter((task) => !task.dueAt && !task.eventId),
+    [linkedTasks]
+  );
+  const planTask = useCallback(
+    async (task: Task) => {
+      const start = new Date();
+      start.setSeconds(0, 0);
+      start.setMinutes(Math.ceil(start.getMinutes() / 15) * 15);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      try {
+        const event = await createEvent({
+          title: task.title,
+          description: task.description,
+          startAt: start.toISOString(),
+          endAt: end.toISOString(),
+          customerId: task.customerId,
+          assigneeId: task.assigneeId,
+          status: 'planned'
+        });
+        await updateTask(task.id, { dueAt: start.toISOString(), eventId: event.id });
+        await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        toast.success('Tarea planificada para hoy');
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'No se pudo planificar la tarea.');
+      }
+    },
+    [queryClient]
   );
 
   const mobileRange = useMemo(
@@ -253,7 +314,43 @@ export function CalendarPage({
     async (event: Event, nextStart: Date) => {
       const duration = new Date(event.endAt).getTime() - new Date(event.startAt).getTime();
       const nextEnd = new Date(nextStart.getTime() + duration);
+      const conflict = events.find(
+        (candidate) =>
+          candidate.id !== event.id &&
+          new Date(candidate.startAt) < nextEnd &&
+          new Date(candidate.endAt) > nextStart
+      );
+      if (conflict) {
+        const shouldMove = window.confirm(
+          `Hay un conflicto con ${conflict.title} · ${format(new Date(conflict.startAt), 'HH:mm')}.\n\nAceptar para mover el bloque igualmente o Cancelar para mantenerlo.`
+        );
+        if (!shouldMove) return;
+      }
       const snapshots = queryClient.getQueriesData<Event[]>({ queryKey: eventKeys.all });
+      const taskId = event.id.startsWith('task:') ? event.id.slice(5) : null;
+      if (taskId) {
+        try {
+          const createdEvent = await createEvent({
+            title: event.title,
+            description: event.description,
+            startAt: nextStart.toISOString(),
+            endAt: nextEnd.toISOString(),
+            customerId: event.customerId,
+            assigneeId: event.assigneeId,
+            status: 'planned'
+          });
+          await updateTask(taskId, {
+            dueAt: nextStart.toISOString(),
+            eventId: createdEvent.id
+          });
+          await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+          await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+          toast.success('Tarea planificada en calendario');
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : 'No se pudo planificar la tarea.');
+        }
+        return;
+      }
       const updateCachedEvent = (events: Event[] | undefined) =>
         events?.map((cachedEvent) =>
           cachedEvent.id === event.id
@@ -279,7 +376,7 @@ export function CalendarPage({
         toast.error(error instanceof Error ? error.message : 'No se pudo reprogramar el bloque.');
       }
     },
-    [queryClient]
+    [events, queryClient]
   );
   const resizeEvent = useCallback(
     async (event: Event, nextEnd: Date) => {
@@ -306,7 +403,13 @@ export function CalendarPage({
     },
     [queryClient]
   );
-  const visibleEvents = events.filter(
+  const calendarEvents = [
+    ...events,
+    ...projectedTaskBlocks.filter(
+      (event) => new Date(event.startAt) < range.end && new Date(event.endAt) > range.start
+    )
+  ];
+  const visibleEvents = calendarEvents.filter(
     (event) =>
       filters.includes(categoryFor(event, categories).id) &&
       (!calendarSearch.trim() ||
@@ -314,7 +417,13 @@ export function CalendarPage({
           .toLowerCase()
           .includes(calendarSearch.trim().toLowerCase()))
   );
-  const visibleMobileEvents = mobileMonthEvents.filter(
+  const visibleMobileEvents = [
+    ...mobileMonthEvents,
+    ...projectedTaskBlocks.filter(
+      (event) =>
+        new Date(event.startAt) < mobileRange.end && new Date(event.endAt) > mobileRange.start
+    )
+  ].filter(
     (event) =>
       filters.includes(categoryFor(event, categories).id) &&
       (!calendarSearch.trim() ||
@@ -468,6 +577,25 @@ export function CalendarPage({
         <span className='text-muted-foreground ml-auto text-xs'>
           {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este periodo
         </span>
+        {unplannedTasks.length > 0 && (
+          <div className='border-border/60 bg-muted/20 flex items-center gap-2 rounded-lg border px-2 py-1'>
+            <span className='text-muted-foreground text-xs'>
+              {unplannedTasks.length} sin planificar
+            </span>
+            {unplannedTasks.slice(0, 2).map((task) => (
+              <Button
+                key={task.id}
+                variant='ghost'
+                size='sm'
+                className='h-7 max-w-40 truncate px-2 text-xs'
+                onClick={() => void planTask(task)}
+                title={`Planificar ${task.title}`}
+              >
+                Planificar
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       {(isError || isMobileError) && (

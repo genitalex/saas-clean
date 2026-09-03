@@ -364,6 +364,7 @@ export function EventDialog({
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');
   const [allDay, setAllDay] = useState(false);
+  const [repeatRule, setRepeatRule] = useState('');
   const [location, setLocation] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -414,6 +415,7 @@ export function EventDialog({
     setStartAt(toInputValue(start));
     setEndAt(toInputValue(end));
     setAllDay(event?.allDay ?? false);
+    setRepeatRule(event?.repeatRule ?? '');
     setLocation(event?.location ?? '');
     setCustomerId(event?.customerId ?? initialCustomerId ?? '');
     setAssigneeId(event?.assigneeId ?? '');
@@ -441,6 +443,7 @@ export function EventDialog({
       startAt,
       endAt,
       allDay,
+      repeatRule: repeatRule || null,
       location: location || null,
       customerId: customerId || null,
       assigneeId: assigneeId || null
@@ -667,6 +670,21 @@ export function EventDialog({
                   )}
                 </div>
               )}
+
+              <label htmlFor='event-repeat' className='flex flex-col gap-2'>
+                <span className='text-sm font-medium'>Repetir</span>
+                <NativeSelect
+                  id='event-repeat'
+                  value={repeatRule}
+                  onChange={(inputEvent) => setRepeatRule(inputEvent.target.value)}
+                  className='h-11 rounded-[10px] bg-muted/25'
+                >
+                  <NativeSelectOption value=''>No se repite</NativeSelectOption>
+                  <NativeSelectOption value='daily'>Cada día</NativeSelectOption>
+                  <NativeSelectOption value='weekly'>Cada semana</NativeSelectOption>
+                  <NativeSelectOption value='monthly'>Cada mes</NativeSelectOption>
+                </NativeSelect>
+              </label>
             </section>
 
             <section className='space-y-3'>
