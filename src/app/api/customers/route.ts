@@ -22,13 +22,14 @@ export async function GET(request: NextRequest) {
   const organizationId = context.organization.id;
   try {
     const q = request.nextUrl.searchParams.get('search')?.trim() || '';
+    const archived = request.nextUrl.searchParams.get('archived') === 'true';
     const rows = await db
       .select()
       .from(customers)
       .where(
         and(
           eq(customers.organizationId, organizationId),
-          eq(customers.archived, false),
+          eq(customers.archived, archived),
           q
             ? or(
                 ilike(customers.name, `%${q}%`),

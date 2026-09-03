@@ -20,6 +20,7 @@ import { AddNoteDialog } from '@/features/activities/components/add-note-dialog'
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 import { EventDialog } from '@/features/calendar/components/event-dialog';
 import { useState } from 'react';
+import { CustomerLifecycleActions } from './customer-lifecycle-actions';
 
 type Customer = {
   id: string;
@@ -120,6 +121,13 @@ export default function CustomerViewPage({ customerId }: { customerId: string })
           </div>
         </div>
         <div className='flex flex-wrap gap-2'>
+          <CustomerLifecycleActions
+            customerId={customer.id}
+            archived={customer.archived}
+            onCompleted={(action) => {
+              if (action === 'deleted') window.location.href = '/dashboard/customers';
+            }}
+          />
           <Button
             variant='outline'
             size='sm'

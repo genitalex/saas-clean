@@ -16,13 +16,17 @@ type Customer = {
 export default function CustomerListing() {
   const [rows, setRows] = useState<Customer[]>([]);
   const [q, setQ] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deepLinkId, setDeepLinkId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const r = await fetch(`/api/customers?search=${encodeURIComponent(q)}`, { cache: 'no-store' });
+    const r = await fetch(
+      `/api/customers?search=${encodeURIComponent(q)}&archived=${showArchived}`,
+      { cache: 'no-store' }
+    );
     if (r.ok) setRows(await r.json());
-  }, [q]);
+  }, [q, showArchived]);
 
   useEffect(() => {
     void load();
@@ -88,6 +92,13 @@ export default function CustomerListing() {
           onChange={(e) => setQ(e.target.value)}
         />
         <span className='text-muted-foreground text-xs'>{rows.length} clientes</span>
+        <button
+          type='button'
+          onClick={() => setShowArchived((value) => !value)}
+          className='text-primary text-sm hover:underline'
+        >
+          {showArchived ? 'Ver clientes activos' : 'Ver archivados'}
+        </button>
       </div>
       <div className='overflow-visible rounded-2xl border border-border/60 bg-card/45'>
         <div className='hidden grid-cols-[2fr_1fr_2fr_auto] gap-4 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid'>
@@ -116,7 +127,7 @@ export default function CustomerListing() {
         ))}
         {rows.length === 0 && (
           <div className='text-muted-foreground p-10 text-center text-sm'>
-            No hay clientes todavía.
+            {showArchived ? 'No hay clientes archivados.' : 'No hay clientes todavía.'}
           </div>
         )}
       </div>

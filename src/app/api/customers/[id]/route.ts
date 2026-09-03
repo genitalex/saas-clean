@@ -1,6 +1,6 @@
 import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import { db } from '@/lib/db';
-import { customers, users } from '@/lib/db/schema';
+import { activities, customers, users } from '@/lib/db/schema';
 import { customerSchema } from '@/features/customers/schemas/customer';
 import { and, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
@@ -106,12 +106,29 @@ export async function DELETE(
   }
   const organizationId = context.organization.id;
   const { id } = await params;
-  const [row] = await db
-    .update(customers)
-    .set({ archived: true, updatedAt: new Date() })
-    .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
-    .returning();
-  return row
-    ? NextResponse.json(row)
+  const permanently = request.nextUrl.searchParams.get('permanent') === 'true';
+  if (!permanently) {
+    const [row] = await db
+      .update(customers)
+      .set({ archived: true, updatedAt: new Date() })
+      .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
+      .returning();
+    return row
+      ? NextResponse.json(row)
+      : NextResponse.json({ error: 'CUSTOMER_NOT_FOUND' }, { status: 404 });
+  }
+
+  const deleted = await db.transaction(async (tx) => {
+    await tx
+      .update(activities)
+      .set({ customerId: null })
+      .where(and(eq(activities.customerId, id), eq(activities.organizationId, organizationId)));
+    return tx
+      .delete(customers)
+      .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
+      .returning({ id: customers.id });
+  });
+  return deleted[0]
+    ? NextResponse.json(deleted[0])
     : NextResponse.json({ error: 'CUSTOMER_NOT_FOUND' }, { status: 404 });
 }

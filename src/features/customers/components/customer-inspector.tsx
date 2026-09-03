@@ -25,6 +25,7 @@ import type { Activity } from '@/features/activities/types';
 import { AddNoteDialog } from '@/features/activities/components/add-note-dialog';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 import { EventDialog } from '@/features/calendar/components/event-dialog';
+import { CustomerLifecycleActions } from './customer-lifecycle-actions';
 
 type Customer = {
   id: string;
@@ -235,6 +236,13 @@ export function CustomerInspector({
                   </div>
                 </div>
                 <div className='flex flex-wrap gap-2 pt-2'>
+                  <CustomerLifecycleActions
+                    customerId={customer.id}
+                    archived={customer.archived}
+                    onCompleted={(action) => {
+                      if (action === 'deleted' || action === 'archived') onOpenChange(false);
+                    }}
+                  />
                   <AddNoteDialog customerId={customer.id} />
                   <NewTaskDialog customerId={customer.id} />
                   <Button size='sm' variant='outline' onClick={() => void createFollowUp('task')}>

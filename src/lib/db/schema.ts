@@ -445,9 +445,7 @@ export const activities = pgTable(
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
 
-    customerId: uuid('customer_id')
-      .notNull()
-      .references(() => customers.id, { onDelete: 'cascade' }),
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
 
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
 

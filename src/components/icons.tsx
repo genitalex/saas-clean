@@ -1,6 +1,7 @@
 import {
   IconActivity,
   IconAdjustmentsHorizontal,
+  IconArchive,
   IconAlertCircle,
   IconAlertTriangle,
   IconArrowRight,
@@ -121,6 +122,7 @@ export const Icons = {
   search: IconSearch,
   settings: IconSettings,
   trash: IconTrash,
+  archive: IconArchive,
 
   // Navigation / Chevrons
   chevronDown: IconChevronDown,
