@@ -1,4 +1,5 @@
 import type { TaskFilters, TaskStatus } from '../types';
+import type { TaskWorkspace } from '../types';
 
 function toSearchParams(filters: TaskFilters = {}) {
   const params = new URLSearchParams();
@@ -8,6 +9,7 @@ function toSearchParams(filters: TaskFilters = {}) {
   if (filters.eventId) params.set('eventId', filters.eventId);
   if (filters.assigneeId) params.set('assigneeId', filters.assigneeId);
   if (filters.search) params.set('search', filters.search);
+  if (filters.parentTaskId) params.set('parentTaskId', filters.parentTaskId);
   return params.toString();
 }
 
@@ -41,7 +43,8 @@ async function requestTaskList<T>(input: RequestInfo, init?: RequestInit): Promi
 export const taskKeys = {
   all: ['tasks'] as const,
   list: (filters: TaskFilters = {}) => [...taskKeys.all, 'list', filters] as const,
-  detail: (id: string) => [...taskKeys.all, 'detail', id] as const
+  detail: (id: string) => [...taskKeys.all, 'detail', id] as const,
+  workspace: (id: string) => [...taskKeys.all, 'workspace', id] as const
 };
 
 export async function getTasks(filters: TaskFilters = {}) {
@@ -75,4 +78,23 @@ export async function deleteTask(id: string) {
 
 export async function updateTaskStatus(id: string, status: TaskStatus) {
   return updateTask(id, { status });
+}
+
+export async function getTaskWorkspace(id: string) {
+  return request<TaskWorkspace>(`/api/tasks/${id}/workspace`);
+}
+
+export async function addTaskDependency(taskId: string, blockingTaskId: string) {
+  return request<TaskWorkspace>(`/api/tasks/${taskId}/dependencies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ blockingTaskId })
+  });
+}
+
+export async function removeTaskDependency(taskId: string, blockingTaskId: string) {
+  return request<TaskWorkspace>(
+    `/api/tasks/${taskId}/dependencies?blockingTaskId=${encodeURIComponent(blockingTaskId)}`,
+    { method: 'DELETE' }
+  );
 }

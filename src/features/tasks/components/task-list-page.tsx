@@ -25,8 +25,15 @@ import {
   SheetTitle
 } from '@/components/ui/sheet';
 import { Icons } from '@/components/icons';
-import { deleteTask, getTasks, taskKeys } from '../queries';
-import { updateTask } from '../queries';
+import {
+  addTaskDependency,
+  createTask,
+  deleteTask,
+  getTaskWorkspace,
+  getTasks,
+  taskKeys,
+  updateTask
+} from '../queries';
 import { createEvent, getEvent, getEvents, updateEvent } from '@/features/calendar/queries';
 import {
   createSavedView,
@@ -727,6 +734,20 @@ function TaskInspector({
   const [scheduleDate, setScheduleDate] = useState('');
   const [waitingOn, setWaitingOn] = useState('');
   const [recurrenceRule, setRecurrenceRule] = useState<TaskRecurrence | ''>('');
+  const [subtaskTitle, setSubtaskTitle] = useState('');
+  const [followUpDate, setFollowUpDate] = useState('');
+  const workspaceQuery = useQuery({
+    queryKey: taskKeys.workspace(task?.id ?? ''),
+    queryFn: () => getTaskWorkspace(task!.id),
+    enabled: Boolean(task),
+    staleTime: 10_000
+  });
+  const allTasksQuery = useQuery({
+    queryKey: taskKeys.list(),
+    queryFn: () => getTasks(),
+    enabled: Boolean(task),
+    staleTime: 20_000
+  });
 
   useEffect(() => {
     setTitle(task?.title ?? '');
@@ -832,6 +853,48 @@ function TaskInspector({
     }
   };
 
+  const addSubtask = async () => {
+    const titleValue = subtaskTitle.trim();
+    if (!titleValue) return;
+    try {
+      await createTask({ title: titleValue, parentTaskId: task.id, customerId: task.customerId });
+      setSubtaskTitle('');
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Subtarea añadida');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo añadir la subtarea.');
+    }
+  };
+
+  const createFollowUp = async () => {
+    if (!followUpDate) return;
+    try {
+      await createTask({
+        title: `Seguimiento: ${task.title}`,
+        description: `Continuar con: ${task.title}`,
+        dueAt: new Date(`${followUpDate}T09:00:00`).toISOString(),
+        customerId: task.customerId,
+        assigneeId: task.assigneeId,
+        followUpForTaskId: task.id
+      });
+      setFollowUpDate('');
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Seguimiento creado');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo crear el seguimiento.');
+    }
+  };
+
+  const workspace = workspaceQuery.data;
+  const completedSubtasks =
+    workspace?.subtasks.filter((subtask) => subtask.status === 'done').length ?? 0;
+  const dependencyCandidates = (allTasksQuery.data ?? []).filter(
+    (candidate) =>
+      candidate.id !== task.id &&
+      candidate.status !== 'done' &&
+      !workspace?.blockedBy.some((blocked) => blocked.id === candidate.id)
+  );
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side='right' className='w-full gap-0 overflow-hidden p-0 sm:max-w-md'>
@@ -918,6 +981,101 @@ function TaskInspector({
                 <Icons.chevronRight className='text-muted-foreground size-4' />
               </a>
             )}
+            {workspace?.blockedBy.length ? (
+              <div className='rounded-2xl border border-amber-300/40 bg-amber-50/50 p-3 dark:border-amber-400/20 dark:bg-amber-400/5'>
+                <p className='text-xs font-medium'>Bloqueada por</p>
+                {workspace.blockedBy.map((blockingTask) => (
+                  <Link
+                    key={blockingTask.id}
+                    href={`/dashboard/tasks?task=${blockingTask.id}`}
+                    className='mt-2 flex items-center gap-2 text-sm hover:underline'
+                  >
+                    <Icons.lock className='size-3.5 text-amber-600' />
+                    <span className='truncate'>{blockingTask.title}</span>
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            <div className='flex flex-wrap items-center gap-2'>
+              <NativeSelect
+                aria-label='Añadir tarea bloqueante'
+                defaultValue=''
+                onChange={(event) => {
+                  if (!event.target.value) return;
+                  void addTaskDependency(task.id, event.target.value)
+                    .then(() => {
+                      void queryClient.invalidateQueries({ queryKey: taskKeys.workspace(task.id) });
+                    })
+                    .catch((error: unknown) =>
+                      toast.error(
+                        error instanceof Error ? error.message : 'No se pudo añadir el bloqueo.'
+                      )
+                    );
+                  event.currentTarget.value = '';
+                }}
+              >
+                <NativeSelectOption value=''>Añadir bloqueo...</NativeSelectOption>
+                {dependencyCandidates.map((candidate) => (
+                  <NativeSelectOption key={candidate.id} value={candidate.id}>
+                    {candidate.title}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+          </section>
+          <Separator />
+          <section className='space-y-3'>
+            <div className='flex items-center justify-between'>
+              <h3 className='text-sm font-semibold'>Checklist</h3>
+              {workspace?.subtasks.length ? (
+                <span className='text-muted-foreground text-xs'>
+                  {completedSubtasks}/{workspace.subtasks.length}
+                </span>
+              ) : null}
+            </div>
+            <div className='space-y-1'>
+              {workspace?.subtasks.map((subtask) => (
+                <div key={subtask.id} className='flex items-center gap-2 rounded-lg px-1 py-1'>
+                  <button
+                    type='button'
+                    aria-label={
+                      subtask.status === 'done' ? 'Reabrir subtarea' : 'Completar subtarea'
+                    }
+                    onClick={() =>
+                      void updateTask(subtask.id, {
+                        status: subtask.status === 'done' ? 'todo' : 'done'
+                      }).then(() =>
+                        queryClient.invalidateQueries({ queryKey: taskKeys.workspace(task.id) })
+                      )
+                    }
+                    className='flex size-5 shrink-0 items-center justify-center rounded-full border border-border'
+                  >
+                    {subtask.status === 'done' && <Icons.check className='size-3' />}
+                  </button>
+                  <Input
+                    defaultValue={subtask.title}
+                    aria-label={`Título de ${subtask.title}`}
+                    className='h-8 border-transparent bg-transparent px-1 shadow-none focus-visible:border-border'
+                    onBlur={(event) =>
+                      event.target.value.trim() !== subtask.title &&
+                      void updateTask(subtask.id, { title: event.target.value.trim() }).then(() =>
+                        queryClient.invalidateQueries({ queryKey: taskKeys.workspace(task.id) })
+                      )
+                    }
+                  />
+                </div>
+              ))}
+              <div className='flex items-center gap-2'>
+                <Icons.add className='text-muted-foreground size-4' />
+                <Input
+                  value={subtaskTitle}
+                  onChange={(event) => setSubtaskTitle(event.target.value)}
+                  onKeyDown={(event) => event.key === 'Enter' && void addSubtask()}
+                  placeholder='Añadir subtarea'
+                  className='h-8 border-transparent bg-transparent px-1 shadow-none'
+                />
+              </div>
+            </div>
           </section>
           <Separator />
           <section className='space-y-3'>
@@ -956,6 +1114,29 @@ function TaskInspector({
                 </Button>
               )}
             </div>
+            {task.status === 'waiting' && (
+              <div className='flex flex-wrap items-center gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => void save({ status: 'todo', waitingOn: null })}
+                >
+                  Ya no estoy esperando
+                </Button>
+                <Input
+                  type='date'
+                  value={followUpDate}
+                  onChange={(event) => setFollowUpDate(event.target.value)}
+                  aria-label='Fecha del seguimiento'
+                  className='h-9 w-40 rounded-xl'
+                />
+                {followUpDate && (
+                  <Button variant='secondary' size='sm' onClick={() => void createFollowUp()}>
+                    Crear seguimiento
+                  </Button>
+                )}
+              </div>
+            )}
             <div className='flex flex-wrap gap-2'>
               {(Object.keys(priorityLabels) as TaskPriority[]).map((value) => (
                 <Button

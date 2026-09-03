@@ -1,7 +1,9 @@
 import {
   boolean,
+  type AnyPgColumn,
   index,
   jsonb,
+  primaryKey,
   pgEnum,
   pgTable,
   text,
@@ -328,6 +330,14 @@ export const tasks = pgTable(
 
     assigneeId: uuid('assignee_id').references(() => users.id, { onDelete: 'set null' }),
 
+    parentTaskId: uuid('parent_task_id').references((): AnyPgColumn => tasks.id, {
+      onDelete: 'cascade'
+    }),
+
+    followUpForTaskId: uuid('follow_up_for_task_id').references((): AnyPgColumn => tasks.id, {
+      onDelete: 'set null'
+    }),
+
     title: text('title').notNull(),
     description: text('description'),
     status: taskStatus('status').notNull().default('todo'),
@@ -345,10 +355,29 @@ export const tasks = pgTable(
     index('tasks_customer_id_idx').on(table.customerId),
     index('tasks_event_id_idx').on(table.eventId),
     index('tasks_assignee_id_idx').on(table.assigneeId),
+    index('tasks_parent_task_id_idx').on(table.parentTaskId),
+    index('tasks_follow_up_for_task_id_idx').on(table.followUpForTaskId),
     index('tasks_status_idx').on(table.status),
     index('tasks_due_at_idx').on(table.dueAt),
     index('tasks_recurrence_rule_idx').on(table.recurrenceRule),
     index('tasks_organization_status_idx').on(table.organizationId, table.status)
+  ]
+);
+
+export const taskDependencies = pgTable(
+  'task_dependencies',
+  {
+    taskId: uuid('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    blockingTaskId: uuid('blocking_task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    primaryKey({ columns: [table.taskId, table.blockingTaskId] }),
+    index('task_dependencies_blocking_task_id_idx').on(table.blockingTaskId)
   ]
 );
 

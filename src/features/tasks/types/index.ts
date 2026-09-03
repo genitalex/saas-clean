@@ -16,6 +16,7 @@ export type TaskFilters = {
   customerId?: string;
   eventId?: string;
   assigneeId?: string;
+  parentTaskId?: string;
   search?: string;
 };
 
@@ -26,12 +27,24 @@ export type TaskPayload = {
   dueAt?: string | null;
   waitingOn?: string | null;
   recurrenceRule?: TaskRecurrence | null;
+  parentTaskId?: string | null;
+  followUpForTaskId?: string | null;
   customerId?: string | null;
   eventId?: string | null;
   assigneeId?: string | null;
 };
 
 export type TaskUpdatePayload = Partial<TaskPayload> & { status?: TaskStatus };
+
+export type TaskDependency = Pick<Task, 'id' | 'title' | 'status'>;
+export type TaskWorkspace = {
+  task: Task;
+  parent: TaskDependency | null;
+  subtasks: Task[];
+  blockedBy: TaskDependency[];
+  blocks: TaskDependency[];
+  followUp: Task | null;
+};
 
 export type CustomerOption = Pick<InferSelectModel<typeof customers>, 'id' | 'name' | 'kind'>;
 export type UserOption = Pick<InferSelectModel<typeof users>, 'id' | 'name'>;

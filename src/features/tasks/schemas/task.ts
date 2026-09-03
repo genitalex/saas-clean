@@ -11,6 +11,8 @@ export const taskPayloadSchema = z.object({
   dueAt: z.string().datetime({ local: true }).nullable().optional(),
   waitingOn: z.string().trim().max(200).nullable().optional(),
   recurrenceRule: taskRecurrenceSchema.nullable().optional(),
+  parentTaskId: z.string().uuid().nullable().optional(),
+  followUpForTaskId: z.string().uuid().nullable().optional(),
   customerId: z.string().uuid().nullable().optional(),
   eventId: z.string().uuid().nullable().optional(),
   assigneeId: z.string().uuid().nullable().optional()
