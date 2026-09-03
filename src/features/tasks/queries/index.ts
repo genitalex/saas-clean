@@ -3,6 +3,7 @@ import type { TaskFilters, TaskStatus } from '../types';
 function toSearchParams(filters: TaskFilters = {}) {
   const params = new URLSearchParams();
   if (filters.status) params.set('status', filters.status);
+  if (filters.priority) params.set('priority', filters.priority);
   if (filters.customerId) params.set('customerId', filters.customerId);
   if (filters.eventId) params.set('eventId', filters.eventId);
   if (filters.assigneeId) params.set('assigneeId', filters.assigneeId);

@@ -11,6 +11,7 @@ export type TaskStatus = Task['status'];
 export type TaskPriority = Task['priority'];
 export type TaskFilters = {
   status?: TaskStatus;
+  priority?: TaskPriority;
   customerId?: string;
   eventId?: string;
   assigneeId?: string;

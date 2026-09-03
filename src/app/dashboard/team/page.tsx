@@ -1,8 +1,8 @@
-import WorkspacePlaceholder from '@/components/layout/workspace-placeholder';
+import TeamWorkPage from '@/features/team/components/team-work-page';
 import PageContainer from '@/components/layout/page-container';
 import { getAuthContext } from '@/lib/db/organization-context';
 
-export const metadata = { title: 'Dashboard: Equipo' };
+export const metadata = { title: 'Equipo' };
 
 export default async function Page() {
   const { membership } = await getAuthContext();
@@ -12,5 +12,12 @@ export default async function Page() {
     return <PageContainer access={false}> </PageContainer>;
   }
 
-  return <WorkspacePlaceholder section='team' />;
+  return (
+    <PageContainer
+      pageTitle='Equipo'
+      pageDescription='Qué tiene por delante cada persona y dónde necesita atención.'
+    >
+      <TeamWorkPage />
+    </PageContainer>
+  );
 }

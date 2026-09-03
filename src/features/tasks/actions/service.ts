@@ -114,6 +114,7 @@ export async function getTasks(filters: TaskFilters = {}) {
       and(
         eq(tasks.organizationId, organization.id),
         filters.status ? eq(tasks.status, filters.status) : undefined,
+        filters.priority ? eq(tasks.priority, filters.priority) : undefined,
         filters.customerId ? eq(tasks.customerId, filters.customerId) : undefined,
         filters.eventId ? eq(tasks.eventId, filters.eventId) : undefined,
         filters.assigneeId ? eq(tasks.assigneeId, filters.assigneeId) : undefined,

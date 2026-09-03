@@ -9,6 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -19,6 +26,14 @@ import { Icons } from '@/components/icons';
 import { deleteTask, getTasks, taskKeys } from '../queries';
 import { updateTask } from '../queries';
 import { createEvent, getEvent, getEvents, updateEvent } from '@/features/calendar/queries';
+import {
+  createSavedView,
+  deleteSavedView,
+  getSavedViews,
+  updateSavedView
+} from '@/features/saved-views/queries';
+import type { SavedView } from '@/features/saved-views/types';
+import { useSession } from '@/lib/auth-client';
 import type { Task, TaskPriority, TaskStatus } from '../types';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 
@@ -33,9 +48,11 @@ const priorityLabels: Record<TaskPriority, string> = { low: 'Baja', medium: 'Med
 
 export function TaskListPage() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<TaskStatus | ''>('');
   const [priority, setPriority] = useState<TaskPriority | ''>('');
+  const [assigneeId, setAssigneeId] = useState('');
   const [selected, setSelected] = useState<Task | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkAssigneeId, setBulkAssigneeId] = useState('');
@@ -50,8 +67,24 @@ export function TaskListPage() {
     isPending,
     isError
   } = useQuery({
-    queryKey: taskKeys.list({ search, status: status || undefined }),
-    queryFn: () => getTasks({ search, status: status || undefined })
+    queryKey: taskKeys.list({
+      search,
+      status: status || undefined,
+      priority: priority || undefined,
+      assigneeId: assigneeId || undefined
+    }),
+    queryFn: () =>
+      getTasks({
+        search,
+        status: status || undefined,
+        priority: priority || undefined,
+        assigneeId: assigneeId || undefined
+      })
+  });
+
+  const { data: savedViews = [] } = useQuery({
+    queryKey: ['saved-views', 'tasks'],
+    queryFn: () => getSavedViews('tasks')
   });
 
   const { data: assignees = [] } = useQuery({
@@ -65,18 +98,133 @@ export function TaskListPage() {
     staleTime: 60_000
   });
 
-  const filteredTasks = priority ? tasks.filter((task) => task.priority === priority) : tasks;
+  const filteredTasks = tasks.filter((task) => {
+    if (priority && task.priority !== priority) return false;
+    if (assigneeId && task.assigneeId !== assigneeId) return false;
+    return true;
+  });
   const selectedTasks = tasks.filter((task) => selectedIds.includes(task.id));
   const allVisibleSelected =
     filteredTasks.length > 0 && filteredTasks.every((task) => selectedIds.includes(task.id));
 
+  const recommendedViews = [
+    {
+      name: 'Mis tareas',
+      filters: { assigneeId: session?.user?.id || '' }
+    },
+    {
+      name: 'Hoy',
+      filters: { status: 'todo' as const }
+    },
+    {
+      name: 'Pendientes',
+      filters: { status: 'todo' as const }
+    },
+    {
+      name: 'Urgentes',
+      filters: { status: 'todo' as const, priority: 'high' as const }
+    },
+    {
+      name: 'Esta semana',
+      filters: { status: 'todo' as const, assigneeId: session?.user?.id || '' }
+    }
+  ];
+
+  const applyFilters = (next: { status?: string; priority?: string; assigneeId?: string }) => {
+    setStatus((next.status as TaskStatus | '') || '');
+    setPriority((next.priority as TaskPriority | '') || '');
+    setAssigneeId(next.assigneeId || '');
+  };
+
+  const saveCurrentView = async () => {
+    const name = window.prompt('Nombre de la vista');
+    if (!name || !name.trim()) return;
+
+    try {
+      await createSavedView({
+        entity: 'tasks',
+        name: name.trim(),
+        filters: {
+          status: status || undefined,
+          priority: priority || undefined,
+          assigneeId: assigneeId || undefined,
+          search: search || undefined
+        },
+        sortBy: 'createdAt',
+        groupBy: 'status'
+      });
+      await queryClient.invalidateQueries({ queryKey: ['saved-views'] });
+      toast.success('Vista guardada');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo guardar la vista.');
+    }
+  };
+
+  const updateViewFavorite = async (view: SavedView, favorite: boolean) => {
+    try {
+      await updateSavedView(view.id, { favorite });
+      await queryClient.invalidateQueries({ queryKey: ['saved-views'] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo actualizar la vista.');
+    }
+  };
+
+  const renameView = async (view: SavedView) => {
+    const nextName = window.prompt('Renombrar vista', view.name);
+    if (!nextName || !nextName.trim()) return;
+    try {
+      await updateSavedView(view.id, { name: nextName.trim() });
+      await queryClient.invalidateQueries({ queryKey: ['saved-views'] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo renombrar la vista.');
+    }
+  };
+
+  const deleteView = async (view: SavedView) => {
+    try {
+      await deleteSavedView(view.id);
+      await queryClient.invalidateQueries({ queryKey: ['saved-views'] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo eliminar la vista.');
+    }
+  };
+
+  const openSavedView = (view: SavedView) => {
+    applyFilters({
+      status: view.filters.status,
+      priority: view.filters.priority,
+      assigneeId: view.filters.assigneeId
+    });
+    setSearch(view.filters.search || '');
+  };
+
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setStatus((params.get('status') as TaskStatus | null) || '');
+    setPriority((params.get('priority') as TaskPriority | null) || '');
+    setAssigneeId(params.get('assigneeId') || '');
+    setSearch(params.get('search') || '');
+
     const syncDeepLink = () =>
       setDeepLinkId(new URLSearchParams(window.location.search).get('task'));
     syncDeepLink();
     window.addEventListener('popstate', syncDeepLink);
     return () => window.removeEventListener('popstate', syncDeepLink);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (priority) params.set('priority', priority);
+    if (assigneeId) params.set('assigneeId', assigneeId);
+    if (search) params.set('search', search);
+    const next = params.toString();
+    const current = window.location.search.replace(/^\?/, '');
+    if (next !== current) {
+      const nextUrl = `${window.location.pathname}${next ? `?${next}` : ''}`;
+      window.history.replaceState(null, '', nextUrl);
+    }
+  }, [status, priority, assigneeId, search]);
 
   useEffect(() => {
     if (deepLinkId && tasks.length > 0) {
@@ -249,6 +397,19 @@ export function TaskListPage() {
         />
         <div className='flex flex-wrap gap-2'>
           <select
+            aria-label='Filtrar por responsable'
+            className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+            value={assigneeId}
+            onChange={(event) => setAssigneeId(event.target.value)}
+          >
+            <option value=''>Todos los responsables</option>
+            {assignees.map((assignee) => (
+              <option key={assignee.id} value={assignee.id}>
+                {assignee.name}
+              </option>
+            ))}
+          </select>
+          <select
             aria-label='Filtrar por estado'
             className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
             value={status}
@@ -274,6 +435,60 @@ export function TaskListPage() {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <div className='flex flex-col gap-3 rounded-[22px] border border-border/60 bg-card/40 p-3'>
+        <div className='flex flex-wrap items-center gap-2'>
+          <span className='text-xs font-medium uppercase tracking-[0.18em] text-primary'>
+            Vistas
+          </span>
+          <Button variant='outline' size='sm' onClick={() => void saveCurrentView()}>
+            Guardar vista
+          </Button>
+          {recommendedViews.map((view) => (
+            <Button
+              key={view.name}
+              variant='ghost'
+              size='sm'
+              onClick={() => applyFilters(view.filters)}
+            >
+              {view.name}
+            </Button>
+          ))}
+        </div>
+        <div className='flex flex-wrap gap-2'>
+          {(savedViews ?? []).map((view) => (
+            <div
+              key={view.id}
+              className='flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-1 text-xs'
+            >
+              <button type='button' className='font-medium' onClick={() => openSavedView(view)}>
+                {view.name}
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <button
+                    type='button'
+                    aria-label={`Más opciones para ${view.name}`}
+                    className='p-1 text-muted-foreground hover:text-foreground'
+                  >
+                    <Icons.chevronDown className='size-3.5' />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem onSelect={() => renameView(view)}>Renombrar</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => updateViewFavorite(view, !view.favorite)}>
+                    {view.favorite ? 'Quitar favorito' : 'Marcar favorito'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem variant='destructive' onSelect={() => deleteView(view)}>
+                    Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ))}
         </div>
       </div>
 

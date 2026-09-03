@@ -347,6 +347,36 @@ export const tasks = pgTable(
   ]
 );
 
+export const savedViews = pgTable(
+  'saved_views',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    entity: text('entity').notNull().default('tasks'),
+    name: text('name').notNull(),
+    filters: jsonb('filters').notNull().default({}),
+    sortBy: text('sort_by'),
+    groupBy: text('group_by'),
+    favorite: boolean('favorite').notNull().default(false),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('saved_views_org_user_idx').on(table.organizationId, table.userId),
+    index('saved_views_entity_idx').on(table.entity),
+    index('saved_views_favorite_idx').on(table.organizationId, table.favorite)
+  ]
+);
+
 export const activityType = pgEnum('activity_type', [
   'note',
   'call',

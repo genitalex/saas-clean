@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthContextError } from '@/lib/db/organization-context';
 import { createTask, getTasks, TaskServiceError } from '@/features/tasks/actions/service';
-import { taskStatusSchema } from '@/features/tasks/schemas/task';
+import { taskPrioritySchema, taskStatusSchema } from '@/features/tasks/schemas/task';
 import type { TaskFilters } from '@/features/tasks/types';
 
 function errorResponse(error: unknown) {
@@ -20,12 +20,19 @@ function errorResponse(error: unknown) {
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const status = params.get('status');
+  const priority = params.get('priority');
+
   if (status && !taskStatusSchema.safeParse(status).success) {
     return NextResponse.json({ error: 'INVALID_STATUS' }, { status: 400 });
   }
+  if (priority && !taskPrioritySchema.safeParse(priority).success) {
+    return NextResponse.json({ error: 'INVALID_PRIORITY' }, { status: 400 });
+  }
+
   try {
     const filters: TaskFilters = {
       status: status ? (status as TaskFilters['status']) : undefined,
+      priority: priority ? (priority as TaskFilters['priority']) : undefined,
       customerId: params.get('customerId') || undefined,
       eventId: params.get('eventId') || undefined,
       assigneeId: params.get('assigneeId') || undefined,
