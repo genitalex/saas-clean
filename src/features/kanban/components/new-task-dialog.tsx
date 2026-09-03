@@ -108,7 +108,7 @@ export default function NewTaskDialog({
         {triggerIcon}
         Nueva tarea
       </DialogTrigger>
-      <DialogContent className='sm:max-w-lg'>
+      <DialogContent className='sm:max-w-205'>
         <DialogHeader>
           <DialogTitle>Nueva tarea</DialogTitle>
           <DialogDescription>Añade una tarea para el equipo.</DialogDescription>
@@ -128,9 +128,10 @@ export default function NewTaskDialog({
             maxLength={5000}
           />
           <div className='grid gap-4 sm:grid-cols-2'>
-            <label className='flex flex-col gap-1.5 text-sm'>
+            <label htmlFor='task-priority' className='flex flex-col gap-1.5 text-sm'>
               <span className='text-muted-foreground'>Prioridad</span>
               <NativeSelect
+                id='task-priority'
                 value={priority}
                 onChange={(event) => setPriority(event.target.value as TaskPriority)}
               >

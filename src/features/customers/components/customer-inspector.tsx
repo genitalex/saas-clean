@@ -201,7 +201,7 @@ export function CustomerInspector({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:w-[min(760px,58vw)] sm:max-w-none'
+          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:w-[min(500px,calc(100vw-1rem))] sm:max-w-none'
         >
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
@@ -242,48 +242,45 @@ export function CustomerInspector({
                 </div>
                 <div className='mt-4 space-y-3 border-t border-border/45 pt-3'>
                   <div className='flex w-full min-w-0 items-center'>
-                    <div className='flex w-full min-w-0 overflow-hidden rounded-[10px] border border-border/55 bg-background'>
+                    <div className='flex w-max min-w-full overflow-hidden rounded-[10px] border border-border/55 bg-background'>
                       <Button
                         size='sm'
                         variant='ghost'
                         onClick={() => setEventDialogOpen(true)}
-                        className='h-8 min-w-0 flex-1 rounded-none border-0 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        className='h-8 shrink-0 rounded-none border-0 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
                       >
-                        <Icons.calendar className='size-3.5' />{' '}
-                        <span className='truncate'>Nuevo evento</span>
+                        <Icons.calendar className='size-3.5' /> <span>Nuevo evento</span>
                       </Button>
                       <AddNoteDialog
                         customerId={customer.id}
-                        triggerClassName='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        triggerClassName='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
                         triggerIcon={<Icons.post className='size-3.5' />}
                       />
                       <NewTaskDialog
                         customerId={customer.id}
-                        triggerClassName='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        triggerClassName='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
                         triggerIcon={<Icons.check className='size-3.5' />}
                       />
                       <Button
                         size='sm'
                         variant='ghost'
                         onClick={() => void createFollowUp('task')}
-                        className='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        className='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
                       >
-                        <Icons.check className='size-3.5 shrink-0' />{' '}
-                        <span className='truncate'>Seguimiento</span>
+                        <Icons.check className='size-3.5 shrink-0' /> <span>Seguimiento</span>
                       </Button>
                       <Button
                         size='sm'
                         variant='ghost'
                         onClick={() => void createFollowUp('event')}
-                        className='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        className='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
                       >
-                        <Icons.calendar className='size-3.5 shrink-0' />{' '}
-                        <span className='truncate'>Reunión</span>
+                        <Icons.calendar className='size-3.5 shrink-0' /> <span>Reunión</span>
                       </Button>
                       <CustomerLifecycleActions
                         customerId={customer.id}
                         archived={customer.archived}
-                        triggerClassName='h-8 w-9 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        triggerClassName='h-8 w-9 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
                         onCompleted={(action) => {
                           if (action === 'deleted' || action === 'archived') onOpenChange(false);
                         }}
@@ -374,7 +371,7 @@ export function CustomerInspector({
                         setContact((current) => ({ ...current, address: value }))
                       }
                       onBlur={(value) => void saveContact({ address: value })}
-                      className='bg-transparent px-0 py-2.5 text-sm'
+                      className='bg-transparent px-0 py-3.5 text-sm'
                     />
                     <EditableDetail
                       label='Sitio web'
@@ -385,7 +382,7 @@ export function CustomerInspector({
                       }
                       onBlur={(value) => void saveContact({ website: value })}
                       type='url'
-                      className='bg-transparent px-0 py-2.5 text-sm'
+                      className='bg-transparent px-0 py-3.5 text-sm'
                     />
                     <div className='border-t border-border/30 pt-3'>
                       <span className='text-muted-foreground block text-[11px]'>
@@ -575,7 +572,7 @@ function EditableDetail({
 }) {
   return (
     <label className={className ?? 'bg-background p-3'}>
-      <span className='text-muted-foreground block text-[11px]'>{label}</span>
+      <span className='text-muted-foreground block text-[11px] font-normal'>{label}</span>
       <input
         type={type}
         aria-label={label}
@@ -583,7 +580,7 @@ function EditableDetail({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         onBlur={(event) => onBlur(event.target.value)}
-        className='mt-1 w-full min-w-0 bg-transparent text-[13px] font-normal leading-5 outline-none placeholder:text-muted-foreground/50'
+        className='mt-2 w-full min-w-0 bg-transparent text-[13px] font-normal leading-5 outline-none placeholder:text-muted-foreground/70'
       />
     </label>
   );
