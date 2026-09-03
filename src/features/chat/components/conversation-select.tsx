@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import type { Conversation } from '../utils/types';
 
 interface ConversationSelectProps {
@@ -38,18 +39,17 @@ export function ConversationSelect({
         >
           Conversation
         </label>
-        <select
+        <NativeSelect
           id='messenger-conversation'
           value={selectedId}
           onChange={(e) => onSelect(e.target.value)}
-          className='border-border/40 bg-background/70 text-foreground focus:border-primary/40 focus:ring-primary/30 w-full rounded-xl border px-2.5 py-1.5 text-xs focus:ring-2 focus:outline-none sm:rounded-2xl sm:px-3 sm:py-2 sm:text-sm'
         >
           {conversations.map((conversation) => (
-            <option key={conversation.id} value={conversation.id}>
+            <NativeSelectOption key={conversation.id} value={conversation.id}>
               {conversation.name}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { createTask, taskKeys } from '@/features/tasks/queries';
 import { activityKeys } from '@/features/activities/queries';
 import { taskPayloadSchema } from '@/features/tasks/schemas/task';
@@ -113,15 +114,14 @@ export default function NewTaskDialog({
           <div className='grid gap-4 sm:grid-cols-2'>
             <label className='flex flex-col gap-1.5 text-sm'>
               <span className='text-muted-foreground'>Prioridad</span>
-              <select
-                className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+              <NativeSelect
                 value={priority}
                 onChange={(event) => setPriority(event.target.value as TaskPriority)}
               >
-                <option value='low'>Baja</option>
-                <option value='medium'>Media</option>
-                <option value='high'>Alta</option>
-              </select>
+                <NativeSelectOption value='low'>Baja</NativeSelectOption>
+                <NativeSelectOption value='medium'>Media</NativeSelectOption>
+                <NativeSelectOption value='high'>Alta</NativeSelectOption>
+              </NativeSelect>
             </label>
             <label htmlFor='task-due-at' className='flex flex-col gap-1.5 text-sm'>
               <span className='text-muted-foreground'>Fecha límite</span>
@@ -135,31 +135,31 @@ export default function NewTaskDialog({
           </div>
           <label className='flex flex-col gap-1.5 text-sm'>
             <span className='text-muted-foreground'>Cliente (opcional)</span>
-            <select
-              className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+            <NativeSelect
               value={selectedCustomerId}
               onChange={(event) => setSelectedCustomerId(event.target.value)}
             >
-              <option value=''>Sin cliente</option>
+              <NativeSelectOption value=''>Sin cliente</NativeSelectOption>
               {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
+                <NativeSelectOption key={customer.id} value={customer.id}>
                   {customer.name}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <label className='flex flex-col gap-1.5 text-sm'>
             <span className='text-muted-foreground'>Responsable (opcional)</span>
-            <select
-              className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
+            <NativeSelect
               value={assigneeId}
               onChange={(event) => setAssigneeId(event.target.value)}
             >
-              <option value=''>Sin responsable</option>
+              <NativeSelectOption value=''>Sin responsable</NativeSelectOption>
               {session?.user.id && (
-                <option value={session.user.id}>{session.user.name} (tú)</option>
+                <NativeSelectOption value={session.user.id}>
+                  {session.user.name} (tú)
+                </NativeSelectOption>
               )}
-            </select>
+            </NativeSelect>
           </label>
         </form>
         <DialogFooter>

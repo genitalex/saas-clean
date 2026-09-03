@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 export default function CustomerFormSheet({ initialOpen = false }: { initialOpen?: boolean }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -48,14 +49,13 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
         <div className='border-border bg-background fixed inset-x-4 top-20 z-50 mx-auto max-w-md rounded-xl border p-5 shadow-xl'>
           <h2 className='text-lg font-semibold'>New customer</h2>
           <div className='mt-4 space-y-3'>
-            <select
-              className='h-10 w-full rounded-md border px-3'
+            <NativeSelect
               value={kind}
               onChange={(e) => setKind(e.target.value as 'person' | 'company')}
             >
-              <option value='person'>Person</option>
-              <option value='company'>Company</option>
-            </select>
+              <NativeSelectOption value='person'>Person</NativeSelectOption>
+              <NativeSelectOption value='company'>Company</NativeSelectOption>
+            </NativeSelect>
             <input
               className='h-10 w-full rounded-md border px-3'
               aria-label='Customer name'

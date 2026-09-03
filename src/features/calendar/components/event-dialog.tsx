@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Icons } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { createEvent, deleteEvent, eventKeys, updateEvent } from '../queries';
@@ -521,13 +523,11 @@ export function EventDialog({
                   <div className='text-muted-foreground text-xs'>Sin una hora concreta.</div>
                 </div>
 
-                <input
+                <Checkbox
                   id='event-all-day'
                   aria-label='Todo el día'
-                  type='checkbox'
                   checked={allDay}
-                  onChange={(inputEvent) => setAllDay(inputEvent.target.checked)}
-                  className='size-5 accent-[--color-primary]'
+                  onCheckedChange={(checked) => setAllDay(checked === true)}
                 />
               </label>
             </section>
@@ -556,14 +556,14 @@ export function EventDialog({
                           setCategoryId((current) => (current === category.id ? '' : category.id))
                         }
                         className={cn(
-                          'flex size-7 shrink-0 items-center justify-center rounded-full transition-all',
+                          'flex size-7 shrink-0 items-center justify-center rounded-full transition-[background-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]',
                           categoryId === category.id
-                            ? 'ring-2 ring-foreground/70 ring-offset-2 ring-offset-background'
-                            : 'hover:scale-105'
+                            ? 'bg-foreground/8 ring-1 ring-foreground/55 ring-offset-1 ring-offset-background'
+                            : 'hover:bg-foreground/6 hover:scale-[1.03]'
                         )}
                       >
                         <span
-                          className='size-3.5 rounded-full'
+                          className='size-3.5 rounded-full shadow-[inset_0_0_0_1px_rgba(15,23,42,0.12)]'
                           style={{ backgroundColor: category.color }}
                         />
                       </button>
@@ -583,22 +583,18 @@ export function EventDialog({
                     Cliente <span className='text-muted-foreground font-normal'>(opcional)</span>
                   </span>
 
-                  <div className='relative'>
-                    <select
-                      id='event-customer'
-                      className='h-12 w-full appearance-none rounded-2xl border border-border/60 bg-muted/25 px-4 pr-10 text-[16px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-11 sm:text-sm'
-                      value={customerId}
-                      onChange={(inputEvent) => setCustomerId(inputEvent.target.value)}
-                    >
-                      <option value=''>Sin cliente</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Icons.chevronDown className='text-muted-foreground pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2' />
-                  </div>
+                  <NativeSelect
+                    id='event-customer'
+                    value={customerId}
+                    onChange={(inputEvent) => setCustomerId(inputEvent.target.value)}
+                  >
+                    <NativeSelectOption value=''>Sin cliente</NativeSelectOption>
+                    {customers.map((customer) => (
+                      <NativeSelectOption key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
                 </label>
               </div>
 
@@ -607,22 +603,18 @@ export function EventDialog({
                   Responsable <span className='text-muted-foreground font-normal'>(opcional)</span>
                 </span>
 
-                <div className='relative'>
-                  <select
-                    id='event-assignee'
-                    className='h-12 w-full appearance-none rounded-2xl border border-border/60 bg-muted/25 px-4 pr-10 text-[16px] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:h-11 sm:text-sm'
-                    value={assigneeId}
-                    onChange={(inputEvent) => setAssigneeId(inputEvent.target.value)}
-                  >
-                    <option value=''>Sin responsable</option>
-                    {members.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
-                  <Icons.chevronDown className='text-muted-foreground pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2' />
-                </div>
+                <NativeSelect
+                  id='event-assignee'
+                  value={assigneeId}
+                  onChange={(inputEvent) => setAssigneeId(inputEvent.target.value)}
+                >
+                  <NativeSelectOption value=''>Sin responsable</NativeSelectOption>
+                  {members.map((member) => (
+                    <NativeSelectOption key={member.id} value={member.id}>
+                      {member.name}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
               </label>
             </section>
 

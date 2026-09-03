@@ -6,6 +6,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -106,6 +108,7 @@ export function TaskListPage() {
   const selectedTasks = tasks.filter((task) => selectedIds.includes(task.id));
   const allVisibleSelected =
     filteredTasks.length > 0 && filteredTasks.every((task) => selectedIds.includes(task.id));
+  const someVisibleSelected = filteredTasks.some((task) => selectedIds.includes(task.id));
 
   const recommendedViews = [
     {
@@ -396,45 +399,42 @@ export function TaskListPage() {
           onChange={(event) => setSearch(event.target.value)}
         />
         <div className='flex flex-wrap gap-2'>
-          <select
+          <NativeSelect
             aria-label='Filtrar por responsable'
-            className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
             value={assigneeId}
             onChange={(event) => setAssigneeId(event.target.value)}
           >
-            <option value=''>Todos los responsables</option>
+            <NativeSelectOption value=''>Todos los responsables</NativeSelectOption>
             {assignees.map((assignee) => (
-              <option key={assignee.id} value={assignee.id}>
+              <NativeSelectOption key={assignee.id} value={assignee.id}>
                 {assignee.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-          <select
+          </NativeSelect>
+          <NativeSelect
             aria-label='Filtrar por estado'
-            className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
             value={status}
             onChange={(event) => setStatus(event.target.value as TaskStatus | '')}
           >
-            <option value=''>Todos los estados</option>
+            <NativeSelectOption value=''>Todos los estados</NativeSelectOption>
             {Object.entries(statusLabels).map(([value, label]) => (
-              <option key={value} value={value}>
+              <NativeSelectOption key={value} value={value}>
                 {label}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-          <select
+          </NativeSelect>
+          <NativeSelect
             aria-label='Filtrar por prioridad'
-            className='h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm'
             value={priority}
             onChange={(event) => setPriority(event.target.value as TaskPriority | '')}
           >
-            <option value=''>Todas las prioridades</option>
+            <NativeSelectOption value=''>Todas las prioridades</NativeSelectOption>
             {Object.entries(priorityLabels).map(([value, label]) => (
-              <option key={value} value={value}>
+              <NativeSelectOption key={value} value={value}>
                 {label}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       </div>
 
@@ -545,19 +545,18 @@ export function TaskListPage() {
                   Guardar fecha
                 </Button>
               )}
-              <select
+              <NativeSelect
                 aria-label='Asignar a'
-                className='h-9 rounded-lg border border-input bg-transparent px-2 text-sm'
                 value={bulkAssigneeId}
                 onChange={(event) => setBulkAssigneeId(event.target.value)}
               >
-                <option value=''>Asignar a…</option>
+                <NativeSelectOption value=''>Asignar a…</NativeSelectOption>
                 {assignees.map((assignee) => (
-                  <option key={assignee.id} value={assignee.id}>
+                  <NativeSelectOption key={assignee.id} value={assignee.id}>
                     {assignee.name}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
               {bulkAssigneeId && (
                 <Button variant='secondary' size='sm' onClick={() => void bulkAssign()}>
                   Asignar
@@ -604,18 +603,17 @@ export function TaskListPage() {
                   aria-label='Inicio del plan de tareas'
                   className='h-9 w-48 rounded-lg'
                 />
-                <select
+                <NativeSelect
                   value={bulkPlanDuration}
                   onChange={(event) => setBulkPlanDuration(event.target.value)}
                   aria-label='Duración de cada tarea'
-                  className='h-9 rounded-lg border border-input bg-transparent px-2 text-sm'
                 >
-                  <option value='15'>15 min</option>
-                  <option value='30'>30 min</option>
-                  <option value='45'>45 min</option>
-                  <option value='60'>1 h</option>
-                  <option value='120'>2 h</option>
-                </select>
+                  <NativeSelectOption value='15'>15 min</NativeSelectOption>
+                  <NativeSelectOption value='30'>30 min</NativeSelectOption>
+                  <NativeSelectOption value='45'>45 min</NativeSelectOption>
+                  <NativeSelectOption value='60'>1 h</NativeSelectOption>
+                  <NativeSelectOption value='120'>2 h</NativeSelectOption>
+                </NativeSelect>
                 <Button variant='secondary' size='sm' onClick={() => void bulkPlan()}>
                   Colocar consecutivamente
                 </Button>
@@ -633,12 +631,11 @@ export function TaskListPage() {
         <div className='overflow-hidden rounded-[26px] border border-border/60 bg-card/45'>
           <div className='flex items-center justify-between border-b border-border/50 px-4 py-3 sm:px-5'>
             <div className='flex items-center gap-3'>
-              <input
-                type='checkbox'
+              <Checkbox
                 aria-label='Seleccionar todas las tareas visibles'
                 checked={allVisibleSelected}
-                onChange={() => toggleSelectAll()}
-                className='size-4 rounded border-border'
+                indeterminate={someVisibleSelected && !allVisibleSelected}
+                onCheckedChange={() => toggleSelectAll()}
               />
               <div>
                 <p className='text-sm font-semibold'>Trabajo</p>
@@ -660,13 +657,11 @@ export function TaskListPage() {
                   key={task.id}
                   className={`flex w-full items-center gap-3 border-b px-3 py-2.5 text-left last:border-0 ${isSelected ? 'bg-primary/[0.03]' : 'hover:bg-muted/30'}`}
                 >
-                  <input
-                    type='checkbox'
+                  <Checkbox
                     aria-label={`Seleccionar ${task.title}`}
                     checked={isSelected}
                     onClick={(event) => event.stopPropagation()}
-                    onChange={() => toggleTaskSelection(task.id)}
-                    className='size-4 rounded border-border'
+                    onCheckedChange={() => toggleTaskSelection(task.id)}
                   />
                   <button
                     type='button'

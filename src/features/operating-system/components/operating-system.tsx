@@ -23,6 +23,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -121,7 +123,7 @@ function OpportunityCard({
           <span>{opportunity.owner}</span>
           <span>Cierra {opportunity.close}</span>
         </div>
-        <select
+        <NativeSelect
           aria-label='Mover etapa'
           value={opportunity.stage}
           onChange={(event) => {
@@ -129,12 +131,13 @@ function OpportunityCard({
             onMove(opportunity.id, event.target.value);
           }}
           onClick={(event) => event.stopPropagation()}
-          className='rounded-md border bg-background px-2 py-1 text-xs'
         >
           {stages.map((option) => (
-            <option key={option}>{option}</option>
+            <NativeSelectOption key={option} value={option}>
+              {option}
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
       </CardContent>
     </Card>
   );
@@ -332,16 +335,17 @@ function OpportunityDetail({
               Guardar
             </Button>
           </div>
-          <select
+          <NativeSelect
             aria-label='Cambiar etapa'
             value={opportunity.stage}
             onChange={(event) => onMove(event.target.value)}
-            className='rounded-md border bg-background p-2'
           >
             {stages.map((stage) => (
-              <option key={stage}>{stage}</option>
+              <NativeSelectOption key={stage} value={stage}>
+                {stage}
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
         </CardContent>
       </Card>
     </main>
@@ -1306,11 +1310,10 @@ export function WorkspaceConfigurator() {
               className='flex items-center justify-between rounded-lg border p-3 text-sm'
             >
               <span>{name}</span>
-              <input
-                type='checkbox'
+              <Checkbox
                 aria-label={`Enable ${name}`}
                 checked={enabled}
-                onChange={() =>
+                onCheckedChange={() =>
                   setModules((current) => ({
                     ...current,
                     [name]: !current[name as keyof typeof current]
