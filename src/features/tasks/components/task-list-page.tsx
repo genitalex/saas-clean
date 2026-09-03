@@ -446,7 +446,7 @@ export function TaskListPage() {
         </div>
       </div>
 
-      <div className='flex flex-col gap-3 rounded-[20px] border border-border/60 bg-card/40 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]'>
+      <div className='flex flex-col gap-3 rounded-[20px] border border-border/60 bg-card/40 p-3'>
         <div className='flex flex-wrap items-center gap-2'>
           <span className='text-[11px] font-medium uppercase tracking-[0.16em] text-primary'>
             Vistas
@@ -469,7 +469,7 @@ export function TaskListPage() {
           {(savedViews ?? []).map((view) => (
             <div
               key={view.id}
-              className='flex items-center gap-1 rounded-full border border-border/70 bg-background/60 px-2 py-1 text-xs shadow-[0_1px_2px_rgba(15,23,42,0.02)]'
+              className='flex items-center gap-1 rounded-full border border-border/70 bg-background/60 px-2 py-1 text-xs'
             >
               <button type='button' className='font-medium' onClick={() => openSavedView(view)}>
                 {view.name}
@@ -501,7 +501,7 @@ export function TaskListPage() {
       </div>
 
       {selectedIds.length > 0 && (
-        <div className='sticky top-3 z-10 rounded-[20px] border border-primary/20 bg-background/90 p-3 shadow-[0_12px_26px_-20px_rgba(15,23,42,0.3)]'>
+        <div className='sticky top-3 z-10 rounded-[20px] border border-primary/20 bg-background/90 p-3'>
           <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
             <div className='flex items-center gap-3'>
               <span className='text-sm font-medium'>

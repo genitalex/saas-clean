@@ -15,7 +15,7 @@ export function TodaySummary() {
           <Card
             key={item.label}
             size='sm'
-            className='min-w-0 transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-sm'
+            className='min-w-0 transition-colors hover:border-primary/30'
           >
             <CardContent className='flex items-end justify-between gap-3'>
               <div>

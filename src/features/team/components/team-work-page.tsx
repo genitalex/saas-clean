@@ -113,7 +113,7 @@ export default function TeamWorkPage() {
   return (
     <div className='space-y-5'>
       <div className='grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]'>
-        <div className='rounded-[22px] border border-border/60 bg-card/60 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]'>
+        <div className='rounded-[22px] border border-border/60 bg-card/60 p-3'>
           <div className='mb-3 flex items-center justify-between px-1'>
             <div>
               <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
@@ -170,7 +170,7 @@ export default function TeamWorkPage() {
           </div>
         </div>
 
-        <div className='rounded-[22px] border border-border/60 bg-card/60 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]'>
+        <div className='rounded-[22px] border border-border/60 bg-card/60 p-3'>
           {activeMember ? (
             <>
               <div className='mb-3 flex items-center justify-between gap-3 px-1'>

@@ -163,21 +163,21 @@ export function TodayScreen({ role }: { role: Role }) {
       <section className='flex flex-wrap gap-2'>
         <Link
           href='/dashboard/tasks'
-          className='bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-2xl px-4 text-sm font-medium shadow-sm transition-transform hover:-translate-y-px active:scale-[0.98]'
+          className='bg-primary text-primary-foreground inline-flex min-h-11 items-center gap-2 rounded-2xl px-4 text-sm font-medium transition-transform hover:-translate-y-px active:scale-[0.98]'
         >
           <Icons.add className='size-4' />
           Nueva tarea
         </Link>
         <Link
           href='/dashboard/calendar'
-          className='bg-card inline-flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50'
+          className='bg-card inline-flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 px-4 text-sm font-medium transition-colors hover:bg-muted/50'
         >
           <Icons.calendar className='size-4' />
           Nuevo evento
         </Link>
         <Link
           href='/dashboard/customers'
-          className='bg-card inline-flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 px-4 text-sm font-medium shadow-sm transition-colors hover:bg-muted/50'
+          className='bg-card inline-flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 px-4 text-sm font-medium transition-colors hover:bg-muted/50'
         >
           <Icons.teams className='size-4' />
           Nuevo cliente
@@ -185,7 +185,7 @@ export function TodayScreen({ role }: { role: Role }) {
       </section>
 
       <section className='grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]'>
-        <div className='min-w-0 rounded-[28px] border border-border/60 bg-card/70 p-5 shadow-[0_18px_50px_-38px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6'>
+        <div className='min-w-0 rounded-[28px] border border-border/60 bg-card/70 p-5 backdrop-blur-xl sm:p-6'>
           <div className='flex items-start justify-between gap-4'>
             <div>
               <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
@@ -234,7 +234,7 @@ export function TodayScreen({ role }: { role: Role }) {
           </div>
         </div>
 
-        <div className='rounded-[28px] border border-border/60 bg-card/70 p-5 shadow-[0_18px_50px_-38px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-6'>
+        <div className='rounded-[28px] border border-border/60 bg-card/70 p-5 backdrop-blur-xl sm:p-6'>
           <div className='flex items-start justify-between gap-4'>
             <div>
               <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
@@ -304,9 +304,7 @@ export function TodayScreen({ role }: { role: Role }) {
                 href='/dashboard/calendar'
                 className={[
                   'min-w-0 rounded-2xl border px-2 py-3 text-center transition-all hover:-translate-y-px hover:bg-muted/40',
-                  current
-                    ? 'border-primary/30 bg-primary/8 shadow-sm'
-                    : 'border-border/60 bg-background/55'
+                  current ? 'border-primary/30 bg-primary/8' : 'border-border/60 bg-background/55'
                 ].join(' ')}
               >
                 <span className='text-muted-foreground block text-[10px] font-semibold uppercase'>

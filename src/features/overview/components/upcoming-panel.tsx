@@ -5,7 +5,7 @@ import { overviewMock } from './mock-data';
 
 export function UpcomingPanel() {
   return (
-    <Card className='h-full transition-shadow hover:shadow-sm'>
+    <Card className='h-full'>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Próximamente</CardTitle>
         <Button variant='ghost' size='sm' type='button' disabled>

@@ -223,7 +223,7 @@ function SortableNote({
         backgroundColor: note.color
       }}
       className={cn(
-        'relative min-h-[220px] overflow-hidden group rounded-[6px] border border-black/8 p-5 shadow-[0_16px_30px_-18px_rgba(0,0,0,0.35)]',
+        'relative min-h-[220px] overflow-hidden group rounded-[6px] border border-black/8 p-5',
         'before:absolute before:left-1/2 before:top-[-9px] before:size-[18px] before:-translate-x-1/2 before:rotate-45 before:bg-black/8',
         isDragging && 'z-20 scale-[1.02] rotate-1 shadow-[0_24px_50px_-22px_rgba(0,0,0,0.4)]'
       )}

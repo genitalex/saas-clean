@@ -104,7 +104,7 @@ function OpportunityCard({
       style={style}
       {...listeners}
       {...attributes}
-      className={`touch-none cursor-grab transition-[transform,box-shadow,opacity] hover:shadow-md active:cursor-grabbing ${
+      className={`touch-none cursor-grab transition-[transform,opacity] active:cursor-grabbing ${
         isDragging ? 'z-10 scale-[1.02] opacity-40 shadow-xl' : ''
       }`}
       onClick={onOpen}
@@ -639,7 +639,7 @@ export function OperatingSystemPage({
         {summary.cards.map((item, index) => (
           <Card
             key={`${item.title}-${index}`}
-            className='cursor-pointer transition-shadow hover:shadow-md'
+            className='cursor-pointer transition-colors'
             onClick={() => setOpen(item.title)}
           >
             <CardHeader>

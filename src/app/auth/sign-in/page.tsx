@@ -88,7 +88,7 @@ function AuthShell({
 }) {
   return (
     <main className='bg-muted/30 flex min-h-screen items-center justify-center p-6'>
-      <div className='bg-background w-full max-w-md rounded-2xl border p-8 shadow-sm'>
+      <div className='bg-background w-full max-w-md rounded-2xl border p-8'>
         <div className='mb-8'>
           <h1 className='text-2xl font-semibold'>{title}</h1>
           <p className='text-muted-foreground mt-2'>{subtitle}</p>

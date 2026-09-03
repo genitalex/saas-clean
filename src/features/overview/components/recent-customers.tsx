@@ -6,7 +6,7 @@ import { overviewMock } from './mock-data';
 
 export function RecentCustomers() {
   return (
-    <Card className='transition-shadow hover:shadow-sm'>
+    <Card>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Clientes recientes</CardTitle>
         <Button

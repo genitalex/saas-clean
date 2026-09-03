@@ -62,7 +62,7 @@ function IntegrationCard({
 }) {
   const disabled = integration.status === 'coming-soon';
   return (
-    <Card className='group flex min-h-48 flex-col justify-between border-border/70 shadow-none transition hover:-translate-y-0.5 hover:shadow-md'>
+    <Card className='group flex min-h-48 flex-col justify-between border-border/70 transition hover:-translate-y-0.5'>
       <CardHeader className='gap-4 pb-3'>
         <div className='flex items-start justify-between gap-3'>
           <IntegrationMark integration={integration} />

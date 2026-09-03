@@ -29,8 +29,7 @@ type TodayPlanItem =
   | { type: 'task'; task: Task; at: Date }
   | { type: 'event'; event: Event; at: Date };
 
-const glass =
-  'rounded-[26px] border border-border/55 bg-card/60 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] backdrop-blur-xl';
+const glass = 'rounded-[26px] border border-border/55 bg-card/60 backdrop-blur-xl';
 const softButton =
   'transition-all duration-200 hover:-translate-y-px hover:border-primary/20 hover:bg-card/80 active:translate-y-0';
 
@@ -349,7 +348,7 @@ export function TodayPage({
                 className={cn(
                   'group min-w-0 rounded-2xl border p-2 text-center transition-all duration-200 hover:-translate-y-px hover:bg-card/80 sm:p-3',
                   selected
-                    ? 'border-primary/25 bg-primary/[0.06] shadow-sm'
+                    ? 'border-primary/25 bg-primary/[0.06]'
                     : 'border-border/45 bg-background/35'
                 )}
               >
@@ -359,9 +358,7 @@ export function TodayPage({
                 <span
                   className={cn(
                     'mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold',
-                    selected
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'group-hover:bg-muted/70'
+                    selected ? 'bg-primary text-primary-foreground' : 'group-hover:bg-muted/70'
                   )}
                 >
                   {format(day, 'd')}

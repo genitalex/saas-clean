@@ -28,7 +28,7 @@ export default function SignUpPage() {
   }
   return (
     <main className='bg-muted/30 flex min-h-screen items-center justify-center p-6'>
-      <div className='bg-background w-full max-w-md rounded-2xl border p-8 shadow-sm'>
+      <div className='bg-background w-full max-w-md rounded-2xl border p-8'>
         <h1 className='text-2xl font-semibold'>Create your account</h1>
         <p className='text-muted-foreground mt-2'>Start with your first workspace.</p>
         <form onSubmit={submit} className='mt-8 space-y-4'>

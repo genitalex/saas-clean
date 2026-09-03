@@ -51,7 +51,7 @@ export default function OnboardingForm() {
   }
   return (
     <main className='bg-muted/30 flex min-h-screen items-center justify-center p-6'>
-      <div className='bg-background w-full max-w-lg rounded-2xl border p-8 shadow-sm'>
+      <div className='bg-background w-full max-w-lg rounded-2xl border p-8'>
         <h1 className='text-2xl font-semibold'>Create your workspace</h1>
         <p className='text-muted-foreground mt-2'>
           This is where your team and customer data will live.

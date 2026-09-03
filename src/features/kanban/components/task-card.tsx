@@ -80,7 +80,7 @@ export function TaskCard({
         if (!suppressClickRef?.current) onOpenTask?.(task);
       }}
       className={cn(
-        'bg-card w-full cursor-grab touch-none rounded-lg border border-border/70 p-3 text-left shadow-none transition-shadow hover:bg-muted/30 hover:shadow-sm active:cursor-grabbing',
+        'bg-card w-full cursor-grab touch-none rounded-lg border border-border/70 p-3 text-left shadow-none transition-colors hover:bg-muted/30 active:cursor-grabbing',
         isDragging && 'opacity-0'
       )}
       style={{
