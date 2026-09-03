@@ -59,10 +59,6 @@ function findTask(columns: Columns, taskId: string) {
   return null;
 }
 
-function isTaskId(columns: Columns, id: string) {
-  return Boolean(findTask(columns, id));
-}
-
 function TrashDropZone({ active, over }: { active: boolean; over: boolean }) {
   const { setNodeRef } = useDroppable({
     id: TRASH_ID,
