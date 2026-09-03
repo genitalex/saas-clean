@@ -14,6 +14,11 @@
 @import './themes/glass.css';
 @import './themes/mac.css';
 
+html[data-theme],
+html[data-theme].dark {
+  --font-sans: var(--font-google-sans-flex), sans-serif;
+}
+
 [data-theme] {
   --shadow-2xs: 0 1px 2px rgb(15 23 42 / 0.04);
   --shadow-xs: 0 2px 6px rgb(15 23 42 / 0.04);

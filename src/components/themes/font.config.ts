@@ -2,9 +2,7 @@ import {
   Architects_Daughter,
   DM_Sans,
   Fira_Code,
-  Geist,
   Geist_Mono,
-  Google_Sans_Flex,
   Instrument_Sans,
   Inter,
   JetBrains_Mono,
@@ -16,22 +14,25 @@ import {
   Source_Code_Pro,
   Space_Mono
 } from 'next/font/google';
+import localFont from 'next/font/local';
 
 import { cn } from '@/lib/utils';
 
-const fontSans = Geist({
-  subsets: ['latin'],
-  variable: '--font-sans'
+const fontGoogleSansFlex = localFont({
+  src: '../../assets/fonts/GoogleSansFlex-Latin-Variable.woff2',
+  weight: '100 900',
+  style: 'normal',
+  display: 'swap',
+  fallback: ['Arial', 'sans-serif'],
+  adjustFontFallback: 'Arial',
+  variable: '--font-google-sans-flex'
 });
+
+const fontSans = fontGoogleSansFlex;
 
 const fontMono = Geist_Mono({
   subsets: ['latin'],
   variable: '--font-mono'
-});
-
-const fontGoogleSansFlex = Google_Sans_Flex({
-  subsets: ['latin'],
-  variable: '--font-google-sans-flex'
 });
 
 const fontSourceCodePro = Source_Code_Pro({
@@ -105,7 +106,6 @@ const fontPlayfairDisplay = Playfair_Display({
 export const fontVariables = cn(
   fontSans.variable,
   fontMono.variable,
-  fontGoogleSansFlex.variable,
   fontSourceCodePro.variable,
   fontInstrument.variable,
   fontNotoMono.variable,
