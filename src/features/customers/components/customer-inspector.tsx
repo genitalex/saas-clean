@@ -228,7 +228,7 @@ export function CustomerInspector({
                       key={customer.id + customer.name}
                       onBlur={(event) => void saveName(event.target.value)}
                       aria-label='Nombre del cliente'
-                      className='h-10 border-transparent bg-transparent px-0 text-2xl font-semibold tracking-tight shadow-none focus-visible:border-border focus-visible:bg-muted/30 focus-visible:px-2'
+                      className='h-10 border-transparent bg-transparent px-0 text-2xl font-semibold tracking-tight shadow-none transition-[background-color,padding] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:border-transparent focus-visible:bg-muted/35 focus-visible:px-2 focus-visible:ring-0'
                     />
                     <SheetDescription className='mt-1.5 flex items-center gap-2 text-sm'>
                       {customer.kind === 'person' ? 'Persona' : 'Empresa'}
@@ -238,55 +238,63 @@ export function CustomerInspector({
                     </SheetDescription>
                   </div>
                 </div>
-                <div className='mt-5 flex flex-wrap items-center gap-2 border-t border-border/50 pt-4'>
-                  <Button
-                    size='sm'
-                    onClick={() => setEventDialogOpen(true)}
-                    className='rounded-xl px-3.5 shadow-[0_6px_16px_-8px_rgba(15,23,42,0.45)]'
-                  >
-                    <Icons.calendar data-icon='inline-start' /> Nuevo evento
-                  </Button>
-                  <AddNoteDialog customerId={customer.id} />
-                  <NewTaskDialog customerId={customer.id} />
-                  <Button size='sm' variant='outline' onClick={() => void createFollowUp('task')}>
-                    <Icons.check data-icon='inline-start' /> Seguimiento
-                  </Button>
-                  <Button size='sm' variant='outline' onClick={() => void createFollowUp('event')}>
-                    <Icons.calendar data-icon='inline-start' /> Reunión
-                  </Button>
-                  <CustomerLifecycleActions
-                    customerId={customer.id}
-                    archived={customer.archived}
-                    onCompleted={(action) => {
-                      if (action === 'deleted' || action === 'archived') onOpenChange(false);
-                    }}
-                  />
-                  {customer.phone && (
-                    <a
-                      href={`tel:${customer.phone}`}
-                      className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                <div className='mt-5 space-y-3 border-t border-border/50 pt-4'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => setEventDialogOpen(true)}
+                      className='rounded-xl px-3.5 shadow-[0_6px_16px_-8px_rgba(15,23,42,0.45)]'
                     >
-                      <Icons.phone className='size-4' /> Llamar
-                    </a>
-                  )}
-                  {customer.email && (
-                    <a
-                      href={`mailto:${customer.email}`}
-                      className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                      <Icons.calendar data-icon='inline-start' /> Nuevo evento
+                    </Button>
+                    <AddNoteDialog customerId={customer.id} />
+                    <NewTaskDialog customerId={customer.id} />
+                    <Button size='sm' variant='outline' onClick={() => void createFollowUp('task')}>
+                      <Icons.check data-icon='inline-start' /> Seguimiento
+                    </Button>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      onClick={() => void createFollowUp('event')}
                     >
-                      <Icons.send className='size-4' /> Email
-                    </a>
-                  )}
-                  {customer.website && (
-                    <a
-                      href={customer.website}
-                      target='_blank'
-                      rel='noreferrer'
-                      className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
-                    >
-                      <Icons.externalLink className='size-4' /> Web
-                    </a>
-                  )}
+                      <Icons.calendar data-icon='inline-start' /> Reunión
+                    </Button>
+                    <CustomerLifecycleActions
+                      customerId={customer.id}
+                      archived={customer.archived}
+                      onCompleted={(action) => {
+                        if (action === 'deleted' || action === 'archived') onOpenChange(false);
+                      }}
+                    />
+                  </div>
+                  <div className='flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/40 pt-3'>
+                    {customer.phone && (
+                      <a
+                        href={`tel:${customer.phone}`}
+                        className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                      >
+                        <Icons.phone className='size-4' /> Llamar
+                      </a>
+                    )}
+                    {customer.email && (
+                      <a
+                        href={`mailto:${customer.email}`}
+                        className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                      >
+                        <Icons.send className='size-4' /> Email
+                      </a>
+                    )}
+                    {customer.website && (
+                      <a
+                        href={customer.website}
+                        target='_blank'
+                        rel='noreferrer'
+                        className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                      >
+                        <Icons.externalLink className='size-4' /> Web
+                      </a>
+                    )}
+                  </div>
                 </div>
               </SheetHeader>
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
