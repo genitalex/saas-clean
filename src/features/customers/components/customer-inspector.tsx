@@ -201,7 +201,7 @@ export function CustomerInspector({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:max-w-2xl'
+          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:w-[min(760px,58vw)] sm:max-w-none'
         >
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
@@ -220,7 +220,7 @@ export function CustomerInspector({
             <>
               <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-5 sm:pb-4'>
                 <div className='flex items-start gap-4'>
-                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-semibold'>
+                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-normal'>
                     {customer.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className='min-w-0 flex-1'>
@@ -230,7 +230,7 @@ export function CustomerInspector({
                       key={customer.id + customer.name}
                       onBlur={(event) => void saveName(event.target.value)}
                       aria-label='Nombre del cliente'
-                      className='h-10 border-transparent bg-transparent px-0 text-2xl font-semibold tracking-tight shadow-none transition-[background-color,padding] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:border-transparent focus-visible:bg-muted/35 focus-visible:px-2 focus-visible:ring-0'
+                      className='h-10 border-transparent bg-transparent px-0 text-[1.35rem] font-normal tracking-tight shadow-none transition-[background-color,padding] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:border-transparent focus-visible:bg-muted/35 focus-visible:px-2 focus-visible:ring-0'
                     />
                     <SheetDescription className='mt-1.5 flex items-center gap-2 text-sm'>
                       {customer.kind === 'person' ? 'Persona' : 'Empresa'}
@@ -241,51 +241,54 @@ export function CustomerInspector({
                   </div>
                 </div>
                 <div className='mt-4 space-y-3 border-t border-border/45 pt-3'>
-                  <div className='flex min-w-0 items-center gap-2'>
-                    <div className='inline-flex min-w-0 max-w-full overflow-hidden rounded-[10px] border border-border/55 bg-background'>
+                  <div className='flex w-full min-w-0 items-center'>
+                    <div className='flex w-full min-w-0 overflow-hidden rounded-[10px] border border-border/55 bg-background'>
                       <Button
                         size='sm'
                         variant='ghost'
                         onClick={() => setEventDialogOpen(true)}
-                        className='h-8 rounded-none border-0 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        className='h-8 min-w-0 flex-1 rounded-none border-0 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
                       >
-                        <Icons.calendar className='size-3.5' /> Nuevo evento
+                        <Icons.calendar className='size-3.5' />{' '}
+                        <span className='truncate'>Nuevo evento</span>
                       </Button>
                       <AddNoteDialog
                         customerId={customer.id}
-                        triggerClassName='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        triggerClassName='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
                         triggerIcon={<Icons.post className='size-3.5' />}
                       />
                       <NewTaskDialog
                         customerId={customer.id}
-                        triggerClassName='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        triggerClassName='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
                         triggerIcon={<Icons.check className='size-3.5' />}
                       />
                       <Button
                         size='sm'
                         variant='ghost'
                         onClick={() => void createFollowUp('task')}
-                        className='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        className='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
                       >
-                        <Icons.check className='size-3.5' /> Seguimiento
+                        <Icons.check className='size-3.5 shrink-0' />{' '}
+                        <span className='truncate'>Seguimiento</span>
                       </Button>
                       <Button
                         size='sm'
                         variant='ghost'
                         onClick={() => void createFollowUp('event')}
-                        className='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        className='h-8 min-w-0 flex-1 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
                       >
-                        <Icons.calendar className='size-3.5' /> Reunión
+                        <Icons.calendar className='size-3.5 shrink-0' />{' '}
+                        <span className='truncate'>Reunión</span>
                       </Button>
+                      <CustomerLifecycleActions
+                        customerId={customer.id}
+                        archived={customer.archived}
+                        triggerClassName='h-8 w-9 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                        onCompleted={(action) => {
+                          if (action === 'deleted' || action === 'archived') onOpenChange(false);
+                        }}
+                      />
                     </div>
-                    <CustomerLifecycleActions
-                      customerId={customer.id}
-                      archived={customer.archived}
-                      triggerClassName='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
-                      onCompleted={(action) => {
-                        if (action === 'deleted' || action === 'archived') onOpenChange(false);
-                      }}
-                    />
                   </div>
                   <div className='flex items-center border-t border-border/35 pt-3'>
                     {(customer.phone || customer.email || customer.website) && (
@@ -293,7 +296,7 @@ export function CustomerInspector({
                         {customer.phone && (
                           <a
                             href={`tel:${customer.phone}`}
-                            className='inline-flex h-8 items-center gap-1.5 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+                            className='inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-normal text-foreground transition-colors hover:bg-muted/60'
                           >
                             <Icons.phone className='size-3.5' /> Llamar
                           </a>
@@ -301,7 +304,7 @@ export function CustomerInspector({
                         {customer.email && (
                           <a
                             href={`mailto:${customer.email}`}
-                            className='inline-flex h-8 items-center gap-1.5 border-l border-border/50 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+                            className='inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal text-foreground transition-colors hover:bg-muted/60'
                           >
                             <Icons.send className='size-3.5' /> Email
                           </a>
@@ -311,7 +314,7 @@ export function CustomerInspector({
                             href={customer.website}
                             target='_blank'
                             rel='noreferrer'
-                            className='inline-flex h-8 items-center gap-1.5 border-l border-border/50 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+                            className='inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal text-foreground transition-colors hover:bg-muted/60'
                           >
                             <Icons.externalLink className='size-3.5' /> Web
                           </a>
@@ -324,7 +327,7 @@ export function CustomerInspector({
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
                 <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
-                    <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
+                    <p className='text-xs font-normal uppercase tracking-[0.14em] text-muted-foreground'>
                       Resumen
                     </p>
                   </div>
@@ -358,11 +361,11 @@ export function CustomerInspector({
                 </section>
                 <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
-                    <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
+                    <p className='text-xs font-normal uppercase tracking-[0.14em] text-muted-foreground'>
                       Contacto adicional
                     </p>
                   </div>
-                  <div className='space-y-5 px-4 py-3.5'>
+                  <div className='space-y-7 px-4 py-4'>
                     <EditableDetail
                       label='Dirección'
                       value={contact.address}
@@ -371,7 +374,7 @@ export function CustomerInspector({
                         setContact((current) => ({ ...current, address: value }))
                       }
                       onBlur={(value) => void saveContact({ address: value })}
-                      className='bg-transparent px-0 py-3.5 text-sm'
+                      className='bg-transparent px-0 py-2.5 text-sm'
                     />
                     <EditableDetail
                       label='Sitio web'
@@ -382,7 +385,7 @@ export function CustomerInspector({
                       }
                       onBlur={(value) => void saveContact({ website: value })}
                       type='url'
-                      className='bg-transparent px-0 py-3.5 text-sm'
+                      className='bg-transparent px-0 py-2.5 text-sm'
                     />
                     <div className='border-t border-border/30 pt-3'>
                       <span className='text-muted-foreground block text-[11px]'>
@@ -533,9 +536,9 @@ function CustomerDatePicker({
 function SectionTitle({ title, href }: { title: string; href: string }) {
   return (
     <div className='flex items-center justify-between'>
-      <h3 className='text-sm font-semibold'>{title}</h3>
+      <h3 className='text-sm font-normal'>{title}</h3>
       <Link
-        className='inline-flex h-8 items-center rounded-[10px] border border-border/50 bg-background px-2.5 text-xs font-medium text-foreground shadow-none transition-colors hover:bg-muted/60'
+        className='inline-flex h-8 items-center rounded-[10px] border border-border/50 bg-background px-2.5 text-xs font-normal text-foreground shadow-none transition-colors hover:bg-muted/60'
         href={href}
       >
         Ver todo
@@ -548,7 +551,7 @@ function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className='bg-background p-3'>
       <p className='text-muted-foreground text-[11px]'>{label}</p>
-      <p className='mt-1 truncate text-sm font-medium'>{value}</p>
+      <p className='mt-1 truncate text-sm font-normal'>{value}</p>
     </div>
   );
 }
@@ -600,7 +603,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
       </span>
       <div className='min-w-0 flex-1'>
         <div className='flex items-baseline justify-between gap-2'>
-          <p className='truncate text-sm font-medium'>{activity.title}</p>
+          <p className='truncate text-sm font-normal'>{activity.title}</p>
           <time className='text-muted-foreground shrink-0 text-xs'>
             {day} · {format(date, 'HH:mm')}
           </time>
