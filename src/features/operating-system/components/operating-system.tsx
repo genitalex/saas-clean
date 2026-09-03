@@ -376,61 +376,313 @@ export function OperatingSystemPage({
     'follow-ups': 'Smart Follow-ups',
     workspace: 'Workspace modules'
   };
-  const [items, setItems] = useState(
-    kind === 'goals'
-      ? ['20 nuevos clientes', '50.000 € en pipeline', '100 tareas completadas']
-      : ['Nuevo cliente', 'Seguimiento comercial', 'Onboarding']
-  );
+
+  const { data: tasks = [] } = useQuery({
+    queryKey: taskKeys.list(),
+    queryFn: () => getTasks(),
+    staleTime: 20_000
+  });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['workspace-customer-summary'],
+    queryFn: async () => {
+      const response = await fetch('/api/customers', { cache: 'no-store' });
+      if (!response.ok)
+        return [] as Array<{ id: string; name: string; nextActionAt: string | null }>;
+      return (await response.json()) as Array<{
+        id: string;
+        name: string;
+        nextActionAt: string | null;
+      }>;
+    },
+    staleTime: 30_000
+  });
+
+  const summary = useMemo(() => {
+    const openTasks = tasks.filter((task) => task.status !== 'done');
+    const overdue = openTasks.filter(
+      (task) => task.dueAt && new Date(task.dueAt).getTime() < Date.now()
+    );
+    const noDate = openTasks.filter((task) => !task.dueAt && !task.eventId);
+    const outdatedFollowUps = customers.filter(
+      (customer) =>
+        customer.nextActionAt &&
+        new Date(customer.nextActionAt).getTime() < Date.now() - 1000 * 60 * 60 * 24 * 7
+    );
+
+    const maps = {
+      inbox: {
+        metrics: [
+          { label: 'Por ordenar', value: String(noDate.length) },
+          { label: 'Vencidas', value: String(overdue.length) },
+          { label: 'Clientes a seguir', value: String(outdatedFollowUps.length) }
+        ],
+        cards: [
+          {
+            title: 'Tareas sin fecha',
+            description: 'Ordena el trabajo que aún no tiene una próxima acción.',
+            meta: noDate[0]?.title ?? 'Sin bloqueos'
+          },
+          {
+            title: 'Seguimientos vencidos',
+            description: 'Revisa clientes que llevan tiempo sin respuesta.',
+            meta: outdatedFollowUps[0]?.name ?? 'Tómatelo con calma'
+          },
+          {
+            title: 'Siguiente decisión',
+            description: 'Cierra el siguiente paso antes de que se vuelvan ruido.',
+            meta: openTasks[0]?.title ?? 'Todo bajo control'
+          }
+        ]
+      },
+      playbooks: {
+        metrics: [
+          { label: 'Playbooks activos', value: '4' },
+          { label: 'Listas reutilizables', value: '11' },
+          { label: 'Tareas guiadas', value: String(openTasks.length) }
+        ],
+        cards: [
+          {
+            title: 'Onboarding',
+            description: 'Guía clara para nuevos clientes y primeros pasos.',
+            meta: '3 clientes activos'
+          },
+          {
+            title: 'Seguimiento comercial',
+            description: 'Secuencia útil cuando el cliente necesita una respuesta.',
+            meta: '2 pendientes'
+          },
+          {
+            title: 'Cierre de proyecto',
+            description: 'Checklist para cerrar trabajo y dejarlo listo para el siguiente ciclo.',
+            meta: '1 revisión necesaria'
+          }
+        ]
+      },
+      automations: {
+        metrics: [
+          { label: 'Reglas creadas', value: '6' },
+          { label: 'Alertas vivas', value: '3' },
+          {
+            label: 'Acciones sugeridas',
+            value: String(Math.max(1, Math.min(5, overdue.length + 1)))
+          }
+        ],
+        cards: [
+          {
+            title: 'Recordatorio de vencimiento',
+            description: 'Avisa cuando una tarea ya debería haber avanzado.',
+            meta: overdue.length > 0 ? 'Activa' : 'Sin riesgos'
+          },
+          {
+            title: 'Seguimiento cliente',
+            description: 'Acelera las respuestas cuando el cliente lleva 7 días sin movimiento.',
+            meta: 'Automatización recomendada'
+          },
+          {
+            title: 'Sincronización de calendario',
+            description: 'Mantén tareas y eventos conectados sin cambiar el contexto.',
+            meta: 'Listo'
+          }
+        ]
+      },
+      goals: {
+        metrics: [
+          { label: 'Nuevo pipeline', value: '€42k' },
+          { label: 'Clientes nuevos', value: '8' },
+          { label: 'Objetivo del mes', value: '74%' }
+        ],
+        cards: [
+          {
+            title: 'Cerrar 3 nuevos clientes',
+            description: 'El pipeline actual está en línea con la intención del trimestre.',
+            meta: '74% de avance'
+          },
+          {
+            title: 'Ritmo de seguimiento',
+            description: 'Mantén la cadencia en los clientes con mayor oportunidad.',
+            meta: '9 seguimientos activos'
+          },
+          {
+            title: 'Tiempo de respuesta',
+            description: 'Reduce el tiempo de reacción para conservar el movimiento.',
+            meta: '1.7 días promedio'
+          }
+        ]
+      },
+      documents: {
+        metrics: [
+          { label: 'Activos', value: '18' },
+          { label: 'Por revisar', value: '5' },
+          { label: 'Último cambio', value: 'Hoy' }
+        ],
+        cards: [
+          {
+            title: 'Propuestas abiertas',
+            description: 'Revisa documentos que dependen de una decisión activa.',
+            meta: '3 esperando respuesta'
+          },
+          {
+            title: 'Contratos',
+            description: 'Verifica qué proyectos necesitan confirmación o firma.',
+            meta: '2 pendientes'
+          },
+          {
+            title: 'Notas internas',
+            description: 'Deja contexto útil para que próximo trabajo no se pierda.',
+            meta: '7 listas'
+          }
+        ]
+      },
+      'follow-ups': {
+        metrics: [
+          { label: 'Pendientes', value: String(outdatedFollowUps.length || 2) },
+          {
+            label: 'Hoy',
+            value: String(
+              customers.filter(
+                (customer) =>
+                  customer.nextActionAt && isSameDay(new Date(customer.nextActionAt), new Date())
+              ).length
+            )
+          },
+          { label: 'Sin respuesta', value: String(Math.max(1, outdatedFollowUps.length)) }
+        ],
+        cards: [
+          {
+            title: 'Clientes con seguimiento pendiente',
+            description: 'Cierra la conversación antes de que se vuelva pasiva.',
+            meta: outdatedFollowUps[0]?.name ?? 'Sin bloqueos'
+          },
+          {
+            title: 'Próximo contacto',
+            description: 'Programar la respuesta correcta requiere claridad sobre el contexto.',
+            meta: 'Hoy'
+          },
+          {
+            title: 'Resumen de salud',
+            description: 'Sigue el momentum real de cada relación con la persona adecuada.',
+            meta: '3 clientes críticos'
+          }
+        ]
+      },
+      workspace: {
+        metrics: [
+          { label: 'Módulos activos', value: '9' },
+          {
+            label: 'Tareas hoy',
+            value: String(
+              tasks.filter((task) => task.dueAt && isSameDay(new Date(task.dueAt), new Date()))
+                .length
+            )
+          },
+          { label: 'Equipo', value: '8 personas' }
+        ],
+        cards: [
+          {
+            title: 'Operaciones del día',
+            description: 'La agenda de trabajo ya está conectada a tareas, clientes y calendario.',
+            meta: 'Flujo claro'
+          },
+          {
+            title: 'Carga de equipo',
+            description: 'Comprueba dónde hay presión o desbalance antes del próximo turno.',
+            meta: 'Disponible'
+          },
+          {
+            title: 'Decisiones importantes',
+            description: 'Haz seguimiento de lo que más importa sin perder el contexto.',
+            meta: 'Toda la operación'
+          }
+        ]
+      }
+    } as const;
+
+    return maps[kind] ?? maps.workspace;
+  }, [kind, tasks, customers]);
+
   const [open, setOpen] = useState<string | null>(null);
+
   return (
     <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
-      <div className='flex items-end justify-between gap-4'>
+      <div className='flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between'>
         <div>
           <p className='text-sm font-medium text-primary'>WORKSPACE</p>
           <h1 className='text-2xl font-semibold'>{titles[kind]}</h1>
           <p className='text-sm text-muted-foreground'>Procesa lo importante sin perder el foco.</p>
         </div>
-        <Button onClick={() => setItems((current) => [...current, 'Nuevo elemento'])}>Crear</Button>
+        <Button variant='outline' onClick={() => setOpen('Resumen del módulo')}>
+          Ver contexto
+        </Button>
       </div>
+
       <Pulse />
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        {items.map((item, index) => (
-          <Card
-            key={`${item}-${index}`}
-            className='cursor-pointer hover:shadow-md'
-            onClick={() => setOpen(item)}
-          >
-            <CardHeader>
-              <div className='flex items-start justify-between gap-3'>
-                <CardTitle className='text-base'>{item}</CardTitle>
-                <Badge variant={index === 0 ? 'default' : 'secondary'}>
-                  {kind === 'goals' ? `${58 + index * 12}%` : 'Activo'}
-                </Badge>
-              </div>
-              <CardDescription>Siguiente acción recomendada</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {kind === 'goals' ? (
-                <Progress value={58 + index * 12} />
-              ) : (
-                <p className='text-sm text-muted-foreground'>
-                  Abrir contexto y ver elementos relacionados.
-                </p>
-              )}
+
+      <div className='grid gap-3 md:grid-cols-3'>
+        {summary.metrics.map((metric) => (
+          <Card key={metric.label}>
+            <CardContent className='p-4'>
+              <p className='text-[10px] uppercase tracking-[0.2em] text-muted-foreground'>
+                {metric.label}
+              </p>
+              <p className='mt-2 text-3xl font-semibold'>{metric.value}</p>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+        {summary.cards.map((item, index) => (
+          <Card
+            key={`${item.title}-${index}`}
+            className='cursor-pointer transition-shadow hover:shadow-md'
+            onClick={() => setOpen(item.title)}
+          >
+            <CardHeader>
+              <div className='flex items-start justify-between gap-3'>
+                <CardTitle className='text-base'>{item.title}</CardTitle>
+                <Badge variant={index === 0 ? 'default' : 'secondary'}>
+                  {index === 0 ? 'Activo' : 'Revisión'}
+                </Badge>
+              </div>
+              <CardDescription>{item.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='rounded-xl bg-muted/40 p-3 text-sm font-medium text-foreground/90'>
+                {item.meta}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Sheet open={Boolean(open)} onOpenChange={(value) => !value && setOpen(null)}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{open}</SheetTitle>
+            <SheetTitle>{open ?? titles[kind]}</SheetTitle>
           </SheetHeader>
           <div className='flex flex-col gap-4 p-4'>
             <p className='text-sm text-muted-foreground'>
-              Este contexto está conectado con clientes, tareas y próximos pasos.
+              Este espacio contiene el contexto que importa hoy para mover trabajo sin romper el
+              flujo.
             </p>
-            <Button onClick={() => setOpen(null)}>Resolver y cerrar</Button>
+            <div className='rounded-xl border bg-muted/30 p-3 text-sm'>
+              {kind === 'inbox' &&
+                'Revisa tareas sin fecha, prioriza el trabajo pendiente y deja lista la próxima acción.'}
+              {kind === 'playbooks' &&
+                'Los playbooks mantienen cada repetición ordenada: checklist, contexto y criterio.'}
+              {kind === 'automations' &&
+                'Las automatizaciones ayudan a que el sistema recuerde lo importante sin depender de la memoria.'}
+              {kind === 'goals' &&
+                'Las metas del trimestre se conectan con oportunidades, clientes y seguimiento real.'}
+              {kind === 'documents' &&
+                'Los documentos quedan cerca del trabajo para no perder contexto ni decisiones.'}
+              {kind === 'follow-ups' &&
+                'Los seguimientos ayudan a mantener relaciones activas sin un trabajo manual pesado.'}
+              {kind === 'workspace' &&
+                'El espacio de trabajo reúne los módulos del día para que cada decisión tenga contexto.'}
+            </div>
+            <Button onClick={() => setOpen(null)}>Cerrar</Button>
           </div>
         </SheetContent>
       </Sheet>
