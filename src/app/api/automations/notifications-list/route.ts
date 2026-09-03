@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as service from '@/features/automations/api/service';
+import { getAuthContext } from '@/lib/db/organization-context';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const organizationId = searchParams.get('organizationId');
-  const userId = searchParams.get('userId');
   const unreadOnly = searchParams.get('unreadOnly') === 'true';
-
-  if (!organizationId || !userId) {
-    return NextResponse.json({ error: 'Missing organizationId or userId' }, { status: 400 });
+  try {
+    const { organization, user } = await getAuthContext();
+    const notifications = await service.getNotifications(organization.id, user.id, unreadOnly, 50);
+    return NextResponse.json(notifications);
+  } catch {
+    return NextResponse.json({ error: 'NOTIFICATIONS_REQUEST_FAILED' }, { status: 401 });
   }
-
-  const notifications = await service.getNotifications(organizationId, userId, unreadOnly, 50);
-  return NextResponse.json(notifications);
 }

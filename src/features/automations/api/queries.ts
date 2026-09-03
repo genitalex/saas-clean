@@ -1,4 +1,4 @@
-import { queryOptions, type UseQueryResult } from '@tanstack/react-query';
+import { queryOptions } from '@tanstack/react-query';
 import type { Automation, AutomationFilters, Notification, AttentionItem } from '../types';
 // API routes handle service layer calls, this file is client-only
 

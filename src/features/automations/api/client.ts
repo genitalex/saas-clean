@@ -15,6 +15,16 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
   }
 }
 
+export async function createAutomation(payload: import('../types').AutomationPayload) {
+  const response = await fetch('/api/automations/get', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error('Failed to create automation');
+  return response.json();
+}
+
 export async function markAllNotificationsAsRead(
   organizationId: string,
   userId: string
@@ -40,6 +50,19 @@ export async function toggleAutomation(automationId: string, enabled: boolean): 
   if (!response.ok) {
     throw new Error('Failed to toggle automation');
   }
+}
+
+export async function updateAutomation(
+  automationId: string,
+  payload: Partial<import('../types').AutomationPayload>
+) {
+  const response = await fetch('/api/automations/manage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update', automationId, payload })
+  });
+  if (!response.ok) throw new Error('Failed to update automation');
+  return response.json();
 }
 
 export async function deleteAutomation(automationId: string): Promise<void> {

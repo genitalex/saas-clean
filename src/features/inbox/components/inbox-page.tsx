@@ -9,6 +9,8 @@ import { Icons } from '@/components/icons';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 import { QuickCapture } from '@/features/today/components/quick-capture';
+import { AttentionItems } from '@/features/automations/components/attention-items';
+import { Suspense } from 'react';
 
 function nextDate(days: number) {
   const date = new Date();
@@ -17,7 +19,7 @@ function nextDate(days: number) {
   return date.toISOString();
 }
 
-export function InboxPage() {
+export function InboxPage({ organizationId, userId }: { organizationId: string; userId: string }) {
   const queryClient = useQueryClient();
   const tasksQuery = useQuery({
     queryKey: taskKeys.list(),
@@ -53,6 +55,15 @@ export function InboxPage() {
       </header>
 
       <QuickCapture />
+
+      <section className='rounded-2xl border border-border/55 bg-primary/[0.03] p-5 sm:p-6'>
+        <h2 className='text-lg font-semibold'>Atención pendiente</h2>
+        <div className='mt-4'>
+          <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
+            <AttentionItems organizationId={organizationId} userId={userId} compact />
+          </Suspense>
+        </div>
+      </section>
 
       <section className='rounded-2xl border border-border/55 bg-card/45 p-5 sm:p-6'>
         <div className='flex items-center justify-between gap-3'>

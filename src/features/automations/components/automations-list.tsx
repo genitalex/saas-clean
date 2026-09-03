@@ -80,11 +80,13 @@ export function AutomationsList({ organizationId }: AutomationsListProps) {
               </div>
               {Object.keys(automation.config || {}).length > 0 && (
                 <div className='text-xs text-muted-foreground mt-2'>
-                  {Object.entries(automation.config as Record<string, any>).map(([key, value]) => (
-                    <div key={key}>
-                      {key}: {String(value)}
-                    </div>
-                  ))}
+                  {Object.entries(automation.config as Record<string, unknown>).map(
+                    ([key, value]) => (
+                      <div key={key}>
+                        {key}: {String(value)}
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </div>

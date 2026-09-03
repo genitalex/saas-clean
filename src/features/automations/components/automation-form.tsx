@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import * as service from '@/features/automations/api/service';
+import * as client from '@/features/automations/api/client';
 import { automationKeys } from '@/features/automations/api/queries';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
-import type { AutomationPayload } from '../types';
+import type { AutomationAction, AutomationPayload, AutomationTrigger } from '../types';
 
 interface AutomationFormProps {
   organizationId: string;
@@ -38,12 +38,12 @@ const actionOptions = [
 
 export function AutomationForm({ organizationId, onSuccess }: AutomationFormProps) {
   const queryClient = useQueryClient();
-  const [trigger, setTrigger] = useState<string>('task_completed');
-  const [action, setAction] = useState<string>('create_follow_up');
+  const [trigger, setTrigger] = useState<AutomationTrigger>('task_completed');
+  const [action, setAction] = useState<AutomationAction>('create_follow_up');
 
   const mutation = useMutation({
     mutationFn: async (values: AutomationPayload) => {
-      return service.createAutomation(organizationId, values);
+      return client.createAutomation(values);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: automationKeys.all });
@@ -56,8 +56,8 @@ export function AutomationForm({ organizationId, onSuccess }: AutomationFormProp
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     mutation.mutate({
-      trigger: trigger as any,
-      action: action as any,
+      trigger,
+      action,
       enabled: true
     });
   };

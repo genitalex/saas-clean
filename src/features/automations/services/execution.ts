@@ -1,8 +1,22 @@
 import { db } from '@/lib/db';
-import { eq, and, lt, ne } from 'drizzle-orm';
-import { tasks, events, customers, activities, attentionItems } from '@/lib/db/schema';
+import { eq, and, ne } from 'drizzle-orm';
+import {
+  tasks,
+  events,
+  customers,
+  activities,
+  attentionItems,
+  notifications
+} from '@/lib/db/schema';
 import type { AutomationTrigger } from '../types';
 import * as service from '../api/service';
+import { recordSystemActivity } from '@/features/activities/actions/service';
+
+function configNumber(config: unknown, key: string, fallback: number) {
+  if (!config || typeof config !== 'object') return fallback;
+  const value = (config as Record<string, unknown>)[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
 
 /**
  * Automation Execution Engine
@@ -27,6 +41,14 @@ async function createFollowUpTask(
 
   if (!originalTask) return null;
 
+  const existingFollowUp = await db.query.tasks.findFirst({
+    where: and(
+      eq(tasks.organizationId, organizationId),
+      eq(tasks.followUpForTaskId, originalTaskId)
+    )
+  });
+  if (existingFollowUp) return existingFollowUp;
+
   // Create follow-up task
   const followUpDate = new Date();
   followUpDate.setDate(followUpDate.getDate() + daysDelay);
@@ -49,6 +71,33 @@ async function createFollowUpTask(
     .returning();
 
   return followUpTask[0];
+}
+
+async function createAutomationNotificationOnce(
+  organizationId: string,
+  userId: string,
+  title: string,
+  message: string,
+  refEntityType: string,
+  refEntityId: string
+) {
+  const existing = await db.query.notifications.findFirst({
+    where: and(
+      eq(notifications.organizationId, organizationId),
+      eq(notifications.userId, userId),
+      eq(notifications.title, title),
+      eq(notifications.refEntityType, refEntityType),
+      eq(notifications.refEntityId, refEntityId)
+    )
+  });
+  if (existing) return existing;
+  return service.createNotification(organizationId, userId, {
+    type: 'automation_executed',
+    title,
+    message,
+    refEntityType,
+    refEntityId
+  });
 }
 
 async function createAttentionForOverdueTask(
@@ -121,8 +170,11 @@ async function checkCustomerInactivity(
   const recentActivities = await db.query.activities.findMany({
     where: and(eq(activities.customerId, customerId))
   });
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - daysSinceActivity);
+  const hasRecentActivity = recentActivities.some((activity) => activity.createdAt >= cutoff);
 
-  if (recentActivities.length === 0) {
+  if (!hasRecentActivity) {
     await service.createAttentionItem(organizationId, userId, {
       type: 'customer_inactive',
       title: `No activity: ${customer.name}`,
@@ -148,16 +200,25 @@ export async function executeAutomationsForTaskCompletion(
 
   for (const automation of automations) {
     if (automation.action === 'create_follow_up') {
-      const daysDelay = (automation.config as any)?.daysDelay || 3;
+      const daysDelay = configNumber(automation.config, 'daysDelay', 3);
       await createFollowUpTask(organizationId, userId, taskId, daysDelay);
 
-      await service.createNotification(organizationId, userId, {
-        type: 'automation_executed',
-        title: 'Follow-up created',
-        message: 'A follow-up task has been created automatically',
-        refEntityType: 'task',
-        refEntityId: taskId
-      });
+      await createAutomationNotificationOnce(
+        organizationId,
+        userId,
+        'Follow-up created',
+        'A follow-up task has been created automatically',
+        'task',
+        taskId
+      );
+      const completedTask = await db.query.tasks.findFirst({ where: eq(tasks.id, taskId) });
+      if (completedTask?.customerId)
+        await recordSystemActivity(
+          completedTask.customerId,
+          'Seguimiento creado automáticamente',
+          { taskId },
+          completedTask.eventId
+        );
     }
   }
 }
@@ -208,7 +269,7 @@ export async function executeAutomationsForCustomerInactivity(
 
   for (const automation of automations) {
     if (automation.action === 'create_attention' || automation.action === 'mark_attention') {
-      const daysSinceActivity = (automation.config as any)?.daysSinceActivity || 7;
+      const daysSinceActivity = configNumber(automation.config, 'daysSinceActivity', 7);
       await checkCustomerInactivity(organizationId, customerId, userId, daysSinceActivity);
     }
   }
@@ -232,8 +293,16 @@ export async function executeAutomationsForEventCompletion(
 
   for (const automation of automations) {
     if (automation.action === 'create_task') {
+      const existingTask = await db.query.tasks.findFirst({
+        where: and(
+          eq(tasks.organizationId, organizationId),
+          eq(tasks.eventId, eventId),
+          eq(tasks.title, `Follow-up: ${event.title}`)
+        )
+      });
+      if (existingTask) continue;
       // Create a new task from completed event
-      await db
+      const [createdTask] = await db
         .insert(tasks)
         .values({
           organizationId,
@@ -243,18 +312,27 @@ export async function executeAutomationsForEventCompletion(
           status: 'todo',
           priority: 'medium',
           customerId: event.customerId,
+          eventId,
           createdAt: new Date(),
           updatedAt: new Date()
         })
         .returning();
 
-      await service.createNotification(organizationId, userId, {
-        type: 'automation_executed',
-        title: 'Task created',
-        message: 'A task has been created from the completed event',
-        refEntityType: 'event',
-        refEntityId: eventId
-      });
+      await createAutomationNotificationOnce(
+        organizationId,
+        userId,
+        'Task created',
+        'A task has been created from the completed event',
+        'event',
+        eventId
+      );
+      if (event.customerId)
+        await recordSystemActivity(
+          event.customerId,
+          'Tarea de seguimiento creada automáticamente',
+          { taskId: createdTask.id, eventId },
+          eventId
+        );
     }
   }
 }
@@ -285,9 +363,8 @@ export async function checkAndProcessOverdueTasks(organizationId: string) {
       )
     });
 
-    if (!existingAttention && task.assigneeId) {
-      await createAttentionForOverdueTask(organizationId, task.id, task.assigneeId);
-    }
+    if (!existingAttention && task.assigneeId)
+      await executeAutomationsForTaskOverdue(organizationId, task.id, task.assigneeId);
   }
 }
 
@@ -310,9 +387,8 @@ export async function checkAndProcessWaitingTasks(organizationId: string) {
         )
       });
 
-      if (!existingAttention && task.assigneeId) {
-        await createAttentionForWaitingDue(organizationId, task.id, task.assigneeId);
-      }
+      if (!existingAttention && task.assigneeId)
+        await executeAutomationsForWaitingDue(organizationId, task.id, task.assigneeId);
     }
   }
 }

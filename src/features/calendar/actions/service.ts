@@ -7,6 +7,7 @@ import { activities, customers, events, organizationMembers, tasks, users } from
 import { eventFiltersSchema, eventPayloadSchema, eventUpdateSchema } from '../schemas/event';
 import type { EventFilters, EventPayload, EventUpdatePayload } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
+import { executeAutomationsForEventCompletion } from '@/features/automations/services/execution';
 
 export class EventServiceError extends Error {
   constructor(
@@ -197,7 +198,7 @@ export async function createEvent(input: EventPayload) {
 }
 
 export async function updateEvent(id: string, input: EventUpdatePayload) {
-  const { organization } = await getAuthContext();
+  const { organization, user } = await getAuthContext();
   const existing = await getEvent(id);
   const parsed = eventUpdateSchema.safeParse({
     title: input.title ?? existing.title,
@@ -270,6 +271,17 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
         { eventId: id, status: parsed.data.status },
         id
       );
+    }
+  }
+  if (parsed.data.status === 'done' && existing.status !== 'done') {
+    try {
+      await executeAutomationsForEventCompletion(
+        organization.id,
+        id,
+        existing.assigneeId ?? user.id
+      );
+    } catch (error) {
+      console.error('[automations:event-completed]', error);
     }
   }
   return getEvent(updated.id);

@@ -1,17 +1,25 @@
 import { db } from '@/lib/db';
 import { attentionItems } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthContext } from '@/lib/db/organization-context';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { action, attentionItemId, status } = body;
+  const { action, attentionItemId } = body;
+  const { organization, user } = await getAuthContext();
 
   if (action === 'acknowledge' && attentionItemId) {
     await db
       .update(attentionItems)
       .set({ status: 'acknowledged' })
-      .where(eq(attentionItems.id, attentionItemId));
+      .where(
+        and(
+          eq(attentionItems.id, attentionItemId),
+          eq(attentionItems.organizationId, organization.id),
+          eq(attentionItems.userId, user.id)
+        )
+      );
 
     return NextResponse.json({ success: true });
   }
@@ -20,7 +28,13 @@ export async function POST(req: NextRequest) {
     await db
       .update(attentionItems)
       .set({ status: 'resolved' })
-      .where(eq(attentionItems.id, attentionItemId));
+      .where(
+        and(
+          eq(attentionItems.id, attentionItemId),
+          eq(attentionItems.organizationId, organization.id),
+          eq(attentionItems.userId, user.id)
+        )
+      );
 
     return NextResponse.json({ success: true });
   }

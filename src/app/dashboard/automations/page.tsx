@@ -1,9 +1,14 @@
 import PageContainer from '@/components/layout/page-container';
-import { OperatingSystemPage } from '@/features/operating-system/components/operating-system';
-export default function Page() {
+import { AutomationExperience } from '@/features/operating-system/components/operating-system';
+import { getAuthContext } from '@/lib/db/organization-context';
+import { Suspense } from 'react';
+export default async function Page() {
+  const { organization, user } = await getAuthContext();
   return (
     <PageContainer scrollable>
-      <OperatingSystemPage kind='automations' />
+      <Suspense fallback={null}>
+        <AutomationExperience organizationId={organization.id} />
+      </Suspense>
     </PageContainer>
   );
 }

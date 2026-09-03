@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -24,6 +25,7 @@ import { getActivities, activityKeys } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
 import { QuickCapture } from './quick-capture';
 import { toast } from 'sonner';
+import { AttentionItems } from '@/features/automations/components/attention-items';
 
 type TodayPlanItem =
   | { type: 'task'; task: Task; at: Date }
@@ -58,11 +60,15 @@ function taskNeedsAttention(task: Task, now: Date) {
 export function TodayPage({
   role,
   userName,
-  initialNow
+  initialNow,
+  organizationId,
+  userId
 }: {
   role: 'owner' | 'manager' | 'member';
   userName: string;
   initialNow: string;
+  organizationId: string;
+  userId: string;
 }) {
   const queryClient = useQueryClient();
   const [now, setNow] = useState(() => new Date(initialNow));
@@ -191,6 +197,15 @@ export function TodayPage({
       </section>
 
       <QuickCapture />
+
+      <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='automated-attention'>
+        <SectionHeader eyebrow='Atención' title='Lo que necesita una decisión' />
+        <div className='mt-4'>
+          <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
+            <AttentionItems organizationId={organizationId} userId={userId} compact />
+          </Suspense>
+        </div>
+      </section>
 
       <section
         className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5'

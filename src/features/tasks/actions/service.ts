@@ -22,6 +22,7 @@ import type {
   TaskWorkspace
 } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
+import { executeAutomationsForTaskCompletion } from '@/features/automations/services/execution';
 
 export class TaskServiceError extends Error {
   constructor(
@@ -255,7 +256,7 @@ export async function createTask(input: TaskPayload) {
 }
 
 export async function updateTask(id: string, input: TaskUpdatePayload) {
-  const { organization } = await getAuthContext();
+  const { organization, user } = await getAuthContext();
   const parsed = taskUpdateSchema.safeParse(input);
   if (!parsed.success) throw new TaskServiceError('Invalid task payload', 'INVALID_PAYLOAD');
   const previous = await getTask(id);
@@ -336,6 +337,15 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
       { taskId: id },
       previous.eventId
     );
+    try {
+      await executeAutomationsForTaskCompletion(
+        organization.id,
+        id,
+        previous.assigneeId ?? user.id
+      );
+    } catch (error) {
+      console.error('[automations:task-completed]', error);
+    }
   }
   if (parsed.data.status && parsed.data.status !== previous.status) {
     const labels = { todo: 'Todo', in_progress: 'En curso', waiting: 'Esperando', done: 'Hecha' };

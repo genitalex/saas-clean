@@ -65,7 +65,7 @@ export function AttentionItems({ organizationId, userId, compact = false }: Atte
       {displayItems.map((item) => {
         const typeInfo = typeLabels[item.type as keyof typeof typeLabels] || {
           label: item.type,
-          icon: 'alert' as const
+          icon: 'alertCircle' as const
         };
         const IconComponent = Icons[typeInfo.icon as keyof typeof Icons];
 

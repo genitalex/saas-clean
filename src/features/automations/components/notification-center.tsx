@@ -20,20 +20,23 @@ const MAX_VISIBLE = 5;
 
 export function NotificationCenter() {
   const { data: session } = useSession();
-  const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
-
-  if (!session?.user?.id) return null;
-
-  // Get organization ID from session or use a fallback
-  // The organization context should be available from the page-level auth context
-  // For now, we'll store a temporary org ID in session storage or use a default
   const organizationId =
     typeof window !== 'undefined' ? localStorage.getItem('activeOrganizationId') || '' : '';
+  if (!session?.user?.id || !organizationId) return null;
+  return (
+    <AuthenticatedNotificationCenter organizationId={organizationId} userId={session.user.id} />
+  );
+}
 
-  if (!organizationId) return null;
-
-  const userId = session.user.id;
+function AuthenticatedNotificationCenter({
+  organizationId,
+  userId
+}: {
+  organizationId: string;
+  userId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [isOpen, setIsOpen] = useState(false);
 
   // Query for unread count
   const { data: unreadCount = 0 } = useSuspenseQuery(

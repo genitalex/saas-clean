@@ -10,7 +10,7 @@ export type AutomationAction = Automation['action'];
 export type AutomationPayload = {
   trigger: AutomationTrigger;
   action: AutomationAction;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   enabled?: boolean;
 };
 
@@ -52,7 +52,7 @@ export type AutomationTriggerContext = {
   trigger: AutomationTrigger;
   organizationId: string;
   userId: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 };
 
 export type AutomationExecutionResult = {

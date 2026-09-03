@@ -14,7 +14,7 @@ export const automationSchema = z.object({
     'create_attention',
     'mark_attention'
   ] as const),
-  config: z.record(z.string(), z.any()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
   enabled: z.boolean().optional()
 });
 

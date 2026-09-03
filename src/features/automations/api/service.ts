@@ -1,14 +1,5 @@
 import { db } from '@/lib/db';
-import {
-  automations,
-  notifications,
-  attentionItems,
-  organizations,
-  tasks,
-  events,
-  customers,
-  users
-} from '@/lib/db/schema';
+import { automations, notifications, attentionItems } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import type {
   Automation,
@@ -239,7 +230,19 @@ export async function createAttentionItem(
     })
     .returning();
 
-  return result[0];
+  const created = result[0];
+  try {
+    await createNotification(organizationId, userId, {
+      type: payload.type === 'task_overdue' ? 'task_overdue' : 'waiting_ready',
+      title: payload.title,
+      message: payload.message,
+      refEntityType: payload.refEntityType,
+      refEntityId: payload.refEntityId
+    });
+  } catch (error) {
+    console.error('[automations:notification]', error);
+  }
+  return created;
 }
 
 export async function acknowledgeAttentionItem(attentionItemId: string): Promise<void> {
@@ -262,12 +265,16 @@ export async function deleteAttentionItem(attentionItemId: string): Promise<void
 
 export async function getAttentionItemsForEntity(
   refEntityType: string,
-  refEntityId: string
+  refEntityId: string,
+  organizationId?: string,
+  userId?: string
 ): Promise<AttentionItem[]> {
   return db.query.attentionItems.findMany({
     where: and(
       eq(attentionItems.refEntityType, refEntityType),
-      eq(attentionItems.refEntityId, refEntityId)
+      eq(attentionItems.refEntityId, refEntityId),
+      organizationId ? eq(attentionItems.organizationId, organizationId) : undefined,
+      userId ? eq(attentionItems.userId, userId) : undefined
     )
   });
 }

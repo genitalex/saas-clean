@@ -6,7 +6,7 @@ export const metadata = { title: 'Dashboard: Hoy' };
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {
-  const { membership, user } = await getAuthContext();
+  const { membership, user, organization } = await getAuthContext();
   const role =
     membership.role === 'owner' || membership.role === 'manager' ? membership.role : 'member';
   return (
@@ -14,6 +14,8 @@ export default async function Page() {
       role={role}
       userName={user.name.split(' ')[0] || user.name}
       initialNow={new Date().toISOString()}
+      organizationId={organization.id}
+      userId={user.id}
     />
   );
 }

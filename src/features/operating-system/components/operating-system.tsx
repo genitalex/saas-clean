@@ -19,6 +19,9 @@ import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { AttentionItems } from '@/features/automations/components/attention-items';
+import { AutomationForm } from '@/features/automations/components/automation-form';
+import { AutomationsList } from '@/features/automations/components/automations-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -353,7 +356,9 @@ function OpportunityDetail({
 }
 
 export function OperatingSystemPage({
-  kind
+  kind,
+  organizationId,
+  userId
 }: {
   kind:
     | 'inbox'
@@ -365,10 +370,9 @@ export function OperatingSystemPage({
     | 'weekly-review'
     | 'follow-ups'
     | 'workspace';
+  organizationId?: string;
+  userId?: string;
 }) {
-  if (kind === 'my-work') return <MyWorkExperience />;
-  if (kind === 'weekly-review') return <WeeklyReviewExperience />;
-
   const titles = {
     inbox: 'Inbox de trabajo',
     playbooks: 'Playbooks',
@@ -602,10 +606,14 @@ export function OperatingSystemPage({
       }
     } as const;
 
-    return maps[kind] ?? maps.workspace;
+    return kind === 'my-work' || kind === 'weekly-review' ? maps.workspace : maps[kind];
   }, [kind, tasks, customers]);
 
   const [open, setOpen] = useState<string | null>(null);
+
+  if (kind === 'my-work')
+    return <MyWorkExperience organizationId={organizationId} userId={userId} />;
+  if (kind === 'weekly-review') return <WeeklyReviewExperience />;
 
   return (
     <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
@@ -694,7 +702,39 @@ export function OperatingSystemPage({
   );
 }
 
-function MyWorkExperience() {
+export function AutomationExperience({ organizationId }: { organizationId: string }) {
+  return (
+    <main className='flex flex-1 flex-col gap-6 py-2'>
+      <div>
+        <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>Flujo</p>
+        <h1 className='mt-1 text-2xl font-semibold tracking-tight'>Automatizaciones</h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Cuando ocurre algo, el sistema hace lo siguiente.
+        </p>
+      </div>
+      <div className='grid gap-5 lg:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)]'>
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-lg'>Nueva regla</CardTitle>
+            <CardDescription>Reglas simples y previsibles.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AutomationForm organizationId={organizationId} />
+          </CardContent>
+        </Card>
+        <AutomationsList organizationId={organizationId} />
+      </div>
+    </main>
+  );
+}
+
+function MyWorkExperience({
+  organizationId,
+  userId
+}: {
+  organizationId?: string;
+  userId?: string;
+}) {
   const queryClient = useQueryClient();
   const intoRange = (days: number) => {
     const start = startOfDay(new Date());
@@ -841,6 +881,17 @@ function MyWorkExperience() {
 
   return (
     <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
+      {organizationId && userId && (
+        <Card className='border-primary/15 bg-primary/[0.03]'>
+          <CardHeader>
+            <CardDescription>Atención</CardDescription>
+            <CardTitle className='text-xl'>Decisiones pendientes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AttentionItems organizationId={organizationId} userId={userId} compact />
+          </CardContent>
+        </Card>
+      )}
       <div className='flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between'>
         <div>
           <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
