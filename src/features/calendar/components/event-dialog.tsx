@@ -386,8 +386,8 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[680px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-2xl border border-border/70 bg-background p-0 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
-        <DialogHeader className='border-b border-border/60 px-5 pb-5 pt-5 pr-12 sm:px-6 sm:pb-6 sm:pt-6'>
+      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[680px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[26px] border border-border/60 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
+        <DialogHeader className='border-b border-border/50 bg-muted/[0.22] px-5 pb-5 pt-5 pr-12 sm:px-7 sm:pb-6 sm:pt-7'>
           <div className='flex items-start gap-3'>
             <div className='bg-primary/10 text-primary mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl'>
               {event ? <Icons.calendar className='size-5' /> : <Icons.add className='size-5' />}
@@ -407,7 +407,7 @@ export function EventDialog({
           </div>
 
           {(startPreview || endPreview) && (
-            <div className='bg-muted/45 mt-4 rounded-2xl border border-border/50 px-3.5 py-3'>
+            <div className='bg-background/70 mt-5 rounded-2xl border border-border/50 px-4 py-3.5 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.5)]'>
               <div className='flex items-center justify-between gap-3'>
                 <div className='min-w-0'>
                   <div className='text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground'>
@@ -431,7 +431,7 @@ export function EventDialog({
           className='min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
           onSubmit={handleSubmit}
         >
-          <div className='space-y-7'>
+          <div className='space-y-8'>
             <section className='space-y-3'>
               <div>
                 <div className='text-sm font-semibold tracking-tight'>Detalles</div>
@@ -685,7 +685,7 @@ export function EventDialog({
           </div>
         </form>
 
-        <DialogFooter className='!mx-0 !mb-0 border-t border-border/60 bg-background px-5 py-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-4 sm:pb-4'>
+        <DialogFooter className='!mx-0 !mb-0 border-t border-border/50 bg-muted/[0.18] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-7 sm:py-5 sm:pb-5'>
           <div className='flex w-full items-center gap-2'>
             {event && (
               <Button
