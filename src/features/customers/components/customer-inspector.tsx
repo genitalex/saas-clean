@@ -237,85 +237,81 @@ export function CustomerInspector({
                     </DialogDescription>
                   </div>
                 </div>
-                <div className='mt-4 space-y-3 border-t border-border/45 pt-3'>
-                  <div className='flex min-w-0 items-center'>
-                    <div className='inline-flex w-fit max-w-full flex-nowrap overflow-x-auto rounded-[10px] border border-border/55 bg-background scrollbar-none'>
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        onClick={() => setEventDialogOpen(true)}
-                        className='h-8 shrink-0 rounded-none border-0 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
-                      >
-                        <Icons.calendar className='size-3.5' /> <span>Nuevo evento</span>
-                      </Button>
-                      <AddNoteDialog
-                        customerId={customer.id}
-                        triggerClassName='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
-                        triggerIcon={<Icons.post className='size-3.5' />}
-                      />
-                      <NewTaskDialog
-                        customerId={customer.id}
-                        triggerClassName='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
-                        triggerIcon={<Icons.check className='size-3.5' />}
-                      />
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        onClick={() => void createFollowUp('task')}
-                        className='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
-                      >
-                        <Icons.check className='size-3.5 shrink-0' /> <span>Seguimiento</span>
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='ghost'
-                        onClick={() => void createFollowUp('event')}
-                        className='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
-                      >
-                        <Icons.calendar className='size-3.5 shrink-0' /> <span>Reunión</span>
-                      </Button>
-                      <CustomerLifecycleActions
-                        customerId={customer.id}
-                        archived={customer.archived}
-                        triggerClassName='h-8 w-9 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
-                        onCompleted={(action) => {
-                          if (action === 'deleted' || action === 'archived') onOpenChange(false);
-                        }}
-                      />
+                <div className='mt-4 flex w-fit max-w-full flex-nowrap items-center gap-3 overflow-x-auto border-t border-border/45 pt-3 scrollbar-none'>
+                  <div className='inline-flex w-fit shrink-0 flex-nowrap rounded-[10px] border border-border/55 bg-background'>
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      onClick={() => setEventDialogOpen(true)}
+                      className='h-8 shrink-0 rounded-none border-0 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
+                    >
+                      <Icons.calendar className='size-3.5' /> <span>Nuevo evento</span>
+                    </Button>
+                    <AddNoteDialog
+                      customerId={customer.id}
+                      triggerClassName='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
+                      triggerIcon={<Icons.post className='size-3.5' />}
+                    />
+                    <NewTaskDialog
+                      customerId={customer.id}
+                      triggerClassName='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
+                      triggerIcon={<Icons.check className='size-3.5' />}
+                    />
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      onClick={() => void createFollowUp('task')}
+                      className='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
+                    >
+                      <Icons.check className='size-3.5 shrink-0' /> <span>Seguimiento</span>
+                    </Button>
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      onClick={() => void createFollowUp('event')}
+                      className='h-8 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal whitespace-nowrap shadow-none hover:bg-muted/60'
+                    >
+                      <Icons.calendar className='size-3.5 shrink-0' /> <span>Reunión</span>
+                    </Button>
+                    <CustomerLifecycleActions
+                      customerId={customer.id}
+                      archived={customer.archived}
+                      triggerClassName='h-8 w-9 shrink-0 rounded-none border-0 border-l border-border/50 bg-background px-2 text-xs font-normal shadow-none hover:bg-muted/60'
+                      onCompleted={(action) => {
+                        if (action === 'deleted' || action === 'archived') onOpenChange(false);
+                      }}
+                    />
+                  </div>
+                  {(customer.phone || customer.email || customer.website) && (
+                    <div className='inline-flex w-fit shrink-0 flex-nowrap rounded-[10px] border border-border/60 bg-background'>
+                      {customer.phone && (
+                        <a
+                          href={`tel:${customer.phone}`}
+                          className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
+                        >
+                          <Icons.phone className='size-3.5' /> Llamar
+                        </a>
+                      )}
+                      {customer.email && (
+                        <a
+                          href={`mailto:${customer.email}`}
+                          className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
+                        >
+                          <Icons.send className='size-3.5' /> Email
+                        </a>
+                      )}
+                      {customer.website && (
+                        <a
+                          href={customer.website}
+                          target='_blank'
+                          rel='noreferrer'
+                          className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
+                        >
+                          <Icons.externalLink className='size-3.5' /> Web
+                        </a>
+                      )}
                     </div>
-                  </div>
-                  <div className='flex items-center border-t border-border/35 pt-3'>
-                    {(customer.phone || customer.email || customer.website) && (
-                      <div className='inline-flex w-fit max-w-full flex-nowrap overflow-x-auto rounded-[10px] border border-border/60 bg-background scrollbar-none'>
-                        {customer.phone && (
-                          <a
-                            href={`tel:${customer.phone}`}
-                            className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
-                          >
-                            <Icons.phone className='size-3.5' /> Llamar
-                          </a>
-                        )}
-                        {customer.email && (
-                          <a
-                            href={`mailto:${customer.email}`}
-                            className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
-                          >
-                            <Icons.send className='size-3.5' /> Email
-                          </a>
-                        )}
-                        {customer.website && (
-                          <a
-                            href={customer.website}
-                            target='_blank'
-                            rel='noreferrer'
-                            className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
-                          >
-                            <Icons.externalLink className='size-3.5' /> Web
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </DialogHeader>
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
