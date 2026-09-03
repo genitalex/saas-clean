@@ -106,6 +106,13 @@
       "when": 1788440500000,
       "tag": "0014_preserve_customer_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788462030875,
+      "tag": "0015_redundant_warbound",
+      "breakpoints": true
     }
   ]
 }

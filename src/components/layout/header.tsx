@@ -6,7 +6,7 @@ import { Breadcrumbs } from '../breadcrumbs';
 import SearchInput from '../search-input';
 import { ThemeSelector } from '../themes/theme-selector';
 import { ThemeModeToggle } from '../themes/theme-mode-toggle';
-import { NotificationCenter } from '@/features/notifications/components/notification-center';
+import { NotificationCenter } from '@/features/automations/components/notification-center';
 import { UserNav } from './user-nav';
 import { useShellMetric } from '@/hooks/use-shell-metric';
 import { useKBar } from 'kbar';
