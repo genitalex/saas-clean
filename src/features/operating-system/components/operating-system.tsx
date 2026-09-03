@@ -27,7 +27,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Icons } from '@/components/icons';
 import { createEvent, eventKeys, getEvents, updateEvent } from '@/features/calendar/queries';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
@@ -660,11 +660,11 @@ export function OperatingSystemPage({
         ))}
       </div>
 
-      <Sheet open={Boolean(open)} onOpenChange={(value) => !value && setOpen(null)}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>{open ?? titles[kind]}</SheetTitle>
-          </SheetHeader>
+      <Dialog open={Boolean(open)} onOpenChange={(value) => !value && setOpen(null)}>
+        <DialogContent className='max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-205'>
+          <DialogHeader>
+            <DialogTitle>{open ?? titles[kind]}</DialogTitle>
+          </DialogHeader>
           <div className='flex flex-col gap-4 p-4'>
             <p className='text-sm text-muted-foreground'>
               Este espacio contiene el contexto que importa hoy para mover trabajo sin romper el
@@ -688,8 +688,8 @@ export function OperatingSystemPage({
             </div>
             <Button onClick={() => setOpen(null)}>Cerrar</Button>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
@@ -1331,11 +1331,11 @@ export function ContextDrawerDemo() {
       <Button variant='outline' onClick={() => setOpen(true)}>
         Abrir contexto
       </Button>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Contexto rápido</SheetTitle>
-          </SheetHeader>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className='max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-205'>
+          <DialogHeader>
+            <DialogTitle>Contexto rápido</DialogTitle>
+          </DialogHeader>
           <div className='flex flex-col gap-4 p-4'>
             <Badge>Cliente · María López</Badge>
             <p className='text-sm text-muted-foreground'>
@@ -1343,8 +1343,8 @@ export function ContextDrawerDemo() {
             </p>
             <Button onClick={() => setOpen(false)}>Programar próximo paso</Button>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -1355,11 +1355,11 @@ export function ShortcutOverlay() {
       <Button variant='outline' onClick={() => setOpen(true)}>
         Ver atajos · Cmd K
       </Button>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Atajos de teclado</SheetTitle>
-          </SheetHeader>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className='max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-205'>
+          <DialogHeader>
+            <DialogTitle>Atajos de teclado</DialogTitle>
+          </DialogHeader>
           <div className='flex flex-col gap-3 p-4 text-sm'>
             {[
               ['Cmd K', 'Buscar'],
@@ -1373,8 +1373,8 @@ export function ShortcutOverlay() {
               </div>
             ))}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

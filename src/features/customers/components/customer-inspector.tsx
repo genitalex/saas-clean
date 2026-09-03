@@ -14,12 +14,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import { getEvents, eventKeys } from '@/features/calendar/queries';
 import { activityKeys, getCustomerActivities } from '@/features/activities/queries';
@@ -198,11 +198,8 @@ export function CustomerInspector({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:w-[min(500px,calc(100vw-1rem))] sm:max-w-none'
-        >
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className='grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-2xl border-border/70 bg-background p-0 sm:max-w-205'>
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
               <div className='bg-muted h-8 w-2/3 animate-pulse rounded' />
@@ -218,13 +215,13 @@ export function CustomerInspector({
             </div>
           ) : (
             <>
-              <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-5 sm:pb-4'>
+              <DialogHeader className='shrink-0 border-b border-border/50 bg-background p-4 pb-3 sm:p-5 sm:pb-4'>
                 <div className='flex items-start gap-4'>
                   <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-normal'>
                     {customer.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className='min-w-0 flex-1'>
-                    <SheetTitle className='sr-only'>Inspector del cliente</SheetTitle>
+                    <DialogTitle className='sr-only'>Inspector del cliente</DialogTitle>
                     <Input
                       defaultValue={customer.name}
                       key={customer.id + customer.name}
@@ -232,17 +229,17 @@ export function CustomerInspector({
                       aria-label='Nombre del cliente'
                       className='h-10 border-transparent bg-transparent px-0 text-[1.35rem] font-normal tracking-tight shadow-none transition-[background-color,padding] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:border-transparent focus-visible:bg-muted/35 focus-visible:px-2 focus-visible:ring-0'
                     />
-                    <SheetDescription className='mt-1.5 flex items-center gap-2 text-sm'>
+                    <DialogDescription className='mt-1.5 flex items-center gap-2 text-sm'>
                       {customer.kind === 'person' ? 'Persona' : 'Empresa'}
                       <Badge variant={customer.archived ? 'destructive' : 'secondary'}>
                         {customer.archived ? 'Archivado' : 'Activo'}
                       </Badge>
-                    </SheetDescription>
+                    </DialogDescription>
                   </div>
                 </div>
                 <div className='mt-4 space-y-3 border-t border-border/45 pt-3'>
                   <div className='flex w-full min-w-0 items-center'>
-                    <div className='flex w-max min-w-full overflow-hidden rounded-[10px] border border-border/55 bg-background'>
+                    <div className='flex w-max min-w-full overflow-x-auto rounded-[10px] border border-border/55 bg-background'>
                       <Button
                         size='sm'
                         variant='ghost'
@@ -320,7 +317,7 @@ export function CustomerInspector({
                     )}
                   </div>
                 </div>
-              </SheetHeader>
+              </DialogHeader>
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
                 <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
@@ -469,8 +466,8 @@ export function CustomerInspector({
               </div>
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       {customer && (
         <EventDialog
           open={eventDialogOpen}
@@ -522,7 +519,6 @@ function CustomerDatePicker({
             const next = `${String(date.getFullYear()).padStart(4, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             onChange(next);
           }}
-          initialFocus
           className='p-1 [--cell-size:--spacing(7)]'
         />
       </PopoverContent>

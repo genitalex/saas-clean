@@ -527,7 +527,7 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='grid w-[calc(100%-2rem)] max-w-[820px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-border/55 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
+      <DialogContent className='grid w-[calc(100%-1.5rem)] max-w-210 max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-border/55 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
         <DialogHeader className='border-b border-border/45 bg-background px-5 pb-3.5 pt-3.5 pr-12 sm:px-6 sm:pb-4 sm:pt-4'>
           <div className='flex items-start gap-3'>
             <div className='bg-primary/10 text-primary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[10px]'>

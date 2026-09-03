@@ -78,7 +78,6 @@ export function DatePicker({
             setOpen(false);
           }}
           defaultMonth={selected}
-          initialFocus
           className='p-1.5 [--cell-size:--spacing(7)]'
         />
       </PopoverContent>
