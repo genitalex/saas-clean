@@ -105,7 +105,8 @@ export default function NewTaskDialog({
           <Button variant='secondary' size='sm' className={cn('shadow-none', triggerClassName)} />
         }
       >
-        {triggerIcon}+ Nueva tarea
+        {triggerIcon}
+        Nueva tarea
       </DialogTrigger>
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader>

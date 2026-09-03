@@ -59,7 +59,8 @@ export function AddNoteDialog({
           <Button variant='outline' size='sm' className={cn('shadow-none', triggerClassName)} />
         }
       >
-        {triggerIcon}+ Nota
+        {triggerIcon}
+        Nota
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

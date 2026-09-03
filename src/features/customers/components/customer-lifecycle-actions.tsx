@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Icons } from '@/components/icons';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,12 +26,14 @@ export function CustomerLifecycleActions({
   customerId,
   archived,
   onEdit,
-  onCompleted
+  onCompleted,
+  triggerClassName
 }: {
   customerId: string;
   archived: boolean;
   onEdit?: () => void;
   onCompleted?: (action: 'archived' | 'restored' | 'deleted') => void;
+  triggerClassName?: string;
 }) {
   const queryClient = useQueryClient();
   const [permanentDialogOpen, setPermanentDialogOpen] = useState(false);
@@ -90,7 +93,10 @@ export function CustomerLifecycleActions({
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label='Acciones del cliente'
-          className='inline-flex size-9 items-center justify-center rounded-lg border border-border/60 hover:bg-muted'
+          className={cn(
+            'inline-flex size-9 items-center justify-center rounded-lg border border-border/60 bg-background hover:bg-muted',
+            triggerClassName
+          )}
         >
           <Icons.ellipsis className='size-4' />
         </DropdownMenuTrigger>

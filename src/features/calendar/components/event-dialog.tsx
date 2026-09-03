@@ -151,7 +151,7 @@ function DateSegmentControl({
 
   return (
     <div ref={controlRef} className='relative' aria-label={label}>
-      <div className='flex min-h-12 items-center gap-1 rounded-2xl border border-border/60 bg-muted/25 p-1'>
+      <div className='flex min-h-12 items-center gap-1 rounded-[10px] border border-border/55 bg-muted/25 p-1'>
         {segments.map((segment) => {
           const isActive = activeSegment === segment.key;
           return (
@@ -163,9 +163,9 @@ function DateSegmentControl({
               aria-haspopup='listbox'
               onClick={() => setActiveSegment(isActive ? null : segment.key)}
               className={cn(
-                'min-h-10 min-w-0 flex-1 rounded-xl px-2 text-center text-sm font-medium capitalize transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98] sm:px-3',
+                'min-h-10 min-w-0 flex-1 rounded-xl px-2 text-center text-sm font-medium capitalize transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 active:scale-[0.98] sm:px-3',
                 isActive
-                  ? 'bg-background text-foreground ring-1 ring-border/70'
+                  ? 'bg-background text-foreground border border-border/35'
                   : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
               )}
             >
@@ -179,7 +179,7 @@ function DateSegmentControl({
         <div
           role='listbox'
           aria-label={`Opciones de ${activeSegment}`}
-          className='absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-52 overflow-y-auto rounded-2xl border border-border/70 bg-background p-1'
+          className='absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-52 overflow-y-auto rounded-[10px] border border-border/55 bg-background p-1 shadow-none'
         >
           {segments
             .find((segment) => segment.key === activeSegment)
@@ -197,7 +197,7 @@ function DateSegmentControl({
                   aria-selected={selected}
                   onClick={() => selectDatePart(activeSegment, option)}
                   className={cn(
-                    'flex min-h-10 w-full items-center rounded-xl px-3 text-left text-sm capitalize transition-colors duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+                    'flex min-h-10 w-full items-center rounded-xl px-3 text-left text-sm capitalize transition-colors duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30',
                     selected
                       ? 'bg-primary/10 font-semibold text-foreground'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
@@ -527,19 +527,19 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[800px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[16px] border border-border/60 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
-        <DialogHeader className='border-b border-border/50 bg-background px-5 pb-4 pt-4 pr-12 sm:px-6 sm:pb-5 sm:pt-5'>
+      <DialogContent className='grid w-[calc(100%-2rem)] max-w-[820px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[14px] border border-border/55 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
+        <DialogHeader className='border-b border-border/45 bg-background px-5 pb-3.5 pt-3.5 pr-12 sm:px-6 sm:pb-4 sm:pt-4'>
           <div className='flex items-start gap-3'>
-            <div className='bg-primary/10 text-primary mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl'>
+            <div className='bg-primary/10 text-primary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[10px]'>
               {event ? <Icons.calendar className='size-5' /> : <Icons.add className='size-5' />}
             </div>
 
             <div className='min-w-0'>
-              <DialogTitle className='text-lg tracking-tight sm:text-xl'>
+              <DialogTitle className='text-[17px] tracking-tight sm:text-lg'>
                 {event ? 'Editar evento' : 'Nuevo evento'}
               </DialogTitle>
 
-              <DialogDescription className='mt-1 max-w-[52ch] text-sm leading-5 sm:text-[15px]'>
+              <DialogDescription className='mt-1 max-w-[52ch] text-xs leading-5 sm:text-sm'>
                 {event
                   ? 'Actualiza los detalles de este evento.'
                   : 'Añade una actividad a la agenda del equipo.'}
@@ -553,7 +553,7 @@ export function EventDialog({
           className='min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
           onSubmit={handleSubmit}
         >
-          <div className='space-y-8'>
+          <div className='space-y-6'>
             <section className='space-y-3'>
               <div>
                 <div className='text-sm font-semibold tracking-tight'>Título</div>
@@ -571,7 +571,7 @@ export function EventDialog({
                   required
                   maxLength={200}
                   placeholder='¿Qué vas a hacer?'
-                  className='h-12 rounded-2xl px-4 text-[16px] sm:h-11'
+                  className='h-12 rounded-[10px] px-4 text-[16px] sm:h-11'
                 />
               </label>
             </section>
@@ -635,7 +635,7 @@ export function EventDialog({
 
               <label
                 htmlFor='event-all-day'
-                className='bg-muted/25 flex min-h-[52px] cursor-pointer items-center justify-between rounded-2xl border border-border/60 px-4 py-3'
+                className='bg-muted/25 flex min-h-11 cursor-pointer items-center justify-between rounded-[10px] border border-border/55 px-4 py-2.5'
               >
                 <div>
                   <div className='text-sm font-medium'>Todo el día</div>
@@ -682,7 +682,7 @@ export function EventDialog({
                   <div className='flex items-center justify-between gap-3'>
                     <span className='text-sm font-medium'>Categoría</span>
                   </div>
-                  <div className='flex min-h-11 flex-wrap items-center gap-1.5 rounded-2xl border border-border/60 bg-muted/25 px-2.5 py-2 sm:min-h-11'>
+                  <div className='flex min-h-11 flex-wrap items-center gap-1.5 rounded-[10px] border border-border/55 bg-muted/25 px-2.5 py-2 sm:min-h-11'>
                     {categories.slice(0, 8).map((category) => (
                       <button
                         key={category.id}
@@ -695,7 +695,7 @@ export function EventDialog({
                         className={cn(
                           'flex size-7 shrink-0 items-center justify-center rounded-full transition-[background-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]',
                           categoryId === category.id
-                            ? 'bg-foreground/8 ring-1 ring-foreground/55 ring-offset-1 ring-offset-background'
+                            ? 'bg-foreground/8 border border-foreground/35'
                             : 'hover:bg-foreground/6 hover:scale-[1.03]'
                         )}
                       >
@@ -772,7 +772,7 @@ export function EventDialog({
                     onChange={(inputEvent) => setLocation(inputEvent.target.value)}
                     maxLength={500}
                     placeholder='Dirección, lugar o enlace…'
-                    className='h-12 min-w-0 flex-1 rounded-2xl px-4 text-[16px] sm:h-11 sm:text-sm'
+                    className='h-12 min-w-0 flex-1 rounded-[10px] px-4 text-[16px] sm:h-11 sm:text-sm'
                   />
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || ' ')}`}
@@ -783,7 +783,7 @@ export function EventDialog({
                       if (!location.trim()) clickEvent.preventDefault();
                     }}
                     className={cn(
-                      'inline-flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-border/60 bg-muted/25 px-3 text-sm font-medium transition-colors sm:h-11',
+                      'inline-flex h-12 shrink-0 items-center gap-2 rounded-[10px] border border-border/55 bg-muted/25 px-3 text-sm font-medium transition-colors sm:h-11',
                       location.trim() ? 'hover:bg-accent/50' : 'pointer-events-none opacity-40'
                     )}
                   >
@@ -806,7 +806,7 @@ export function EventDialog({
                   onChange={(inputEvent) => setDescription(inputEvent.target.value)}
                   maxLength={5000}
                   placeholder='Añade cualquier detalle que quieras recordar…'
-                  className='min-h-28 rounded-2xl px-4 py-3 text-[16px] sm:text-sm'
+                  className='min-h-28 rounded-[10px] px-4 py-3 text-[16px] sm:text-sm'
                 />
               </label>
 
@@ -822,7 +822,7 @@ export function EventDialog({
           </div>
         </form>
 
-        <DialogFooter className='!mx-0 !mb-0 border-t border-border/50 bg-muted/[0.18] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-7 sm:py-5 sm:pb-5'>
+        <DialogFooter className='!mx-0 !mb-0 border-t border-border/50 bg-muted/[0.18] px-5 py-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-4 sm:pb-4'>
           <div className='flex w-full items-center gap-2'>
             {event && (
               <Button
@@ -830,7 +830,7 @@ export function EventDialog({
                 type='button'
                 onClick={() => void handleDelete()}
                 disabled={pending}
-                className='h-11 shrink-0 rounded-2xl px-4 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                className='h-10 shrink-0 rounded-[10px] px-4 text-destructive hover:bg-destructive/10 hover:text-destructive'
               >
                 Eliminar
               </Button>
@@ -840,7 +840,7 @@ export function EventDialog({
               type='submit'
               form='event-form'
               disabled={pending}
-              className='h-12 flex-1 rounded-2xl px-5 text-[15px] font-semibold shadow-sm'
+              className='h-12 flex-1 rounded-[10px] px-5 text-[15px] font-semibold shadow-none'
             >
               {pending ? 'Guardando…' : event ? 'Guardar cambios' : 'Crear evento'}
             </Button>

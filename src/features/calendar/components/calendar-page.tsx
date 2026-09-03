@@ -354,19 +354,19 @@ export function CalendarPage({
               value={calendarSearch}
               onChange={(event) => setCalendarSearch(event.target.value)}
               placeholder='Buscar en el calendario…'
-              className='h-9 rounded-xl border-border/60 bg-muted/25 pl-9 shadow-none'
+              className='h-10 rounded-[10px] border-border/60 bg-muted/25 pl-9 shadow-none'
             />
-            <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-border/70 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
+            <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-[6px] border border-border/60 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
               /
             </kbd>
           </div>
-          <div className='border-border/50 hidden items-center gap-0.5 rounded-xl border border-border/60 bg-background/80 p-1 md:flex'>
+          <div className='border-border/50 hidden h-10 items-center gap-0.5 rounded-[10px] border border-border/60 bg-background/80 p-1 md:flex'>
             <Button
               variant='ghost'
               size='icon-sm'
               onClick={() => shift(-1)}
               aria-label='Ir al periodo anterior'
-              className='rounded-lg'
+              className='h-8 rounded-[8px]'
             >
               <Icons.chevronLeft className='size-4' />
             </Button>
@@ -374,7 +374,7 @@ export function CalendarPage({
               variant='ghost'
               size='sm'
               onClick={() => setCursor(new Date())}
-              className='rounded-lg px-3 text-sm font-medium'
+              className='h-8 rounded-[8px] px-3 text-sm font-medium'
             >
               Hoy
             </Button>
@@ -383,13 +383,13 @@ export function CalendarPage({
               size='icon-sm'
               onClick={() => shift(1)}
               aria-label='Ir al periodo siguiente'
-              className='rounded-lg'
+              className='h-8 rounded-[8px]'
             >
               <Icons.chevronRight className='size-4' />
             </Button>
           </div>
           <div
-            className='border-border/50 hidden rounded-xl border border-border/60 bg-background/80 p-1 md:flex'
+            className='border-border/50 hidden h-10 rounded-[10px] border border-border/60 bg-background/80 p-1 md:flex'
             role='group'
             aria-label='Vista del calendario'
           >
@@ -399,10 +399,10 @@ export function CalendarPage({
                 onClick={() => setView(option)}
                 aria-pressed={view === option}
                 className={cn(
-                  'rounded-[9px] border border-transparent px-3.5 py-1.5 text-sm font-medium transition-[background-color,border-color,color]',
+                  'h-8 rounded-[8px] border border-transparent px-3.5 text-sm font-medium transition-[background-color,border-color,color]',
                   view === option
-                    ? 'border-border/45 bg-card text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'border-border/35 bg-card text-foreground shadow-none'
+                    : 'text-muted-foreground hover:bg-muted/45 hover:text-foreground'
                 )}
               >
                 {option === 'month'
@@ -424,7 +424,7 @@ export function CalendarPage({
           >
             <Icons.settings className='size-[18px]' />
           </Button>
-          <Button onClick={() => openCreate(selectedDate)} className='gap-1.5'>
+          <Button onClick={() => openCreate(selectedDate)} className='h-10 gap-1.5 rounded-[10px]'>
             <Icons.add className='size-4' />
             <span className='hidden sm:inline'>Nuevo evento</span>
           </Button>
@@ -886,7 +886,7 @@ function MobileMonthView({
           size='icon-sm'
           onClick={() => onCursorChange(subMonths(cursor, 1))}
           aria-label='Mes anterior'
-          className='rounded-lg'
+          className='h-8 rounded-[8px]'
         >
           <Icons.chevronLeft className='size-4' />
         </Button>
@@ -903,7 +903,7 @@ function MobileMonthView({
           size='icon-sm'
           onClick={() => onCursorChange(addMonths(cursor, 1))}
           aria-label='Mes siguiente'
-          className='rounded-lg'
+          className='h-8 rounded-[8px]'
         >
           <Icons.chevronRight className='size-4' />
         </Button>
@@ -923,7 +923,7 @@ function MobileMonthView({
             size='icon-sm'
             onClick={() => onSelectDay(startOfDay(new Date()))}
             aria-label='Nuevo evento hoy'
-            className='rounded-lg'
+            className='h-8 rounded-[8px]'
           >
             <Icons.add className='size-4' />
           </Button>
@@ -933,7 +933,7 @@ function MobileMonthView({
           size='icon-sm'
           onClick={onOpenSettings}
           aria-label='Configuración del calendario'
-          className='text-muted-foreground shrink-0 rounded-lg'
+          className='text-muted-foreground h-10 shrink-0 rounded-[10px]'
         >
           <Icons.settings className='size-4' />
         </Button>
@@ -1504,12 +1504,12 @@ function MobileDayTimeline({
                 onPointerDown={(e) => startDrag(e, event)}
                 onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                 className={cn(
-                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-[8px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
+                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-[6px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
                 )}
                 style={{
                   top,
                   height: Math.max(42, bottom - top - 6),
-                  backgroundColor: `color-mix(in srgb, ${category.color} 12%, var(--card))`,
+                  backgroundColor: `color-mix(in srgb, ${category.color} 22%, var(--card))`,
                   borderColor: `color-mix(in srgb, ${category.color} 30%, var(--border))`
                 }}
               >
@@ -2218,12 +2218,12 @@ function CompressedDayTimeline({
                       onPointerDown={(e) => startDrag(e, event)}
                       onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                       className={cn(
-                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-[8px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
+                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-[6px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
                       )}
                       style={{
                         top,
                         height: Math.max(34, bottom - top - 6),
-                        backgroundColor: `color-mix(in srgb, ${category.color} 11%, var(--card))`,
+                        backgroundColor: `color-mix(in srgb, ${category.color} 20%, var(--card))`,
                         borderColor: `color-mix(in srgb, ${category.color} 28%, var(--border))`
                       }}
                     >
@@ -2462,12 +2462,12 @@ function WeekTimeline({
                             if (!suppressClickRef.current) onOpenEvent(event);
                           }}
                           className={cn(
-                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-[8px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
+                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-[6px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
                           )}
                           style={{
                             top: clampedTop,
                             height,
-                            backgroundColor: `color-mix(in srgb, ${category.color} 11%, var(--card))`,
+                            backgroundColor: `color-mix(in srgb, ${category.color} 20%, var(--card))`,
                             borderColor: `color-mix(in srgb, ${category.color} 28%, var(--border))`
                           }}
                         >

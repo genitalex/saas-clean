@@ -201,7 +201,7 @@ export function CustomerInspector({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:max-w-xl'
+          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:max-w-2xl'
         >
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
@@ -240,9 +240,9 @@ export function CustomerInspector({
                     </SheetDescription>
                   </div>
                 </div>
-                <div className='mt-4 space-y-3 border-t border-border/50 pt-3'>
-                  <div className='flex flex-wrap items-center gap-2'>
-                    <div className='inline-flex max-w-full overflow-hidden rounded-[10px] border border-border/60 bg-background'>
+                <div className='mt-4 space-y-3 border-t border-border/45 pt-3'>
+                  <div className='flex min-w-0 items-center gap-2'>
+                    <div className='inline-flex min-w-0 max-w-full overflow-hidden rounded-[10px] border border-border/55 bg-background'>
                       <Button
                         size='sm'
                         variant='ghost'
@@ -281,12 +281,13 @@ export function CustomerInspector({
                     <CustomerLifecycleActions
                       customerId={customer.id}
                       archived={customer.archived}
+                      triggerClassName='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
                       onCompleted={(action) => {
                         if (action === 'deleted' || action === 'archived') onOpenChange(false);
                       }}
                     />
                   </div>
-                  <div className='flex flex-wrap items-center border-t border-border/40 pt-3'>
+                  <div className='flex items-center border-t border-border/35 pt-3'>
                     {(customer.phone || customer.email || customer.website) && (
                       <div className='inline-flex max-w-full overflow-hidden rounded-[10px] border border-border/60 bg-background'>
                         {customer.phone && (
@@ -361,7 +362,7 @@ export function CustomerInspector({
                       Contacto adicional
                     </p>
                   </div>
-                  <div className='space-y-3 px-4 py-3'>
+                  <div className='space-y-5 px-4 py-3.5'>
                     <EditableDetail
                       label='Dirección'
                       value={contact.address}
@@ -370,7 +371,7 @@ export function CustomerInspector({
                         setContact((current) => ({ ...current, address: value }))
                       }
                       onBlur={(value) => void saveContact({ address: value })}
-                      className='bg-transparent px-0 py-2.5'
+                      className='bg-transparent px-0 py-3.5 text-sm'
                     />
                     <EditableDetail
                       label='Sitio web'
@@ -381,7 +382,7 @@ export function CustomerInspector({
                       }
                       onBlur={(value) => void saveContact({ website: value })}
                       type='url'
-                      className='bg-transparent px-0 py-2.5'
+                      className='bg-transparent px-0 py-3.5 text-sm'
                     />
                     <div className='border-t border-border/30 pt-3'>
                       <span className='text-muted-foreground block text-[11px]'>
@@ -534,7 +535,7 @@ function SectionTitle({ title, href }: { title: string; href: string }) {
     <div className='flex items-center justify-between'>
       <h3 className='text-sm font-semibold'>{title}</h3>
       <Link
-        className='inline-flex h-8 items-center rounded-[10px] border border-border/60 bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+        className='inline-flex h-8 items-center rounded-[10px] border border-border/50 bg-background px-2.5 text-xs font-medium text-foreground shadow-none transition-colors hover:bg-muted/60'
         href={href}
       >
         Ver todo
@@ -579,7 +580,7 @@ function EditableDetail({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         onBlur={(event) => onBlur(event.target.value)}
-        className='mt-1 w-full min-w-0 bg-transparent text-sm font-normal outline-none placeholder:text-muted-foreground/55'
+        className='mt-1 w-full min-w-0 bg-transparent text-[13px] font-normal leading-5 outline-none placeholder:text-muted-foreground/50'
       />
     </label>
   );
