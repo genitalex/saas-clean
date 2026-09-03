@@ -1,7 +1,7 @@
 /**
  * Default theme that loads when no user preference is set
  */
-export const DEFAULT_THEME = 'glass';
+export const DEFAULT_THEME = 'premium';
 
 export const THEMES = [
   {

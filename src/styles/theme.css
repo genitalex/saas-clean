@@ -15,18 +15,14 @@
 @import './themes/mac.css';
 
 [data-theme] {
-  --shadow-2xs: none;
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-md: none;
-  --shadow-lg: 0 2px 8px rgb(0 0 0 / 0.04);
-  --shadow-xl: 0 2px 8px rgb(0 0 0 / 0.04);
-  --shadow-2xl: 0 2px 8px rgb(0 0 0 / 0.04);
-}
-
-[data-theme] [class*='shadow-'] {
-  box-shadow: none !important;
+  --shadow-2xs: 0 1px 2px rgb(15 23 42 / 0.04);
+  --shadow-xs: 0 2px 6px rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 4px 12px rgb(15 23 42 / 0.05);
+  --shadow: 0 8px 18px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 12px 26px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 18px 34px rgb(15 23 42 / 0.1);
+  --shadow-xl: 0 22px 40px rgb(15 23 42 / 0.12);
+  --shadow-2xl: 0 28px 52px rgb(15 23 42 / 0.14);
 }
 
 [data-theme] [data-slot='popover-content'],
@@ -37,7 +33,7 @@
 [data-theme] [data-slot='select-content'],
 [data-theme] [data-slot='command'],
 [data-theme] [data-slot='tooltip-content'] {
-  box-shadow: var(--shadow-lg) !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 body {
