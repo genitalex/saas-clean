@@ -42,6 +42,8 @@ export const navGroups: NavGroup[] = [
     variant: 'primary',
     items: [
       { title: 'Inbox', url: '/dashboard/inbox', icon: 'inbox', shortcut: ['g', 'i'], items: [] },
+      { title: 'My Work', url: '/dashboard/my-work', icon: 'check', items: [] },
+      { title: 'Weekly Review', url: '/dashboard/weekly-review', icon: 'calendar', items: [] },
       { title: 'Activity', url: '/dashboard/activity', icon: 'trendingUp', items: [] },
       { title: 'Business Pulse', url: '/dashboard/business-pulse', icon: 'pulse', items: [] },
       { title: 'Automations', url: '/dashboard/automations', icon: 'automations', items: [] },

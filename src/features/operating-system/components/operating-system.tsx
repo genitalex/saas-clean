@@ -15,6 +15,10 @@ import {
   type DragStartEvent
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +26,10 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Icons } from '@/components/icons';
+import { createEvent, eventKeys, getEvents, updateEvent } from '@/features/calendar/queries';
+import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
+import type { Task } from '@/features/tasks/types';
 
 type Opportunity = {
   id: number;
@@ -354,6 +362,9 @@ export function OperatingSystemPage({
     | 'follow-ups'
     | 'workspace';
 }) {
+  if (kind === 'my-work') return <MyWorkExperience />;
+  if (kind === 'weekly-review') return <WeeklyReviewExperience />;
+
   const titles = {
     inbox: 'Inbox de trabajo',
     playbooks: 'Playbooks',
@@ -423,6 +434,481 @@ export function OperatingSystemPage({
           </div>
         </SheetContent>
       </Sheet>
+    </main>
+  );
+}
+
+function MyWorkExperience() {
+  const queryClient = useQueryClient();
+  const intoRange = (days: number) => {
+    const start = startOfDay(new Date());
+    return {
+      startDate: start.toISOString(),
+      endDate: addDays(start, days).toISOString()
+    };
+  };
+
+  const tasksQuery = useQuery({
+    queryKey: taskKeys.list(),
+    queryFn: () => getTasks(),
+    staleTime: 20_000
+  });
+  const eventsQuery = useQuery({
+    queryKey: eventKeys.list(intoRange(14)),
+    queryFn: () => getEvents(intoRange(14)),
+    staleTime: 20_000
+  });
+  const customersQuery = useQuery({
+    queryKey: ['my-work-customers'],
+    queryFn: async () => {
+      const response = await fetch('/api/customers', { cache: 'no-store' });
+      if (!response.ok)
+        return [] as Array<{ id: string; name: string; nextActionAt: string | null }>;
+      const payload = (await response.json()) as Array<{
+        id: string;
+        name: string;
+        nextActionAt: string | null;
+      }>;
+      return payload;
+    },
+    staleTime: 30_000
+  });
+
+  const tasks = tasksQuery.data ?? [];
+  const events = eventsQuery.data ?? [];
+  const customers = customersQuery.data ?? [];
+
+  const nextTask = useMemo(
+    () =>
+      [...tasks]
+        .filter((task) => task.status !== 'done')
+        .sort((a, b) => {
+          const priority = { high: 3, medium: 2, low: 1 } as Record<string, number>;
+          return (
+            (priority[b.priority] ?? 0) - (priority[a.priority] ?? 0) ||
+            new Date(a.dueAt ?? '2999-01-01').getTime() -
+              new Date(b.dueAt ?? '2999-01-01').getTime()
+          );
+        })[0],
+    [tasks]
+  );
+
+  const inboxTasks = useMemo(
+    () =>
+      tasks.filter((task) => task.status !== 'done' && !task.dueAt && !task.eventId).slice(0, 4),
+    [tasks]
+  );
+
+  const todayPlan = useMemo(() => {
+    const today = startOfDay(new Date());
+    const taskItems = tasks
+      .filter(
+        (task) => task.status !== 'done' && task.dueAt && isSameDay(new Date(task.dueAt), today)
+      )
+      .map((task) => ({
+        id: `task-${task.id}`,
+        type: 'task' as const,
+        title: task.title,
+        when: new Date(task.dueAt!),
+        task
+      }));
+    const eventItems = events
+      .filter((event) => isSameDay(new Date(event.startAt), today))
+      .map((event) => ({
+        id: `event-${event.id}`,
+        type: 'event' as const,
+        title: event.title,
+        when: new Date(event.startAt),
+        event
+      }));
+    return [...taskItems, ...eventItems]
+      .sort((a, b) => a.when.getTime() - b.when.getTime())
+      .slice(0, 5);
+  }, [tasks, events]);
+
+  const followUps = useMemo(
+    () =>
+      customers
+        .filter(
+          (customer) =>
+            customer.nextActionAt &&
+            new Date(customer.nextActionAt).getTime() < addDays(new Date(), -7).getTime()
+        )
+        .slice(0, 4),
+    [customers]
+  );
+
+  const onCompleteTask = async (task: Task) => {
+    try {
+      await updateTask(task.id, { status: 'done' });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Tarea completada');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo completar la tarea.');
+    }
+  };
+
+  const onReschedule = async (task: Task, when: 'today' | 'tomorrow') => {
+    const date = new Date();
+    if (when === 'tomorrow') date.setDate(date.getDate() + 1);
+    date.setHours(9, 0, 0, 0);
+
+    try {
+      await updateTask(task.id, { dueAt: date.toISOString() });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success(when === 'today' ? 'Añadida a hoy' : 'Añadida a mañana');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo reprogramar la tarea.');
+    }
+  };
+
+  const onPlanTask = async (task: Task) => {
+    const start = task.dueAt ? new Date(task.dueAt) : new Date();
+    try {
+      const created = await createEvent({
+        title: task.title,
+        description: task.description ?? undefined,
+        startAt: start.toISOString(),
+        endAt: new Date(start.getTime() + 60 * 60 * 1000).toISOString(),
+        customerId: task.customerId,
+        assigneeId: task.assigneeId,
+        status: 'planned'
+      });
+      await updateTask(task.id, { eventId: created.id, dueAt: start.toISOString() });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
+      toast.success('Tarea planificada en calendario');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo planificar la tarea.');
+    }
+  };
+
+  return (
+    <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
+      <div className='flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between'>
+        <div>
+          <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
+            Mi trabajo
+          </p>
+          <h1 className='mt-1 text-2xl font-semibold tracking-tight'>Flujo del día</h1>
+        </div>
+        <Link href='/dashboard/today' className='text-sm text-primary'>
+          Ver hoy
+        </Link>
+      </div>
+
+      <div className='grid gap-4 xl:grid-cols-[1.2fr_0.8fr]'>
+        <Card className='border-primary/20 bg-primary/[0.03]'>
+          <CardHeader>
+            <CardDescription>Siguiente acción</CardDescription>
+            <CardTitle className='text-xl'>
+              {nextTask ? nextTask.title : 'Todo está bajo control'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <p className='text-sm text-muted-foreground'>
+              {nextTask
+                ? `${nextTask.customer?.name ?? 'Trabajo interno'} · ${nextTask.priority === 'high' ? 'Prioridad alta' : 'Siguiente paso'}${nextTask.dueAt ? ` · ${format(new Date(nextTask.dueAt), 'd MMM', { locale: es })}` : ''}`
+                : 'No hay trabajo atrapado. El día puede seguir con calma.'}
+            </p>
+            {nextTask && (
+              <div className='flex flex-wrap gap-2'>
+                <Button size='sm' onClick={() => void onCompleteTask(nextTask)}>
+                  Hecho
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => void onReschedule(nextTask, 'today')}
+                >
+                  Hoy
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => void onReschedule(nextTask, 'tomorrow')}
+                >
+                  Mañana
+                </Button>
+                <Button variant='outline' size='sm' onClick={() => void onPlanTask(nextTask)}>
+                  Planificar
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardDescription>Resumen</CardDescription>
+            <CardTitle className='text-xl'>Este día</CardTitle>
+          </CardHeader>
+          <CardContent className='grid grid-cols-2 gap-3 text-sm'>
+            <div className='rounded-xl bg-muted/45 p-3'>
+              <div className='text-2xl font-semibold'>
+                {tasks.filter((task) => task.status !== 'done').length}
+              </div>
+              <div className='text-muted-foreground'>abiertas</div>
+            </div>
+            <div className='rounded-xl bg-muted/45 p-3'>
+              <div className='text-2xl font-semibold'>{todayPlan.length}</div>
+              <div className='text-muted-foreground'>hoy</div>
+            </div>
+            <div className='rounded-xl bg-muted/45 p-3'>
+              <div className='text-2xl font-semibold'>{followUps.length}</div>
+              <div className='text-muted-foreground'>seguimientos</div>
+            </div>
+            <div className='rounded-xl bg-muted/45 p-3'>
+              <div className='text-2xl font-semibold'>{inboxTasks.length}</div>
+              <div className='text-muted-foreground'>por organizar</div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className='grid gap-4 lg:grid-cols-[1.1fr_0.9fr]'>
+        <Card>
+          <CardHeader>
+            <div className='flex items-center justify-between gap-3'>
+              <div>
+                <CardDescription>Hoy</CardDescription>
+                <CardTitle>Agenda del día</CardTitle>
+              </div>
+              <Link href='/dashboard/calendar' className='text-xs text-muted-foreground'>
+                Calendario
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            {todayPlan.length === 0 && (
+              <p className='text-sm text-muted-foreground'>No hay trabajo programado para hoy.</p>
+            )}
+            {todayPlan.map((item) => (
+              <div
+                key={item.id}
+                className='flex items-center gap-3 rounded-2xl border border-border/60 bg-background/50 p-3'
+              >
+                <span className='flex size-8 items-center justify-center rounded-xl bg-primary/[0.08] text-primary'>
+                  {item.type === 'task' ? (
+                    <Icons.check className='size-4' />
+                  ) : (
+                    <Icons.calendar className='size-4' />
+                  )}
+                </span>
+                <div className='min-w-0 flex-1'>
+                  <p className='truncate text-sm font-medium'>{item.title}</p>
+                  <p className='text-muted-foreground mt-0.5 text-xs'>
+                    {item.type === 'task' ? 'Tarea' : 'Evento'} · {format(item.when, 'HH:mm')}
+                  </p>
+                </div>
+                {item.type === 'task' && item.task && (
+                  <div className='flex gap-1'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => void onCompleteTask(item.task!)}
+                    >
+                      Hecho
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardDescription>Entrada</CardDescription>
+            <CardTitle>Por organizar</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            {inboxTasks.length === 0 && (
+              <p className='text-sm text-muted-foreground'>La bandeja está despejada.</p>
+            )}
+            {inboxTasks.map((task) => (
+              <div
+                key={task.id}
+                className='flex items-center gap-3 rounded-2xl border border-border/60 bg-background/50 p-3'
+              >
+                <span className='flex size-8 items-center justify-center rounded-xl bg-muted'>
+                  <Icons.inbox className='size-4' />
+                </span>
+                <div className='min-w-0 flex-1'>
+                  <p className='truncate text-sm font-medium'>{task.title}</p>
+                  <p className='text-muted-foreground mt-0.5 text-xs'>
+                    {task.customer?.name ?? 'Trabajo interno'}
+                  </p>
+                </div>
+                <div className='flex gap-1'>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => void onReschedule(task, 'today')}
+                  >
+                    Hoy
+                  </Button>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => void onReschedule(task, 'tomorrow')}
+                  >
+                    Mañana
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className='grid gap-4 lg:grid-cols-2'>
+        <Card>
+          <CardHeader>
+            <CardDescription>Seguimiento</CardDescription>
+            <CardTitle>Clientes que necesitan respuesta</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            {followUps.length === 0 && (
+              <p className='text-sm text-muted-foreground'>Todo está al día.</p>
+            )}
+            {followUps.map((customer) => (
+              <Link
+                key={customer.id}
+                href={`/dashboard/customers/${customer.id}`}
+                className='flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/50 p-3 text-left'
+              >
+                <div className='min-w-0'>
+                  <p className='truncate text-sm font-medium'>{customer.name}</p>
+                  <p className='text-muted-foreground mt-0.5 text-xs'>
+                    {customer.nextActionAt
+                      ? format(new Date(customer.nextActionAt), 'd MMM yyyy', { locale: es })
+                      : 'Sin fecha'}
+                  </p>
+                </div>
+                <Icons.chevronRight className='text-muted-foreground size-4' />
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardDescription>Trabajo</CardDescription>
+            <CardTitle>Lo útil para cerrar el día</CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            <Link
+              href='/dashboard/tasks'
+              className='flex items-center justify-between rounded-2xl border border-border/60 bg-background/50 p-3'
+            >
+              <span className='text-sm font-medium'>Revisar tareas</span>
+              <Icons.chevronRight className='text-muted-foreground size-4' />
+            </Link>
+            <Link
+              href='/dashboard/team'
+              className='flex items-center justify-between rounded-2xl border border-border/60 bg-background/50 p-3'
+            >
+              <span className='text-sm font-medium'>Ver carga del equipo</span>
+              <Icons.chevronRight className='text-muted-foreground size-4' />
+            </Link>
+            <Link
+              href='/dashboard/activity'
+              className='flex items-center justify-between rounded-2xl border border-border/60 bg-background/50 p-3'
+            >
+              <span className='text-sm font-medium'>Comprobar actividad reciente</span>
+              <Icons.chevronRight className='text-muted-foreground size-4' />
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}
+
+function WeeklyReviewExperience() {
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+  const { data: tasks = [] } = useQuery({ queryKey: taskKeys.list(), queryFn: () => getTasks() });
+  const { data: events = [] } = useQuery({
+    queryKey: eventKeys.list({
+      startDate: weekStart.toISOString(),
+      endDate: addDays(weekStart, 7).toISOString()
+    }),
+    queryFn: () =>
+      getEvents({
+        startDate: weekStart.toISOString(),
+        endDate: addDays(weekStart, 7).toISOString()
+      })
+  });
+
+  const done = tasks.filter((task) => task.status === 'done').length;
+  const pending = tasks.filter((task) => task.status !== 'done').length;
+  const committed = events.length;
+
+  return (
+    <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
+      <div>
+        <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
+          Revisión semanal
+        </p>
+        <h1 className='mt-1 text-2xl font-semibold tracking-tight'>Lo que importa esta semana</h1>
+      </div>
+
+      <div className='grid gap-3 md:grid-cols-3'>
+        <Card>
+          <CardContent className='p-4'>
+            <p className='text-muted-foreground text-xs uppercase tracking-[0.2em]'>Hecho</p>
+            <p className='mt-2 text-3xl font-semibold'>{done}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className='p-4'>
+            <p className='text-muted-foreground text-xs uppercase tracking-[0.2em]'>Pendiente</p>
+            <p className='mt-2 text-3xl font-semibold'>{pending}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className='p-4'>
+            <p className='text-muted-foreground text-xs uppercase tracking-[0.2em]'>Compromisos</p>
+            <p className='mt-2 text-3xl font-semibold'>{committed}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardDescription>Vista semanal</CardDescription>
+          <CardTitle>Agenda</CardTitle>
+        </CardHeader>
+        <CardContent className='grid gap-2 md:grid-cols-7'>
+          {weekDays.map((day) => {
+            const items = events.filter((event) => isSameDay(new Date(event.startAt), day));
+            return (
+              <div
+                key={day.toISOString()}
+                className='rounded-2xl border border-border/60 bg-background/50 p-3'
+              >
+                <p className='text-muted-foreground text-[10px] uppercase tracking-[0.2em]'>
+                  {format(day, 'EEE', { locale: es })}
+                </p>
+                <p className='mt-2 text-lg font-semibold'>{format(day, 'd')}</p>
+                <div className='mt-3 space-y-1'>
+                  {items.slice(0, 2).map((event) => (
+                    <div
+                      key={event.id}
+                      className='rounded-md bg-primary/[0.05] px-2 py-1 text-[11px]'
+                    >
+                      {event.title}
+                    </div>
+                  ))}
+                  {items.length === 0 && <p className='text-[11px] text-muted-foreground'>Libre</p>}
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
     </main>
   );
 }
