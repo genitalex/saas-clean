@@ -238,8 +238,8 @@ export function CustomerInspector({
                   </div>
                 </div>
                 <div className='mt-4 space-y-3 border-t border-border/45 pt-3'>
-                  <div className='flex w-full min-w-0 items-center'>
-                    <div className='flex w-max min-w-full overflow-x-auto rounded-[10px] border border-border/55 bg-background'>
+                  <div className='flex min-w-0 items-center'>
+                    <div className='inline-flex w-fit max-w-full flex-nowrap overflow-x-auto rounded-[10px] border border-border/55 bg-background scrollbar-none'>
                       <Button
                         size='sm'
                         variant='ghost'
@@ -286,11 +286,11 @@ export function CustomerInspector({
                   </div>
                   <div className='flex items-center border-t border-border/35 pt-3'>
                     {(customer.phone || customer.email || customer.website) && (
-                      <div className='inline-flex max-w-full overflow-hidden rounded-[10px] border border-border/60 bg-background'>
+                      <div className='inline-flex w-fit max-w-full flex-nowrap overflow-x-auto rounded-[10px] border border-border/60 bg-background scrollbar-none'>
                         {customer.phone && (
                           <a
                             href={`tel:${customer.phone}`}
-                            className='inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs font-normal text-foreground transition-colors hover:bg-muted/60'
+                            className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
                           >
                             <Icons.phone className='size-3.5' /> Llamar
                           </a>
@@ -298,7 +298,7 @@ export function CustomerInspector({
                         {customer.email && (
                           <a
                             href={`mailto:${customer.email}`}
-                            className='inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal text-foreground transition-colors hover:bg-muted/60'
+                            className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
                           >
                             <Icons.send className='size-3.5' /> Email
                           </a>
@@ -308,7 +308,7 @@ export function CustomerInspector({
                             href={customer.website}
                             target='_blank'
                             rel='noreferrer'
-                            className='inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal text-foreground transition-colors hover:bg-muted/60'
+                            className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border-l border-border/50 px-2 text-xs font-normal whitespace-nowrap text-foreground transition-colors hover:bg-muted/60'
                           >
                             <Icons.externalLink className='size-3.5' /> Web
                           </a>
