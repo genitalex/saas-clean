@@ -199,7 +199,7 @@ export function CustomerInspector({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-muted/[0.18] p-0 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] sm:max-w-xl'
+          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:max-w-xl'
         >
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
@@ -216,9 +216,9 @@ export function CustomerInspector({
             </div>
           ) : (
             <>
-              <SheetHeader className='shrink-0 border-b border-border/50 bg-background/95 p-5 pb-4 sm:p-6 sm:pb-5'>
+              <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-5 sm:pb-4'>
                 <div className='flex items-start gap-4'>
-                  <span className='bg-primary/10 text-primary ring-primary/10 flex size-14 shrink-0 items-center justify-center rounded-[20px] text-base font-semibold ring-4'>
+                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-semibold'>
                     {customer.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className='min-w-0 flex-1'>
@@ -243,7 +243,7 @@ export function CustomerInspector({
                     <Button
                       size='sm'
                       onClick={() => setEventDialogOpen(true)}
-                      className='rounded-xl px-3.5 shadow-[0_6px_16px_-8px_rgba(15,23,42,0.45)]'
+                      className='rounded-lg px-3.5 shadow-none'
                     >
                       <Icons.calendar data-icon='inline-start' /> Nuevo evento
                     </Button>
@@ -298,7 +298,7 @@ export function CustomerInspector({
                 </div>
               </SheetHeader>
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
-                <section className='overflow-hidden rounded-[22px] border border-border/50 bg-background/80 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.5)]'>
+                <section className='overflow-hidden rounded-xl border border-border/50 bg-background shadow-none'>
                   <div className='border-b border-border/50 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
                       Resumen
@@ -332,7 +332,7 @@ export function CustomerInspector({
                     />
                   </div>
                 </section>
-                <section className='overflow-hidden rounded-[22px] border border-border/50 bg-background/80 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.5)]'>
+                <section className='overflow-hidden rounded-xl border border-border/50 bg-background shadow-none'>
                   <div className='border-b border-border/50 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
                       Contacto adicional
@@ -395,7 +395,7 @@ export function CustomerInspector({
                       <Link
                         key={event.id}
                         href={`/dashboard/calendar?event=${event.id}`}
-                        className='group flex items-center gap-3 rounded-2xl border border-border/50 bg-background/60 px-3.5 py-3.5 transition-[background-color,transform,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-primary/20 hover:bg-background'
+                        className='group flex items-center gap-3 rounded-lg border border-border/45 bg-background px-3 py-3 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:bg-muted/20'
                       >
                         <Icons.calendar className='text-primary size-4' />
                         <span className='min-w-0 flex-1 truncate text-sm font-medium transition-colors group-hover:text-primary'>
@@ -421,7 +421,7 @@ export function CustomerInspector({
                         <Link
                           key={task.id}
                           href={`/dashboard/tasks?task=${task.id}`}
-                          className='group flex items-center gap-3 rounded-2xl border border-border/50 bg-background/60 px-3.5 py-3.5 transition-[background-color,transform,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-primary/20 hover:bg-background'
+                          className='group flex items-center gap-3 rounded-lg border border-border/45 bg-background px-3 py-3 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:bg-muted/20'
                         >
                           <span className='bg-primary/10 text-primary flex size-7 items-center justify-center rounded-full'>
                             <Icons.check className='size-4' />
