@@ -317,14 +317,14 @@ export function CalendarPage({
             <button
               type='button'
               onClick={() => setYearPickerOpen(true)}
-              className='group mt-0.5 inline-flex items-center gap-1.5 rounded-xl px-1.5 py-0.5 text-left text-[1.75rem] leading-tight font-semibold tracking-tight capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className='group mt-0.5 inline-flex items-center gap-1.5 rounded-xl px-1.5 py-0.5 text-left text-[1.6rem] leading-tight font-semibold tracking-[-0.03em] capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
               aria-label={`Cambiar mes y año, actualmente ${title}`}
             >
               {title}
-              <Icons.chevronDown className='text-muted-foreground/65 size-4.5 opacity-70 transition-transform group-hover:translate-y-0.5' />
+              <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
             </button>
           ) : (
-            <h1 className='mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight capitalize'>
+            <h1 className='mt-0.5 text-[1.6rem] leading-tight font-semibold tracking-[-0.03em] capitalize'>
               {title}
             </h1>
           )}
@@ -343,7 +343,7 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='bg-surface-subtle/70 border-border/50 hidden items-center gap-0.5 rounded-xl border p-1 backdrop-blur-sm md:flex'>
+          <div className='border-border/50 hidden items-center gap-0.5 rounded-xl border border-border/60 bg-background/80 p-1 md:flex'>
             <Button
               variant='ghost'
               size='icon-sm'
@@ -372,7 +372,7 @@ export function CalendarPage({
             </Button>
           </div>
           <div
-            className='bg-surface-subtle/70 border-border/50 hidden rounded-xl border p-1 backdrop-blur-sm md:flex'
+            className='border-border/50 hidden rounded-xl border border-border/60 bg-background/80 p-1 md:flex'
             role='group'
             aria-label='Vista del calendario'
           >
@@ -1825,9 +1825,9 @@ function MonthView({
                   'group border-border/70 relative min-h-32 border-r border-b bg-background p-2.5 transition-colors last:border-r-0',
                   !out && 'cursor-pointer',
                   out && 'cursor-default',
-                  'hover:bg-accent/25',
-                  weekend && !out && 'bg-muted/60',
-                  out && 'bg-muted/45'
+                  'hover:bg-accent/20',
+                  weekend && !out && 'bg-muted/40',
+                  out && 'bg-muted/35'
                 )}
               >
                 <button
@@ -1865,7 +1865,7 @@ function MonthView({
                           clickEvent.stopPropagation();
                           onOpenEvent(event);
                         }}
-                        className='flex min-w-0 items-center gap-1.5 rounded-md border-l-2 py-1 pr-2 pl-2 text-left text-xs font-medium transition-colors hover:brightness-95'
+                        className='flex min-w-0 items-center gap-1.5 rounded-md border-l-2 py-1 pr-2 pl-2 text-left text-xs font-medium transition-colors hover:brightness-95 hover:shadow-[inset_0_0_0_1px_rgba(15,23,42,0.02)]'
                         style={{
                           backgroundColor: `${category.color}14`,
                           borderColor: category.color,

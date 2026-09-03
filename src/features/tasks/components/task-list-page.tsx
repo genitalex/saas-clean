@@ -438,9 +438,9 @@ export function TaskListPage() {
         </div>
       </div>
 
-      <div className='flex flex-col gap-3 rounded-[22px] border border-border/60 bg-card/40 p-3'>
+      <div className='flex flex-col gap-3 rounded-[20px] border border-border/60 bg-card/40 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]'>
         <div className='flex flex-wrap items-center gap-2'>
-          <span className='text-xs font-medium uppercase tracking-[0.18em] text-primary'>
+          <span className='text-[11px] font-medium uppercase tracking-[0.16em] text-primary'>
             Vistas
           </span>
           <Button variant='outline' size='sm' onClick={() => void saveCurrentView()}>
@@ -461,7 +461,7 @@ export function TaskListPage() {
           {(savedViews ?? []).map((view) => (
             <div
               key={view.id}
-              className='flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-1 text-xs'
+              className='flex items-center gap-1 rounded-full border border-border/70 bg-background/60 px-2 py-1 text-xs shadow-[0_1px_2px_rgba(15,23,42,0.02)]'
             >
               <button type='button' className='font-medium' onClick={() => openSavedView(view)}>
                 {view.name}
@@ -493,7 +493,7 @@ export function TaskListPage() {
       </div>
 
       {selectedIds.length > 0 && (
-        <div className='sticky top-3 z-10 rounded-[22px] border border-primary/20 bg-background/80 p-3 shadow-sm backdrop-blur-md'>
+        <div className='sticky top-3 z-10 rounded-[20px] border border-primary/20 bg-background/90 p-3 shadow-[0_12px_26px_-20px_rgba(15,23,42,0.3)]'>
           <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
             <div className='flex items-center gap-3'>
               <span className='text-sm font-medium'>
@@ -658,7 +658,7 @@ export function TaskListPage() {
               return (
                 <div
                   key={task.id}
-                  className={`flex w-full items-center gap-3 border-b p-3 text-left last:border-0 ${isSelected ? 'bg-primary/[0.03]' : 'hover:bg-muted/35'}`}
+                  className={`flex w-full items-center gap-3 border-b px-3 py-2.5 text-left last:border-0 ${isSelected ? 'bg-primary/[0.03]' : 'hover:bg-muted/30'}`}
                 >
                   <input
                     type='checkbox'
@@ -674,21 +674,23 @@ export function TaskListPage() {
                     onClick={() => openTask(task)}
                   >
                     <span
-                      className={`size-2 shrink-0 rounded-full ${task.status === 'done' ? 'bg-emerald-500' : task.status === 'in_progress' ? 'bg-blue-500' : task.status === 'waiting' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`}
+                      className={`mt-0.5 size-2.5 shrink-0 rounded-full ${task.status === 'done' ? 'bg-emerald-500' : task.status === 'in_progress' ? 'bg-blue-500' : task.status === 'waiting' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`}
                     />
                     <span className='min-w-0 flex-1'>
                       <span className='block truncate text-sm font-medium'>{task.title}</span>
                       <span className='text-muted-foreground mt-1 block text-xs'>
                         {task.customer?.name ?? 'Sin cliente'}
-                        {task.dueAt ? ` · ${new Date(task.dueAt).toLocaleDateString()}` : ''}
+                        {task.dueAt ? ` · ${new Date(task.dueAt).toLocaleDateString('es-ES')}` : ''}
                       </span>
                     </span>
-                    <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
-                      {priorityLabels[task.priority]}
-                    </Badge>
-                    <span className='text-muted-foreground hidden text-xs sm:block'>
-                      {statusLabels[task.status]}
-                    </span>
+                    <div className='flex items-center gap-2'>
+                      <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
+                        {priorityLabels[task.priority]}
+                      </Badge>
+                      <span className='text-muted-foreground hidden text-[11px] uppercase tracking-[0.12em] sm:block'>
+                        {statusLabels[task.status]}
+                      </span>
+                    </div>
                   </button>
                 </div>
               );

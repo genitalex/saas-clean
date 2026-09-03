@@ -112,18 +112,18 @@ export default function TeamWorkPage() {
 
   return (
     <div className='space-y-5'>
-      <div className='grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]'>
-        <div className='rounded-[24px] border border-border/60 bg-card/60 p-4 shadow-sm'>
-          <div className='mb-3 flex items-center justify-between'>
+      <div className='grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]'>
+        <div className='rounded-[22px] border border-border/60 bg-card/60 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]'>
+          <div className='mb-3 flex items-center justify-between px-1'>
             <div>
-              <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
+              <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
                 Equipo
               </p>
-              <h2 className='mt-1 text-lg font-semibold'>Carga de trabajo</h2>
+              <h2 className='mt-1 text-base font-semibold'>Carga de trabajo</h2>
             </div>
           </div>
 
-          <div className='space-y-2'>
+          <div className='space-y-1.5'>
             {members.length === 0 ? (
               <p className='text-muted-foreground text-sm'>Todavía no hay trabajo asignado.</p>
             ) : (
@@ -135,10 +135,10 @@ export default function TeamWorkPage() {
                     type='button'
                     onClick={() => setSelectedMember(member.id)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-4 rounded-2xl border p-3 text-left transition-colors',
+                      'flex w-full items-center justify-between gap-4 rounded-xl border px-3 py-2.5 text-left transition-all',
                       selected
-                        ? 'border-primary/30 bg-primary/5'
-                        : 'border-border/60 bg-background/50 hover:bg-muted/30'
+                        ? 'border-primary/30 bg-primary/5 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.05)]'
+                        : 'border-border/60 bg-background/40 hover:bg-muted/30'
                     )}
                   >
                     <div className='min-w-0'>
@@ -170,15 +170,15 @@ export default function TeamWorkPage() {
           </div>
         </div>
 
-        <div className='rounded-[24px] border border-border/60 bg-card/60 p-4 shadow-sm'>
+        <div className='rounded-[22px] border border-border/60 bg-card/60 p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]'>
           {activeMember ? (
             <>
-              <div className='mb-3 flex items-center justify-between gap-3'>
+              <div className='mb-3 flex items-center justify-between gap-3 px-1'>
                 <div>
-                  <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
+                  <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
                     Contexto
                   </p>
-                  <h2 className='mt-1 text-lg font-semibold'>{activeMember.name}</h2>
+                  <h2 className='mt-1 text-base font-semibold'>{activeMember.name}</h2>
                 </div>
                 <Link
                   href={`/dashboard/tasks?assigneeId=${activeMember.id}`}

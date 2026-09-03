@@ -42,7 +42,7 @@ export function MobileBottomNav() {
         ref={navRef}
         aria-label='Primary'
         className={cn(
-          'bg-background/85 fixed inset-x-0 bottom-0 z-30 border-t backdrop-blur-md',
+          'fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 shadow-[0_-12px_30px_-24px_rgba(15,23,42,0.18)]',
           'transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none',
           'md:hidden',
           visible || moreOpen
@@ -60,17 +60,17 @@ export function MobileBottomNav() {
                 <Link
                   href={item.url}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-1 py-2.5 text-xs transition-colors',
+                    'flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] transition-colors',
                     isActive ? 'text-primary font-semibold' : 'text-muted-foreground font-medium'
                   )}
                 >
                   <span
                     className={cn(
-                      'flex size-10 items-center justify-center rounded-xl transition-colors',
-                      isActive && 'bg-primary/10'
+                      'flex size-9 items-center justify-center rounded-xl transition-all',
+                      isActive && 'bg-primary/10 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.08)]'
                     )}
                   >
-                    <Icon className='size-[22px]' />
+                    <Icon className='size-[20px]' />
                   </span>
                   <span>{item.title}</span>
                 </Link>
@@ -82,19 +82,19 @@ export function MobileBottomNav() {
               type='button'
               onClick={() => setMoreOpen(true)}
               className={cn(
-                'flex w-full flex-col items-center justify-center gap-1 py-2.5 text-xs transition-colors',
+                'flex w-full flex-col items-center justify-center gap-1 py-2.5 text-[11px] transition-colors',
                 moreIsActive ? 'text-primary font-semibold' : 'text-muted-foreground font-medium'
               )}
             >
               <span
                 className={cn(
-                  'flex size-10 items-center justify-center rounded-xl transition-colors',
-                  moreIsActive && 'bg-primary/10'
+                  'flex size-9 items-center justify-center rounded-xl transition-all',
+                  moreIsActive && 'bg-primary/10 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.08)]'
                 )}
               >
-                <Icons.moreHorizontal className='size-[22px]' />
+                <Icons.moreHorizontal className='size-[20px]' />
               </span>
-              <span>More</span>
+              <span>Más</span>
             </button>
           </li>
         </ul>
