@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Sheet,
   SheetContent,
@@ -199,7 +200,7 @@ export function CustomerInspector({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:max-w-xl'
+          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] sm:max-w-xl'
         >
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
@@ -216,9 +217,9 @@ export function CustomerInspector({
             </div>
           ) : (
             <>
-              <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-5 sm:pb-4'>
+              <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-6 sm:pb-5'>
                 <div className='flex items-start gap-4'>
-                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-semibold'>
+                  <span className='bg-primary/10 text-primary ring-primary/10 flex size-14 shrink-0 items-center justify-center rounded-[14px] text-base font-semibold ring-1'>
                     {customer.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className='min-w-0 flex-1'>
@@ -243,7 +244,7 @@ export function CustomerInspector({
                     <Button
                       size='sm'
                       onClick={() => setEventDialogOpen(true)}
-                      className='rounded-lg px-3.5 shadow-none'
+                      className='rounded-xl px-3.5 shadow-[0_6px_16px_-8px_rgba(15,23,42,0.45)]'
                     >
                       <Icons.calendar data-icon='inline-start' /> Nuevo evento
                     </Button>
@@ -267,38 +268,42 @@ export function CustomerInspector({
                       }}
                     />
                   </div>
-                  <div className='flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/40 pt-3'>
-                    {customer.phone && (
-                      <a
-                        href={`tel:${customer.phone}`}
-                        className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
-                      >
-                        <Icons.phone className='size-4' /> Llamar
-                      </a>
-                    )}
-                    {customer.email && (
-                      <a
-                        href={`mailto:${customer.email}`}
-                        className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
-                      >
-                        <Icons.send className='size-4' /> Email
-                      </a>
-                    )}
-                    {customer.website && (
-                      <a
-                        href={customer.website}
-                        target='_blank'
-                        rel='noreferrer'
-                        className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
-                      >
-                        <Icons.externalLink className='size-4' /> Web
-                      </a>
-                    )}
-                  </div>
+                  {(customer.phone || customer.email || customer.website) && (
+                    <div className='flex items-center gap-0.5 border-t border-border/40 pt-3'>
+                      <div className='inline-flex items-center overflow-hidden rounded-[10px] border border-border/60 bg-background'>
+                        {customer.phone && (
+                          <a
+                            href={`tel:${customer.phone}`}
+                            className='inline-flex h-8 items-center gap-1.5 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+                          >
+                            <Icons.phone className='size-3.5' /> Llamar
+                          </a>
+                        )}
+                        {customer.email && (
+                          <a
+                            href={`mailto:${customer.email}`}
+                            className='inline-flex h-8 items-center gap-1.5 border-l border-border/50 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+                          >
+                            <Icons.send className='size-3.5' /> Email
+                          </a>
+                        )}
+                        {customer.website && (
+                          <a
+                            href={customer.website}
+                            target='_blank'
+                            rel='noreferrer'
+                            className='inline-flex h-8 items-center gap-1.5 border-l border-border/50 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+                          >
+                            <Icons.externalLink className='size-3.5' /> Web
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </SheetHeader>
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
-                <section className='overflow-hidden rounded-xl border border-border/50 bg-background shadow-none'>
+                <section className='overflow-hidden rounded-[14px] border border-border/40 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
                       Resumen
@@ -332,7 +337,7 @@ export function CustomerInspector({
                     />
                   </div>
                 </section>
-                <section className='overflow-hidden rounded-xl border border-border/50 bg-background shadow-none'>
+                <section className='overflow-hidden rounded-[14px] border border-border/40 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
                       Contacto adicional
@@ -360,28 +365,20 @@ export function CustomerInspector({
                       type='url'
                       className='bg-transparent px-0 py-2'
                     />
-                    <label
-                      htmlFor='customer-next-action-date'
-                      className='block border-t border-border/40 pt-3'
-                    >
+                    <div className='border-t border-border/40 pt-3'>
                       <span className='text-muted-foreground block text-[11px]'>
                         Próxima acción
                       </span>
-                      <Input
-                        id='customer-next-action-date'
-                        type='date'
-                        aria-label='Fecha de próxima acción'
+                      <DatePicker
                         value={contact.nextActionAt}
-                        onChange={(event) =>
-                          setContact((current) => ({
-                            ...current,
-                            nextActionAt: event.target.value
-                          }))
-                        }
-                        onBlur={() => void saveContact({ nextActionAt: contact.nextActionAt })}
-                        className='mt-1 h-9 w-full max-w-52 border-transparent bg-muted/35 px-3 shadow-none focus-visible:border-primary/40'
+                        onChange={(value) => {
+                          setContact((current) => ({ ...current, nextActionAt: value }));
+                          void saveContact({ nextActionAt: value });
+                        }}
+                        aria-label='Fecha de próxima acción'
+                        className='mt-1 w-full max-w-52'
                       />
-                    </label>
+                    </div>
                   </div>
                 </section>
                 <section className='space-y-3'>
@@ -395,7 +392,7 @@ export function CustomerInspector({
                       <Link
                         key={event.id}
                         href={`/dashboard/calendar?event=${event.id}`}
-                        className='group flex items-center gap-3 rounded-lg border border-border/45 bg-background px-3 py-3 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:bg-muted/20'
+                        className='group flex items-center gap-3 rounded-[12px] border border-border/40 bg-background px-3.5 py-3.5 transition-[background-color,transform,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-primary/20 hover:bg-background'
                       >
                         <Icons.calendar className='text-primary size-4' />
                         <span className='min-w-0 flex-1 truncate text-sm font-medium transition-colors group-hover:text-primary'>
@@ -421,7 +418,7 @@ export function CustomerInspector({
                         <Link
                           key={task.id}
                           href={`/dashboard/tasks?task=${task.id}`}
-                          className='group flex items-center gap-3 rounded-lg border border-border/45 bg-background px-3 py-3 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20 hover:bg-muted/20'
+                          className='group flex items-center gap-3 rounded-[12px] border border-border/40 bg-background px-3.5 py-3.5 transition-[background-color,transform,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-primary/20 hover:bg-background'
                         >
                           <span className='bg-primary/10 text-primary flex size-7 items-center justify-center rounded-full'>
                             <Icons.check className='size-4' />

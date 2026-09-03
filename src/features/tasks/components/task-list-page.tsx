@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
@@ -1148,12 +1149,11 @@ function TaskInspector({
               </Button>
             </div>
             <div className='flex flex-wrap items-center gap-2'>
-              <Input
-                type='date'
+              <DatePicker
                 value={scheduleDate}
-                onChange={(event) => setScheduleDate(event.target.value)}
+                onChange={setScheduleDate}
                 aria-label='Elegir fecha de la tarea'
-                className='h-9 w-40 rounded-xl'
+                className='w-40'
               />
               {scheduleDate && (
                 <Button variant='outline' size='sm' onClick={() => void scheduleOnDate()}>
@@ -1170,12 +1170,11 @@ function TaskInspector({
                 >
                   Ya no estoy esperando
                 </Button>
-                <Input
-                  type='date'
+                <DatePicker
                   value={followUpDate}
-                  onChange={(event) => setFollowUpDate(event.target.value)}
+                  onChange={setFollowUpDate}
                   aria-label='Fecha del seguimiento'
-                  className='h-9 w-40 rounded-xl'
+                  className='w-40'
                 />
                 {followUpDate && (
                   <Button variant='secondary' size='sm' onClick={() => void createFollowUp()}>

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 import { createActivity } from '@/features/activities/queries';
 export default function CustomerFormSheet({ initialOpen = false }: { initialOpen?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -76,7 +77,7 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
           Add customer
         </button>
       ) : (
-        <div className='border-border bg-background fixed inset-x-4 top-20 z-50 mx-auto max-h-[calc(100dvh-6rem)] max-w-md overflow-y-auto rounded-xl border p-5'>
+        <div className='border-border bg-background fixed inset-x-4 top-20 z-50 mx-auto max-h-[calc(100dvh-6rem)] max-w-md overflow-y-auto rounded-[14px] border p-5'>
           <h2 className='text-lg font-semibold'>New customer</h2>
           <div className='mt-4 space-y-4'>
             <NativeSelect
@@ -107,7 +108,7 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
-            <details className='rounded-xl border border-border/60 px-3 py-2'>
+            <details className='rounded-[12px] border border-border/40 px-3 py-2'>
               <summary className='cursor-pointer text-sm font-medium'>More information</summary>
               <div className='mt-3 space-y-3'>
                 <Input
@@ -131,7 +132,7 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
                 />
               </div>
             </details>
-            <div className='rounded-xl border border-border/60 px-3 py-2'>
+            <div className='rounded-[12px] border border-border/40 px-3 py-2'>
               <p className='text-sm font-medium'>Next action</p>
               <div className='mt-3 space-y-3'>
                 <Input
@@ -140,11 +141,11 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
                   value={nextAction}
                   onChange={(e) => setNextAction(e.target.value)}
                 />
-                <Input
-                  aria-label='Next action date'
-                  type='date'
+                <DatePicker
                   value={nextActionAt}
-                  onChange={(e) => setNextActionAt(e.target.value)}
+                  onChange={setNextActionAt}
+                  aria-label='Next action date'
+                  className='w-full'
                 />
               </div>
             </div>

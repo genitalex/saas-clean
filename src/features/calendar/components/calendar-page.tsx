@@ -389,7 +389,7 @@ export function CalendarPage({
             </Button>
           </div>
           <div
-            className='border-border/50 hidden items-center gap-0.5 rounded-full border bg-muted/45 p-0.5 md:flex'
+            className='border-border/50 hidden rounded-xl border border-border/60 bg-background/80 p-1 md:flex'
             role='group'
             aria-label='Vista del calendario'
           >
@@ -399,10 +399,10 @@ export function CalendarPage({
                 onClick={() => setView(option)}
                 aria-pressed={view === option}
                 className={cn(
-                  'rounded-full border border-transparent px-3.5 py-1.5 text-sm font-medium transition-[background-color,border-color,color] duration-150',
+                  'rounded-[9px] border border-transparent px-3.5 py-1.5 text-sm font-medium transition-[background-color,border-color,color]',
                   view === option
-                    ? 'border-border/45 bg-background text-foreground'
-                    : 'text-muted-foreground hover:bg-background/45 hover:text-foreground'
+                    ? 'border-border/45 bg-card text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 {option === 'month'
@@ -1504,12 +1504,12 @@ function MobileDayTimeline({
                 onPointerDown={(e) => startDrag(e, event)}
                 onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                 className={cn(
-                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-md border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
+                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-[8px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
                 )}
                 style={{
                   top,
                   height: Math.max(42, bottom - top - 6),
-                  backgroundColor: `color-mix(in srgb, ${category.color} 13%, var(--background))`,
+                  backgroundColor: `color-mix(in srgb, ${category.color} 12%, var(--card))`,
                   borderColor: `color-mix(in srgb, ${category.color} 30%, var(--border))`
                 }}
               >
@@ -1894,9 +1894,9 @@ function MonthView({
                           clickEvent.stopPropagation();
                           onOpenEvent(event);
                         }}
-                        className='flex min-w-0 items-center gap-1.5 rounded-md border-l-2 py-1 pr-2 pl-2 text-left text-xs font-medium transition-colors hover:brightness-95'
+                        className='flex min-w-0 items-center gap-1.5 rounded-md border-l-2 py-1 pr-2 pl-2 text-left text-xs font-medium transition-colors hover:brightness-95 hover:shadow-[inset_0_0_0_1px_rgba(15,23,42,0.02)]'
                         style={{
-                          backgroundColor: `color-mix(in srgb, ${category.color} 11%, var(--background))`,
+                          backgroundColor: `${category.color}14`,
                           borderColor: category.color,
                           color: category.color
                         }}
@@ -2218,12 +2218,12 @@ function CompressedDayTimeline({
                       onPointerDown={(e) => startDrag(e, event)}
                       onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                       className={cn(
-                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-md border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
+                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-[8px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
                       )}
                       style={{
                         top,
                         height: Math.max(34, bottom - top - 6),
-                        backgroundColor: `color-mix(in srgb, ${category.color} 12%, var(--background))`,
+                        backgroundColor: `color-mix(in srgb, ${category.color} 11%, var(--card))`,
                         borderColor: `color-mix(in srgb, ${category.color} 28%, var(--border))`
                       }}
                     >
@@ -2462,13 +2462,13 @@ function WeekTimeline({
                             if (!suppressClickRef.current) onOpenEvent(event);
                           }}
                           className={cn(
-                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-md border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
+                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-[8px] border text-left transition-transform hover:-translate-y-px active:cursor-grabbing'
                           )}
                           style={{
                             top: clampedTop,
                             height,
-                            backgroundColor: `${category.color}12`,
-                            borderColor: `${category.color}35`
+                            backgroundColor: `color-mix(in srgb, ${category.color} 11%, var(--card))`,
+                            borderColor: `color-mix(in srgb, ${category.color} 28%, var(--border))`
                           }}
                         >
                           <span

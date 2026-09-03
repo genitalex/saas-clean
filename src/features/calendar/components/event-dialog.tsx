@@ -151,7 +151,7 @@ function DateSegmentControl({
 
   return (
     <div ref={controlRef} className='relative' aria-label={label}>
-      <div className='flex min-h-10 items-center gap-0.5 rounded-full border border-border/50 bg-muted/45 p-0.5'>
+      <div className='flex min-h-12 items-center gap-1 rounded-2xl border border-border/60 bg-muted/25 p-1'>
         {segments.map((segment) => {
           const isActive = activeSegment === segment.key;
           return (
@@ -163,10 +163,10 @@ function DateSegmentControl({
               aria-haspopup='listbox'
               onClick={() => setActiveSegment(isActive ? null : segment.key)}
               className={cn(
-                'min-h-9 min-w-0 flex-1 rounded-full border border-transparent px-2 text-center text-sm font-medium capitalize transition-[background-color,border-color,color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 active:scale-[0.99] sm:px-3',
+                'min-h-10 min-w-0 flex-1 rounded-xl px-2 text-center text-sm font-medium capitalize transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98] sm:px-3',
                 isActive
-                  ? 'border-border/45 bg-background text-foreground'
-                  : 'text-muted-foreground hover:bg-background/55 hover:text-foreground'
+                  ? 'bg-background text-foreground ring-1 ring-border/70'
+                  : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
               )}
             >
               {segment.text}
@@ -179,7 +179,7 @@ function DateSegmentControl({
         <div
           role='listbox'
           aria-label={`Opciones de ${activeSegment}`}
-          className='absolute inset-x-0 top-[calc(100%+0.45rem)] z-30 max-h-52 overflow-y-auto rounded-xl border border-border/60 bg-background p-1'
+          className='absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-52 overflow-y-auto rounded-2xl border border-border/70 bg-background p-1'
         >
           {segments
             .find((segment) => segment.key === activeSegment)
@@ -197,10 +197,10 @@ function DateSegmentControl({
                   aria-selected={selected}
                   onClick={() => selectDatePart(activeSegment, option)}
                   className={cn(
-                    'flex min-h-9 w-full items-center rounded-lg border border-transparent px-3 text-left text-sm capitalize transition-colors duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30',
+                    'flex min-h-10 w-full items-center rounded-xl px-3 text-left text-sm capitalize transition-colors duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                     selected
-                      ? 'border-border/40 bg-muted/55 font-semibold text-foreground'
-                      : 'text-muted-foreground hover:bg-muted/55 hover:text-foreground'
+                      ? 'bg-primary/10 font-semibold text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   )}
                 >
                   {text}
@@ -242,10 +242,10 @@ function TimeWheel({
 
   return (
     <div
-      className='relative overflow-hidden rounded-xl border border-border/55 bg-muted/20 px-1.5 py-1'
+      className='relative overflow-hidden rounded-[12px] border border-border/45 bg-muted/15 px-1.5 py-1'
       aria-label={label}
     >
-      <div className='pointer-events-none absolute inset-x-2 top-1/2 z-10 h-10 -translate-y-1/2 rounded-lg border border-primary/20 bg-primary/[0.045]' />
+      <div className='pointer-events-none absolute inset-x-2 top-1/2 z-10 h-10 -translate-y-1/2 rounded-[9px] border border-primary/15 bg-primary/[0.045]' />
       <div className='pointer-events-none absolute inset-x-0 top-0 z-20 h-8 bg-gradient-to-b from-background/95 to-transparent' />
       <div className='pointer-events-none absolute inset-x-0 bottom-0 z-20 h-8 bg-gradient-to-t from-background/95 to-transparent' />
       <div className='relative z-0 flex h-[134px] items-center justify-center gap-1 sm:h-[122px]'>
@@ -527,10 +527,10 @@ export function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[800px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[16px] border border-border/60 bg-background p-0 shadow-[0_24px_64px_-34px_rgba(15,23,42,0.38)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
+      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[800px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[16px] border border-border/60 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
         <DialogHeader className='border-b border-border/50 bg-background px-5 pb-4 pt-4 pr-12 sm:px-6 sm:pb-5 sm:pt-5'>
           <div className='flex items-start gap-3'>
-            <div className='bg-primary/10 text-primary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl'>
+            <div className='bg-primary/10 text-primary mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl'>
               {event ? <Icons.calendar className='size-5' /> : <Icons.add className='size-5' />}
             </div>
 
@@ -539,7 +539,7 @@ export function EventDialog({
                 {event ? 'Editar evento' : 'Nuevo evento'}
               </DialogTitle>
 
-              <DialogDescription className='mt-0.5 max-w-[52ch] text-xs leading-4.5 sm:text-sm'>
+              <DialogDescription className='mt-1 max-w-[52ch] text-sm leading-5 sm:text-[15px]'>
                 {event
                   ? 'Actualiza los detalles de este evento.'
                   : 'Añade una actividad a la agenda del equipo.'}
@@ -553,7 +553,7 @@ export function EventDialog({
           className='min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6'
           onSubmit={handleSubmit}
         >
-          <div className='space-y-6 sm:space-y-7'>
+          <div className='space-y-8'>
             <section className='space-y-3'>
               <div>
                 <div className='text-sm font-semibold tracking-tight'>Título</div>
@@ -571,7 +571,7 @@ export function EventDialog({
                   required
                   maxLength={200}
                   placeholder='¿Qué vas a hacer?'
-                  className='h-11 rounded-xl px-4 text-[16px] sm:h-10'
+                  className='h-12 rounded-2xl px-4 text-[16px] sm:h-11'
                 />
               </label>
             </section>
@@ -635,7 +635,7 @@ export function EventDialog({
 
               <label
                 htmlFor='event-all-day'
-                className='bg-muted/25 flex min-h-11 cursor-pointer items-center justify-between rounded-xl border border-border/60 px-4 py-2.5'
+                className='bg-muted/25 flex min-h-[52px] cursor-pointer items-center justify-between rounded-2xl border border-border/60 px-4 py-3'
               >
                 <div>
                   <div className='text-sm font-medium'>Todo el día</div>
@@ -682,7 +682,7 @@ export function EventDialog({
                   <div className='flex items-center justify-between gap-3'>
                     <span className='text-sm font-medium'>Categoría</span>
                   </div>
-                  <div className='flex min-h-10 flex-wrap items-center gap-1.5 rounded-xl border border-border/60 bg-muted/25 px-2.5 py-1.5 sm:min-h-10'>
+                  <div className='flex min-h-11 flex-wrap items-center gap-1.5 rounded-2xl border border-border/60 bg-muted/25 px-2.5 py-2 sm:min-h-11'>
                     {categories.slice(0, 8).map((category) => (
                       <button
                         key={category.id}
@@ -695,12 +695,12 @@ export function EventDialog({
                         className={cn(
                           'flex size-7 shrink-0 items-center justify-center rounded-full transition-[background-color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]',
                           categoryId === category.id
-                            ? 'border border-border/55 bg-foreground/8'
-                            : 'border border-transparent hover:bg-foreground/6 hover:scale-[1.02]'
+                            ? 'bg-foreground/8 ring-1 ring-foreground/55 ring-offset-1 ring-offset-background'
+                            : 'hover:bg-foreground/6 hover:scale-[1.03]'
                         )}
                       >
                         <span
-                          className='size-3.5 rounded-full ring-1 ring-inset ring-foreground/10'
+                          className='size-3.5 rounded-full shadow-[inset_0_0_0_1px_rgba(15,23,42,0.12)]'
                           style={{ backgroundColor: category.color }}
                         />
                       </button>
@@ -772,7 +772,7 @@ export function EventDialog({
                     onChange={(inputEvent) => setLocation(inputEvent.target.value)}
                     maxLength={500}
                     placeholder='Dirección, lugar o enlace…'
-                    className='h-11 min-w-0 flex-1 rounded-xl px-4 text-[16px] sm:h-10 sm:text-sm'
+                    className='h-12 min-w-0 flex-1 rounded-2xl px-4 text-[16px] sm:h-11 sm:text-sm'
                   />
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || ' ')}`}
@@ -783,7 +783,7 @@ export function EventDialog({
                       if (!location.trim()) clickEvent.preventDefault();
                     }}
                     className={cn(
-                      'inline-flex h-11 shrink-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/25 px-3 text-sm font-medium transition-colors sm:h-10',
+                      'inline-flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-border/60 bg-muted/25 px-3 text-sm font-medium transition-colors sm:h-11',
                       location.trim() ? 'hover:bg-accent/50' : 'pointer-events-none opacity-40'
                     )}
                   >
@@ -806,7 +806,7 @@ export function EventDialog({
                   onChange={(inputEvent) => setDescription(inputEvent.target.value)}
                   maxLength={5000}
                   placeholder='Añade cualquier detalle que quieras recordar…'
-                  className='min-h-24 rounded-xl px-4 py-3 text-[16px] sm:text-sm'
+                  className='min-h-28 rounded-2xl px-4 py-3 text-[16px] sm:text-sm'
                 />
               </label>
 
@@ -822,7 +822,7 @@ export function EventDialog({
           </div>
         </form>
 
-        <DialogFooter className='!mx-0 !mb-0 rounded-b-[15px] border-t border-border/50 bg-background px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-4 sm:pb-4'>
+        <DialogFooter className='!mx-0 !mb-0 border-t border-border/50 bg-muted/[0.18] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-7 sm:py-5 sm:pb-5'>
           <div className='flex w-full items-center gap-2'>
             {event && (
               <Button
@@ -830,7 +830,7 @@ export function EventDialog({
                 type='button'
                 onClick={() => void handleDelete()}
                 disabled={pending}
-                className='h-10 shrink-0 rounded-xl px-4 text-destructive hover:bg-destructive/10 hover:text-destructive'
+                className='h-11 shrink-0 rounded-2xl px-4 text-destructive hover:bg-destructive/10 hover:text-destructive'
               >
                 Eliminar
               </Button>
@@ -840,7 +840,7 @@ export function EventDialog({
               type='submit'
               form='event-form'
               disabled={pending}
-              className='h-11 flex-1 rounded-xl px-5 text-[15px] font-semibold shadow-none'
+              className='h-12 flex-1 rounded-2xl px-5 text-[15px] font-semibold shadow-sm'
             >
               {pending ? 'Guardando…' : event ? 'Guardar cambios' : 'Crear evento'}
             </Button>
