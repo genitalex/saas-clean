@@ -9,6 +9,7 @@ export type Task = InferSelectModel<typeof tasks> & {
 
 export type TaskStatus = Task['status'];
 export type TaskPriority = Task['priority'];
+export type TaskRecurrence = NonNullable<Task['recurrenceRule']>;
 export type TaskFilters = {
   status?: TaskStatus;
   priority?: TaskPriority;
@@ -23,6 +24,8 @@ export type TaskPayload = {
   description?: string | null;
   priority?: TaskPriority;
   dueAt?: string | null;
+  waitingOn?: string | null;
+  recurrenceRule?: TaskRecurrence | null;
   customerId?: string | null;
   eventId?: string | null;
   assigneeId?: string | null;

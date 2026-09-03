@@ -29,6 +29,8 @@ const taskSelection = {
   status: tasks.status,
   priority: tasks.priority,
   dueAt: tasks.dueAt,
+  waitingOn: tasks.waitingOn,
+  recurrenceRule: tasks.recurrenceRule,
   createdAt: tasks.createdAt,
   updatedAt: tasks.updatedAt,
   completedAt: tasks.completedAt,
@@ -199,6 +201,12 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
       ...(parsed.data.dueAt !== undefined && {
         dueAt: parsed.data.dueAt ? new Date(parsed.data.dueAt) : null
       }),
+      ...(parsed.data.waitingOn !== undefined && {
+        waitingOn: parsed.data.waitingOn || null
+      }),
+      ...(parsed.data.recurrenceRule !== undefined && {
+        recurrenceRule: parsed.data.recurrenceRule || null
+      }),
       ...(parsed.data.customerId !== undefined && { customerId: parsed.data.customerId || null }),
       ...(parsed.data.eventId !== undefined && { eventId: parsed.data.eventId || null }),
       ...(parsed.data.assigneeId !== undefined && { assigneeId: parsed.data.assigneeId || null }),
@@ -224,7 +232,37 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
       previous.eventId
     );
   }
+  if (
+    parsed.data.status === 'done' &&
+    previous &&
+    previous.status !== 'done' &&
+    previous.recurrenceRule
+  ) {
+    const nextDueAt = nextRecurrenceDate(previous.dueAt, previous.recurrenceRule);
+    await db.insert(tasks).values({
+      organizationId: organization.id,
+      customerId: previous.customerId,
+      eventId: null,
+      assigneeId: previous.assigneeId,
+      title: previous.title,
+      description: previous.description,
+      priority: previous.priority,
+      dueAt: nextDueAt,
+      recurrenceRule: previous.recurrenceRule,
+      waitingOn: null,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
   return getTask(updated.id);
+}
+
+function nextRecurrenceDate(dueAt: Date | null, rule: 'daily' | 'weekly' | 'monthly') {
+  const next = new Date(dueAt ?? new Date());
+  if (rule === 'daily') next.setDate(next.getDate() + 1);
+  if (rule === 'weekly') next.setDate(next.getDate() + 7);
+  if (rule === 'monthly') next.setMonth(next.getMonth() + 1);
+  return next;
 }
 
 export async function deleteTask(id: string) {

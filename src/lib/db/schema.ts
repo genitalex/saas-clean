@@ -215,6 +215,8 @@ export const taskStatus = pgEnum('task_status', ['todo', 'in_progress', 'waiting
 
 export const taskPriority = pgEnum('task_priority', ['low', 'medium', 'high']);
 
+export const taskRecurrence = pgEnum('task_recurrence', ['daily', 'weekly', 'monthly']);
+
 export const eventStatus = pgEnum('event_status', ['planned', 'in_progress', 'done', 'cancelled']);
 
 export const customers = pgTable(
@@ -331,6 +333,8 @@ export const tasks = pgTable(
     status: taskStatus('status').notNull().default('todo'),
     priority: taskPriority('priority').notNull().default('medium'),
     dueAt: timestamp('due_at', { withTimezone: true }),
+    waitingOn: text('waiting_on'),
+    recurrenceRule: taskRecurrence('recurrence_rule'),
 
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -343,6 +347,7 @@ export const tasks = pgTable(
     index('tasks_assignee_id_idx').on(table.assigneeId),
     index('tasks_status_idx').on(table.status),
     index('tasks_due_at_idx').on(table.dueAt),
+    index('tasks_recurrence_rule_idx').on(table.recurrenceRule),
     index('tasks_organization_status_idx').on(table.organizationId, table.status)
   ]
 );

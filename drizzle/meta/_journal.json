@@ -71,6 +71,13 @@
       "when": 1788371040533,
       "tag": "0009_event_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788438536384,
+      "tag": "0010_task_workflow",
+      "breakpoints": true
     }
   ]
 }

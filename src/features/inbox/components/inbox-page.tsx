@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,10 @@ export function InboxPage() {
   });
   const tasks = (tasksQuery.data ?? []).filter(
     (task) => task.status !== 'done' && !task.dueAt && !task.eventId
+  );
+  const waiting = (tasksQuery.data ?? []).filter((task) => task.status === 'waiting');
+  const overdue = (tasksQuery.data ?? []).filter(
+    (task) => task.status !== 'done' && task.dueAt && new Date(task.dueAt) < new Date()
   );
 
   const schedule = async (task: Task, days: number) => {
@@ -57,7 +62,9 @@ export function InboxPage() {
               Decide sólo cuándo entra en tu jornada.
             </p>
           </div>
-          <span className='text-muted-foreground text-xs tabular-nums'>{tasks.length}</span>
+          <span className='text-muted-foreground text-xs tabular-nums'>
+            {tasks.length + waiting.length + overdue.length}
+          </span>
         </div>
         <div className='mt-4 divide-y divide-border/50'>
           {tasks.map((task) => (
@@ -81,12 +88,55 @@ export function InboxPage() {
               </div>
             </div>
           ))}
-          {!tasksQuery.isPending && tasks.length === 0 && (
+          {waiting.map((task) => (
+            <AttentionTask
+              key={task.id}
+              task={task}
+              label={task.waitingOn ? `Esperando a ${task.waitingOn}` : 'Esperando respuesta'}
+            />
+          ))}
+          {overdue.map((task) => (
+            <AttentionTask key={task.id} task={task} label='Seguimiento vencido' />
+          ))}
+          {!tasksQuery.isPending && tasks.length + waiting.length + overdue.length === 0 && (
             <p className='text-muted-foreground py-8 text-center text-sm'>Inbox despejado.</p>
           )}
           {tasksQuery.isPending && <div className='bg-muted/50 h-14 animate-pulse rounded-xl' />}
         </div>
       </section>
     </main>
+  );
+}
+
+function AttentionTask({ task, label }: { task: Task; label: string }) {
+  const queryClient = useQueryClient();
+  const [pending, setPending] = useState(false);
+
+  const schedule = async () => {
+    setPending(true);
+    try {
+      await updateTask(task.id, { dueAt: nextDate(0) });
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      toast.success('Seguimiento añadido a hoy');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo organizar la tarea.');
+    } finally {
+      setPending(false);
+    }
+  };
+
+  return (
+    <div className='flex flex-wrap items-center gap-3 py-3'>
+      <span className='bg-primary/[0.08] text-primary flex size-8 shrink-0 items-center justify-center rounded-full'>
+        <Icons.warning className='size-4' />
+      </span>
+      <Link href={`/dashboard/tasks?task=${task.id}`} className='min-w-0 flex-1'>
+        <span className='block truncate text-sm font-medium'>{task.title}</span>
+        <span className='text-muted-foreground mt-0.5 block truncate text-xs'>{label}</span>
+      </Link>
+      <Button variant='ghost' size='sm' disabled={pending} onClick={() => void schedule()}>
+        Hoy
+      </Button>
+    </div>
   );
 }

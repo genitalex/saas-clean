@@ -36,7 +36,7 @@ import {
 } from '@/features/saved-views/queries';
 import type { SavedView } from '@/features/saved-views/types';
 import { useSession } from '@/lib/auth-client';
-import type { Task, TaskPriority, TaskStatus } from '../types';
+import type { Task, TaskPriority, TaskRecurrence, TaskStatus } from '../types';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 
 const statusLabels: Record<TaskStatus, string> = {
@@ -665,6 +665,7 @@ export function TaskListPage() {
                   />
                   <button
                     type='button'
+                    aria-label={`Abrir tarea ${task.title}`}
                     className='flex min-w-0 flex-1 items-center gap-3 text-left'
                     onClick={() => openTask(task)}
                   >
@@ -724,8 +725,14 @@ function TaskInspector({
 }) {
   const [title, setTitle] = useState('');
   const [scheduleDate, setScheduleDate] = useState('');
+  const [waitingOn, setWaitingOn] = useState('');
+  const [recurrenceRule, setRecurrenceRule] = useState<TaskRecurrence | ''>('');
 
-  useEffect(() => setTitle(task?.title ?? ''), [task]);
+  useEffect(() => {
+    setTitle(task?.title ?? '');
+    setWaitingOn(task?.waitingOn ?? '');
+    setRecurrenceRule(task?.recurrenceRule ?? '');
+  }, [task]);
 
   if (!task) return null;
 
@@ -879,6 +886,18 @@ function TaskInspector({
               <Detail label='Cliente' value={task.customer?.name ?? 'Trabajo interno'} />
               <Detail label='Responsable' value={task.assignee?.name ?? 'Sin asignar'} />
             </div>
+            <div className='space-y-2 rounded-2xl border border-border/60 p-3'>
+              <label htmlFor='task-waiting-on' className='text-muted-foreground text-xs'>
+                Esperando a
+              </label>
+              <Input
+                id='task-waiting-on'
+                placeholder='Persona, respuesta o condición'
+                value={waitingOn}
+                onChange={(event) => setWaitingOn(event.target.value)}
+                onBlur={() => void save({ waitingOn: waitingOn.trim() || null })}
+              />
+            </div>
             {task.customer && (
               <Link
                 href={`/dashboard/customers/${task.customer.id}`}
@@ -948,6 +967,25 @@ function TaskInspector({
                   {priorityLabels[value]}
                 </Button>
               ))}
+            </div>
+            <div className='flex flex-wrap items-center gap-2'>
+              <NativeSelect
+                aria-label='Repetición de la tarea'
+                value={recurrenceRule}
+                onChange={(event) => {
+                  const value = event.target.value as TaskRecurrence | '';
+                  setRecurrenceRule(value);
+                  void save({ recurrenceRule: value || null });
+                }}
+              >
+                <NativeSelectOption value=''>Sin repetición</NativeSelectOption>
+                <NativeSelectOption value='daily'>Cada día</NativeSelectOption>
+                <NativeSelectOption value='weekly'>Cada semana</NativeSelectOption>
+                <NativeSelectOption value='monthly'>Cada mes</NativeSelectOption>
+              </NativeSelect>
+              <span className='text-muted-foreground text-xs'>
+                Se crea la próxima al completar.
+              </span>
             </div>
           </section>
           <section className='space-y-2'>
