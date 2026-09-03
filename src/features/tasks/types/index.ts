@@ -44,6 +44,15 @@ export type TaskWorkspace = {
   blockedBy: TaskDependency[];
   blocks: TaskDependency[];
   followUp: Task | null;
+  history: TaskWorkflowHistory[];
+};
+
+export type TaskWorkflowHistory = {
+  id: string;
+  type: string;
+  message: string;
+  createdAt: Date;
+  actor: { id: string; name: string } | null;
 };
 
 export type CustomerOption = Pick<InferSelectModel<typeof customers>, 'id' | 'name' | 'kind'>;

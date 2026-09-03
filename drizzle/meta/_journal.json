@@ -85,6 +85,13 @@
       "when": 1788439000000,
       "tag": "0011_execution_graph",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788439500000,
+      "tag": "0012_task_workflow_history",
+      "breakpoints": true
     }
   ]
 }

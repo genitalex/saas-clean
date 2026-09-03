@@ -31,6 +31,7 @@ import {
   deleteTask,
   getTaskWorkspace,
   getTasks,
+  removeTaskDependency,
   taskKeys,
   updateTask
 } from '../queries';
@@ -985,14 +986,35 @@ function TaskInspector({
               <div className='rounded-2xl border border-amber-300/40 bg-amber-50/50 p-3 dark:border-amber-400/20 dark:bg-amber-400/5'>
                 <p className='text-xs font-medium'>Bloqueada por</p>
                 {workspace.blockedBy.map((blockingTask) => (
-                  <Link
-                    key={blockingTask.id}
-                    href={`/dashboard/tasks?task=${blockingTask.id}`}
-                    className='mt-2 flex items-center gap-2 text-sm hover:underline'
-                  >
-                    <Icons.lock className='size-3.5 text-amber-600' />
-                    <span className='truncate'>{blockingTask.title}</span>
-                  </Link>
+                  <div key={blockingTask.id} className='mt-2 flex items-center gap-2 text-sm'>
+                    <Link
+                      href={`/dashboard/tasks?task=${blockingTask.id}`}
+                      className='flex min-w-0 flex-1 items-center gap-2 hover:underline'
+                    >
+                      <Icons.lock className='size-3.5 shrink-0 text-amber-600' />
+                      <span className='truncate'>{blockingTask.title}</span>
+                    </Link>
+                    <button
+                      type='button'
+                      aria-label={`Eliminar bloqueo de ${blockingTask.title}`}
+                      className='text-muted-foreground hover:text-foreground'
+                      onClick={() =>
+                        void removeTaskDependency(task.id, blockingTask.id)
+                          .then(() =>
+                            queryClient.invalidateQueries({ queryKey: taskKeys.workspace(task.id) })
+                          )
+                          .catch((error: unknown) =>
+                            toast.error(
+                              error instanceof Error
+                                ? error.message
+                                : 'No se pudo eliminar el bloqueo.'
+                            )
+                          )
+                      }
+                    >
+                      <Icons.close className='size-3.5' />
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : null}
@@ -1021,6 +1043,31 @@ function TaskInspector({
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
+            </div>
+          </section>
+          <Separator />
+          <section className='space-y-3'>
+            <h3 className='text-sm font-semibold'>Historial</h3>
+            <div className='space-y-3'>
+              {workspace?.history.map((entry) => (
+                <div key={entry.id} className='flex gap-3 text-xs'>
+                  <time className='text-muted-foreground w-12 shrink-0 tabular-nums'>
+                    {new Date(entry.createdAt).toLocaleTimeString('es-ES', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </time>
+                  <div className='min-w-0'>
+                    <p>{entry.message}</p>
+                    {entry.actor && (
+                      <p className='text-muted-foreground mt-0.5'>{entry.actor.name}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {workspace && workspace.history.length === 0 && (
+                <p className='text-muted-foreground text-xs'>Todavía no hay cambios registrados.</p>
+              )}
             </div>
           </section>
           <Separator />

@@ -381,6 +381,21 @@ export const taskDependencies = pgTable(
   ]
 );
 
+export const taskWorkflowHistory = pgTable(
+  'task_workflow_history',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    taskId: uuid('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    type: text('type').notNull(),
+    message: text('message').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [index('task_workflow_history_task_created_idx').on(table.taskId, table.createdAt)]
+);
+
 export const savedViews = pgTable(
   'saved_views',
   {

@@ -8,11 +8,13 @@ import {
   events,
   organizationMembers,
   taskDependencies,
+  taskWorkflowHistory,
   tasks,
   users
 } from '@/lib/db/schema';
 import { taskPayloadSchema, taskUpdateSchema } from '../schemas/task';
 import type {
+  Task,
   TaskDependency,
   TaskFilters,
   TaskPayload,
@@ -56,6 +58,15 @@ const taskSelection = {
 
 function pickDependency(candidate: TaskDependency | null) {
   return candidate ? { id: candidate.id, title: candidate.title, status: candidate.status } : null;
+}
+
+async function recordTaskHistory(taskId: string, type: string, message: string) {
+  try {
+    const { user } = await getAuthContext();
+    await db.insert(taskWorkflowHistory).values({ taskId, actorId: user.id, type, message });
+  } catch (error) {
+    console.error('[tasks:history]', error);
+  }
 }
 
 async function validateReferences(
@@ -222,6 +233,23 @@ export async function createTask(input: TaskPayload) {
       { taskId: created.id },
       parsed.data.eventId
     );
+  await recordTaskHistory(created.id, 'created', 'Tarea creada');
+  if (parsed.data.parentTaskId)
+    await recordTaskHistory(
+      parsed.data.parentTaskId,
+      'subtask_created',
+      `Subtarea creada: ${parsed.data.title}`
+    );
+  if (parsed.data.followUpForTaskId)
+    await recordTaskHistory(
+      parsed.data.followUpForTaskId,
+      'follow_up_created',
+      `Seguimiento creado: ${parsed.data.title}`
+    );
+  if (parsed.data.followUpForTaskId && parsed.data.customerId)
+    await recordSystemActivity(parsed.data.customerId, 'Seguimiento creado', {
+      taskId: created.id
+    });
   return getTask(created.id);
 }
 
@@ -229,7 +257,7 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
   const { organization } = await getAuthContext();
   const parsed = taskUpdateSchema.safeParse(input);
   if (!parsed.success) throw new TaskServiceError('Invalid task payload', 'INVALID_PAYLOAD');
-  const previous = parsed.data.status === 'done' ? await getTask(id) : null;
+  const previous = await getTask(id);
   await validateReferences(
     organization.id,
     parsed.data.customerId,
@@ -288,6 +316,46 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
       previous.eventId
     );
   }
+  if (parsed.data.status && parsed.data.status !== previous.status) {
+    const labels = { todo: 'Todo', in_progress: 'En curso', waiting: 'Esperando', done: 'Hecha' };
+    await recordTaskHistory(id, 'status_changed', `Pasó a “${labels[parsed.data.status]}”`);
+  }
+  if (parsed.data.waitingOn !== undefined && parsed.data.waitingOn !== previous.waitingOn) {
+    await recordTaskHistory(
+      id,
+      parsed.data.waitingOn ? 'waiting_set' : 'waiting_cleared',
+      parsed.data.waitingOn ? `Esperando a ${parsed.data.waitingOn}` : 'Se eliminó la espera'
+    );
+    if (previous.customerId)
+      await recordSystemActivity(
+        previous.customerId,
+        parsed.data.waitingOn ? 'Tarea en espera' : 'Tarea dejó de esperar',
+        { taskId: id }
+      );
+  }
+  if (parsed.data.dueAt !== undefined && parsed.data.dueAt !== previous.dueAt?.toISOString())
+    await recordTaskHistory(
+      id,
+      'scheduled',
+      parsed.data.dueAt ? 'Fecha planificada cambiada' : 'Se quitó la fecha planificada'
+    );
+  if (parsed.data.priority !== undefined && parsed.data.priority !== previous.priority)
+    await recordTaskHistory(id, 'priority_changed', `Prioridad cambiada a ${parsed.data.priority}`);
+  if (
+    parsed.data.recurrenceRule !== undefined &&
+    parsed.data.recurrenceRule !== previous.recurrenceRule
+  )
+    await recordTaskHistory(
+      id,
+      'recurrence_changed',
+      parsed.data.recurrenceRule ? 'Recurrencia modificada' : 'Recurrencia eliminada'
+    );
+  if (parsed.data.status === 'done' && previous.status !== 'done' && previous.parentTaskId)
+    await recordTaskHistory(
+      previous.parentTaskId,
+      'subtask_completed',
+      `Subtarea completada: ${previous.title}`
+    );
   if (
     parsed.data.status === 'done' &&
     previous &&
@@ -344,9 +412,13 @@ export async function updateTaskStatus(
 
 export async function getTaskWorkspace(id: string): Promise<TaskWorkspace> {
   const { organization } = await getAuthContext();
-  const task = await getTask(id);
-  const subtasks = await getTasks({ parentTaskId: id });
-  const parentTask = task.parentTaskId ? await getTask(task.parentTaskId) : null;
+  const allTasks = await getTasks();
+  const task = allTasks.find((candidate) => candidate.id === id);
+  if (!task) throw new TaskServiceError('Task not found', 'NOT_FOUND');
+  const subtasks = allTasks.filter((candidate) => candidate.parentTaskId === id);
+  const parentTask = task.parentTaskId
+    ? (allTasks.find((candidate) => candidate.id === task.parentTaskId) ?? null)
+    : null;
   const dependencyRows = await db
     .select({ taskId: taskDependencies.taskId, blockingTaskId: taskDependencies.blockingTaskId })
     .from(taskDependencies)
@@ -357,17 +429,34 @@ export async function getTaskWorkspace(id: string): Promise<TaskWorkspace> {
     .from(taskDependencies)
     .innerJoin(tasks, eq(tasks.id, taskDependencies.blockingTaskId))
     .where(and(eq(tasks.organizationId, organization.id), eq(taskDependencies.blockingTaskId, id)));
-  const blockedBy = await Promise.all(dependencyRows.map((row) => getTask(row.blockingTaskId)));
-  const blocks = await Promise.all(blockingRows.map((row) => getTask(row.taskId)));
-  const followUps = await getTasks({ search: undefined });
-  const followUp = followUps.find((candidate) => candidate.followUpForTaskId === id) ?? null;
+  const blockedBy = dependencyRows
+    .map((row) => allTasks.find((candidate) => candidate.id === row.blockingTaskId))
+    .filter((candidate): candidate is Task => Boolean(candidate));
+  const blocks = blockingRows
+    .map((row) => allTasks.find((candidate) => candidate.id === row.taskId))
+    .filter((candidate): candidate is Task => Boolean(candidate));
+  const followUp = allTasks.find((candidate) => candidate.followUpForTaskId === id) ?? null;
+  const history = await db
+    .select({
+      id: taskWorkflowHistory.id,
+      type: taskWorkflowHistory.type,
+      message: taskWorkflowHistory.message,
+      createdAt: taskWorkflowHistory.createdAt,
+      actor: { id: users.id, name: users.name }
+    })
+    .from(taskWorkflowHistory)
+    .leftJoin(users, eq(users.id, taskWorkflowHistory.actorId))
+    .where(eq(taskWorkflowHistory.taskId, id))
+    .orderBy(desc(taskWorkflowHistory.createdAt))
+    .limit(40);
   return {
     task,
     parent: pickDependency(parentTask),
     subtasks,
     blockedBy: blockedBy.map((candidate) => pickDependency(candidate)!),
     blocks: blocks.map((candidate) => pickDependency(candidate)!),
-    followUp
+    followUp,
+    history
   };
 }
 
@@ -398,15 +487,28 @@ export async function addTaskDependency(taskId: string, blockingTaskId: string) 
     stack.push(...(graph.get(current) ?? []));
   }
   await db.insert(taskDependencies).values({ taskId, blockingTaskId });
+  await recordTaskHistory(taskId, 'dependency_added', 'Se añadió una tarea bloqueante');
+  await recordTaskHistory(
+    blockingTaskId,
+    'dependency_added',
+    'Esta tarea ahora bloquea otra tarea'
+  );
+  const task = allTasks.find((candidate) => candidate.id === taskId);
+  if (task?.customerId)
+    await recordSystemActivity(task.customerId, 'Tarea bloqueada', { taskId, blockingTaskId });
   return getTaskWorkspace(taskId);
 }
 
 export async function removeTaskDependency(taskId: string, blockingTaskId: string) {
-  await getTask(taskId);
+  const task = await getTask(taskId);
   await db
     .delete(taskDependencies)
     .where(
       and(eq(taskDependencies.taskId, taskId), eq(taskDependencies.blockingTaskId, blockingTaskId))
     );
+  await recordTaskHistory(taskId, 'dependency_removed', 'Se eliminó una tarea bloqueante');
+  await recordTaskHistory(blockingTaskId, 'dependency_removed', 'Dejó de bloquear otra tarea');
+  if (task.customerId)
+    await recordSystemActivity(task.customerId, 'Bloqueo eliminado', { taskId, blockingTaskId });
   return getTaskWorkspace(taskId);
 }
