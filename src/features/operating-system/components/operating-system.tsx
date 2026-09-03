@@ -210,7 +210,7 @@ export function OpportunitiesPage({ detailId }: { detailId?: string }) {
       />
     );
   return (
-    <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
+    <main className='flex flex-1 flex-col gap-6 py-2'>
       <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
         <div>
           <p className='text-sm font-medium text-primary'>PIPELINE</p>
@@ -285,7 +285,7 @@ function OpportunityDetail({
 }) {
   const [note, setNote] = useState('');
   return (
-    <main className='flex flex-1 flex-col gap-6 p-4 md:p-6'>
+    <main className='flex flex-1 flex-col gap-6 py-2'>
       <Link
         href='/dashboard/opportunities'
         className='text-sm text-muted-foreground hover:text-foreground'
@@ -894,7 +894,7 @@ function MyWorkExperience() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='border-0 bg-transparent shadow-none'>
           <CardHeader>
             <CardDescription>Resumen</CardDescription>
             <CardTitle className='text-xl'>Este día</CardTitle>
@@ -923,7 +923,7 @@ function MyWorkExperience() {
       </div>
 
       <div className='grid gap-4 lg:grid-cols-[1.1fr_0.9fr]'>
-        <Card>
+        <Card className='border-0 bg-transparent shadow-none'>
           <CardHeader>
             <div className='flex items-center justify-between gap-3'>
               <div>
@@ -973,7 +973,7 @@ function MyWorkExperience() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='border-0 bg-transparent shadow-none'>
           <CardHeader>
             <CardDescription>Entrada</CardDescription>
             <CardTitle>Por organizar</CardTitle>
@@ -1132,7 +1132,7 @@ function WeeklyReviewExperience() {
         </Card>
       </div>
 
-      <Card>
+      <Card className='border-border/60 bg-card/35 shadow-none'>
         <CardHeader>
           <CardDescription>Vista semanal</CardDescription>
           <CardTitle>Agenda</CardTitle>
@@ -1141,10 +1141,7 @@ function WeeklyReviewExperience() {
           {weekDays.map((day) => {
             const items = events.filter((event) => isSameDay(new Date(event.startAt), day));
             return (
-              <div
-                key={day.toISOString()}
-                className='rounded-2xl border border-border/60 bg-background/50 p-3'
-              >
+              <div key={day.toISOString()} className='rounded-xl bg-muted/30 p-3'>
                 <p className='text-muted-foreground text-[10px] uppercase tracking-[0.2em]'>
                   {format(day, 'EEE', { locale: es })}
                 </p>

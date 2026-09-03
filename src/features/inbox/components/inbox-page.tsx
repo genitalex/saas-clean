@@ -38,7 +38,7 @@ export function InboxPage() {
   };
 
   return (
-    <main className='mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-4 md:p-6'>
+    <main className='mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 py-2'>
       <header>
         <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>Entrada</p>
         <h1 className='mt-1 text-2xl font-semibold tracking-tight'>Inbox</h1>
@@ -49,7 +49,7 @@ export function InboxPage() {
 
       <QuickCapture />
 
-      <section className='rounded-[26px] border border-border/55 bg-card/60 p-5 shadow-[0_18px_55px_-38px_rgba(0,0,0,0.42)] sm:p-6'>
+      <section className='rounded-2xl border border-border/55 bg-card/45 p-5 sm:p-6'>
         <div className='flex items-center justify-between gap-3'>
           <div>
             <h2 className='text-lg font-semibold'>Por organizar</h2>

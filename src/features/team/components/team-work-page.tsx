@@ -249,7 +249,7 @@ export default function TeamWorkPage() {
         </div>
       </div>
 
-      <div className='rounded-[24px] border border-border/60 bg-card/60 p-4 shadow-sm'>
+      <div className='border-t border-border/60 pt-5'>
         <div className='mb-4 flex items-center justify-between gap-3'>
           <div>
             <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
@@ -261,10 +261,7 @@ export default function TeamWorkPage() {
 
         <div className='grid gap-3 md:grid-cols-3'>
           {members.map((member) => (
-            <div
-              key={member.id}
-              className='rounded-2xl border border-border/60 bg-background/60 p-3'
-            >
+            <div key={member.id} className='rounded-xl bg-muted/30 p-3'>
               <p className='font-medium'>{member.name}</p>
               <p className='text-muted-foreground mt-2 text-sm'>
                 {member.taskCount} tareas · {member.today} hoy

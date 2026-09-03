@@ -628,7 +628,7 @@ export function TaskListPage() {
       ) : isError ? (
         <p className='text-destructive text-sm'>No se pudieron cargar las tareas.</p>
       ) : (
-        <div className='overflow-hidden rounded-[26px] border border-border/60 bg-card/45'>
+        <div className='overflow-hidden border-y border-border/60 bg-card/30'>
           <div className='flex items-center justify-between border-b border-border/50 px-4 py-3 sm:px-5'>
             <div className='flex items-center gap-3'>
               <Checkbox

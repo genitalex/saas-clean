@@ -68,7 +68,7 @@ export default function ActivityFeed() {
   }
 
   return (
-    <div className='overflow-hidden rounded-3xl border border-border/60 bg-card/50'>
+    <div className='overflow-hidden border-y border-border/50'>
       {data.map((activity) => (
         <ActivityRow key={activity.id} activity={activity} />
       ))}
@@ -78,7 +78,7 @@ export default function ActivityFeed() {
 
 function ActivityRow({ activity }: { activity: GlobalActivity }) {
   return (
-    <article className='flex gap-4 border-b border-border/50 px-4 py-4 last:border-0 sm:px-6'>
+    <article className='flex gap-4 border-b border-border/50 px-2 py-4 last:border-0 sm:px-3 sm:py-5'>
       <div className='bg-primary/10 text-primary relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl'>
         {activityIcon(activity.type)}
       </div>
@@ -118,7 +118,7 @@ function ActivityRow({ activity }: { activity: GlobalActivity }) {
 
 function ActivityLoading() {
   return (
-    <div className='space-y-px overflow-hidden rounded-3xl border border-border/60 bg-card/50'>
+    <div className='space-y-px overflow-hidden border-y border-border/50'>
       {Array.from({ length: 5 }).map((_, index) => (
         <div
           key={index}

@@ -80,7 +80,7 @@ export default function CustomerViewPage({ customerId }: { customerId: string })
   }
 
   return (
-    <div className='flex flex-col gap-6 p-4 md:p-6'>
+    <div className='flex flex-col gap-6 py-2'>
       <header className='flex flex-col gap-4 border-b pb-6 lg:flex-row lg:items-start lg:justify-between'>
         <div className='flex items-start gap-3'>
           <span className='bg-secondary text-secondary-foreground flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold'>
@@ -160,7 +160,7 @@ export default function CustomerViewPage({ customerId }: { customerId: string })
 
 function ActivityTimeline({ activities, loading }: { activities: Activity[]; loading: boolean }) {
   return (
-    <Card>
+    <Card className='border-0 bg-card/35 shadow-none'>
       <CardHeader className='border-b'>
         <CardTitle className='text-base'>Actividad</CardTitle>
       </CardHeader>

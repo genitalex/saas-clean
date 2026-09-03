@@ -151,9 +151,8 @@ export function TodayPage({
 
   return (
     <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 pb-10 pt-4 sm:gap-8 sm:pt-5'>
-      <section className='relative overflow-hidden rounded-[30px] border border-border/55 bg-background/55 p-5 shadow-[0_24px_70px_-48px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-7 lg:p-8'>
-        <div className='pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/[0.07] blur-3xl' />
-        <div className='relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
+      <section className='rounded-2xl border border-border/60 bg-card/45 p-5 sm:p-7 lg:p-8'>
+        <div className='flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
           <div className='min-w-0'>
             <div className='mb-2 flex items-center gap-2'>
               <span className='size-1.5 rounded-full bg-primary' />
@@ -171,7 +170,7 @@ export function TodayPage({
             </p>
           </div>
 
-          <div className='flex shrink-0 items-center justify-between gap-6 rounded-2xl border border-border/45 bg-background/45 px-4 py-3 backdrop-blur-md lg:min-w-[220px]'>
+          <div className='flex shrink-0 items-center justify-between gap-6 rounded-xl border border-border/50 bg-background/50 px-4 py-3 lg:min-w-[220px]'>
             <div>
               <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.18em]'>
                 Ahora

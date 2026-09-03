@@ -87,7 +87,7 @@ export default function CustomerListing() {
         />
         <span className='text-muted-foreground text-xs'>{rows.length} clientes</span>
       </div>
-      <div className='overflow-visible rounded-[24px] border border-border/60 bg-card/45 backdrop-blur-xl'>
+      <div className='overflow-visible rounded-2xl border border-border/60 bg-card/45'>
         <div className='hidden grid-cols-[2fr_1fr_2fr_auto] gap-4 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid'>
           <span>Cliente</span>
           <span>Tipo</span>
