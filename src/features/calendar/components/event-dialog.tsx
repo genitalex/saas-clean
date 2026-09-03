@@ -60,6 +60,19 @@ function formatPreview(value: string) {
   }).format(date);
 }
 
+function formatPreviewDate(value: string) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  }).format(date);
+}
+
 function localDatePart(value: string) {
   return value.split('T')[0] ?? '';
 }
@@ -71,6 +84,133 @@ function localTimePart(value: string) {
 function withLocalDateTime(datePart: string, timePart: string) {
   if (!datePart) return '';
   return toInputValue(new Date(`${datePart}T${timePart}`));
+}
+
+const monthNames = Array.from({ length: 12 }, (_, index) =>
+  new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(new Date(2020, index, 1))
+);
+
+function DateSegmentControl({
+  value,
+  onChange,
+  label
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+}) {
+  const [yearText, monthText, dayText] = value.split('-');
+  const selectedYear = Number(yearText) || new Date().getFullYear();
+  const selectedMonth = Number(monthText) || 1;
+  const selectedDay = Number(dayText) || 1;
+  const [activeSegment, setActiveSegment] = useState<'day' | 'month' | 'year' | null>(null);
+  const controlRef = useRef<HTMLDivElement>(null);
+  const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+  const years = Array.from({ length: 21 }, (_, index) => selectedYear - 10 + index);
+  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!controlRef.current?.contains(event.target as Node)) setActiveSegment(null);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setActiveSegment(null);
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  function selectDatePart(part: 'day' | 'month' | 'year', nextValue: number) {
+    const nextYear = part === 'year' ? nextValue : selectedYear;
+    const nextMonth = part === 'month' ? nextValue : selectedMonth;
+    const nextDay = Math.min(
+      part === 'day' ? nextValue : selectedDay,
+      new Date(nextYear, nextMonth, 0).getDate()
+    );
+    onChange(
+      `${String(nextYear).padStart(4, '0')}-${String(nextMonth).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`
+    );
+    setActiveSegment(null);
+  }
+
+  const segments = [
+    { key: 'day' as const, text: String(selectedDay), options: days },
+    {
+      key: 'month' as const,
+      text: monthNames[selectedMonth - 1] ?? monthNames[0],
+      options: monthNames.map((_, index) => index + 1)
+    },
+    { key: 'year' as const, text: String(selectedYear), options: years }
+  ];
+
+  return (
+    <div ref={controlRef} className='relative' aria-label={label}>
+      <div className='flex min-h-12 items-center gap-1 rounded-2xl border border-border/60 bg-muted/25 p-1'>
+        {segments.map((segment) => {
+          const isActive = activeSegment === segment.key;
+          return (
+            <button
+              key={segment.key}
+              type='button'
+              aria-label={`Cambiar ${segment.key === 'day' ? 'día' : segment.key === 'month' ? 'mes' : 'año'}`}
+              aria-expanded={isActive}
+              aria-haspopup='listbox'
+              onClick={() => setActiveSegment(isActive ? null : segment.key)}
+              className={cn(
+                'min-h-10 min-w-0 flex-1 rounded-xl px-2 text-center text-sm font-medium capitalize transition-[background-color,color,transform] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98] sm:px-3',
+                isActive
+                  ? 'bg-background text-foreground ring-1 ring-border/70'
+                  : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
+              )}
+            >
+              {segment.text}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeSegment && (
+        <div
+          role='listbox'
+          aria-label={`Opciones de ${activeSegment}`}
+          className='absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-52 overflow-y-auto rounded-2xl border border-border/70 bg-background p-1'
+        >
+          {segments
+            .find((segment) => segment.key === activeSegment)
+            ?.options.map((option) => {
+              const text = activeSegment === 'month' ? monthNames[option - 1] : String(option);
+              const selected =
+                (activeSegment === 'day' && option === selectedDay) ||
+                (activeSegment === 'month' && option === selectedMonth) ||
+                (activeSegment === 'year' && option === selectedYear);
+              return (
+                <button
+                  key={option}
+                  type='button'
+                  role='option'
+                  aria-selected={selected}
+                  onClick={() => selectDatePart(activeSegment, option)}
+                  className={cn(
+                    'flex min-h-10 w-full items-center rounded-xl px-3 text-left text-sm capitalize transition-colors duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+                    selected
+                      ? 'bg-primary/10 font-semibold text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  )}
+                >
+                  {text}
+                </button>
+              );
+            })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function clampTime(value: string) {
@@ -381,12 +521,13 @@ export function EventDialog({
 
   const startPreview = formatPreview(startAt);
   const endPreview = formatPreview(endAt);
+  const previewDate = formatPreviewDate(startAt);
   const startTime = formatPreviewTime(startAt);
   const endTime = formatPreviewTime(endAt);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[680px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[26px] border border-border/60 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
+      <DialogContent className='grid w-[calc(100%-1rem)] max-w-[800px] max-h-[calc(100dvh-1rem)] min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[26px] border border-border/60 bg-background p-0 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.42)] sm:w-[calc(100%-2rem)] sm:max-h-[calc(100dvh-3rem)]'>
         <DialogHeader className='border-b border-border/50 bg-muted/[0.22] px-5 pb-5 pt-5 pr-12 sm:px-7 sm:pb-6 sm:pt-7'>
           <div className='flex items-start gap-3'>
             <div className='bg-primary/10 text-primary mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl'>
@@ -405,25 +546,6 @@ export function EventDialog({
               </DialogDescription>
             </div>
           </div>
-
-          {(startPreview || endPreview) && (
-            <div className='bg-background/70 mt-5 rounded-2xl border border-border/50 px-4 py-3.5 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.5)]'>
-              <div className='flex items-center justify-between gap-3'>
-                <div className='min-w-0'>
-                  <div className='text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground'>
-                    Cuándo
-                  </div>
-                  <div className='mt-1 truncate text-sm font-medium capitalize'>{startPreview}</div>
-                </div>
-
-                {startTime && endTime && (
-                  <div className='text-muted-foreground shrink-0 text-sm tabular-nums'>
-                    {startTime} – {endTime}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </DialogHeader>
 
         <form
@@ -434,9 +556,9 @@ export function EventDialog({
           <div className='space-y-8'>
             <section className='space-y-3'>
               <div>
-                <div className='text-sm font-semibold tracking-tight'>Detalles</div>
+                <div className='text-sm font-semibold tracking-tight'>Título</div>
                 <div className='text-muted-foreground mt-0.5 text-xs'>
-                  Lo esencial para identificar la actividad.
+                  Dale un nombre claro a lo que vas a crear.
                 </div>
               </div>
 
@@ -478,17 +600,14 @@ export function EventDialog({
                           {timeValue}
                         </span>
                       </div>
-                      <Input
-                        aria-label={`${item.label} fecha`}
-                        type='date'
+                      <DateSegmentControl
+                        label={`${item.label} fecha`}
                         value={dateValue}
-                        onChange={(inputEvent) => {
-                          const next = withLocalDateTime(inputEvent.target.value, timeValue);
+                        onChange={(nextDate) => {
+                          const next = withLocalDateTime(nextDate, timeValue);
                           if (isStart) setStartAt(next);
                           else setEndAt(next);
                         }}
-                        required
-                        className='h-11 rounded-2xl bg-muted/25 px-4 text-sm'
                       />
                       <TimeWheel
                         label={`${item.label} hora`}
@@ -530,6 +649,24 @@ export function EventDialog({
                   onCheckedChange={(checked) => setAllDay(checked === true)}
                 />
               </label>
+
+              {(startPreview || endPreview) && (
+                <div className='flex flex-wrap items-end justify-between gap-3 border-t border-border/50 pt-4'>
+                  <div className='min-w-0'>
+                    <div className='text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground'>
+                      Resumen
+                    </div>
+                    <div className='mt-1 truncate text-sm font-medium capitalize'>
+                      {previewDate}
+                    </div>
+                  </div>
+                  {startTime && endTime && (
+                    <div className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+                      {startTime} – {endTime}
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
             <section className='space-y-3'>
