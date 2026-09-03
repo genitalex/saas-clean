@@ -163,9 +163,9 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
     <>
       <GlobalActions />
       <KBarPortal>
-        <KBarPositioner className='bg-black/10 supports-backdrop-filter:backdrop-blur-xs fixed inset-0 z-99999 flex items-start! justify-center p-4! pt-[14vh]!'>
-          <KBarAnimator className='bg-popover text-popover-foreground ring-foreground/10 relative mx-auto w-full max-w-[600px] overflow-hidden rounded-xl shadow-lg ring-1'>
-            <div className='bg-popover sticky top-0 z-10 border-b'>
+        <KBarPositioner className='fixed inset-0 z-50 flex items-start! justify-center bg-black/12 p-4! pt-[14vh]! supports-backdrop-filter:backdrop-blur-[2px]'>
+          <KBarAnimator className='relative mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-border/70 bg-popover text-popover-foreground shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)] ring-1 ring-foreground/5'>
+            <div className='sticky top-0 z-10 border-b border-border/60 bg-popover'>
               <KBarSearch className='placeholder:text-muted-foreground w-full border-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-hidden' />
             </div>
             <div className='h-[400px]'>

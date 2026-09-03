@@ -226,10 +226,10 @@ function MoreSheet({
 }) {
   return (
     <div
-      className='fixed inset-0 z-50 flex items-end justify-center bg-black/10 p-3 backdrop-blur-[2px]'
+      className='fixed inset-0 z-50 flex items-end justify-center bg-black/12 p-3 supports-backdrop-filter:backdrop-blur-[2px]'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-border/60 bg-background/95 shadow-none backdrop-blur-2xl'>
+      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-2xl border border-border/70 bg-background shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)]'>
         <div className='flex items-center justify-between border-b border-border/60 px-5 py-4'>
           <div>
             <h2 className='text-lg font-semibold'>Más</h2>

@@ -1535,7 +1535,7 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1200px] rounded-[30px] p-5 sm:p-7 lg:p-8'>
+      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1200px] rounded-2xl p-5 sm:p-7 lg:p-8'>
         <DialogHeader className='pb-3'>
           <div className='flex items-center justify-between gap-4'>
             <div>

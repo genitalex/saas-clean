@@ -336,7 +336,7 @@ export function KanbanBoard() {
       </DndContext>
 
       <Dialog open={Boolean(selectedTask)} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <DialogContent className='w-[calc(100%-2rem)] max-w-lg rounded-[28px]'>
+        <DialogContent className='w-[calc(100%-2rem)] max-w-lg rounded-2xl'>
           <DialogHeader>
             <DialogTitle>{selectedTask?.title}</DialogTitle>
             <DialogDescription>Detalles de la tarea</DialogDescription>
@@ -401,7 +401,7 @@ export function KanbanBoard() {
         open={Boolean(deleteCandidate)}
         onOpenChange={(open) => !open && !deleting && setDeleteCandidate(null)}
       >
-        <DialogContent className='w-[calc(100%-2rem)] max-w-md rounded-[28px]'>
+        <DialogContent className='w-[calc(100%-2rem)] max-w-md rounded-2xl'>
           <DialogHeader>
             <DialogTitle>¿Eliminar tarea?</DialogTitle>
             <DialogDescription>

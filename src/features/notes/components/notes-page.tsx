@@ -331,10 +331,10 @@ function NoteColorSettings({
 
   return (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/10 p-4 backdrop-blur-sm'
+      className='fixed inset-0 z-50 flex items-center justify-center bg-black/12 p-4 supports-backdrop-filter:backdrop-blur-[2px]'
       onMouseDown={(e) => e.currentTarget === e.target && onClose()}
     >
-      <section className='w-full max-w-lg rounded-[28px] border border-border/60 bg-background/95 p-5 shadow-[0_30px_90px_-38px_rgba(0,0,0,0.5)]'>
+      <section className='w-full max-w-lg rounded-2xl border border-border/70 bg-background p-5 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)]'>
         <div className='flex items-start justify-between gap-4'>
           <div>
             <h2 className='text-lg font-semibold'>Colores de notas</h2>

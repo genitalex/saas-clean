@@ -116,7 +116,7 @@ export function UserNav() {
       {open && (
         <div
           role='menu'
-          className='absolute right-0 top-[calc(100%+10px)] z-50 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/60 bg-popover/95 p-2 text-popover-foreground shadow-[0_20px_60px_-24px_rgba(0,0,0,0.45)] backdrop-blur-2xl'
+          className='absolute right-0 top-[calc(100%+8px)] z-50 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-border/70 bg-popover p-2 text-popover-foreground shadow-[0_12px_28px_-20px_rgba(15,23,42,0.35)]'
         >
           <div className='flex items-center gap-3 px-3 py-3'>
             <Avatar className='size-11'>

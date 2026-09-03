@@ -153,7 +153,7 @@ export function CustomerInspector({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side='right' className='w-full gap-0 overflow-y-auto p-0 sm:max-w-[500px]'>
+        <SheetContent side='right' className='w-full gap-0 overflow-hidden p-0 sm:max-w-md'>
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
               <div className='bg-muted h-8 w-2/3 animate-pulse rounded' />
@@ -169,7 +169,7 @@ export function CustomerInspector({
             </div>
           ) : (
             <>
-              <SheetHeader className='border-b border-border/60 p-5 pb-4'>
+              <SheetHeader className='shrink-0 border-b border-border/60 p-5 pb-4'>
                 <div className='flex items-start gap-3'>
                   <span className='bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold'>
                     {customer.name.slice(0, 2).toUpperCase()}
@@ -213,7 +213,7 @@ export function CustomerInspector({
                   )}
                 </div>
               </SheetHeader>
-              <div className='space-y-6 p-5'>
+              <div className='min-h-0 flex-1 space-y-6 overflow-y-auto p-5'>
                 <section className='grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60'>
                   <Detail label='Correo' value={customer.email || 'Sin correo'} />
                   <Detail label='Teléfono' value={customer.phone || 'Sin teléfono'} />

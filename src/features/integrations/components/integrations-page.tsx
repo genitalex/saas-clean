@@ -119,13 +119,13 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
     );
   return (
     <div
-      className='fixed inset-0 z-40 flex justify-end bg-foreground/20 backdrop-blur-[2px]'
+      className='fixed inset-0 z-50 flex justify-end bg-black/12 supports-backdrop-filter:backdrop-blur-[2px]'
       role='dialog'
       aria-modal='true'
       aria-label='Google Calendar settings'
     >
-      <div className='bg-background flex h-full w-full max-w-xl flex-col overflow-y-auto border-l shadow-2xl'>
-        <div className='flex items-center justify-between border-b px-6 py-5'>
+      <div className='flex h-full w-full max-w-md flex-col overflow-hidden border-l border-border/70 bg-background shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)]'>
+        <div className='flex shrink-0 items-center justify-between border-b border-border/60 px-5 py-5'>
           <div className='flex items-center gap-3'>
             <div className='bg-blue-500/10 flex size-10 items-center justify-center rounded-xl font-semibold text-blue-600'>
               G
@@ -139,7 +139,7 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
             <IconX />
           </Button>
         </div>
-        <div className='flex flex-1 flex-col gap-6 p-6'>
+        <div className='flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-5'>
           <div className='rounded-xl border border-blue-500/20 bg-blue-500/5 p-4'>
             <div className='flex items-start gap-3'>
               <IconCalendar className='mt-0.5 text-blue-600' />
