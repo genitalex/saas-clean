@@ -494,3 +494,154 @@ export const notes = pgTable(
     )
   ]
 );
+
+/* -------------------------------------------------------------------------- */
+/* Automations & Notifications                                               */
+/* -------------------------------------------------------------------------- */
+
+export const automationTrigger = pgEnum('automation_trigger', [
+  'task_completed',
+  'event_completed',
+  'waiting_due',
+  'task_overdue',
+  'customer_inactive'
+]);
+
+export const automationAction = pgEnum('automation_action', [
+  'create_follow_up',
+  'create_task',
+  'create_attention',
+  'mark_attention'
+]);
+
+export const automations = pgTable(
+  'automations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    enabled: boolean('enabled').notNull().default(true),
+
+    trigger: automationTrigger('trigger').notNull(),
+
+    action: automationAction('action').notNull(),
+
+    // Configuration varies by automation type (JSON: delays, days, etc.)
+    config: jsonb('config').notNull().default({}),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('automations_organization_id_idx').on(table.organizationId),
+    index('automations_enabled_idx').on(table.enabled)
+  ]
+);
+
+export const notificationType = pgEnum('notification_type', [
+  'task_assigned',
+  'task_overdue',
+  'follow_up_overdue',
+  'task_blocked',
+  'waiting_ready',
+  'automation_executed',
+  'event_important'
+]);
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    type: notificationType('type').notNull(),
+
+    title: text('title').notNull(),
+
+    message: text('message').notNull(),
+
+    read: boolean('read').notNull().default(false),
+
+    // Reference to originating entity (task, event, etc.)
+    refEntityType: text('ref_entity_type'),
+    refEntityId: uuid('ref_entity_id'),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('notifications_organization_id_idx').on(table.organizationId),
+    index('notifications_user_id_idx').on(table.userId),
+    index('notifications_read_idx').on(table.read),
+    index('notifications_org_user_read_idx').on(table.organizationId, table.userId, table.read),
+    index('notifications_created_at_idx').on(table.createdAt)
+  ]
+);
+
+export const attentionItemType = pgEnum('attention_item_type', [
+  'task_overdue',
+  'follow_up_overdue',
+  'task_blocked',
+  'waiting_ready',
+  'customer_inactive'
+]);
+
+export const attentionItems = pgTable(
+  'attention_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    type: attentionItemType('type').notNull(),
+
+    title: text('title').notNull(),
+
+    message: text('message').notNull(),
+
+    // Reference to originating entity
+    refEntityType: text('ref_entity_type').notNull(),
+    refEntityId: uuid('ref_entity_id').notNull(),
+
+    // Customer context if applicable
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'cascade' }),
+
+    // Status: active, acknowledged, resolved
+    status: text('status').notNull().default('active'),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('attention_items_organization_id_idx').on(table.organizationId),
+    index('attention_items_user_id_idx').on(table.userId),
+    index('attention_items_status_idx').on(table.status),
+    index('attention_items_org_user_status_idx').on(
+      table.organizationId,
+      table.userId,
+      table.status
+    ),
+    index('attention_items_created_at_idx').on(table.createdAt),
+    // Prevent duplicates: one active attention item per entity/user
+    uniqueIndex('attention_items_entity_user_idx').on(
+      table.refEntityType,
+      table.refEntityId,
+      table.userId
+    )
+  ]
+);
