@@ -1,34 +1,56 @@
 import * as React from 'react';
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from './select';
 import { cn } from '@/lib/utils';
-import { IconSelector } from '@tabler/icons-react';
 
 type NativeSelectProps = Omit<React.ComponentProps<'select'>, 'size'> & {
   size?: 'sm' | 'default';
 };
 
 function NativeSelect({ className, size = 'default', ...props }: NativeSelectProps) {
+  const options = React.Children.toArray(props.children).filter(
+    (child): child is React.ReactElement<React.ComponentProps<'option'>> =>
+      React.isValidElement(child) && child.type === NativeSelectOption
+  );
+  const value = props.value == null ? '' : String(props.value);
+
   return (
-    <div
-      className={cn(
-        'group/native-select relative w-fit has-[select:disabled]:opacity-50',
-        className
-      )}
-      data-slot='native-select-wrapper'
-      data-size={size}
+    <Select
+      value={value}
+      onValueChange={(nextValue) => {
+        props.onChange?.({
+          target: { value: nextValue ?? '' }
+        } as React.ChangeEvent<HTMLSelectElement>);
+      }}
+      disabled={props.disabled}
     >
-      <select
-        data-slot='native-select'
-        data-size={size}
-        className='h-10 w-full min-w-0 appearance-none rounded-[10px] border border-input/80 bg-background/80 py-1 pr-9 pl-3 text-sm shadow-none transition-[background-color,border-color,box-shadow] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground hover:border-foreground/25 hover:bg-accent/20 focus-visible:border-ring/70 focus-visible:ring-2 focus-visible:ring-ring/25 disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/15 data-[size=sm]:h-8 data-[size=sm]:rounded-[9px] data-[size=sm]:py-0.5'
-        {...props}
-      />
-      <IconSelector
-        className='pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground select-none'
-        aria-hidden='true'
-        data-slot='native-select-icon'
-      />
-    </div>
+      <SelectTrigger
+        id={props.id}
+        name={props.name}
+        aria-label={props['aria-label']}
+        aria-invalid={props['aria-invalid']}
+        disabled={props.disabled}
+        size={size}
+        className={cn('w-full', className)}
+      >
+        <SelectValue placeholder={options[0]?.props.children} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          {options.map((option) => (
+            <SelectItem key={String(option.props.value)} value={String(option.props.value)}>
+              {option.props.children}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
 

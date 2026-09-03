@@ -35,6 +35,13 @@ import { cn } from '@/lib/utils';
 import { getEvents, eventKeys, updateEvent } from '../queries';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Event } from '../types';
+import {
+  CALENDAR_SNAP_MINUTES,
+  dateKey,
+  localDateAtMinutes,
+  minutesFromDate,
+  snapMinutes
+} from '../lib/calendar-time';
 import { EventDialog } from './event-dialog';
 import { EventInspector } from './event-inspector';
 
@@ -255,10 +262,15 @@ export function CalendarPage({
         );
       queryClient.setQueriesData<Event[]>({ queryKey: eventKeys.all }, updateCachedEvent);
       try {
-        await updateEvent(event.id, {
+        const persistedEvent = await updateEvent(event.id, {
           startAt: nextStart.toISOString(),
           endAt: nextEnd.toISOString()
         });
+        queryClient.setQueriesData<Event[]>({ queryKey: eventKeys.all }, (cachedEvents) =>
+          cachedEvents?.map((cachedEvent) =>
+            cachedEvent.id === persistedEvent.id ? persistedEvent : cachedEvent
+          )
+        );
         await queryClient.invalidateQueries({ queryKey: eventKeys.all });
         await queryClient.invalidateQueries({ queryKey: taskKeys.all });
         toast.success('Bloque reprogramado');
@@ -278,7 +290,12 @@ export function CalendarPage({
         )
       );
       try {
-        await updateEvent(event.id, { endAt: nextEnd.toISOString() });
+        const persistedEvent = await updateEvent(event.id, { endAt: nextEnd.toISOString() });
+        queryClient.setQueriesData<Event[]>({ queryKey: eventKeys.all }, (cachedEvents) =>
+          cachedEvents?.map((cachedEvent) =>
+            cachedEvent.id === persistedEvent.id ? persistedEvent : cachedEvent
+          )
+        );
         await queryClient.invalidateQueries({ queryKey: eventKeys.all });
         await queryClient.invalidateQueries({ queryKey: taskKeys.all });
         toast.success('Duración actualizada');
@@ -1083,7 +1100,7 @@ function useEventDrag({
         const maxStart = endHour * 60 - durationMinutes;
         const minutes = Math.max(
           startHour * 60,
-          Math.min(maxStart, Math.round(rawMinutes / 15) * 15)
+          Math.min(maxStart, snapMinutes(rawMinutes, CALENDAR_SNAP_MINUTES))
         );
         const nextPreview = { event: drag.event, dateKey, minutes };
         previewRef.current = nextPreview;
@@ -1105,8 +1122,7 @@ function useEventDrag({
         return;
       }
 
-      const date = new Date(`${preview.dateKey}T00:00:00`);
-      date.setHours(0, preview.minutes, 0, 0);
+      const date = localDateAtMinutes(preview.dateKey, preview.minutes);
       window.setTimeout(() => {
         suppressClickRef.current = false;
       }, 0);
@@ -1133,7 +1149,7 @@ function useEventDrag({
     const dayElement = event.currentTarget.closest<HTMLElement>('[data-calendar-day]');
     const dayRect = dayElement?.getBoundingClientRect();
     const eventStart = new Date(calendarEvent.startAt);
-    const eventStartMinutes = eventStart.getHours() * 60 + eventStart.getMinutes();
+    const eventStartMinutes = minutesFromDate(eventStart);
     const pointerMinutes = dayRect
       ? minutesFromPointer
         ? minutesFromPointer(event.clientY, dayRect)
@@ -1163,6 +1179,10 @@ function useEventResize({
   hourHeight: number;
   onResize: (event: Event, nextEnd: Date) => Promise<void> | void;
 }) {
+  const [resizePreview, setResizePreview] = useState<{
+    event: Event;
+    endMinutes: number;
+  } | null>(null);
   const resizingRef = useRef<{ event: Event; startY: number; startEnd: number } | null>(null);
   const lastEndMinutesRef = useRef<number | null>(null);
 
@@ -1172,10 +1192,12 @@ function useEventResize({
       if (!resize) return;
       const rawMinutes =
         resize.startEnd + ((pointerEvent.clientY - resize.startY) / hourHeight) * 60;
-      const snapped = Math.round(rawMinutes / 15) * 15;
+      const snapped = snapMinutes(rawMinutes, CALENDAR_SNAP_MINUTES);
       const start = new Date(resize.event.startAt);
       const startMinutes = start.getHours() * 60 + start.getMinutes();
-      lastEndMinutesRef.current = Math.max(startMinutes + 15, Math.min(24 * 60, snapped));
+      const endMinutes = Math.max(startMinutes + CALENDAR_SNAP_MINUTES, Math.min(24 * 60, snapped));
+      lastEndMinutesRef.current = endMinutes;
+      setResizePreview({ event: resize.event, endMinutes });
     };
 
     const up = async () => {
@@ -1183,6 +1205,7 @@ function useEventResize({
       const endMinutes = lastEndMinutesRef.current;
       resizingRef.current = null;
       lastEndMinutesRef.current = null;
+      setResizePreview(null);
       if (!resize || endMinutes == null) return;
       const nextEnd = new Date(resize.event.startAt);
       nextEnd.setHours(0, endMinutes, 0, 0);
@@ -1209,9 +1232,10 @@ function useEventResize({
       startEnd: end.getHours() * 60 + end.getMinutes()
     };
     lastEndMinutesRef.current = end.getHours() * 60 + end.getMinutes();
+    setResizePreview({ event, endMinutes: end.getHours() * 60 + end.getMinutes() });
   };
 
-  return { startResize };
+  return { resizePreview, startResize };
 }
 
 function EventResizeHandle({
@@ -1463,8 +1487,14 @@ function MobileDayTimeline({
             const category = categoryFor(event, categories);
             const startAt = new Date(event.startAt),
               endAt = new Date(event.endAt);
-            const start = startAt.getHours() * 60 + startAt.getMinutes();
+            const preview =
+              dragPreview?.event.id === event.id && dragPreview.dateKey === dateKey(date)
+                ? dragPreview
+                : null;
+            const start = preview ? preview.minutes : minutesFromDate(startAt);
             const duration = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
+            const displayStart = preview ? localDateAtMinutes(date, start) : startAt;
+            const displayEnd = new Date(displayStart.getTime() + duration * 60000);
             const top = offset(start) + 3,
               bottom = offset(Math.min(1440, start + duration));
             return (
@@ -1474,8 +1504,7 @@ function MobileDayTimeline({
                 onPointerDown={(e) => startDrag(e, event)}
                 onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                 className={cn(
-                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
-                  dragPreview?.event.id === event.id && 'opacity-35'
+                  'absolute left-16 right-3 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing'
                 )}
                 style={{
                   top,
@@ -1491,7 +1520,7 @@ function MobileDayTimeline({
                 <span className='flex h-full min-w-0 flex-col justify-center px-3 pl-4'>
                   <span className='truncate text-sm font-semibold'>{event.title}</span>
                   <span className='mt-0.5 text-[11px] text-muted-foreground'>
-                    {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                    {format(displayStart, 'HH:mm')} – {format(displayEnd, 'HH:mm')}
                   </span>
                 </span>
               </button>
@@ -2172,8 +2201,14 @@ function CompressedDayTimeline({
                   const category = categoryFor(event, categories);
                   const startAt = new Date(event.startAt);
                   const endAt = new Date(event.endAt);
-                  const start = startAt.getHours() * 60 + startAt.getMinutes();
+                  const preview =
+                    dragPreview?.event.id === event.id && dragPreview.dateKey === dateKey(cursor)
+                      ? dragPreview
+                      : null;
+                  const start = preview ? preview.minutes : minutesFromDate(startAt);
                   const duration = Math.max(30, (endAt.getTime() - startAt.getTime()) / 60000);
+                  const displayStart = preview ? localDateAtMinutes(cursor, start) : startAt;
+                  const displayEnd = new Date(displayStart.getTime() + duration * 60000);
                   const top = offset(start) + 3;
                   const bottom = offset(Math.min(1440, start + duration));
                   return (
@@ -2183,8 +2218,7 @@ function CompressedDayTimeline({
                       onPointerDown={(e) => startDrag(e, event)}
                       onClick={() => !suppressClickRef.current && onOpenEvent(event)}
                       className={cn(
-                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
-                        dragPreview?.event.id === event.id && 'opacity-35'
+                        'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing'
                       )}
                       style={{
                         top,
@@ -2208,7 +2242,7 @@ function CompressedDayTimeline({
                           )}
                         </span>
                         <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
-                          {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                          {format(displayStart, 'HH:mm')} – {format(displayEnd, 'HH:mm')}
                         </span>
                       </span>
                       <EventResizeHandle event={event} startResize={resize.startResize} />
@@ -2402,12 +2436,20 @@ function WeekTimeline({
                       const category = categoryFor(event, categories);
                       const startAt = new Date(event.startAt);
                       const endAt = new Date(event.endAt);
+                      const preview =
+                        dragPreview?.event.id === event.id && dragPreview.dateKey === dateKey(day)
+                          ? dragPreview
+                          : null;
                       const minutesFromStart =
-                        startAt.getHours() * 60 + startAt.getMinutes() - startHour * 60;
+                        (preview ? preview.minutes : minutesFromDate(startAt)) - startHour * 60;
                       const durationMinutes = Math.max(
                         30,
                         (endAt.getTime() - startAt.getTime()) / 60000
                       );
+                      const displayStart = preview
+                        ? localDateAtMinutes(day, preview.minutes)
+                        : startAt;
+                      const displayEnd = new Date(displayStart.getTime() + durationMinutes * 60000);
                       const clampedTop = Math.max(0, (minutesFromStart / 60) * hourHeight);
                       const height = Math.max(34, (durationMinutes / 60) * hourHeight - 6);
                       return (
@@ -2420,8 +2462,7 @@ function WeekTimeline({
                             if (!suppressClickRef.current) onOpenEvent(event);
                           }}
                           className={cn(
-                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing',
-                            dragPreview?.event.id === event.id && 'opacity-35'
+                            'absolute left-1.5 right-1.5 z-10 cursor-grab touch-none overflow-hidden rounded-xl border text-left backdrop-blur-sm transition-transform hover:-translate-y-px active:cursor-grabbing'
                           )}
                           style={{
                             top: clampedTop,
@@ -2445,7 +2486,7 @@ function WeekTimeline({
                               )}
                             </span>
                             <span className='mt-0.5 truncate text-[11px] text-muted-foreground'>
-                              {format(startAt, 'HH:mm')} – {format(endAt, 'HH:mm')}
+                              {format(displayStart, 'HH:mm')} – {format(displayEnd, 'HH:mm')}
                             </span>
                             {event.location && (
                               <a
@@ -2476,6 +2517,8 @@ function WeekTimeline({
                           15,
                           (ghostEnd.getTime() - ghostStart.getTime()) / 60000
                         );
+                        const ghostStartAt = localDateAtMinutes(day, dragPreview.minutes);
+                        const ghostEndAt = new Date(ghostStartAt.getTime() + ghostDuration * 60000);
                         const ghostTop = ((dragPreview.minutes - startHour * 60) / 60) * hourHeight;
                         const ghostHeight = Math.max(34, (ghostDuration / 60) * hourHeight - 6);
                         return (
@@ -2487,7 +2530,16 @@ function WeekTimeline({
                               backgroundColor: `${ghostCategory.color}18`,
                               borderColor: `${ghostCategory.color}65`
                             }}
-                          />
+                          >
+                            <span className='flex h-full flex-col justify-center px-3 py-2'>
+                              <span className='truncate text-sm font-semibold'>
+                                {ghostEvent.title}
+                              </span>
+                              <span className='text-[11px] text-muted-foreground'>
+                                {format(ghostStartAt, 'HH:mm')} – {format(ghostEndAt, 'HH:mm')}
+                              </span>
+                            </span>
+                          </div>
                         );
                       })()}
 
