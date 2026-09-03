@@ -33,9 +33,11 @@ type Customer = {
   email: string | null;
   phone: string | null;
   address: string | null;
+  website: string | null;
   nextAction: string | null;
   nextActionAt: string | null;
   archived: boolean;
+  owner: { id: string; name: string } | null;
 };
 
 export function CustomerInspector({
@@ -49,6 +51,14 @@ export function CustomerInspector({
 }) {
   const queryClient = useQueryClient();
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const [contact, setContact] = useState({
+    email: '',
+    phone: '',
+    address: '',
+    website: '',
+    nextAction: '',
+    nextActionAt: ''
+  });
   const customerQuery = useQuery({
     queryKey: ['customer', customerId],
     queryFn: async () => {
@@ -77,6 +87,38 @@ export function CustomerInspector({
   const tasks = tasksQuery.data ?? [];
   const events = (eventsQuery.data ?? []).filter((event) => new Date(event.endAt) >= new Date());
 
+  useEffect(() => {
+    if (!customer) return;
+    setContact({
+      email: customer.email ?? '',
+      phone: customer.phone ?? '',
+      address: customer.address ?? '',
+      website: customer.website ?? '',
+      nextAction: customer.nextAction ?? '',
+      nextActionAt: customer.nextActionAt ? customer.nextActionAt.slice(0, 10) : ''
+    });
+  }, [customer]);
+
+  const saveContact = async (patch: Partial<typeof contact>) => {
+    if (!customer) return;
+    const next = { ...contact, ...patch };
+    setContact(next);
+    try {
+      const response = await fetch(`/api/customers/${customer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: customer.kind, name: customer.name, ...next })
+      });
+      if (!response.ok) throw new Error('No se pudo actualizar el cliente.');
+      await queryClient.invalidateQueries({ queryKey: ['customer', customer.id] });
+      await queryClient.invalidateQueries({ queryKey: ['customers'] });
+      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
+      toast.success('Cliente actualizado');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo actualizar el cliente.');
+    }
+  };
+
   const saveName = async (name: string) => {
     if (!customer || !name.trim() || name.trim() === customer.name) return;
     try {
@@ -89,6 +131,7 @@ export function CustomerInspector({
           email: customer.email || '',
           phone: customer.phone || '',
           address: customer.address || '',
+          website: customer.website || '',
           nextAction: customer.nextAction || '',
           nextActionAt: customer.nextActionAt ? customer.nextActionAt.slice(0, 10) : ''
         })
@@ -211,15 +254,83 @@ export function CustomerInspector({
                       <Icons.phone className='size-4' /> Llamar
                     </a>
                   )}
+                  {customer.email && (
+                    <a
+                      href={`mailto:${customer.email}`}
+                      className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                    >
+                      <Icons.send className='size-4' /> Email
+                    </a>
+                  )}
+                  {customer.website && (
+                    <a
+                      href={customer.website}
+                      target='_blank'
+                      rel='noreferrer'
+                      className='text-primary inline-flex items-center gap-1 px-2 text-sm hover:underline'
+                    >
+                      <Icons.externalLink className='size-4' /> Web
+                    </a>
+                  )}
                 </div>
               </SheetHeader>
               <div className='min-h-0 flex-1 space-y-6 overflow-y-auto p-5'>
                 <section className='grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60'>
-                  <Detail label='Correo' value={customer.email || 'Sin correo'} />
-                  <Detail label='Teléfono' value={customer.phone || 'Sin teléfono'} />
-                  <Detail label='Responsable' value='Espacio actual' />
-                  <Detail label='Próximo paso' value={customer.nextAction || 'Sin definir'} />
+                  <EditableDetail
+                    label='Correo'
+                    value={contact.email}
+                    placeholder='Sin correo'
+                    onChange={(value) => setContact((current) => ({ ...current, email: value }))}
+                    onBlur={(value) => void saveContact({ email: value })}
+                    type='email'
+                  />
+                  <EditableDetail
+                    label='Teléfono'
+                    value={contact.phone}
+                    placeholder='Sin teléfono'
+                    onChange={(value) => setContact((current) => ({ ...current, phone: value }))}
+                    onBlur={(value) => void saveContact({ phone: value })}
+                  />
+                  <Detail label='Responsable' value={customer.owner?.name || 'Sin asignar'} />
+                  <EditableDetail
+                    label='Próximo paso'
+                    value={contact.nextAction}
+                    placeholder='Sin definir'
+                    onChange={(value) =>
+                      setContact((current) => ({ ...current, nextAction: value }))
+                    }
+                    onBlur={(value) => void saveContact({ nextAction: value })}
+                  />
                 </section>
+                <div className='space-y-3'>
+                  <EditableDetail
+                    label='Dirección'
+                    value={contact.address}
+                    placeholder='Sin dirección'
+                    onChange={(value) => setContact((current) => ({ ...current, address: value }))}
+                    onBlur={(value) => void saveContact({ address: value })}
+                  />
+                  <EditableDetail
+                    label='Web'
+                    value={contact.website}
+                    placeholder='Sin web'
+                    onChange={(value) => setContact((current) => ({ ...current, website: value }))}
+                    onBlur={(value) => void saveContact({ website: value })}
+                    type='url'
+                  />
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      type='date'
+                      aria-label='Fecha de próxima acción'
+                      value={contact.nextActionAt}
+                      onChange={(event) =>
+                        setContact((current) => ({ ...current, nextActionAt: event.target.value }))
+                      }
+                      onBlur={() => void saveContact({ nextActionAt: contact.nextActionAt })}
+                      className='h-9 max-w-44'
+                    />
+                  </div>
+                </div>
                 <section className='space-y-3'>
                   <SectionTitle title='Próximos eventos' href='/dashboard/calendar' />
                   {eventsQuery.isPending ? (
@@ -321,6 +432,37 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className='text-muted-foreground text-[11px]'>{label}</p>
       <p className='mt-1 truncate text-sm font-medium'>{value}</p>
     </div>
+  );
+}
+
+function EditableDetail({
+  label,
+  value,
+  placeholder,
+  onChange,
+  onBlur,
+  type = 'text'
+}: {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (value: string) => void;
+  onBlur: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className='bg-background p-3'>
+      <span className='text-muted-foreground block text-[11px]'>{label}</span>
+      <input
+        type={type}
+        aria-label={label}
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={(event) => onBlur(event.target.value)}
+        className='mt-1 w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground/70'
+      />
+    </label>
   );
 }
 

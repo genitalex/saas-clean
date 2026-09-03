@@ -9,6 +9,8 @@ type Customer = {
   name: string;
   email: string | null;
   phone: string | null;
+  website: string | null;
+  nextAction: string | null;
 };
 
 export default function CustomerListing() {
@@ -91,7 +93,7 @@ export default function CustomerListing() {
         <div className='hidden grid-cols-[2fr_1fr_2fr_auto] gap-4 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid'>
           <span>Cliente</span>
           <span>Tipo</span>
-          <span>Contacto</span>
+          <span>Contexto</span>
           <span />
         </div>
         {rows.map((customer) => (
@@ -106,7 +108,8 @@ export default function CustomerListing() {
               {customer.kind === 'person' ? 'Persona' : 'Empresa'}
             </span>
             <span className='text-muted-foreground min-w-0 truncate text-sm'>
-              {customer.email || customer.phone || 'Sin contacto'}
+              {customer.email || customer.phone || customer.website || 'Sin contacto'}
+              {customer.nextAction ? ` · ${customer.nextAction}` : ''}
             </span>
             <span className='text-primary text-xs'>Abrir contexto</span>
           </button>

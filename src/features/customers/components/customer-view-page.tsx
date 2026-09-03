@@ -28,6 +28,7 @@ type Customer = {
   email: string | null;
   phone: string | null;
   address: string | null;
+  website: string | null;
   nextAction: string | null;
   nextActionAt: string | null;
   archived: boolean;
@@ -95,8 +96,26 @@ export default function CustomerViewPage({ customerId }: { customerId: string })
               {customer.kind === 'person' ? 'Persona' : 'Empresa'}
             </p>
             <div className='text-muted-foreground mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm'>
-              {customer.email && <span>{customer.email}</span>}
-              {customer.phone && <span>{customer.phone}</span>}
+              {customer.email && (
+                <a className='text-primary hover:underline' href={`mailto:${customer.email}`}>
+                  {customer.email}
+                </a>
+              )}
+              {customer.phone && (
+                <a className='text-primary hover:underline' href={`tel:${customer.phone}`}>
+                  {customer.phone}
+                </a>
+              )}
+              {customer.website && (
+                <a
+                  className='text-primary hover:underline'
+                  href={customer.website}
+                  target='_blank'
+                  rel='noreferrer'
+                >
+                  Web
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -137,6 +156,22 @@ export default function CustomerViewPage({ customerId }: { customerId: string })
             )}
           </CardContent>
         </Card>
+      )}
+
+      {(customer.address || customer.website) && (
+        <div className='flex flex-wrap gap-x-5 gap-y-2 border-y border-border/60 py-3 text-sm'>
+          {customer.address && <span className='text-muted-foreground'>{customer.address}</span>}
+          {customer.website && (
+            <a
+              className='text-primary hover:underline'
+              href={customer.website}
+              target='_blank'
+              rel='noreferrer'
+            >
+              {customer.website}
+            </a>
+          )}
+        </div>
       )}
 
       <div className='grid gap-4 lg:grid-cols-[1.15fr_0.85fr]'>

@@ -1,6 +1,6 @@
 import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import { db } from '@/lib/db';
-import { customers } from '@/lib/db/schema';
+import { customers, users } from '@/lib/db/schema';
 import { customerSchema } from '@/features/customers/schemas/customer';
 import { and, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,16 +12,35 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
     }
     throw error;
   }
-  const session = context.session;
   const organizationId = context.organization.id;
   const { id } = await params;
   const [row] = await db
-    .select()
+    .select({
+      id: customers.id,
+      organizationId: customers.organizationId,
+      ownerId: customers.ownerId,
+      kind: customers.kind,
+      name: customers.name,
+      email: customers.email,
+      phone: customers.phone,
+      address: customers.address,
+      website: customers.website,
+      nextAction: customers.nextAction,
+      nextActionAt: customers.nextActionAt,
+      archived: customers.archived,
+      createdAt: customers.createdAt,
+      updatedAt: customers.updatedAt,
+      owner: { id: users.id, name: users.name }
+    })
     .from(customers)
+    .leftJoin(users, eq(users.id, customers.ownerId))
     .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
     .limit(1);
   return row
@@ -35,11 +54,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
     }
     throw error;
   }
-  const session = context.session;
   const organizationId = context.organization.id;
   const { id } = await params;
   const parsed = customerSchema.safeParse(await request.json());
@@ -52,6 +73,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       email: parsed.data.email || null,
       phone: parsed.data.phone || null,
       address: parsed.data.address || null,
+      website: parsed.data.website || null,
       nextAction: parsed.data.nextAction || null,
       nextActionAt: parsed.data.nextActionAt
         ? new Date(`${parsed.data.nextActionAt}T00:00:00.000Z`)
@@ -75,11 +97,13 @@ export async function DELETE(
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
     }
     throw error;
   }
-  const session = context.session;
   const organizationId = context.organization.id;
   const { id } = await params;
   const [row] = await db

@@ -246,6 +246,8 @@ export const customers = pgTable(
 
     address: text('address'),
 
+    website: text('website'),
+
     nextAction: text('next_action'),
 
     nextActionAt: timestamp('next_action_at', {

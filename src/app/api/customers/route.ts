@@ -12,11 +12,13 @@ export async function GET(request: NextRequest) {
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
     }
     throw error;
   }
-  const session = context.session;
   const organizationId = context.organization.id;
   try {
     const q = request.nextUrl.searchParams.get('search')?.trim() || '';
@@ -31,7 +33,8 @@ export async function GET(request: NextRequest) {
             ? or(
                 ilike(customers.name, `%${q}%`),
                 ilike(customers.email, `%${q}%`),
-                ilike(customers.phone, `%${q}%`)
+                ilike(customers.phone, `%${q}%`),
+                ilike(customers.website, `%${q}%`)
               )
             : undefined
         )
@@ -50,7 +53,10 @@ export async function POST(request: NextRequest) {
     context = await getAuthContext(request.headers);
   } catch (error) {
     if (error instanceof AuthContextError) {
-      return NextResponse.json({ error: error.code }, { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 });
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
     }
     throw error;
   }
@@ -72,6 +78,7 @@ export async function POST(request: NextRequest) {
         email: parsed.data.email || null,
         phone: parsed.data.phone || null,
         address: parsed.data.address || null,
+        website: parsed.data.website || null,
         nextAction: parsed.data.nextAction || null,
         nextActionAt: parsed.data.nextActionAt
           ? new Date(`${parsed.data.nextActionAt}T00:00:00.000Z`)
