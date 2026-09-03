@@ -94,15 +94,20 @@ export function CustomerLifecycleActions({
         >
           <Icons.ellipsis className='size-4' />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align='end'>
-          <DropdownMenuItem onClick={onEdit} disabled={!onEdit}>
+        <DropdownMenuContent align='end' className='w-64 bg-popover p-1.5'>
+          <DropdownMenuItem className='py-2.5' onClick={onEdit} disabled={!onEdit}>
             <Icons.edit /> Editar
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void archiveOrRestore()} disabled={pending}>
+          <DropdownMenuItem
+            className='py-2.5'
+            onClick={() => void archiveOrRestore()}
+            disabled={pending}
+          >
             <Icons.archive /> {archived ? 'Recuperar' : 'Archivar'}
           </DropdownMenuItem>
           <DropdownMenuItem
             variant='destructive'
+            className='whitespace-normal py-2.5 leading-5'
             onClick={() => setPermanentDialogOpen(true)}
             disabled={pending}
           >

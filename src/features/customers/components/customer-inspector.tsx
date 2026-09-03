@@ -332,33 +332,56 @@ export function CustomerInspector({
                     />
                   </div>
                 </section>
-                <section className='space-y-3 rounded-[22px] border border-border/50 bg-background/65 p-4'>
-                  <EditableDetail
-                    label='Dirección'
-                    value={contact.address}
-                    placeholder='Sin dirección'
-                    onChange={(value) => setContact((current) => ({ ...current, address: value }))}
-                    onBlur={(value) => void saveContact({ address: value })}
-                  />
-                  <EditableDetail
-                    label='Web'
-                    value={contact.website}
-                    placeholder='Sin web'
-                    onChange={(value) => setContact((current) => ({ ...current, website: value }))}
-                    onBlur={(value) => void saveContact({ website: value })}
-                    type='url'
-                  />
-                  <div className='flex items-center gap-2'>
-                    <Input
-                      type='date'
-                      aria-label='Fecha de próxima acción'
-                      value={contact.nextActionAt}
-                      onChange={(event) =>
-                        setContact((current) => ({ ...current, nextActionAt: event.target.value }))
+                <section className='overflow-hidden rounded-[22px] border border-border/50 bg-background/80 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.5)]'>
+                  <div className='border-b border-border/50 px-4 py-3'>
+                    <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
+                      Contacto adicional
+                    </p>
+                  </div>
+                  <div className='space-y-1 px-4 py-3'>
+                    <EditableDetail
+                      label='Dirección'
+                      value={contact.address}
+                      placeholder='Sin dirección'
+                      onChange={(value) =>
+                        setContact((current) => ({ ...current, address: value }))
                       }
-                      onBlur={() => void saveContact({ nextActionAt: contact.nextActionAt })}
-                      className='h-9 max-w-44'
+                      onBlur={(value) => void saveContact({ address: value })}
+                      className='bg-transparent px-0 py-2'
                     />
+                    <EditableDetail
+                      label='Sitio web'
+                      value={contact.website}
+                      placeholder='Sin sitio web'
+                      onChange={(value) =>
+                        setContact((current) => ({ ...current, website: value }))
+                      }
+                      onBlur={(value) => void saveContact({ website: value })}
+                      type='url'
+                      className='bg-transparent px-0 py-2'
+                    />
+                    <label
+                      htmlFor='customer-next-action-date'
+                      className='block border-t border-border/40 pt-3'
+                    >
+                      <span className='text-muted-foreground block text-[11px]'>
+                        Próxima acción
+                      </span>
+                      <Input
+                        id='customer-next-action-date'
+                        type='date'
+                        aria-label='Fecha de próxima acción'
+                        value={contact.nextActionAt}
+                        onChange={(event) =>
+                          setContact((current) => ({
+                            ...current,
+                            nextActionAt: event.target.value
+                          }))
+                        }
+                        onBlur={() => void saveContact({ nextActionAt: contact.nextActionAt })}
+                        className='mt-1 h-9 w-full max-w-52 border-transparent bg-muted/35 px-3 shadow-none focus-visible:border-primary/40'
+                      />
+                    </label>
                   </div>
                 </section>
                 <section className='space-y-3'>
@@ -471,7 +494,8 @@ function EditableDetail({
   placeholder,
   onChange,
   onBlur,
-  type = 'text'
+  type = 'text',
+  className
 }: {
   label: string;
   value: string;
@@ -479,9 +503,10 @@ function EditableDetail({
   onChange: (value: string) => void;
   onBlur: (value: string) => void;
   type?: string;
+  className?: string;
 }) {
   return (
-    <label className='bg-background p-3'>
+    <label className={className ?? 'bg-background p-3'}>
       <span className='text-muted-foreground block text-[11px]'>{label}</span>
       <input
         type={type}
