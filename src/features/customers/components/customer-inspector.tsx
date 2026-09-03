@@ -10,8 +10,9 @@ import { Icons } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Sheet,
   SheetContent,
@@ -200,7 +201,7 @@ export function CustomerInspector({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side='right'
-          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] sm:max-w-xl'
+          className='w-full gap-0 overflow-hidden border-l border-border/50 bg-background p-0 shadow-none sm:max-w-xl'
         >
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
@@ -217,9 +218,9 @@ export function CustomerInspector({
             </div>
           ) : (
             <>
-              <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-6 sm:pb-5'>
+              <SheetHeader className='shrink-0 border-b border-border/50 bg-background p-5 pb-4 sm:p-5 sm:pb-4'>
                 <div className='flex items-start gap-4'>
-                  <span className='bg-primary/10 text-primary ring-primary/10 flex size-14 shrink-0 items-center justify-center rounded-[14px] text-base font-semibold ring-1'>
+                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-semibold'>
                     {customer.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className='min-w-0 flex-1'>
@@ -239,27 +240,44 @@ export function CustomerInspector({
                     </SheetDescription>
                   </div>
                 </div>
-                <div className='mt-5 space-y-3 border-t border-border/50 pt-4'>
+                <div className='mt-4 space-y-3 border-t border-border/50 pt-3'>
                   <div className='flex flex-wrap items-center gap-2'>
-                    <Button
-                      size='sm'
-                      onClick={() => setEventDialogOpen(true)}
-                      className='rounded-xl px-3.5 shadow-[0_6px_16px_-8px_rgba(15,23,42,0.45)]'
-                    >
-                      <Icons.calendar data-icon='inline-start' /> Nuevo evento
-                    </Button>
-                    <AddNoteDialog customerId={customer.id} />
-                    <NewTaskDialog customerId={customer.id} />
-                    <Button size='sm' variant='outline' onClick={() => void createFollowUp('task')}>
-                      <Icons.check data-icon='inline-start' /> Seguimiento
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      onClick={() => void createFollowUp('event')}
-                    >
-                      <Icons.calendar data-icon='inline-start' /> Reunión
-                    </Button>
+                    <div className='inline-flex max-w-full overflow-hidden rounded-[10px] border border-border/60 bg-background'>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() => setEventDialogOpen(true)}
+                        className='h-8 rounded-none border-0 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                      >
+                        <Icons.calendar className='size-3.5' /> Nuevo evento
+                      </Button>
+                      <AddNoteDialog
+                        customerId={customer.id}
+                        triggerClassName='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        triggerIcon={<Icons.post className='size-3.5' />}
+                      />
+                      <NewTaskDialog
+                        customerId={customer.id}
+                        triggerClassName='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                        triggerIcon={<Icons.check className='size-3.5' />}
+                      />
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() => void createFollowUp('task')}
+                        className='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                      >
+                        <Icons.check className='size-3.5' /> Seguimiento
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='ghost'
+                        onClick={() => void createFollowUp('event')}
+                        className='h-8 rounded-none border-0 border-l border-border/50 bg-background px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                      >
+                        <Icons.calendar className='size-3.5' /> Reunión
+                      </Button>
+                    </div>
                     <CustomerLifecycleActions
                       customerId={customer.id}
                       archived={customer.archived}
@@ -268,9 +286,9 @@ export function CustomerInspector({
                       }}
                     />
                   </div>
-                  {(customer.phone || customer.email || customer.website) && (
-                    <div className='flex items-center gap-0.5 border-t border-border/40 pt-3'>
-                      <div className='inline-flex items-center overflow-hidden rounded-[10px] border border-border/60 bg-background'>
+                  <div className='flex flex-wrap items-center border-t border-border/40 pt-3'>
+                    {(customer.phone || customer.email || customer.website) && (
+                      <div className='inline-flex max-w-full overflow-hidden rounded-[10px] border border-border/60 bg-background'>
                         {customer.phone && (
                           <a
                             href={`tel:${customer.phone}`}
@@ -298,12 +316,12 @@ export function CustomerInspector({
                           </a>
                         )}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </SheetHeader>
               <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
-                <section className='overflow-hidden rounded-[14px] border border-border/40 bg-background'>
+                <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
                       Resumen
@@ -337,13 +355,13 @@ export function CustomerInspector({
                     />
                   </div>
                 </section>
-                <section className='overflow-hidden rounded-[14px] border border-border/40 bg-background'>
+                <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
                   <div className='border-b border-border/50 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground'>
                       Contacto adicional
                     </p>
                   </div>
-                  <div className='space-y-1 px-4 py-3'>
+                  <div className='space-y-3 px-4 py-3'>
                     <EditableDetail
                       label='Dirección'
                       value={contact.address}
@@ -352,7 +370,7 @@ export function CustomerInspector({
                         setContact((current) => ({ ...current, address: value }))
                       }
                       onBlur={(value) => void saveContact({ address: value })}
-                      className='bg-transparent px-0 py-2'
+                      className='bg-transparent px-0 py-2.5'
                     />
                     <EditableDetail
                       label='Sitio web'
@@ -363,20 +381,18 @@ export function CustomerInspector({
                       }
                       onBlur={(value) => void saveContact({ website: value })}
                       type='url'
-                      className='bg-transparent px-0 py-2'
+                      className='bg-transparent px-0 py-2.5'
                     />
-                    <div className='border-t border-border/40 pt-3'>
+                    <div className='border-t border-border/30 pt-3'>
                       <span className='text-muted-foreground block text-[11px]'>
                         Próxima acción
                       </span>
-                      <DatePicker
+                      <CustomerDatePicker
                         value={contact.nextActionAt}
                         onChange={(value) => {
                           setContact((current) => ({ ...current, nextActionAt: value }));
                           void saveContact({ nextActionAt: value });
                         }}
-                        aria-label='Fecha de próxima acción'
-                        className='mt-1 w-full max-w-52'
                       />
                     </div>
                   </div>
@@ -392,7 +408,7 @@ export function CustomerInspector({
                       <Link
                         key={event.id}
                         href={`/dashboard/calendar?event=${event.id}`}
-                        className='group flex items-center gap-3 rounded-[12px] border border-border/40 bg-background px-3.5 py-3.5 transition-[background-color,transform,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-primary/20 hover:bg-background'
+                        className='group flex items-center gap-3 rounded-[9px] border border-border/25 bg-background px-3 py-2.5 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border/55 hover:bg-muted/20'
                       >
                         <Icons.calendar className='text-primary size-4' />
                         <span className='min-w-0 flex-1 truncate text-sm font-medium transition-colors group-hover:text-primary'>
@@ -418,7 +434,7 @@ export function CustomerInspector({
                         <Link
                           key={task.id}
                           href={`/dashboard/tasks?task=${task.id}`}
-                          className='group flex items-center gap-3 rounded-[12px] border border-border/40 bg-background px-3.5 py-3.5 transition-[background-color,transform,border-color] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-primary/20 hover:bg-background'
+                          className='group flex items-center gap-3 rounded-[9px] border border-border/25 bg-background px-3 py-2.5 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border/55 hover:bg-muted/20'
                         >
                           <span className='bg-primary/10 text-primary flex size-7 items-center justify-center rounded-full'>
                             <Icons.check className='size-4' />
@@ -465,11 +481,62 @@ export function CustomerInspector({
   );
 }
 
+function CustomerDatePicker({
+  value,
+  onChange
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const selected = value ? new Date(`${value}T00:00:00`) : undefined;
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            type='button'
+            variant='outline'
+            className='mt-1 h-9 w-full max-w-52 justify-start gap-2 rounded-[10px] border-border/40 bg-background px-3 text-left text-sm font-normal shadow-none hover:bg-muted/55'
+          />
+        }
+      >
+        <Icons.calendar className='size-3.5 text-muted-foreground' />
+        <span className={selected ? 'text-foreground' : 'text-muted-foreground'}>
+          {selected ? format(selected, 'd MMM yyyy', { locale: es }) : 'Elegir fecha'}
+        </span>
+      </PopoverTrigger>
+      <PopoverContent
+        align='start'
+        sideOffset={6}
+        className='w-auto rounded-[12px] border border-border/50 bg-popover p-1.5 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.45)]'
+      >
+        <Calendar
+          mode='single'
+          locale={es}
+          selected={selected}
+          defaultMonth={selected}
+          onSelect={(date) => {
+            if (!date) return;
+            const next = `${String(date.getFullYear()).padStart(4, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            onChange(next);
+          }}
+          initialFocus
+          className='p-1 [--cell-size:--spacing(7)]'
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function SectionTitle({ title, href }: { title: string; href: string }) {
   return (
     <div className='flex items-center justify-between'>
       <h3 className='text-sm font-semibold'>{title}</h3>
-      <Link className='text-primary text-xs hover:underline' href={href}>
+      <Link
+        className='inline-flex h-8 items-center rounded-[10px] border border-border/60 bg-background px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60'
+        href={href}
+      >
         Ver todo
       </Link>
     </div>
@@ -512,7 +579,7 @@ function EditableDetail({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         onBlur={(event) => onBlur(event.target.value)}
-        className='mt-1 w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground/70'
+        className='mt-1 w-full min-w-0 bg-transparent text-sm font-normal outline-none placeholder:text-muted-foreground/55'
       />
     </label>
   );

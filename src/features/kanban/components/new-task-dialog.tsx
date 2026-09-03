@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,21 @@ import { activityKeys } from '@/features/activities/queries';
 import { taskPayloadSchema } from '@/features/tasks/schemas/task';
 import type { CustomerOption, TaskPriority } from '@/features/tasks/types';
 import { authClient } from '@/lib/auth-client';
+import { cn } from '@/lib/utils';
 
 export default function NewTaskDialog({
   customerId,
   eventId,
-  initialOpen = false
-}: { customerId?: string; eventId?: string; initialOpen?: boolean } = {}) {
+  initialOpen = false,
+  triggerClassName,
+  triggerIcon
+}: {
+  customerId?: string;
+  eventId?: string;
+  initialOpen?: boolean;
+  triggerClassName?: string;
+  triggerIcon?: ReactNode;
+} = {}) {
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const [open, setOpen] = useState(false);
@@ -91,7 +100,13 @@ export default function NewTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant='secondary' size='sm' />}>+ Nueva tarea</DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant='secondary' size='sm' className={cn('shadow-none', triggerClassName)} />
+        }
+      >
+        {triggerIcon}+ Nueva tarea
+      </DialogTrigger>
       <DialogContent className='sm:max-w-lg'>
         <DialogHeader>
           <DialogTitle>Nueva tarea</DialogTitle>

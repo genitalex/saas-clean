@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,17 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { createActivity, activityKeys } from '../queries';
+import { cn } from '@/lib/utils';
 
-export function AddNoteDialog({ customerId }: { customerId: string }) {
+export function AddNoteDialog({
+  customerId,
+  triggerClassName,
+  triggerIcon
+}: {
+  customerId: string;
+  triggerClassName?: string;
+  triggerIcon?: ReactNode;
+}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState('');
@@ -45,7 +54,13 @@ export function AddNoteDialog({ customerId }: { customerId: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant='outline' size='sm' />}>+ Nota</DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant='outline' size='sm' className={cn('shadow-none', triggerClassName)} />
+        }
+      >
+        {triggerIcon}+ Nota
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Añadir nota</DialogTitle>
