@@ -8,6 +8,7 @@ import { TaskListPage } from '@/features/tasks/components/task-list-page';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { OperatingSystemPage } from './operating-system';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 const views = ['all', 'inbox', 'waiting', 'follow-ups', 'completed'] as const;
 type WorkView = (typeof views)[number];
@@ -43,7 +44,10 @@ export function WorkPage() {
   };
 
   return (
-    <main className='flex flex-1 flex-col gap-5 p-4 md:p-6'>
+    <LiquidGlassSurface
+      as='main'
+      className='mx-auto flex min-w-0 max-w-[1280px] flex-1 flex-col gap-5 p-4 md:p-6'
+    >
       <header className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
         <div>
           <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
@@ -98,6 +102,6 @@ export function WorkPage() {
         <TaskListPage basePath='/dashboard/my-work' mode='list' view='completed' />
       )}
       {!showBoard && activeView === 'follow-ups' && <OperatingSystemPage kind='follow-ups' />}
-    </main>
+    </LiquidGlassSurface>
   );
 }

@@ -20,6 +20,7 @@ import {
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Icons } from '@/components/icons';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -433,7 +434,10 @@ export function CalendarPage({
   );
 
   return (
-    <main className='flex flex-col gap-4 pb-0 md:gap-5 md:pb-8 min-h-0'>
+    <LiquidGlassSurface
+      as='main'
+      className='flex min-h-0 flex-col gap-4 p-3 pb-0 md:gap-5 md:p-5 md:pb-8'
+    >
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
@@ -739,7 +743,7 @@ export function CalendarPage({
           setYearPickerOpen(false);
         }}
       />
-    </main>
+    </LiquidGlassSurface>
   );
 }
 

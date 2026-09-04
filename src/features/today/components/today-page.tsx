@@ -10,6 +10,7 @@ import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { cn } from '@/lib/utils';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
@@ -31,7 +32,7 @@ type TodayPlanItem =
   | { type: 'task'; task: Task; at: Date }
   | { type: 'event'; event: Event; at: Date };
 
-const solidSurface = 'rounded-[26px] border border-border/55 bg-card/60 backdrop-blur-xl';
+const solidSurface = 'rounded-[26px] border border-border/55 bg-card/75';
 const softButton =
   'transition-all duration-200 hover:-translate-y-px hover:border-primary/20 hover:bg-card/80 active:translate-y-0';
 
@@ -151,7 +152,10 @@ export function TodayPage({
   const attentionCount = attention.length;
 
   return (
-    <main className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 pb-10 pt-4 sm:gap-8 sm:pt-5'>
+    <LiquidGlassSurface
+      as='main'
+      className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 p-4 pb-10 pt-5 sm:gap-8 sm:p-6 sm:pt-7'
+    >
       <section className='rounded-2xl border border-border/60 bg-card/45 p-5 sm:p-7 lg:p-8'>
         <div className='flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
           <div className='min-w-0'>
@@ -612,7 +616,7 @@ export function TodayPage({
           </Link>
         </div>
       </footer>
-    </main>
+    </LiquidGlassSurface>
   );
 }
 

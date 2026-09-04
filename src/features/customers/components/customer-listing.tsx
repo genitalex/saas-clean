@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CustomerInspector } from './customer-inspector';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 type Customer = {
   id: string;
@@ -82,7 +83,7 @@ export default function CustomerListing() {
   };
 
   return (
-    <div className='space-y-4'>
+    <LiquidGlassSurface as='div' className='mx-auto max-w-[1280px] space-y-4 p-4 md:p-6'>
       <div className='flex flex-wrap items-center gap-3'>
         <input
           aria-label='Buscar clientes'
@@ -136,6 +137,6 @@ export default function CustomerListing() {
         open={Boolean(selectedId)}
         onOpenChange={(open) => !open && closeCustomer()}
       />
-    </div>
+    </LiquidGlassSurface>
   );
 }

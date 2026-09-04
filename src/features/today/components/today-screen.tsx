@@ -185,7 +185,7 @@ export function TodayScreen({ role }: { role: Role }) {
       </section>
 
       <section className='grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]'>
-        <div className='min-w-0 rounded-[28px] border border-border/60 bg-card/70 p-5 backdrop-blur-xl sm:p-6'>
+        <div className='min-w-0 rounded-[28px] border border-border/60 bg-card/70 p-5 sm:p-6'>
           <div className='flex items-start justify-between gap-4'>
             <div>
               <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
@@ -234,7 +234,7 @@ export function TodayScreen({ role }: { role: Role }) {
           </div>
         </div>
 
-        <div className='rounded-[28px] border border-border/60 bg-card/70 p-5 backdrop-blur-xl sm:p-6'>
+        <div className='rounded-[28px] border border-border/60 bg-card/70 p-5 sm:p-6'>
           <div className='flex items-start justify-between gap-4'>
             <div>
               <p className='text-xs font-semibold uppercase tracking-[0.18em] text-primary'>
