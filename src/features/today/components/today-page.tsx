@@ -355,7 +355,7 @@ export function TodayPage({
           href='/dashboard/calendar'
           action='Calendario'
         />
-        <div className='mt-5 grid grid-cols-7 gap-1.5 sm:gap-2'>
+        <div className='mt-5 grid grid-cols-[repeat(7,minmax(0,1fr))] gap-1.5 sm:gap-2'>
           {weekDays.map((day) => {
             const selected = isSameDay(day, today);
             const dayEvents = events
@@ -368,24 +368,24 @@ export function TodayPage({
                 href={`/dashboard/calendar?date=${dayKey}&view=day`}
                 aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
-                  'group min-w-0 rounded-2xl border p-2 text-center transition-all duration-200 hover:-translate-y-px hover:bg-card/80 sm:p-3',
+                  'group flex min-w-0 flex-col items-center rounded-2xl border p-2 text-center transition-all duration-200 hover:-translate-y-px hover:bg-card/80 sm:p-3',
                   selected
                     ? 'border-primary/25 bg-primary/[0.06]'
                     : 'border-border/45 bg-background/35'
                 )}
               >
-                <span className='text-muted-foreground block text-[10px] font-semibold uppercase tracking-wide'>
+                <span className='text-muted-foreground block w-full text-[10px] font-semibold uppercase tracking-wide'>
                   {format(day, 'EEE', { locale: es })}
                 </span>
                 <span
                   className={cn(
-                    'mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold',
+                    'mt-1 flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
                     selected ? 'bg-primary text-primary-foreground' : 'group-hover:bg-muted/70'
                   )}
                 >
                   {format(day, 'd')}
                 </span>
-                <span className='mt-2 flex h-3 items-center justify-center gap-1'>
+                <span className='mt-2 flex h-3 w-full items-center justify-center gap-1'>
                   {dayEvents.map((event) => (
                     <i
                       key={event.id}

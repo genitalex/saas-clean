@@ -237,8 +237,8 @@ export function CustomerInspector({
                     </DialogDescription>
                   </div>
                 </div>
-                <div className='mt-4 flex w-fit max-w-full flex-nowrap items-center gap-3 overflow-x-auto border-t border-border/45 pt-3 scrollbar-none'>
-                  <div className='inline-flex w-fit shrink-0 flex-nowrap rounded-[10px] border border-border/55 bg-background'>
+                <div className='mt-4 flex max-w-full flex-col items-stretch gap-2 border-t border-border/45 pt-3 sm:flex-row sm:items-center sm:gap-3'>
+                  <div className='flex w-full flex-wrap rounded-[10px] border border-border/55 bg-background sm:w-fit sm:flex-nowrap'>
                     <Button
                       size='sm'
                       variant='ghost'
@@ -283,7 +283,7 @@ export function CustomerInspector({
                     />
                   </div>
                   {(customer.phone || customer.email || customer.website) && (
-                    <div className='inline-flex w-fit shrink-0 flex-nowrap rounded-[10px] border border-border/60 bg-background'>
+                    <div className='flex w-full flex-wrap rounded-[10px] border border-border/60 bg-background sm:w-fit sm:flex-nowrap'>
                       {customer.phone && (
                         <a
                           href={`tel:${customer.phone}`}
@@ -321,7 +321,7 @@ export function CustomerInspector({
                       Resumen
                     </p>
                   </div>
-                  <div className='grid grid-cols-2 gap-px bg-border/50'>
+                  <div className='grid grid-cols-1 gap-px bg-border/50 sm:grid-cols-2'>
                     <EditableDetail
                       label='Correo'
                       value={contact.email}

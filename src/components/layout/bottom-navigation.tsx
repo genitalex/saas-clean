@@ -38,8 +38,8 @@ export function BottomNavigation() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className='mb-2 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card p-1 shadow-md sm:mb-4 md:mb-5'>
-          <div className='grid grid-cols-7 gap-0.5 md:hidden'>
-            {primaryItems.slice(0, 5).map((item) => {
+          <div className='grid grid-cols-6 gap-0.5 md:hidden'>
+            {primaryItems.slice(0, 2).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
               const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
               return (
@@ -55,7 +55,11 @@ export function BottomNavigation() {
                 >
                   <Icon className='size-[20px] shrink-0' />
                   <span className='max-w-full truncate text-[10px] font-medium leading-none'>
-                    {item.title}
+                    {item.title === 'Today'
+                      ? 'Hoy'
+                      : item.title === 'Work'
+                        ? 'Trabajo'
+                        : item.title}
                   </span>
                 </Link>
               );
@@ -69,7 +73,7 @@ export function BottomNavigation() {
                 setCreateOpen((value) => !value);
               }}
               className={cn(
-                'flex min-w-0 min-h-[52px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
+                'flex min-w-0 min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[10px] px-1 py-1.5 transition-colors',
                 createOpen
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted/70'
@@ -77,14 +81,40 @@ export function BottomNavigation() {
             >
               <span
                 className={cn(
-                  'flex size-7 items-center justify-center rounded-full',
+                  'flex size-9 items-center justify-center rounded-full shadow-sm transition-transform duration-200 active:scale-95',
                   createOpen ? 'bg-primary-foreground/15' : 'bg-primary text-primary-foreground'
                 )}
               >
-                <Icons.add className='size-4' />
+                <Icons.add className='size-[18px]' />
               </span>
-              <span className='text-[10px] font-medium leading-none'>Nuevo</span>
+              <span className='sr-only'>Nuevo</span>
             </button>
+
+            {primaryItems.slice(2, 4).map((item) => {
+              const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+              const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
+              return (
+                <Link
+                  key={item.url}
+                  href={item.url}
+                  className={cn(
+                    'group flex min-w-0 min-h-[52px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
+                    active
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  )}
+                >
+                  <Icon className='size-[20px] shrink-0' />
+                  <span className='max-w-full truncate text-[10px] font-medium leading-none'>
+                    {item.title === 'Calendar'
+                      ? 'Calendario'
+                      : item.title === 'Customers'
+                        ? 'Clientes'
+                        : item.title}
+                  </span>
+                </Link>
+              );
+            })}
 
             <button
               type='button'
