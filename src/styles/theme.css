@@ -14,6 +14,7 @@
 @import './themes/glass.css';
 @import './themes/mac.css';
 @import './themes/experience-tokens.css';
+@import '../features/design-system/styles/design-editor.css';
 
 [data-theme] {
   --shadow-2xs: 0 1px 2px rgb(15 23 42 / 0.04);
