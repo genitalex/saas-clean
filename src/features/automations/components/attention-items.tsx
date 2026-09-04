@@ -1,6 +1,6 @@
 'use client';
 
-import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAttentionItemsQueryOptions, attentionKeys } from '@/features/automations/api/queries';
 import * as client from '@/features/automations/api/client';
 import { Card } from '@/components/ui/card';
@@ -30,7 +30,10 @@ function getItemPath(item: AttentionItem) {
 export function AttentionItems({ compact = false }: AttentionItemsProps) {
   const queryClient = useQueryClient();
 
-  const { data: items = [] } = useSuspenseQuery(getAttentionItemsQueryOptions('active'));
+  const { data: items = [] } = useQuery({
+    ...getAttentionItemsQueryOptions('active'),
+    throwOnError: true
+  });
 
   const acknowledgeMutation = useMutation({
     mutationFn: (id: string) => client.acknowledgeAttentionItem(id),
@@ -65,7 +68,7 @@ export function AttentionItems({ compact = false }: AttentionItemsProps) {
           <Card key={item.id} className='p-3'>
             <div className='flex items-start gap-3'>
               {IconComponent && (
-                <IconComponent className='h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0' />
+                <IconComponent className='h-4 w-4 text-amber-600 mt-0.5 shrink-0' />
               )}
 
               <div className='flex-1 min-w-0'>
@@ -78,7 +81,7 @@ export function AttentionItems({ compact = false }: AttentionItemsProps) {
                 <p className='text-xs text-muted-foreground line-clamp-2'>{item.message}</p>
               </div>
 
-              <div className='flex items-center gap-1 flex-shrink-0'>
+              <div className='flex items-center gap-1 shrink-0'>
                 <Button
                   size='sm'
                   variant='ghost'

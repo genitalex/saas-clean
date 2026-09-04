@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { automations, notifications, attentionItems } from '@/lib/db/schema';
+import { automations, notifications, attentionItems, customers } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import type {
   Automation,
@@ -176,21 +176,23 @@ export async function getAttentionItems(
   userId: string,
   status: string = 'active'
 ): Promise<(AttentionItem & { customer?: { id: string; name: string } | null })[]> {
-  const items = await db.query.attentionItems.findMany({
-    where: and(
-      eq(attentionItems.organizationId, organizationId),
-      eq(attentionItems.userId, userId),
-      eq(attentionItems.status, status)
-    ),
-    orderBy: desc(attentionItems.createdAt),
-    with: {
-      customer: {
-        columns: { id: true, name: true }
-      }
-    }
-  });
+  const rows = await db
+    .select({
+      attentionItem: attentionItems,
+      customer: { id: customers.id, name: customers.name }
+    })
+    .from(attentionItems)
+    .leftJoin(customers, eq(customers.id, attentionItems.customerId))
+    .where(
+      and(
+        eq(attentionItems.organizationId, organizationId),
+        eq(attentionItems.userId, userId),
+        eq(attentionItems.status, status)
+      )
+    )
+    .orderBy(desc(attentionItems.createdAt));
 
-  return items;
+  return rows.map(({ attentionItem, customer }) => ({ ...attentionItem, customer }));
 }
 
 export async function createAttentionItem(
