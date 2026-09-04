@@ -156,7 +156,11 @@ export function TodayPage({
       as='main'
       className='mx-auto flex w-full max-w-[1080px] min-w-0 flex-1 flex-col gap-6 p-4 pb-10 pt-5 sm:gap-8 sm:p-6 sm:pt-7'
     >
-      <section className='rounded-2xl border border-border/60 bg-card/45 p-5 sm:p-7 lg:p-8'>
+      <section
+        data-design-id='today.greeting'
+        data-design-component='Greeting'
+        className='rounded-2xl border border-border/60 bg-card/45 p-5 sm:p-7 lg:p-8'
+      >
         <div className='flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
           <div className='min-w-0'>
             <div className='mb-2 flex items-center gap-2'>
@@ -198,7 +202,12 @@ export function TodayPage({
 
       <QuickCapture />
 
-      <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='automated-attention'>
+      <section
+        data-design-id='today.attention'
+        data-design-component='Attention'
+        className={cn(solidSurface, 'p-5 sm:p-6')}
+        aria-labelledby='automated-attention'
+      >
         <SectionHeader eyebrow='Atención' title='Lo que necesita una decisión' />
         <div className='mt-4'>
           <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
@@ -208,6 +217,8 @@ export function TodayPage({
       </section>
 
       <section
+        data-design-id='today.quick-actions'
+        data-design-component='QuickActions'
         className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5'
         aria-label='Acciones rápidas'
       >

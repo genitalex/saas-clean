@@ -27,6 +27,9 @@ export default function Header() {
       />
 
       <header
+        data-design-id='shell.header'
+        data-design-component='Header'
+        data-design-source='src/components/layout/header.tsx'
         data-glass-header
         className='relative flex h-14 shrink-0 items-center justify-between gap-3 px-3 sm:px-5'
       >
@@ -44,7 +47,11 @@ export default function Header() {
             <Icons.search className='size-4' />
           </button>
 
-          <div className='hidden md:flex'>
+          <div
+            data-design-id='header.search'
+            data-design-component='Search'
+            className='hidden md:flex'
+          >
             <SearchInput />
           </div>
 

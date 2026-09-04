@@ -83,9 +83,16 @@ export default function CustomerListing() {
   };
 
   return (
-    <LiquidGlassSurface as='div' className='mx-auto max-w-[1280px] space-y-4 p-4 md:p-6'>
+    <LiquidGlassSurface
+      as='div'
+      data-design-id='customers.page'
+      data-design-component='Customers'
+      className='mx-auto max-w-[1280px] space-y-4 p-4 md:p-6'
+    >
       <div className='flex flex-wrap items-center gap-3'>
         <input
+          data-design-id='customers.search'
+          data-design-component='Search'
           aria-label='Buscar clientes'
           className='h-10 w-full max-w-sm rounded-2xl border border-border/60 bg-background/60 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20'
           placeholder='Buscar clientes…'
@@ -101,7 +108,11 @@ export default function CustomerListing() {
           {showArchived ? 'Ver clientes activos' : 'Ver archivados'}
         </button>
       </div>
-      <div className='overflow-visible rounded-2xl border border-border/60 bg-card/45'>
+      <div
+        data-design-id='customers.table'
+        data-design-component='CustomerTable'
+        className='overflow-visible rounded-2xl border border-border/60 bg-card/45'
+      >
         <div className='hidden grid-cols-[2fr_1fr_2fr_auto] gap-4 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid'>
           <span>Cliente</span>
           <span>Tipo</span>
@@ -110,6 +121,8 @@ export default function CustomerListing() {
         </div>
         {rows.map((customer) => (
           <button
+            data-design-id='customers.row'
+            data-design-component='CustomerRow'
             key={customer.id}
             type='button'
             onClick={() => openCustomer(customer)}

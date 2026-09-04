@@ -435,12 +435,18 @@ export function CalendarPage({
 
   return (
     <LiquidGlassSurface
+      data-design-id='calendar.page'
+      data-design-component='Calendar'
       as='main'
       className='flex min-h-0 flex-col gap-4 p-3 pb-0 md:gap-5 md:p-5 md:pb-8'
     >
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
-      <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
+      <header
+        data-design-id='calendar.toolbar'
+        data-design-component='CalendarToolbar'
+        className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'
+      >
         <div className='hidden md:block'>
           <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
           {view === 'month' ? (

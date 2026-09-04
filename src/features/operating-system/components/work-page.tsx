@@ -48,7 +48,11 @@ export function WorkPage() {
       as='main'
       className='mx-auto flex min-w-0 max-w-[1280px] flex-1 flex-col gap-5 p-4 md:p-6'
     >
-      <header className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
+      <header
+        data-design-id='work.page'
+        data-design-component='Work'
+        className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'
+      >
         <div>
           <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
             Trabajo
@@ -61,7 +65,11 @@ export function WorkPage() {
         <NewTaskDialog initialOpen={searchParams.get('create') === '1'} />
       </header>
 
-      <div className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'>
+      <div
+        data-design-id='work.filters'
+        data-design-component='WorkFilters'
+        className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'
+      >
         <div className='inline-flex w-fit rounded-xl p-1' aria-label='Modo de Work'>
           <Link
             href={`/dashboard/my-work?mode=list${activeView === 'all' ? '' : `&view=${activeView}`}`}

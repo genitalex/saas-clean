@@ -27,6 +27,9 @@ export function BottomNavigation() {
   return (
     <>
       <nav
+        data-design-id='navigation.bottom'
+        data-design-component='BottomNavigation'
+        data-design-source='src/components/layout/bottom-navigation.tsx'
         aria-label='Primary navigation'
         className={cn(
           'fixed inset-x-0 bottom-0 z-40 flex justify-center px-2 sm:px-4',

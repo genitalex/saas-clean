@@ -287,6 +287,151 @@
   outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
+.design-toolbar {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+.design-toolbar select,
+.design-search input,
+.design-field select {
+  min-width: 0;
+  height: 2rem;
+  border: 1px solid color-mix(in oklab, var(--border) 75%, transparent);
+  border-radius: 0.45rem;
+  background: var(--background);
+  color: var(--foreground);
+  padding: 0 0.5rem;
+  font-size: 0.7rem;
+  outline: none;
+}
+.design-actions {
+  justify-content: flex-start;
+}
+.design-search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2rem;
+  margin: 0.45rem 0 0.7rem;
+  padding: 0 0.55rem;
+  border: 1px solid color-mix(in oklab, var(--border) 65%, transparent);
+  border-radius: 0.5rem;
+  color: var(--muted-foreground);
+}
+.design-search input {
+  height: 1.8rem;
+  flex: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.design-control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.design-field select {
+  width: 100%;
+}
+.design-state-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+}
+.design-state-tabs button {
+  border: 0;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.2rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.63rem;
+}
+.design-state-tabs button.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.design-tree,
+.design-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.design-tree ul {
+  margin-left: 0.85rem;
+  border-left: 1px solid color-mix(in oklab, var(--border) 55%, transparent);
+}
+.design-tree-node {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--foreground);
+  padding: 0.38rem 0.25rem;
+  text-align: left;
+  font-size: 0.7rem;
+}
+.design-tree-node:hover {
+  background: var(--muted);
+}
+.design-tree-node code {
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.58rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.design-meta {
+  display: grid;
+  gap: 0.35rem;
+}
+.design-meta span,
+.design-computed span {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.62rem;
+}
+.design-meta code,
+.design-computed code {
+  max-width: 13rem;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 0.61rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.design-preset {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0;
+  font-size: 0.68rem;
+}
+.design-preset span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.design-preset button {
+  border: 0;
+  border-radius: 0.35rem;
+  background: var(--muted);
+  color: var(--foreground);
+  padding: 0.25rem 0.4rem;
+  font-size: 0.6rem;
+}
+.design-computed {
+  display: grid;
+  gap: 0.35rem;
+}
 @keyframes design-panel-in {
   from {
     opacity: 0;
