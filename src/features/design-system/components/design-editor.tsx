@@ -11,6 +11,7 @@ import {
   DESIGN_THEMES,
   INITIAL_GLASS_MATERIAL,
   createDesignDocument,
+  normalizeDesignDocument,
   type DesignDocument,
   type DesignState,
   type DesignTarget,
@@ -114,7 +115,7 @@ function loadDocument(): DesignDocument {
   try {
     const value = localStorage.getItem(STORAGE_KEY);
     const parsed = value ? (JSON.parse(value) as DesignDocument) : null;
-    return parsed?.version === 1 ? parsed : createDesignDocument();
+    return normalizeDesignDocument(parsed);
   } catch {
     return createDesignDocument();
   }

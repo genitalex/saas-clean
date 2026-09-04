@@ -164,3 +164,32 @@ export function createDesignDocument(): DesignDocument {
     themes: { notebook: emptyTheme(), mac: emptyTheme(), vercel: emptyTheme(), glass: emptyTheme() }
   };
 }
+
+export function normalizeDesignDocument(value: unknown): DesignDocument {
+  const fallback = createDesignDocument();
+  if (!value || typeof value !== 'object') return fallback;
+
+  const source = value as Partial<DesignDocument> & {
+    themes?: Partial<Record<DesignTheme, Partial<DesignThemeState>>>;
+  };
+  const themes = { ...fallback.themes };
+
+  for (const theme of Object.keys(themes) as DesignTheme[]) {
+    const saved = source.themes?.[theme];
+    if (!saved || typeof saved !== 'object') continue;
+    themes[theme] = {
+      ...themes[theme],
+      ...saved,
+      tokens: saved.tokens && typeof saved.tokens === 'object' ? saved.tokens : {},
+      components: saved.components && typeof saved.components === 'object' ? saved.components : {},
+      elements: saved.elements && typeof saved.elements === 'object' ? saved.elements : {},
+      states: saved.states && typeof saved.states === 'object' ? saved.states : {},
+      responsive: saved.responsive && typeof saved.responsive === 'object' ? saved.responsive : {},
+      materials: saved.materials && typeof saved.materials === 'object' ? saved.materials : {},
+      notes: saved.notes && typeof saved.notes === 'object' ? saved.notes : {},
+      presets: Array.isArray(saved.presets) ? saved.presets : []
+    };
+  }
+
+  return { version: 1, themes };
+}
