@@ -433,18 +433,10 @@ export function CalendarPage({
   );
 
   return (
-    <main
-      data-design-id='calendar.page'
-      data-design-component='Calendar'
-      className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-8 md:pt-7'
-    >
+    <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
-      <header
-        data-design-id='calendar.toolbar'
-        data-design-component='CalendarToolbar'
-        className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'
-      >
+      <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
         <div className='hidden md:block'>
           <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
           {view === 'month' ? (

@@ -44,11 +44,7 @@ export function WorkPage() {
 
   return (
     <main className='mx-auto flex min-w-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-10 md:pt-7'>
-      <header
-        data-design-id='work.page'
-        data-design-component='Work'
-        className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'
-      >
+      <header className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
         <div>
           <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
             Trabajo
@@ -61,11 +57,7 @@ export function WorkPage() {
         <NewTaskDialog initialOpen={searchParams.get('create') === '1'} />
       </header>
 
-      <div
-        data-design-id='work.filters'
-        data-design-component='WorkFilters'
-        className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'
-      >
+      <div className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'>
         <div
           className='inline-flex w-fit rounded-[var(--radius-md)] border border-border/70 bg-muted p-1'
           aria-label='Modo de Work'

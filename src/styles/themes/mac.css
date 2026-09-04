@@ -1,7 +1,7 @@
 /*
  * Mac / iOS theme for saas-clean.
  * Solid native-inspired surfaces, restrained depth, and precise controls.
- * This file is intentionally scoped to data-theme="mac" so Glass remains isolated.
+ * This file is intentionally scoped to data-theme="mac".
  */
 
 [data-theme='mac'] {

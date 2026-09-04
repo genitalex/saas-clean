@@ -83,15 +83,9 @@ export default function CustomerListing() {
   };
 
   return (
-    <div
-      data-design-id='customers.page'
-      data-design-component='Customers'
-      className='mx-auto w-full max-w-[var(--page-max-width)] space-y-6 px-[var(--page-padding)] pt-5 pb-10 md:pt-7'
-    >
+    <div className='mx-auto w-full max-w-[var(--page-max-width)] space-y-6 px-[var(--page-padding)] pt-5 pb-10 md:pt-7'>
       <div className='flex flex-wrap items-center gap-3'>
         <Input
-          data-design-id='customers.search'
-          data-design-component='Search'
           aria-label='Buscar clientes'
           className='w-full max-w-sm'
           placeholder='Buscar clientes…'
@@ -107,11 +101,7 @@ export default function CustomerListing() {
           {showArchived ? 'Ver clientes activos' : 'Ver archivados'}
         </button>
       </div>
-      <div
-        data-design-id='customers.table'
-        data-design-component='CustomerTable'
-        className='overflow-visible rounded-[var(--radius-xl)] border border-border/70 bg-card'
-      >
+      <div className='overflow-visible rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         <div className='hidden grid-cols-[2fr_1fr_2fr_auto] gap-4 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid'>
           <span>Cliente</span>
           <span>Tipo</span>
@@ -120,8 +110,6 @@ export default function CustomerListing() {
         </div>
         {rows.map((customer) => (
           <button
-            data-design-id='customers.row'
-            data-design-component='CustomerRow'
             key={customer.id}
             type='button'
             onClick={() => openCustomer(customer)}

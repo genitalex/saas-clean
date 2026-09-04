@@ -1,6 +1,5 @@
 /* Base is the product reference theme. Other themes remain available for later work. */
 @import './themes/base.css';
-@import '../features/design-system/styles/design-editor.css';
 
 [data-theme] {
   --shadow-2xs: 0 1px 2px rgb(15 23 42 / 0.04);
@@ -13,14 +12,14 @@
   --shadow-2xl: 0 28px 52px rgb(15 23 42 / 0.14);
 }
 
-[data-theme]:not([data-theme='glass']) [data-slot='popover-content'],
-[data-theme]:not([data-theme='glass']) [data-slot='dialog-content'],
-[data-theme]:not([data-theme='glass']) [data-slot='sheet-content'],
-[data-theme]:not([data-theme='glass']) [data-slot='dropdown-menu-content'],
-[data-theme]:not([data-theme='glass']) [data-slot='context-menu-content'],
-[data-theme]:not([data-theme='glass']) [data-slot='select-content'],
-[data-theme]:not([data-theme='glass']) [data-slot='command'],
-[data-theme]:not([data-theme='glass']) [data-slot='tooltip-content'] {
+[data-theme] [data-slot='popover-content'],
+[data-theme] [data-slot='dialog-content'],
+[data-theme] [data-slot='sheet-content'],
+[data-theme] [data-slot='dropdown-menu-content'],
+[data-theme] [data-slot='context-menu-content'],
+[data-theme] [data-slot='select-content'],
+[data-theme] [data-slot='command'],
+[data-theme] [data-slot='tooltip-content'] {
   box-shadow: var(--shadow-md) !important;
 }
 

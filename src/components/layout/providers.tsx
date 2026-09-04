@@ -3,7 +3,6 @@ import React from 'react';
 import { ActiveThemeProvider } from '@/components/themes/active-theme';
 import QueryProvider from '@/components/layout/query-provider';
 import KBar from '@/components/kbar';
-import { DesignEditor } from '@/features/design-system/components/design-editor';
 
 export default function Providers({
   activeThemeValue,
@@ -17,7 +16,6 @@ export default function Providers({
       <ActiveThemeProvider initialTheme={activeThemeValue}>
         <QueryProvider>
           <KBar>{children}</KBar>
-          <DesignEditor>{null}</DesignEditor>
         </QueryProvider>
       </ActiveThemeProvider>
     </>

@@ -152,11 +152,7 @@ export function TodayPage({
 
   return (
     <main className='mx-auto flex w-full max-w-[var(--page-max-width)] min-w-0 flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-10 sm:pt-7'>
-      <section
-        data-design-id='today.greeting'
-        data-design-component='Greeting'
-        className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-7 lg:p-8'
-      >
+      <section className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-7 lg:p-8'>
         <div className='flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
           <div className='min-w-0'>
             <div className='mb-2 flex items-center gap-2'>
@@ -198,12 +194,7 @@ export function TodayPage({
 
       <QuickCapture />
 
-      <section
-        data-design-id='today.attention'
-        data-design-component='Attention'
-        className={cn(solidSurface, 'p-5 sm:p-6')}
-        aria-labelledby='automated-attention'
-      >
+      <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='automated-attention'>
         <SectionHeader eyebrow='Atención' title='Lo que necesita una decisión' />
         <div className='mt-4'>
           <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
@@ -213,8 +204,6 @@ export function TodayPage({
       </section>
 
       <section
-        data-design-id='today.quick-actions'
-        data-design-component='QuickActions'
         className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5'
         aria-label='Acciones rápidas'
       >
