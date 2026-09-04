@@ -37,7 +37,7 @@ export function BottomNavigation() {
       >
         <LiquidGlassSurface
           as='div'
-          className='glass-nav mb-2 w-full max-w-[980px] rounded-[24px] p-1.5 sm:mb-4 md:mb-5'
+          className='mb-2 w-full max-w-[980px] rounded-[16px] p-1 sm:mb-4 md:mb-5'
         >
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
             {primaryItems.slice(0, 5).map((item) => {
@@ -48,19 +48,20 @@ export function BottomNavigation() {
                   key={item.url}
                   href={item.url}
                   className={cn(
-                    'group flex min-w-0 min-h-[54px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2',
+                    'group flex min-w-0 min-h-[52px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
                     active
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   )}
                 >
-                  <Icon className='size-[20px] shrink-0 transition-transform group-hover:scale-105' />
+                  <Icon className='size-[20px] shrink-0' />
                   <span className='max-w-full truncate text-[10px] font-medium leading-none'>
                     {item.title}
                   </span>
                 </Link>
               );
             })}
+
             <button
               type='button'
               aria-expanded={createOpen}
@@ -69,7 +70,7 @@ export function BottomNavigation() {
                 setCreateOpen((value) => !value);
               }}
               className={cn(
-                'flex min-w-0 min-h-[54px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
+                'flex min-w-0 min-h-[52px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
                 createOpen
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted/70'
@@ -85,6 +86,7 @@ export function BottomNavigation() {
               </span>
               <span className='text-[10px] font-medium leading-none'>Nuevo</span>
             </button>
+
             <button
               type='button'
               aria-expanded={moreOpen}
@@ -93,7 +95,7 @@ export function BottomNavigation() {
                 setMoreOpen(true);
               }}
               className={cn(
-                'flex min-w-0 min-h-[54px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
+                'flex min-w-0 min-h-[52px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
                 moreOpen ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/70'
               )}
             >
@@ -111,19 +113,20 @@ export function BottomNavigation() {
                   key={item.url}
                   href={item.url}
                   className={cn(
-                    'group flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition-all duration-200',
+                    'group flex min-w-0 min-h-[48px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
                     active
-                      ? 'bg-primary/10 text-primary shadow-sm'
+                      ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   )}
                 >
-                  <Icon className='size-[18px] shrink-0 transition-transform group-hover:scale-105' />
+                  <Icon className='size-[18px] shrink-0' />
                   <span className='max-w-full truncate text-[10px] font-medium leading-none'>
                     {item.title}
                   </span>
                 </Link>
               );
             })}
+
             <button
               type='button'
               aria-expanded={createOpen}
@@ -132,7 +135,7 @@ export function BottomNavigation() {
                 setCreateOpen((value) => !value);
               }}
               className={cn(
-                'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
+                'flex min-w-0 min-h-[48px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
                 createOpen
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted/70'
@@ -148,6 +151,7 @@ export function BottomNavigation() {
               </span>
               <span className='text-[10px] font-medium leading-none'>Nuevo</span>
             </button>
+
             <button
               type='button'
               aria-expanded={moreOpen}
@@ -156,7 +160,7 @@ export function BottomNavigation() {
                 setMoreOpen(true);
               }}
               className={cn(
-                'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[17px] px-1.5 py-2 transition',
+                'flex min-w-0 min-h-[48px] flex-col items-center justify-center gap-1 rounded-[10px] px-1.5 py-2 transition-colors',
                 moreOpen
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
@@ -191,12 +195,13 @@ function QuickCreate({ onClose }: { onClose: () => void }) {
     ['Nota rápida', '/dashboard/notes'],
     ['Presupuesto', '/dashboard/quotes']
   ];
+
   return (
     <div
-      className='fixed inset-0 z-40 flex items-end justify-center bg-black/8 p-3 backdrop-blur-[2px]'
+      className='glass-quick-create-backdrop fixed inset-0 z-40 flex items-end justify-center p-3'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <div className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg rounded-[24px] border border-border/60 bg-background/94 p-3 shadow-none backdrop-blur-2xl'>
+      <div className='glass-floating-sheet mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg p-3'>
         <p className='text-muted-foreground px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]'>
           Crear rápidamente
         </p>
@@ -206,7 +211,7 @@ function QuickCreate({ onClose }: { onClose: () => void }) {
               key={href + label}
               href={href}
               onClick={onClose}
-              className='rounded-2xl px-3.5 py-3 text-sm font-medium hover:bg-muted/60'
+              className='rounded-[10px] px-3.5 py-3 text-sm font-medium hover:bg-muted/60'
             >
               {label}
             </Link>
@@ -230,11 +235,11 @@ function MoreSheet({
 }) {
   return (
     <div
-      className='fixed inset-0 z-50 flex items-end justify-center bg-black/12 p-3 supports-backdrop-filter:backdrop-blur-[2px]'
+      className='glass-quick-create-backdrop fixed inset-0 z-50 flex items-end justify-center p-3'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-2xl border border-border/70 bg-background shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)]'>
-        <div className='flex items-center justify-between border-b border-border/60 px-5 py-4'>
+      <section className='glass-floating-sheet mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden p-0'>
+        <div className='flex items-center justify-between border-b border-border/50 px-5 py-4'>
           <div>
             <h2 className='text-lg font-semibold'>Más</h2>
             <p className='text-muted-foreground mt-0.5 text-xs'>Herramientas del espacio.</p>
@@ -247,10 +252,12 @@ function MoreSheet({
             <Icons.close className='size-4' />
           </button>
         </div>
+
         <div className='min-h-0 overflow-y-auto px-4 py-4'>
           {navGroups.map((group) => {
             const items = group.items.filter((item) => !primaryUrls.has(item.url));
             if (!items.length) return null;
+
             return (
               <section key={group.label} className='mb-5 last:mb-0'>
                 <p className='text-muted-foreground px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]'>
@@ -266,11 +273,11 @@ function MoreSheet({
                         href={item.url}
                         onClick={onClose}
                         className={cn(
-                          'flex min-h-12 items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium hover:bg-muted/60',
+                          'flex min-h-12 items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-sm font-medium hover:bg-muted/60',
                           active && 'bg-primary/10 text-primary'
                         )}
                       >
-                        <span className='bg-muted/70 flex size-9 items-center justify-center rounded-xl'>
+                        <span className='bg-muted/70 flex size-9 items-center justify-center rounded-[10px]'>
                           <Icon className='size-4.5' />
                         </span>
                         {item.title}

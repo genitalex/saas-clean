@@ -110,11 +110,11 @@ export function QuickCapture() {
 
   return (
     <section
-      className='border-primary/15 bg-primary/[0.035] rounded-[26px] border p-4 sm:p-5'
+      className='border-primary/10 bg-background/60 rounded-[16px] border p-4 sm:p-5'
       aria-label='Captura rápida'
     >
-      <div className='flex items-center gap-2'>
-        <span className='bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-xl'>
+      <div className='flex items-center gap-3'>
+        <span className='bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-[10px]'>
           <Icons.add className='size-4' />
         </span>
         <div>
@@ -124,14 +124,15 @@ export function QuickCapture() {
           </p>
         </div>
       </div>
-      <div className='mt-3 flex gap-2'>
+
+      <div className='mt-4 flex gap-2'>
         <Input
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && void submit()}
           placeholder='llamar a Ana mañana · reunión con Acme jueves 10'
           aria-label='Nueva captura de trabajo'
-          className='h-11 rounded-2xl bg-background/70'
+          className='h-11 rounded-[10px] bg-white/75'
         />
         <Button
           type='button'
@@ -139,6 +140,7 @@ export function QuickCapture() {
           onClick={() => void submit()}
           disabled={pending || !value.trim()}
           aria-label='Guardar captura'
+          className='rounded-[10px]'
         >
           <Icons.arrowRight className='size-4' />
         </Button>

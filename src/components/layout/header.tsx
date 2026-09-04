@@ -19,10 +19,16 @@ export default function Header() {
   useShellMetric(headerRef, '--app-header-height');
 
   return (
-    <div ref={headerRef} className='sticky top-0 z-20'>
+    <div ref={headerRef} data-glass-header-shell className='sticky top-0 z-20 h-14'>
       <LiquidGlassSurface
-        as='header'
-        className='flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/80 px-3 sm:px-5'
+        as='div'
+        className='pointer-events-none absolute inset-0 rounded-none'
+        aria-hidden='true'
+      />
+
+      <header
+        data-glass-header
+        className='relative flex h-14 shrink-0 items-center justify-between gap-3 px-3 sm:px-5'
       >
         <div className='flex min-w-0 items-center gap-2'>
           <Breadcrumbs />
@@ -33,22 +39,27 @@ export default function Header() {
             type='button'
             aria-label='Abrir búsqueda'
             onClick={query.toggle}
-            className='text-muted-foreground hover:bg-muted hover:text-foreground flex size-9 items-center justify-center rounded-xl md:hidden'
+            className='text-muted-foreground hover:bg-muted hover:text-foreground flex size-9 items-center justify-center rounded-[10px] transition-colors md:hidden'
           >
             <Icons.search className='size-4' />
           </button>
+
           <div className='hidden md:flex'>
             <SearchInput />
           </div>
+
           <ThemeModeToggle />
+
           <div className='hidden sm:block'>
             <ThemeSelector />
           </div>
+
           <Separator orientation='vertical' className='mx-0.5 hidden h-5 sm:block' />
+
           <NotificationCenter />
           <UserNav />
         </div>
-      </LiquidGlassSurface>
+      </header>
     </div>
   );
 }
