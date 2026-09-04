@@ -14,13 +14,13 @@
   color-scheme: light;
 
   /* Core semantic palette */
-  --background: oklch(0.975 0.006 250);
+  --background: oklch(0.91 0.018 250);
   --foreground: oklch(0.2 0.015 260);
 
-  --card: color-mix(in srgb, white 82%, var(--background));
+  --card: rgba(255, 255, 255, 0.46);
   --card-foreground: oklch(0.2 0.015 260);
 
-  --popover: color-mix(in srgb, white 90%, var(--background));
+  --popover: rgba(255, 255, 255, 0.62);
   --popover-foreground: oklch(0.2 0.015 260);
 
   --primary: oklch(0.58 0.13 250);
@@ -163,6 +163,7 @@
 
 /* Frost every common shadcn surface without changing markup. */
 [data-theme='glass'] [data-slot='card'],
+[data-theme='glass'] [data-slot='sidebar'],
 [data-theme='glass'] [data-slot='popover-content'],
 [data-theme='glass'] [data-slot='dialog-content'],
 [data-theme='glass'] [data-slot='sheet-content'],
@@ -176,6 +177,8 @@
   background: var(--card) !important;
   border-color: var(--glass-border) !important;
   box-shadow: var(--glass-shadow) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
 }
 
 /* Physical material: inset top highlight + refractive edge */
