@@ -6,7 +6,7 @@ import { Icons } from '@/components/icons';
 import { useThemeConfig } from '@/components/themes/active-theme';
 import { cn } from '@/lib/utils';
 import { ElementTree } from './element-tree';
-import { Control, SelectControl, StyleGrid, StyleSection } from './style-controls';
+import { Control, SelectControl, ShadowControl, StyleGrid, StyleSection } from './style-controls';
 import {
   DESIGN_THEMES,
   INITIAL_GLASS_MATERIAL,
@@ -651,10 +651,8 @@ export function DesignEditor({ children }: { children: React.ReactNode }) {
                     />
                   </StyleSection>
                   <StyleSection title='SHADOW'>
-                    <Control
-                      label='Shadow (multi-layer CSS)'
+                    <ShadowControl
                       value={stateStyles.boxShadow}
-                      placeholder='0 10px 30px rgba(0,0,0,.12)'
                       onChange={(value) => changeStyles({ boxShadow: value })}
                     />
                   </StyleSection>
