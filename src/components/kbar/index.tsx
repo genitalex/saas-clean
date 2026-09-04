@@ -10,6 +10,7 @@ import { useFilteredNavGroups } from '@/hooks/use-nav';
 import { useModeStore } from '@/features/modes/store';
 import GlobalActions from './global-actions';
 import { Icons } from '@/components/icons';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -164,25 +165,27 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
       <GlobalActions />
       <KBarPortal>
         <KBarPositioner className='fixed inset-0 z-50 flex items-start! justify-center bg-black/12 p-4! pt-[14vh]! supports-backdrop-filter:backdrop-blur-[2px]'>
-          <KBarAnimator className='relative mx-auto w-full max-w-xl overflow-hidden rounded-2xl border border-border/70 bg-popover text-popover-foreground shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)] ring-1 ring-foreground/5'>
-            <div className='sticky top-0 z-10 border-b border-border/60 bg-popover'>
-              <KBarSearch className='placeholder:text-muted-foreground w-full border-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-hidden' />
-            </div>
-            <div className='h-[400px]'>
-              <RenderResults />
-            </div>
-            <div className='text-muted-foreground flex items-center gap-3 border-t px-3 py-2 text-xs'>
-              <span className='flex items-center gap-1'>
-                <Kbd>↑</Kbd>
-                <Kbd>↓</Kbd> navigate
-              </span>
-              <span className='flex items-center gap-1'>
-                <Kbd>↵</Kbd> open
-              </span>
-              <span className='flex items-center gap-1'>
-                <Kbd>esc</Kbd> close
-              </span>
-            </div>
+          <KBarAnimator className='relative mx-auto w-full max-w-xl'>
+            <LiquidGlassSurface className='overflow-hidden border border-white/35 text-popover-foreground ring-1 ring-white/20'>
+              <div className='sticky top-0 z-10 border-b border-white/25 bg-transparent'>
+                <KBarSearch className='placeholder:text-muted-foreground w-full border-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-hidden' />
+              </div>
+              <div className='h-[400px]'>
+                <RenderResults />
+              </div>
+              <div className='text-muted-foreground flex items-center gap-3 border-t border-white/25 px-3 py-2 text-xs'>
+                <span className='flex items-center gap-1'>
+                  <Kbd>↑</Kbd>
+                  <Kbd>↓</Kbd> navigate
+                </span>
+                <span className='flex items-center gap-1'>
+                  <Kbd>↵</Kbd> open
+                </span>
+                <span className='flex items-center gap-1'>
+                  <Kbd>esc</Kbd> close
+                </span>
+              </div>
+            </LiquidGlassSurface>
           </KBarAnimator>
         </KBarPositioner>
       </KBarPortal>

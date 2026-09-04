@@ -2,6 +2,7 @@ import {
   Architects_Daughter,
   DM_Sans,
   Fira_Code,
+  Geist,
   Geist_Mono,
   Instrument_Sans,
   Inter,
@@ -29,6 +30,11 @@ const fontGoogleSansFlex = localFont({
 });
 
 const fontSans = fontGoogleSansFlex;
+
+const fontGeist = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist'
+});
 
 const fontMono = Geist_Mono({
   subsets: ['latin'],
@@ -105,6 +111,7 @@ const fontPlayfairDisplay = Playfair_Display({
 
 export const fontVariables = cn(
   fontSans.variable,
+  fontGeist.variable,
   fontMono.variable,
   fontSourceCodePro.variable,
   fontInstrument.variable,

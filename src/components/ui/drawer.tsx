@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
 
 import { cn } from '@/lib/utils';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 type DrawerContextProps = {
   hasSnapPoints: boolean;
@@ -104,12 +105,13 @@ function DrawerContent({ className, children, ...props }: DrawerPrimitive.Popup.
         className='pointer-events-none fixed inset-0 z-50 select-none data-[modal=true]:pointer-events-auto'
       >
         <DrawerPrimitive.Popup
+          render={<LiquidGlassSurface />}
           data-slot='drawer-popup'
           data-swipe-axis={swipeAxis}
           data-snap-points={hasSnapPoints ? '' : undefined}
           className={cn(
             // Base.
-            'group/drawer-popup pointer-events-auto fixed z-50 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col border-border/70 bg-popover text-sm text-popover-foreground shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)] transition-[transform,height,opacity,filter] duration-180 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-2xl data-[swipe-direction=down]:border-t data-[swipe-direction=left]:rounded-r-2xl data-[swipe-direction=left]:border-r data-[swipe-direction=right]:rounded-l-2xl data-[swipe-direction=right]:border-l data-[swipe-direction=up]:rounded-b-2xl data-[swipe-direction=up]:border-b',
+            'group/drawer-popup pointer-events-auto fixed z-50 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col border border-white/35 bg-transparent text-sm text-popover-foreground transition-[transform,height,opacity,filter] duration-180 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-2xl data-[swipe-direction=down]:border-t data-[swipe-direction=left]:rounded-r-2xl data-[swipe-direction=left]:border-r data-[swipe-direction=right]:rounded-l-2xl data-[swipe-direction=right]:border-l data-[swipe-direction=up]:rounded-b-2xl data-[swipe-direction=up]:border-b',
             // Nested.
             'data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95',
             // Bleed.

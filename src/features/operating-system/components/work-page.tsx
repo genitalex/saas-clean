@@ -58,12 +58,7 @@ export function WorkPage() {
       </header>
 
       <div className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'>
-        <div
-          data-glass-material='regular'
-          data-glass-refractive='false'
-          className='inline-flex w-fit rounded-xl p-1'
-          aria-label='Modo de Work'
-        >
+        <div className='inline-flex w-fit rounded-xl p-1' aria-label='Modo de Work'>
           <Link
             href={`/dashboard/my-work?mode=list${activeView === 'all' ? '' : `&view=${activeView}`}`}
             className={`rounded-lg px-4 py-2 text-sm font-medium ${activeMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}

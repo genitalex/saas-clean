@@ -18,8 +18,6 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
   return (
     <CommandPrimitive
       data-slot='command'
-      data-glass-material='frosted'
-      data-glass-refractive='true'
       className={cn(
         'flex size-full flex-col overflow-hidden rounded-2xl! bg-popover p-1 text-popover-foreground',
         className

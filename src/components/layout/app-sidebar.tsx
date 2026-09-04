@@ -145,13 +145,7 @@ export default function AppSidebar() {
   const filteredGroups = useFilteredNavGroups(navGroups);
 
   return (
-    <Sidebar
-      collapsible='icon'
-      variant='sidebar'
-      data-glass-material='regular'
-      data-glass-refractive='true'
-      className='glass-sidebar border-r bg-sidebar'
-    >
+    <Sidebar collapsible='icon' variant='sidebar' className='glass-sidebar border-r bg-sidebar'>
       <SidebarHeader className='border-b'>
         <OrgSwitcher />
       </SidebarHeader>

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { desktopNavItems, mobileNavItems, navGroups } from '@/config/nav-config';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { GlassSurface } from '@/components/ui/glass-surface';
+import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -35,11 +35,8 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <GlassSurface
+        <LiquidGlassSurface
           as='div'
-          material='regular'
-          refractive
-          refractionStrength={0.2}
           className='glass-nav mb-2 w-full max-w-[980px] rounded-[24px] p-1.5 sm:mb-4 md:mb-5'
         >
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
@@ -169,7 +166,7 @@ export function BottomNavigation() {
               <span className='text-[10px] font-medium leading-none'>Más</span>
             </button>
           </div>
-        </GlassSurface>
+        </LiquidGlassSurface>
       </nav>
 
       {createOpen && <QuickCreate onClose={() => setCreateOpen(false)} />}

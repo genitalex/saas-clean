@@ -61,15 +61,15 @@
 
 [data-theme='glass'] {
   --experience-surface-1: var(--card);
-  --experience-surface-2: var(--glass-surface-regular);
+  --experience-surface-2: var(--muted);
   --experience-surface-overlay: var(--popover);
-  --experience-control-radius: var(--glass-radius-sm);
+  --experience-control-radius: var(--radius);
   --experience-control-height: 2.625rem;
   --experience-border-strength: 86%;
-  --experience-surface-shadow: 0 3px 14px rgb(55 67 74 / 0.05);
-  --experience-floating-shadow: var(--glass-shadow-regular);
-  --experience-material-blur: var(--glass-blur-regular);
-  --experience-material-saturation: var(--glass-saturation-regular);
+  --experience-surface-shadow: var(--shadow-sm);
+  --experience-floating-shadow: var(--shadow-md);
+  --experience-material-blur: 0px;
+  --experience-material-saturation: 100%;
   --experience-motion: cubic-bezier(0.2, 0.72, 0.2, 1);
   --experience-density: 1;
 }
