@@ -49,3 +49,25 @@ body {
 [data-theme] body {
   font-family: var(--font-sans);
 }
+
+/* Final Glass overrides: these intentionally come AFTER the generic theme
+   layer so the shared shadow defaults cannot flatten the glass material. */
+[data-theme='glass'] [data-slot='popover-content'],
+[data-theme='glass'] [data-slot='dialog-content'],
+[data-theme='glass'] [data-slot='sheet-content'],
+[data-theme='glass'] [data-slot='dropdown-menu-content'],
+[data-theme='glass'] [data-slot='context-menu-content'],
+[data-theme='glass'] [data-slot='select-content'],
+[data-theme='glass'] [data-slot='command'] {
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-floating) !important;
+}
+
+[data-theme='glass'] [data-slot='tooltip-content'] {
+  background: rgba(255, 255, 255, 0.64) !important;
+  border: 1px solid var(--glass-line) !important;
+  box-shadow:
+    var(--glass-shadow-inset),
+    0 14px 34px rgba(27, 38, 54, 0.12) !important;
+  backdrop-filter: blur(26px) saturate(165%);
+  -webkit-backdrop-filter: blur(26px) saturate(165%);
+}
