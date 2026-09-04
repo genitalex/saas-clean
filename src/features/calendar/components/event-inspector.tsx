@@ -498,7 +498,7 @@ export function EventInspector({
                         {task.status === 'done' && <Icons.check className='size-3.5' />}
                       </button>
                       <Link
-                        href={`/dashboard/tasks?task=${task.id}`}
+                        href={`/dashboard/my-work?mode=list&task=${task.id}`}
                         className={cn(
                           'min-w-0 flex-1 truncate text-sm hover:underline',
                           task.status === 'done' && 'text-muted-foreground line-through'

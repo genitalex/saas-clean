@@ -83,7 +83,10 @@ export function InboxPage() {
               <span className='bg-primary/[0.08] text-primary flex size-8 shrink-0 items-center justify-center rounded-full'>
                 <Icons.check className='size-4' />
               </span>
-              <Link href={`/dashboard/tasks?task=${task.id}`} className='min-w-0 flex-1'>
+              <Link
+                href={`/dashboard/my-work?mode=list&task=${task.id}`}
+                className='min-w-0 flex-1'
+              >
                 <span className='block truncate text-sm font-medium'>{task.title}</span>
                 <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
                   {task.customer?.name ?? 'Sin cliente'}
@@ -141,7 +144,7 @@ function AttentionTask({ task, label }: { task: Task; label: string }) {
       <span className='bg-primary/[0.08] text-primary flex size-8 shrink-0 items-center justify-center rounded-full'>
         <Icons.warning className='size-4' />
       </span>
-      <Link href={`/dashboard/tasks?task=${task.id}`} className='min-w-0 flex-1'>
+      <Link href={`/dashboard/my-work?mode=list&task=${task.id}`} className='min-w-0 flex-1'>
         <span className='block truncate text-sm font-medium'>{task.title}</span>
         <span className='text-muted-foreground mt-0.5 block truncate text-xs'>{label}</span>
       </Link>

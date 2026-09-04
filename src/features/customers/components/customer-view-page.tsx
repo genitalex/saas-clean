@@ -282,7 +282,7 @@ function TasksSection({
     <Card>
       <CardHeader className='flex-row items-center justify-between border-b'>
         <CardTitle className='text-base'>Tareas</CardTitle>
-        <Link className='text-primary text-xs hover:underline' href='/dashboard/tasks'>
+        <Link className='text-primary text-xs hover:underline' href='/dashboard/my-work?mode=list'>
           Ver tareas
         </Link>
       </CardHeader>
@@ -304,7 +304,7 @@ function TasksSection({
                   {task.status === 'done' && <Icons.check />}
                 </button>
                 <Link
-                  href={`/dashboard/tasks?task=${task.id}`}
+                  href={`/dashboard/my-work?mode=list&task=${task.id}`}
                   className={`min-w-0 flex-1 truncate text-sm ${task.status === 'done' ? 'text-muted-foreground line-through' : ''}`}
                 >
                   {task.title}

@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 import { DEFAULT_THEME } from './theme.config';
 
@@ -28,6 +29,7 @@ export function ActiveThemeProvider({
 }) {
   const themeToUse = initialTheme || DEFAULT_THEME;
   const [activeTheme, setActiveTheme] = useState<string>(themeToUse);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Only update if theme has changed
@@ -54,6 +56,20 @@ export function ActiveThemeProvider({
       setThemeCookie(activeTheme);
     }
   }, [activeTheme]);
+
+  useEffect(() => {
+    const surface = pathname.startsWith('/dashboard/my-work')
+      ? 'work'
+      : pathname.startsWith('/dashboard/calendar')
+        ? 'calendar'
+        : pathname.startsWith('/dashboard/customers')
+          ? 'customers'
+          : pathname.startsWith('/dashboard/today')
+            ? 'today'
+            : 'secondary';
+
+    document.documentElement.setAttribute('data-surface', surface);
+  }, [pathname]);
 
   return (
     <ThemeContext.Provider value={{ activeTheme, setActiveTheme }}>

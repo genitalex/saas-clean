@@ -2,6 +2,7 @@
 import React from 'react';
 import { ActiveThemeProvider } from '@/components/themes/active-theme';
 import QueryProvider from '@/components/layout/query-provider';
+import KBar from '@/components/kbar';
 
 export default function Providers({
   activeThemeValue,
@@ -13,7 +14,9 @@ export default function Providers({
   return (
     <>
       <ActiveThemeProvider initialTheme={activeThemeValue}>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <KBar>{children}</KBar>
+        </QueryProvider>
       </ActiveThemeProvider>
     </>
   );

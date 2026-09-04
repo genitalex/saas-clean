@@ -417,7 +417,7 @@ export function CustomerInspector({
                 </section>
                 <Separator />
                 <section className='space-y-3'>
-                  <SectionTitle title='Tareas abiertas' href='/dashboard/tasks' />
+                  <SectionTitle title='Tareas abiertas' href='/dashboard/my-work?mode=list' />
                   {tasksQuery.isPending ? (
                     <LoadingLine />
                   ) : (
@@ -427,7 +427,7 @@ export function CustomerInspector({
                       .map((task) => (
                         <Link
                           key={task.id}
-                          href={`/dashboard/tasks?task=${task.id}`}
+                          href={`/dashboard/my-work?mode=list&task=${task.id}`}
                           className='group flex items-center gap-3 rounded-[9px] border border-border/25 bg-background px-3 py-2.5 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border/55 hover:bg-muted/20'
                         >
                           <span className='bg-primary/10 text-primary flex size-7 items-center justify-center rounded-full'>

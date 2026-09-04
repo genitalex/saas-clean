@@ -1,9 +1,5 @@
-import PageContainer from '@/components/layout/page-container';
-import { BusinessPulse } from '@/features/operating-system/components/operating-system';
+import { redirect } from 'next/navigation';
+
 export default function Page() {
-  return (
-    <PageContainer scrollable>
-      <BusinessPulse />
-    </PageContainer>
-  );
+  redirect('/dashboard/today');
 }

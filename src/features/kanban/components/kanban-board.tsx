@@ -39,6 +39,7 @@ const COLUMN_LABELS: Record<TaskStatus, string> = {
 };
 
 type Columns = Record<TaskStatus, Task[]>;
+const EMPTY_TASKS: Task[] = [];
 
 function toColumns(tasks: Task[]): Columns {
   return COLUMN_ORDER.reduce((result, status) => {
@@ -103,7 +104,7 @@ function TrashDropZone({ active, over }: { active: boolean; over: boolean }) {
 export function KanbanBoard() {
   const queryClient = useQueryClient();
   const {
-    data: tasks = [],
+    data: taskData,
     isLoading,
     isError
   } = useQuery({
@@ -113,6 +114,7 @@ export function KanbanBoard() {
     retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 3000),
     refetchOnWindowFocus: false
   });
+  const tasks = taskData ?? EMPTY_TASKS;
 
   const [columns, setColumns] = React.useState<Columns>(() => toColumns(tasks));
   const [activeTask, setActiveTask] = React.useState<Task | null>(null);

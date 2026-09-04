@@ -1,63 +1,27 @@
 /**
  * Default theme that loads when no user preference is set
  */
-export const DEFAULT_THEME = 'premium';
+export const DEFAULT_THEME = 'notebook';
 
 export const THEMES = [
   {
-    name: 'Glass',
-    value: 'glass'
+    name: 'Notebook',
+    value: 'notebook',
+    description: 'Cálido, humano y táctil'
   },
   {
     name: 'Mac / iOS',
-    value: 'mac'
-  },
-  {
-    name: 'Premium',
-    value: 'premium'
-  },
-  {
-    name: 'Iris',
-    value: 'iris'
-  },
-  {
-    name: 'Claude',
-    value: 'claude'
-  },
-  {
-    name: 'Discord',
-    value: 'discord'
-  },
-  {
-    name: 'Supabase',
-    value: 'supabase'
+    value: 'mac',
+    description: 'Nativo, físico y preciso'
   },
   {
     name: 'Vercel',
-    value: 'vercel'
+    value: 'vercel',
+    description: 'Preciso, sobrio y estructural'
   },
   {
-    name: 'Mono',
-    value: 'mono'
-  },
-  {
-    name: 'Notebook',
-    value: 'notebook'
-  },
-  {
-    name: 'Light Green',
-    value: 'light-green'
-  },
-  {
-    name: 'Zen',
-    value: 'zen'
-  },
-  {
-    name: 'Astro Vista',
-    value: 'astro-vista'
-  },
-  {
-    name: 'WhatsApp',
-    value: 'whatsapp'
+    name: 'Glass',
+    value: 'glass',
+    description: 'Translúcido, profundo y material'
   }
 ];

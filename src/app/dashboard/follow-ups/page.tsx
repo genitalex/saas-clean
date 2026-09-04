@@ -1,9 +1,9 @@
-import PageContainer from '@/components/layout/page-container';
-import { OperatingSystemPage } from '@/features/operating-system/components/operating-system';
-export default function Page() {
-  return (
-    <PageContainer scrollable>
-      <OperatingSystemPage kind='follow-ups' />
-    </PageContainer>
-  );
+import { redirectToWork } from '@/lib/work-redirect';
+
+export default async function Page({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  redirectToWork('follow-ups', await searchParams);
 }

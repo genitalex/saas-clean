@@ -208,7 +208,7 @@ export function TodayPage({
         aria-label='Acciones rápidas'
       >
         <QuickAction
-          href='/dashboard/tasks'
+          href='/dashboard/my-work?mode=list&create=1'
           icon={Icons.check}
           label='Nueva tarea'
           hint='Organiza trabajo'
@@ -244,7 +244,7 @@ export function TodayPage({
           <SectionHeader
             eyebrow='Mi trabajo'
             title='Para hoy'
-            href='/dashboard/tasks'
+            href='/dashboard/my-work?mode=list'
             action='Ver tareas'
           />
           <div className='mt-4 divide-y divide-border/50'>
@@ -254,7 +254,7 @@ export function TodayPage({
               .map((task) => (
                 <Link
                   key={task.id}
-                  href={`/dashboard/tasks?task=${task.id}`}
+                  href={`/dashboard/my-work?mode=list&task=${task.id}`}
                   className='flex min-w-0 items-center gap-3 py-3 transition-colors hover:bg-muted/25'
                 >
                   <span
@@ -306,7 +306,7 @@ export function TodayPage({
             {attention.slice(0, 4).map((task) => (
               <Link
                 key={task.id}
-                href={`/dashboard/tasks?task=${task.id}`}
+                href={`/dashboard/my-work?mode=list&task=${task.id}`}
                 className={cn(
                   'block rounded-2xl border border-border/45 bg-background/45 p-3.5',
                   softButton
@@ -887,14 +887,14 @@ function DayFocusView({
         <SectionHeader
           eyebrow='Trabajo'
           title={`${dayTasks.length} ${dayTasks.length === 1 ? 'tarea con fecha' : 'tareas con fecha'}`}
-          href='/dashboard/tasks'
+          href='/dashboard/my-work?mode=list'
           action='Ver tareas'
         />
         <div className='mt-5 divide-y divide-border/50'>
           {dayTasks.map((task) => (
             <Link
               key={task.id}
-              href={`/dashboard/tasks?task=${task.id}`}
+              href={`/dashboard/my-work?mode=list&task=${task.id}`}
               className='flex items-center gap-3 py-3'
             >
               <span className='flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background/60'>

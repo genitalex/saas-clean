@@ -57,7 +57,15 @@ const statusLabels: Record<TaskStatus, string> = {
 
 const priorityLabels: Record<TaskPriority, string> = { low: 'Baja', medium: 'Media', high: 'Alta' };
 
-export function TaskListPage() {
+export function TaskListPage({
+  basePath = '/dashboard/tasks',
+  mode,
+  view
+}: {
+  basePath?: string;
+  mode?: string;
+  view?: 'all' | 'waiting' | 'completed';
+}) {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const [search, setSearch] = useState('');
@@ -108,6 +116,12 @@ export function TaskListPage() {
     },
     staleTime: 60_000
   });
+
+  const workspacePath = () => {
+    const params = new URLSearchParams();
+    if (mode) params.set('mode', mode);
+    return `${basePath}${params.toString() ? `?${params}` : ''}`;
+  };
 
   const filteredTasks = tasks.filter((task) => {
     if (priority && task.priority !== priority) return false;
@@ -212,7 +226,8 @@ export function TaskListPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setStatus((params.get('status') as TaskStatus | null) || '');
+    const statusFromView = view === 'waiting' ? 'waiting' : view === 'completed' ? 'done' : '';
+    setStatus((params.get('status') as TaskStatus | null) || statusFromView);
     setPriority((params.get('priority') as TaskPriority | null) || '');
     setAssigneeId(params.get('assigneeId') || '');
     setSearch(params.get('search') || '');
@@ -222,7 +237,7 @@ export function TaskListPage() {
     syncDeepLink();
     window.addEventListener('popstate', syncDeepLink);
     return () => window.removeEventListener('popstate', syncDeepLink);
-  }, []);
+  }, [view]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -233,10 +248,23 @@ export function TaskListPage() {
     const next = params.toString();
     const current = window.location.search.replace(/^\?/, '');
     if (next !== current) {
-      const nextUrl = `${window.location.pathname}${next ? `?${next}` : ''}`;
+      const currentParams = new URLSearchParams(window.location.search);
+      if (mode) currentParams.set('mode', mode);
+      else currentParams.delete('mode');
+      if (view && view !== 'all') currentParams.set('view', view);
+      else currentParams.delete('view');
+      if (next) {
+        new URLSearchParams(next).forEach((value, key) => currentParams.set(key, value));
+      } else {
+        ['status', 'priority', 'assigneeId', 'search'].forEach((key) => currentParams.delete(key));
+      }
+      if (view === 'waiting' && !status) currentParams.set('status', 'waiting');
+      if (view === 'completed' && !status) currentParams.set('status', 'done');
+      const nextQuery = currentParams.toString();
+      const nextUrl = `${basePath}${nextQuery ? `?${nextQuery}` : ''}`;
       window.history.replaceState(null, '', nextUrl);
     }
-  }, [status, priority, assigneeId, search]);
+  }, [basePath, mode, status, priority, assigneeId, search, view]);
 
   useEffect(() => {
     if (deepLinkId && tasks.length > 0) {
@@ -246,12 +274,13 @@ export function TaskListPage() {
 
   const openTask = (task: Task) => {
     setSelected(task);
-    window.history.replaceState(null, '', `/dashboard/tasks?task=${task.id}`);
+    const params = new URLSearchParams({ ...(mode ? { mode } : {}), task: task.id });
+    window.history.replaceState(null, '', `${basePath}?${params}`);
   };
 
   const closeTask = () => {
     setSelected(null);
-    window.history.replaceState(null, '', '/dashboard/tasks');
+    window.history.replaceState(null, '', workspacePath());
   };
 
   const toggleTaskSelection = (taskId: string) => {
@@ -989,7 +1018,7 @@ function TaskInspector({
                 {workspace.blockedBy.map((blockingTask) => (
                   <div key={blockingTask.id} className='mt-2 flex items-center gap-2 text-sm'>
                     <Link
-                      href={`/dashboard/tasks?task=${blockingTask.id}`}
+                      href={`/dashboard/my-work?mode=list&task=${blockingTask.id}`}
                       className='flex min-w-0 flex-1 items-center gap-2 hover:underline'
                     >
                       <Icons.lock className='size-3.5 shrink-0 text-amber-600' />

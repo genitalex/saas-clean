@@ -1,9 +1,9 @@
-import KanbanViewPage from '@/features/kanban/components/kanban-view-page';
+import { redirectToWork } from '@/lib/work-redirect';
 
-export const metadata = {
-  title: 'Dashboard : Kanban view'
-};
-
-export default function page() {
-  return <KanbanViewPage />;
+export default async function Page({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  redirectToWork('board', await searchParams);
 }

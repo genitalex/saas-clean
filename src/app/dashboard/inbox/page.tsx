@@ -1,10 +1,9 @@
-import { InboxPage } from '@/features/inbox/components/inbox-page';
-import { Suspense } from 'react';
+import { redirectToWork } from '@/lib/work-redirect';
 
-export default async function Page() {
-  return (
-    <Suspense fallback={null}>
-      <InboxPage />
-    </Suspense>
-  );
+export default async function Page({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  redirectToWork('inbox', await searchParams);
 }
