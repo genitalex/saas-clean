@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { desktopNavItems, mobileNavItems, navGroups } from '@/config/nav-config';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { GlassSurface } from '@/components/ui/glass-surface';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -34,7 +35,13 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='glass-nav mb-2 w-full max-w-[980px] rounded-[24px] border border-border/60 bg-background/78 p-1.5 shadow-none backdrop-blur-2xl sm:mb-4 md:mb-5'>
+        <GlassSurface
+          as='div'
+          material='regular'
+          refractive
+          refractionStrength={0.2}
+          className='glass-nav mb-2 w-full max-w-[980px] rounded-[24px] p-1.5 sm:mb-4 md:mb-5'
+        >
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
             {primaryItems.slice(0, 5).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
@@ -162,7 +169,7 @@ export function BottomNavigation() {
               <span className='text-[10px] font-medium leading-none'>Más</span>
             </button>
           </div>
-        </div>
+        </GlassSurface>
       </nav>
 
       {createOpen && <QuickCreate onClose={() => setCreateOpen(false)} />}

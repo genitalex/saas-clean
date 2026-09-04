@@ -31,7 +31,7 @@ type TodayPlanItem =
   | { type: 'task'; task: Task; at: Date }
   | { type: 'event'; event: Event; at: Date };
 
-const glass = 'rounded-[26px] border border-border/55 bg-card/60 backdrop-blur-xl';
+const solidSurface = 'rounded-[26px] border border-border/55 bg-card/60 backdrop-blur-xl';
 const softButton =
   'transition-all duration-200 hover:-translate-y-px hover:border-primary/20 hover:bg-card/80 active:translate-y-0';
 
@@ -194,7 +194,7 @@ export function TodayPage({
 
       <QuickCapture />
 
-      <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='automated-attention'>
+      <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='automated-attention'>
         <SectionHeader eyebrow='Atención' title='Lo que necesita una decisión' />
         <div className='mt-4'>
           <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
@@ -240,7 +240,7 @@ export function TodayPage({
       </section>
 
       <section className='grid gap-4 lg:grid-cols-[1.4fr_0.8fr]'>
-        <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='work-today'>
+        <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='work-today'>
           <SectionHeader
             eyebrow='Mi trabajo'
             title='Para hoy'
@@ -298,7 +298,7 @@ export function TodayPage({
         </section>
 
         <section
-          className={cn(glass, 'bg-primary/[0.025] p-5 sm:p-6')}
+          className={cn(solidSurface, 'bg-primary/[0.025] p-5 sm:p-6')}
           aria-labelledby='attention-now'
         >
           <SectionHeader eyebrow='Atención' title='Lo que no conviene dejar pasar' />
@@ -337,7 +337,7 @@ export function TodayPage({
         </section>
       </section>
 
-      <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='week-ahead'>
+      <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='week-ahead'>
         <SectionHeader
           eyebrow='Agenda'
           title='Esta semana'
@@ -483,7 +483,7 @@ export function TodayPage({
         </div>
       </section>
 
-      <section className={cn(glass, 'p-5 sm:p-6')} aria-labelledby='recent-activity'>
+      <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='recent-activity'>
         <SectionHeader
           eyebrow='Memoria'
           title='Lo que ha ocurrido'
@@ -502,7 +502,7 @@ export function TodayPage({
       </section>
 
       <section className='grid gap-4 lg:grid-cols-3'>
-        <section className={cn(glass, 'p-5')} aria-labelledby='deadlines-heading'>
+        <section className={cn(solidSurface, 'p-5')} aria-labelledby='deadlines-heading'>
           <SectionHeader eyebrow='Prioridades' title='Lo que vence hoy' />
           <div className='mt-4 space-y-2'>
             {dueToday.slice(0, 4).map((task) => (
@@ -526,7 +526,7 @@ export function TodayPage({
           </div>
         </section>
 
-        <section className={cn(glass, 'p-5')} aria-labelledby='followup-heading'>
+        <section className={cn(solidSurface, 'p-5')} aria-labelledby='followup-heading'>
           <SectionHeader
             eyebrow='Seguimiento'
             title='No dejes enfriar oportunidades'
@@ -562,7 +562,7 @@ export function TodayPage({
           </div>
         </section>
 
-        <section className={cn(glass, 'p-5')} aria-labelledby='team-heading'>
+        <section className={cn(solidSurface, 'p-5')} aria-labelledby='team-heading'>
           <SectionHeader
             eyebrow='Equipo'
             title={role === 'member' ? 'Tu espacio de trabajo' : 'Tu equipo, sin perder tu foco'}
@@ -766,7 +766,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={cn(glass, 'group flex min-w-0 items-center gap-3 px-3.5 py-3', softButton)}
+      className={cn(solidSurface, 'group flex min-w-0 items-center gap-3 px-3.5 py-3', softButton)}
     >
       <span className='bg-primary/[0.08] text-primary flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105'>
         <Icon className='size-4.5' />
@@ -854,7 +854,7 @@ function DayFocusView({
         )}
       </header>
 
-      <section className={cn(glass, 'p-5 sm:p-6')}>
+      <section className={cn(solidSurface, 'p-5 sm:p-6')}>
         <SectionHeader
           eyebrow='Agenda'
           title={`${dayEvents.length} ${dayEvents.length === 1 ? 'evento' : 'eventos'}`}
@@ -883,7 +883,7 @@ function DayFocusView({
         </div>
       </section>
 
-      <section className={cn(glass, 'p-5 sm:p-6')}>
+      <section className={cn(solidSurface, 'p-5 sm:p-6')}>
         <SectionHeader
           eyebrow='Trabajo'
           title={`${dayTasks.length} ${dayTasks.length === 1 ? 'tarea con fecha' : 'tareas con fecha'}`}

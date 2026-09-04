@@ -52,6 +52,8 @@ function SheetContent({
       <SheetPrimitive.Popup
         data-slot='sheet-content'
         data-side={side}
+        data-glass-material='frosted'
+        data-glass-refractive='false'
         className={cn(
           'fixed z-50 flex flex-col gap-4 border-border/70 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)] transition duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:rounded-t-2xl data-[side=bottom]:border-t data-[side=bottom]:data-ending-style:translate-y-8 data-[side=bottom]:data-starting-style:translate-y-8 data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-full data-[side=left]:rounded-r-2xl data-[side=left]:border-r data-[side=left]:data-ending-style:translate-x-8 data-[side=left]:data-starting-style:translate-x-8 data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-full data-[side=right]:rounded-l-2xl data-[side=right]:border-l data-[side=right]:data-ending-style:translate-x-8 data-[side=right]:data-starting-style:translate-x-8 data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:rounded-b-2xl data-[side=top]:border-b data-[side=top]:data-ending-style:translate-y-8 data-[side=top]:data-starting-style:translate-y-8 data-[side=left]:sm:max-w-md data-[side=right]:sm:max-w-md sm:data-[side=left]:w-[min(28rem,calc(100vw-2rem))] sm:data-[side=right]:w-[min(28rem,calc(100vw-2rem))]',
           className

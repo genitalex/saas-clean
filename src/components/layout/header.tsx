@@ -11,6 +11,7 @@ import { UserNav } from './user-nav';
 import { useShellMetric } from '@/hooks/use-shell-metric';
 import { useKBar } from 'kbar';
 import { Icons } from '@/components/icons';
+import { GlassSurface } from '@/components/ui/glass-surface';
 
 export default function Header() {
   const { query } = useKBar();
@@ -18,8 +19,12 @@ export default function Header() {
   useShellMetric(headerRef, '--app-header-height');
 
   return (
-    <header
+    <GlassSurface
+      as='header'
       ref={headerRef}
+      material='regular'
+      refractive
+      refractionStrength={0.16}
       className='bg-background/95 sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/80 px-3 shadow-[inset_0_-1px_0_rgba(15,23,42,0.04)] sm:px-5'
     >
       <div className='flex min-w-0 items-center gap-2'>
@@ -46,6 +51,6 @@ export default function Header() {
         <NotificationCenter />
         <UserNav />
       </div>
-    </header>
+    </GlassSurface>
   );
 }

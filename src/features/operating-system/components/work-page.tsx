@@ -59,7 +59,9 @@ export function WorkPage() {
 
       <div className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'>
         <div
-          className='inline-flex w-fit rounded-xl border border-border/60 bg-card/40 p-1'
+          data-glass-material='regular'
+          data-glass-refractive='false'
+          className='inline-flex w-fit rounded-xl p-1'
           aria-label='Modo de Work'
         >
           <Link
