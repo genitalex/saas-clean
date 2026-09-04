@@ -1,20 +1,5 @@
 /* Base is the product reference theme. Other themes remain available for later work. */
 @import './themes/base.css';
-@import './themes/premium.css';
-@import './themes/iris.css';
-@import './themes/claude.css';
-@import './themes/discord.css';
-@import './themes/supabase.css';
-@import './themes/vercel.css';
-@import './themes/mono.css';
-@import './themes/notebook.css';
-@import './themes/light-green.css';
-@import './themes/zen.css';
-@import './themes/astro-vista.css';
-@import './themes/whatsapp.css';
-@import './themes/glass.css';
-@import './themes/mac.css';
-@import './themes/experience-tokens.css';
 @import '../features/design-system/styles/design-editor.css';
 
 [data-theme] {

@@ -37,7 +37,7 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='mb-2 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card/95 p-1 shadow-md supports-backdrop-filter:backdrop-blur-sm sm:mb-4 md:mb-5'>
+        <div className='mb-2 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card p-1 shadow-md sm:mb-4 md:mb-5'>
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
             {primaryItems.slice(0, 5).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
@@ -197,10 +197,10 @@ function QuickCreate({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className='glass-quick-create-backdrop fixed inset-0 z-40 flex items-end justify-center p-3'
+      className='fixed inset-0 z-40 flex items-end justify-center bg-foreground/20 p-3'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <div className='glass-floating-sheet mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg p-3'>
+      <div className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] w-full max-w-lg rounded-[var(--radius-xl)] border border-border/70 bg-popover p-3 shadow-lg'>
         <p className='text-muted-foreground px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em]'>
           Crear rápidamente
         </p>
@@ -234,10 +234,10 @@ function MoreSheet({
 }) {
   return (
     <div
-      className='glass-quick-create-backdrop fixed inset-0 z-50 flex items-end justify-center p-3'
+      className='fixed inset-0 z-50 flex items-end justify-center bg-foreground/20 p-3'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <section className='glass-floating-sheet mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden p-0'>
+      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-popover p-0 shadow-lg'>
         <div className='flex items-center justify-between border-b border-border/50 px-5 py-4'>
           <div>
             <h2 className='text-lg font-semibold'>Más</h2>

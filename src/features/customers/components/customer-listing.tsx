@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CustomerInspector } from './customer-inspector';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
+import { Input } from '@/components/ui/input';
 
 type Customer = {
   id: string;
@@ -83,18 +83,17 @@ export default function CustomerListing() {
   };
 
   return (
-    <LiquidGlassSurface
-      as='div'
+    <div
       data-design-id='customers.page'
       data-design-component='Customers'
-      className='mx-auto max-w-[1280px] space-y-4 p-4 md:p-6'
+      className='mx-auto w-full max-w-[var(--page-max-width)] space-y-6 px-[var(--page-padding)] pt-5 pb-10 md:pt-7'
     >
       <div className='flex flex-wrap items-center gap-3'>
-        <input
+        <Input
           data-design-id='customers.search'
           data-design-component='Search'
           aria-label='Buscar clientes'
-          className='h-10 w-full max-w-sm rounded-[var(--radius-md)] border border-border/70 bg-background px-3 text-sm outline-none transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-ring focus:ring-2 focus:ring-ring/20'
+          className='w-full max-w-sm'
           placeholder='Buscar clientes…'
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -111,7 +110,7 @@ export default function CustomerListing() {
       <div
         data-design-id='customers.table'
         data-design-component='CustomerTable'
-        className='overflow-visible rounded-2xl border border-border/60 bg-card/45'
+        className='overflow-visible rounded-[var(--radius-xl)] border border-border/70 bg-card'
       >
         <div className='hidden grid-cols-[2fr_1fr_2fr_auto] gap-4 border-b border-border/60 px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground md:grid'>
           <span>Cliente</span>
@@ -150,6 +149,6 @@ export default function CustomerListing() {
         open={Boolean(selectedId)}
         onOpenChange={(open) => !open && closeCustomer()}
       />
-    </LiquidGlassSurface>
+    </div>
   );
 }

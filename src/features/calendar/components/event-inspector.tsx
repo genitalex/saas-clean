@@ -294,7 +294,7 @@ export function EventInspector({
         side='right'
         showCloseButton={false}
         style={{ ['--event-inspector-width' as string]: `${width}px` }}
-        className='w-[var(--event-inspector-width)] max-w-[calc(100vw-0.5rem)] gap-0 overflow-hidden border-l bg-background p-0 shadow-none backdrop-blur-none sm:max-w-[var(--event-inspector-width)]'
+        className='w-[var(--event-inspector-width)] max-w-[calc(100vw-0.5rem)] gap-0 overflow-hidden border-l bg-popover p-0 shadow-lg sm:max-w-[var(--event-inspector-width)]'
       >
         <div
           onPointerDown={resizeStart}

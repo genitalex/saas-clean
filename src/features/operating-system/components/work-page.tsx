@@ -8,7 +8,6 @@ import { TaskListPage } from '@/features/tasks/components/task-list-page';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { OperatingSystemPage } from './operating-system';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 const views = ['all', 'inbox', 'waiting', 'follow-ups', 'completed'] as const;
 type WorkView = (typeof views)[number];
@@ -44,10 +43,7 @@ export function WorkPage() {
   };
 
   return (
-    <LiquidGlassSurface
-      as='main'
-      className='mx-auto flex min-w-0 max-w-[1280px] flex-1 flex-col gap-5 p-4 md:p-6'
-    >
+    <main className='mx-auto flex min-w-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-10 md:pt-7'>
       <header
         data-design-id='work.page'
         data-design-component='Work'
@@ -70,16 +66,19 @@ export function WorkPage() {
         data-design-component='WorkFilters'
         className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'
       >
-        <div className='inline-flex w-fit rounded-xl p-1' aria-label='Modo de Work'>
+        <div
+          className='inline-flex w-fit rounded-[var(--radius-md)] border border-border/70 bg-muted p-1'
+          aria-label='Modo de Work'
+        >
           <Link
             href={`/dashboard/my-work?mode=list${activeView === 'all' ? '' : `&view=${activeView}`}`}
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${activeMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+            className={`rounded-[var(--radius-sm)] px-4 py-2 text-sm font-medium transition-colors ${activeMode === 'list' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:bg-background'}`}
           >
             Lista
           </Link>
           <Link
             href='/dashboard/my-work?mode=board'
-            className={`rounded-lg px-4 py-2 text-sm font-medium ${showBoard ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+            className={`rounded-[var(--radius-sm)] px-4 py-2 text-sm font-medium transition-colors ${showBoard ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:bg-background'}`}
           >
             Board
           </Link>
@@ -110,6 +109,6 @@ export function WorkPage() {
         <TaskListPage basePath='/dashboard/my-work' mode='list' view='completed' />
       )}
       {!showBoard && activeView === 'follow-ups' && <OperatingSystemPage kind='follow-ups' />}
-    </LiquidGlassSurface>
+    </main>
   );
 }

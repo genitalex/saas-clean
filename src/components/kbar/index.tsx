@@ -10,7 +10,6 @@ import { useFilteredNavGroups } from '@/hooks/use-nav';
 import { useModeStore } from '@/features/modes/store';
 import GlobalActions from './global-actions';
 import { Icons } from '@/components/icons';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -164,16 +163,16 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
     <>
       <GlobalActions />
       <KBarPortal>
-        <KBarPositioner className='fixed inset-0 z-50 flex items-start! justify-center bg-black/12 p-4! pt-[14vh]! supports-backdrop-filter:backdrop-blur-[2px]'>
+        <KBarPositioner className='fixed inset-0 z-50 flex items-start! justify-center bg-foreground/20 p-4! pt-[14vh]!'>
           <KBarAnimator className='relative mx-auto w-full max-w-xl'>
-            <LiquidGlassSurface className='overflow-hidden border border-white/35 text-popover-foreground ring-1 ring-white/20'>
-              <div className='sticky top-0 z-10 border-b border-white/25 bg-transparent'>
+            <div className='overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-popover text-popover-foreground shadow-lg'>
+              <div className='sticky top-0 z-10 border-b border-border/70 bg-popover'>
                 <KBarSearch className='placeholder:text-muted-foreground w-full border-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-hidden' />
               </div>
               <div className='h-[400px]'>
                 <RenderResults />
               </div>
-              <div className='text-muted-foreground flex items-center gap-3 border-t border-white/25 px-3 py-2 text-xs'>
+              <div className='text-muted-foreground flex items-center gap-3 border-t border-border/70 px-3 py-2 text-xs'>
                 <span className='flex items-center gap-1'>
                   <Kbd>↑</Kbd>
                   <Kbd>↓</Kbd> navigate
@@ -185,7 +184,7 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
                   <Kbd>esc</Kbd> close
                 </span>
               </div>
-            </LiquidGlassSurface>
+            </div>
           </KBarAnimator>
         </KBarPositioner>
       </KBarPortal>

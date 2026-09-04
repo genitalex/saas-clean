@@ -119,7 +119,7 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
     );
   return (
     <div
-      className='fixed inset-0 z-50 flex justify-end bg-black/12 supports-backdrop-filter:backdrop-blur-[2px]'
+      className='fixed inset-0 z-50 flex justify-end bg-foreground/20'
       role='dialog'
       aria-modal='true'
       aria-label='Google Calendar settings'

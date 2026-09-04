@@ -119,7 +119,7 @@ export function NotesPage() {
           <button
             type='button'
             onClick={() => setSettingsOpen(true)}
-            className='border-border/55 bg-card/60 text-muted-foreground flex size-10 items-center justify-center rounded-2xl border backdrop-blur-xl hover:bg-card hover:text-foreground'
+            className='text-muted-foreground flex size-10 items-center justify-center rounded-[var(--radius-lg)] border border-border/70 bg-card hover:bg-muted hover:text-foreground'
             aria-label='Configurar colores'
           >
             <Icons.palette className='size-4.5' />
@@ -331,7 +331,7 @@ function NoteColorSettings({
 
   return (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/12 p-4 supports-backdrop-filter:backdrop-blur-[2px]'
+      className='fixed inset-0 z-50 flex items-center justify-center bg-foreground/20 p-4'
       onMouseDown={(e) => e.currentTarget === e.target && onClose()}
     >
       <section className='w-full max-w-lg rounded-2xl border border-border/70 bg-background p-5 shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)]'>

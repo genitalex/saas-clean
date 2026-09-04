@@ -18,16 +18,11 @@ export default function Header() {
   useShellMetric(headerRef, '--app-header-height');
 
   return (
-    <div
-      ref={headerRef}
-      data-glass-header-shell
-      className='sticky top-0 z-20 h-14 border-b border-border/60 bg-background/95 supports-backdrop-filter:backdrop-blur-sm'
-    >
+    <div ref={headerRef} className='sticky top-0 z-20 h-14 border-b border-border/60 bg-background'>
       <header
         data-design-id='shell.header'
         data-design-component='Header'
         data-design-source='src/components/layout/header.tsx'
-        data-glass-header
         className='relative flex h-14 shrink-0 items-center justify-between gap-3 px-3 sm:px-5'
       >
         <div className='flex min-w-0 items-center gap-2'>

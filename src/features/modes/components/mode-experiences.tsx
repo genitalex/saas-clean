@@ -29,7 +29,7 @@ export function ModeExperiences() {
   const activeMode = useModeStore((state) => state.activeMode);
   if (!activeMode) return null;
   return (
-    <div className='fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-sm'>
+    <div className='fixed inset-0 z-50 overflow-y-auto bg-background'>
       <ModeContent />
     </div>
   );

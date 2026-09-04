@@ -57,7 +57,7 @@ export default function TemplatesPage() {
       pageDescription='Mensajes repetitivos listos para copiar y personalizar.'
     >
       <div className='grid gap-5 lg:grid-cols-[0.9fr_1.1fr]'>
-        <section className='rounded-[28px] border border-border/60 bg-card/60 p-5 backdrop-blur-xl sm:p-6'>
+        <section className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-6'>
           <div className='flex items-start justify-between gap-3'>
             <div>
               <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
@@ -100,7 +100,7 @@ export default function TemplatesPage() {
             )}
           </div>
         </section>
-        <section className='rounded-[28px] border border-border/60 bg-background/45 p-5 backdrop-blur-xl sm:p-6'>
+        <section className='rounded-[var(--radius-xl)] border border-border/70 bg-background p-5 sm:p-6'>
           <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
             {selectedTemplate ? 'Editar plantilla' : 'Nueva plantilla'}
           </p>

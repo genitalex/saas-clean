@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 import { GreetingHeader } from './greeting-header';
@@ -52,10 +51,7 @@ export function DashboardHome() {
     .slice(0, 3);
 
   return (
-    <LiquidGlassSurface
-      as='main'
-      className='mx-auto flex min-w-0 max-w-[1280px] flex-1 flex-col gap-10 p-5 pb-12 sm:gap-12 sm:p-8 lg:p-10'
-    >
+    <main className='mx-auto flex min-w-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-12 sm:pt-7'>
       <GreetingHeader />
 
       <section aria-labelledby='next-heading' className='flex min-w-0 flex-col gap-4'>
@@ -191,7 +187,7 @@ export function DashboardHome() {
           </Button>
         ))}
       </nav>
-    </LiquidGlassSurface>
+    </main>
   );
 }
 

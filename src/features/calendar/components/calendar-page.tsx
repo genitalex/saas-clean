@@ -20,7 +20,6 @@ import {
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Icons } from '@/components/icons';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -50,9 +49,9 @@ import { EventInspector } from './event-inspector';
 type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 type Category = { id: string; name: string; color: string };
 const defaultCategories: Category[] = [
-  { id: 'work', name: 'Trabajo', color: '#4f39c9' },
+  { id: 'work', name: 'Trabajo', color: '#c56a2d' },
   { id: 'important', name: 'Importante', color: '#d97706' },
-  { id: 'personal', name: 'Personal', color: '#0d9488' }
+  { id: 'personal', name: 'Personal', color: '#64706a' }
 ];
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -434,11 +433,10 @@ export function CalendarPage({
   );
 
   return (
-    <LiquidGlassSurface
+    <main
       data-design-id='calendar.page'
       data-design-component='Calendar'
-      as='main'
-      className='flex min-h-0 flex-col gap-4 p-3 pb-0 md:gap-5 md:p-5 md:pb-8'
+      className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-8 md:pt-7'
     >
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
@@ -662,7 +660,7 @@ export function CalendarPage({
       {/* Desktop / tablet: month, week and day grid views. */}
       <Card
         className={cn(
-          'border-border/60 bg-card/95 hidden min-w-0 overflow-hidden py-0 backdrop-blur-sm md:block'
+          'hidden min-w-0 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card py-0 md:block'
         )}
       >
         {isLoading ? (
@@ -749,7 +747,7 @@ export function CalendarPage({
           setYearPickerOpen(false);
         }}
       />
-    </LiquidGlassSurface>
+    </main>
   );
 }
 
@@ -1077,7 +1075,7 @@ function MobileMonthView({
         </Button>
       </div>
 
-      <div className='border-border/50 bg-card/70 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border backdrop-blur-sm'>
+      <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         <div className='bg-surface-subtle/70 grid shrink-0 grid-cols-7 border-b'>
           {mobileWeekDaysNarrow.map((day, index) => (
             <div
@@ -1512,7 +1510,7 @@ function MobileDayTimeline({
       <button
         type='button'
         onClick={() => (early ? setEarlyExpanded((v) => !v) : setLateExpanded((v) => !v))}
-        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle/50 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle/80 hover:text-foreground'
+        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
         style={{ top, height }}
       >
         <span className='inline-flex items-center gap-1.5'>
@@ -1558,7 +1556,7 @@ function MobileDayTimeline({
         </Button>
       </div>
 
-      <div className='bg-card/75 border-border/50 min-h-0 flex-1 overflow-y-auto rounded-2xl border backdrop-blur-sm'>
+      <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         {allDayEvents.length > 0 && (
           <div className='border-border/60 bg-surface-subtle/45 flex min-h-[58px] flex-wrap items-center gap-2 border-b px-3 py-2'>
             <span className='text-muted-foreground shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em]'>
@@ -1601,7 +1599,7 @@ function MobileDayTimeline({
             <button
               type='button'
               onClick={() => setEarlyExpanded(false)}
-              className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+              className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
               aria-label='Contraer madrugada'
             >
               Contraer
@@ -1612,7 +1610,7 @@ function MobileDayTimeline({
             <button
               type='button'
               onClick={() => setLateExpanded(false)}
-              className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+              className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
               style={{ top: earlyHeight + workHeight + 6 }}
               aria-label='Contraer noche'
             >
@@ -2196,7 +2194,7 @@ function CompressedDayTimeline({
       <button
         type='button'
         onClick={() => (early ? setEarlyExpanded((v) => !v) : setLateExpanded((v) => !v))}
-        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle/50 text-[11px] font-medium text-muted-foreground backdrop-blur-sm transition-colors hover:bg-surface-subtle/75 hover:text-foreground'
+        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
         style={{ top, height }}
         aria-label={`${expanded ? 'Contraer' : 'Expandir'} ${early ? 'madrugada' : 'noche'}`}
       >
@@ -2217,7 +2215,7 @@ function CompressedDayTimeline({
       <div className='overflow-x-auto'>
         <div className='min-w-[680px]'>
           <div
-            className='bg-surface-subtle/70 sticky top-0 z-10 grid border-b backdrop-blur-sm'
+            className='bg-surface-subtle sticky top-0 z-10 grid border-b'
             style={{ gridTemplateColumns: '72px minmax(0, 1fr)' }}
           >
             <div className='border-border/60 border-r' />
@@ -2315,7 +2313,7 @@ function CompressedDayTimeline({
                   <button
                     type='button'
                     onClick={() => setEarlyExpanded(false)}
-                    className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+                    className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
                     aria-label='Contraer madrugada'
                   >
                     Contraer
@@ -2326,7 +2324,7 @@ function CompressedDayTimeline({
                   <button
                     type='button'
                     onClick={() => setLateExpanded(false)}
-                    className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle/80 px-2 py-1 text-[10px] font-medium text-muted-foreground backdrop-blur-sm transition hover:bg-surface-subtle hover:text-foreground'
+                    className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
                     style={{ top: earlyHeight + workHeight + 6 }}
                     aria-label='Contraer noche'
                   >
@@ -2454,7 +2452,7 @@ function WeekTimeline({
       <div className='overflow-x-auto'>
         <div className={cn('min-w-0', view === 'week' ? 'min-w-[980px]' : 'min-w-[680px]')}>
           <div
-            className='bg-surface-subtle/70 sticky top-0 z-10 grid border-b backdrop-blur-sm'
+            className='bg-surface-subtle sticky top-0 z-10 grid border-b'
             style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(0, 1fr))` }}
           >
             <div className='border-border/60 border-r' />
@@ -2712,7 +2710,7 @@ function CategoryDialog({
   onChange: (categories: Category[]) => void;
 }) {
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#4f39c9');
+  const [color, setColor] = useState('#c56a2d');
   const [editing, setEditing] = useState<string | null>(null);
   const save = () => {
     if (!name.trim()) return;
@@ -2725,7 +2723,7 @@ function CategoryDialog({
         : [...categories, { id: crypto.randomUUID(), name: name.trim(), color }]
     );
     setName('');
-    setColor('#4f39c9');
+    setColor('#c56a2d');
     setEditing(null);
   };
   return (

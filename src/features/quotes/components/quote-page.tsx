@@ -45,7 +45,7 @@ export default function QuotePage() {
       pageDescription='Un presupuesto sencillo, rápido de compartir y fácil de entender.'
     >
       <div className='grid gap-5 lg:grid-cols-[0.9fr_1.1fr]'>
-        <section className='rounded-[28px] border border-border/60 bg-card/60 p-5 backdrop-blur-xl sm:p-6'>
+        <section className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-6'>
           <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>Datos</p>
           <h2 className='mt-1 text-lg font-semibold'>Cliente y conceptos</h2>
           <div className='mt-4 flex flex-col gap-3'>
@@ -88,7 +88,7 @@ export default function QuotePage() {
         </section>
         <section
           id='quote-print'
-          className='rounded-[28px] border border-border/60 bg-background/55 p-6 backdrop-blur-xl print:rounded-none print:border-0 print:bg-white print:p-0'
+          className='rounded-[var(--radius-xl)] border border-border/70 bg-background p-6 print:rounded-none print:border-0 print:bg-white print:p-0'
         >
           <div className='flex items-start justify-between gap-4 border-b border-border/60 pb-5'>
             <div>

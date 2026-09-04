@@ -32,7 +32,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
   }, [conversations, search]);
 
   return (
-    <div className='border-border/40 bg-background/75 hidden h-full flex-col gap-4 overflow-hidden rounded-2xl border p-3 backdrop-blur lg:col-start-1 lg:col-end-2 lg:flex lg:rounded-3xl lg:p-4'>
+    <div className='hidden h-full flex-col gap-4 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-background p-3 lg:col-start-1 lg:col-end-2 lg:flex lg:p-4'>
       <div className='flex items-center justify-between gap-3'>
         <div>
           <p className='text-foreground text-sm font-semibold'>Messenger</p>

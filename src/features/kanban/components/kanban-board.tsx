@@ -70,7 +70,7 @@ function TrashDropZone({ active, over }: { active: boolean; over: boolean }) {
     <div
       ref={setNodeRef}
       className={cn(
-        'fixed bottom-5 left-1/2 z-[120] flex min-h-16 w-[min(92vw,340px)] -translate-x-1/2 items-center gap-3 rounded-2xl border-2 px-4 py-3 shadow-2xl backdrop-blur-xl transition-all duration-150',
+        'fixed bottom-5 left-1/2 z-[120] flex min-h-16 w-[min(92vw,340px)] -translate-x-1/2 items-center gap-3 rounded-[var(--radius-xl)] border border-border/70 bg-popover px-4 py-3 shadow-lg transition-all duration-150',
         active ? 'opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
         over
           ? 'scale-[1.03] border-destructive bg-destructive text-destructive-foreground'
@@ -81,7 +81,7 @@ function TrashDropZone({ active, over }: { active: boolean; over: boolean }) {
       <span
         className={cn(
           'flex size-9 shrink-0 items-center justify-center rounded-xl',
-          over ? 'bg-white/15' : 'bg-destructive/10'
+          over ? 'bg-muted' : 'bg-destructive/10'
         )}
       >
         <span className='text-base'>⌫</span>

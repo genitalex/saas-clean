@@ -199,7 +199,7 @@ export function CustomerInspector({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-2xl border-border/70 bg-background p-0 sm:max-w-205'>
+        <DialogContent className='grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-[var(--radius-xl)] border-border/70 bg-popover p-0 sm:max-w-205'>
           {customerQuery.isPending ? (
             <div className='space-y-4 p-5'>
               <div className='bg-muted h-8 w-2/3 animate-pulse rounded' />
@@ -217,7 +217,7 @@ export function CustomerInspector({
             <>
               <DialogHeader className='shrink-0 border-b border-border/50 bg-background p-4 pb-3 sm:p-5 sm:pb-4'>
                 <div className='flex items-start gap-4'>
-                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-2xl text-base font-normal'>
+                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] text-base font-normal'>
                     {customer.name.slice(0, 2).toUpperCase()}
                   </span>
                   <div className='min-w-0 flex-1'>
