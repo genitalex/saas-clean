@@ -19,7 +19,7 @@ function nextDate(days: number) {
   return date.toISOString();
 }
 
-export function InboxPage({ organizationId, userId }: { organizationId: string; userId: string }) {
+export function InboxPage() {
   const queryClient = useQueryClient();
   const tasksQuery = useQuery({
     queryKey: taskKeys.list(),
@@ -60,7 +60,7 @@ export function InboxPage({ organizationId, userId }: { organizationId: string; 
         <h2 className='text-lg font-semibold'>Atención pendiente</h2>
         <div className='mt-4'>
           <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
-            <AttentionItems organizationId={organizationId} userId={userId} compact />
+            <AttentionItems compact />
           </Suspense>
         </div>
       </section>

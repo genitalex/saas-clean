@@ -7,6 +7,13 @@ export type Task = InferSelectModel<typeof tasks> & {
   assignee: { id: string; name: string } | null;
 };
 
+export type TaskApi = Omit<Task, 'dueAt' | 'createdAt' | 'updatedAt' | 'completedAt'> & {
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+};
+
 export type TaskStatus = Task['status'];
 export type TaskPriority = Task['priority'];
 export type TaskRecurrence = NonNullable<Task['recurrenceRule']>;
@@ -45,6 +52,16 @@ export type TaskWorkspace = {
   blocks: TaskDependency[];
   followUp: Task | null;
   history: TaskWorkflowHistory[];
+};
+
+export type TaskWorkspaceApi = {
+  task: TaskApi;
+  parent: TaskDependency | null;
+  subtasks: TaskApi[];
+  blockedBy: TaskDependency[];
+  blocks: TaskDependency[];
+  followUp: TaskApi | null;
+  history: Array<Omit<TaskWorkflowHistory, 'createdAt'> & { createdAt: string }>;
 };
 
 export type TaskWorkflowHistory = {

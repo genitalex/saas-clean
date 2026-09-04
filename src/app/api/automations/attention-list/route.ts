@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as service from '@/features/automations/api/service';
-import { getAuthContext } from '@/lib/db/organization-context';
+import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import {
   checkAndProcessOverdueTasks,
   checkAndProcessWaitingTasks
@@ -25,9 +25,17 @@ export async function GET(req: NextRequest) {
       );
       return NextResponse.json(attentionItems);
     }
-    const attentionItems = await service.getAttentionItems(organization.id, user.id);
+    const status = searchParams.get('status') || 'active';
+    const attentionItems = await service.getAttentionItems(organization.id, user.id, status);
     return NextResponse.json(attentionItems);
-  } catch {
-    return NextResponse.json({ error: 'ATTENTION_REQUEST_FAILED' }, { status: 401 });
+  } catch (error) {
+    if (error instanceof AuthContextError) {
+      return NextResponse.json(
+        { error: error.code },
+        { status: error.code === 'UNAUTHENTICATED' ? 401 : 403 }
+      );
+    }
+    console.error('[attention-list]', error);
+    return NextResponse.json({ error: 'ATTENTION_REQUEST_FAILED' }, { status: 500 });
   }
 }

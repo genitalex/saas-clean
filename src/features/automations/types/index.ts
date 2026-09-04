@@ -23,6 +23,8 @@ export type AutomationFilters = {
 /* Notifications */
 export type Notification = InferSelectModel<typeof notifications>;
 
+export type NotificationApi = Omit<Notification, 'createdAt'> & { createdAt: string };
+
 export type NotificationType = Notification['type'];
 
 export type NotificationPayload = {
@@ -35,6 +37,11 @@ export type NotificationPayload = {
 
 /* Attention Items */
 export type AttentionItem = InferSelectModel<typeof attentionItems>;
+
+export type AttentionItemApi = Omit<AttentionItem, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type AttentionItemType = AttentionItem['type'];
 

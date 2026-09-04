@@ -1,5 +1,13 @@
 import { queryOptions } from '@tanstack/react-query';
-import type { Automation, AutomationFilters, Notification, AttentionItem } from '../types';
+import type {
+  Automation,
+  AutomationFilters,
+  Notification,
+  NotificationApi,
+  AttentionItem,
+  AttentionItemApi
+} from '../types';
+import { deserializeDate } from '@/lib/date-utils';
 // API routes handle service layer calls, this file is client-only
 
 /* ---------- Automation Query Keys ---------- */
@@ -25,8 +33,7 @@ export const notificationKeys = {
 export const attentionKeys = {
   all: ['attention'] as const,
   lists: () => [...attentionKeys.all, 'list'] as const,
-  list: (orgId: string, userId: string, status?: string) =>
-    [...attentionKeys.lists(), { orgId, userId, status }] as const,
+  list: (status?: string) => [...attentionKeys.lists(), { status }] as const,
   detail: (id: string) => [...attentionKeys.all, 'detail', id] as const
 };
 
@@ -61,7 +68,13 @@ export function getNotificationsQueryOptions(
       });
       const res = await fetch(`/api/automations/notifications-list?${params}`);
       if (!res.ok) throw new Error('Failed to fetch notifications');
-      return res.json() as Promise<Notification[]>;
+      const notifications = (await res.json()) as NotificationApi[];
+      return notifications.map(
+        (notification): Notification => ({
+          ...notification,
+          createdAt: deserializeDate(notification.createdAt, 'notification.createdAt')
+        })
+      );
     },
     staleTime: 1000 * 30, // 30 seconds - notifications should refresh frequently
     gcTime: 1000 * 60 // 1 minute
@@ -88,18 +101,23 @@ export function getUnreadNotificationCountQueryOptions(organizationId: string, u
 }
 
 /* ---------- Attention Item Query Options ---------- */
-export function getAttentionItemsQueryOptions(
-  organizationId: string,
-  userId: string,
-  status?: string
-) {
+export function getAttentionItemsQueryOptions(status?: string) {
   return queryOptions({
-    queryKey: attentionKeys.list(organizationId, userId, status),
+    queryKey: attentionKeys.list(status),
     queryFn: async () => {
-      const params = new URLSearchParams({ organizationId, userId });
-      const res = await fetch(`/api/automations/attention-list?${params}`);
+      const params = status ? `?status=${encodeURIComponent(status)}` : '';
+      const res = await fetch(`/api/automations/attention-list${params}`, {
+        credentials: 'same-origin'
+      });
       if (!res.ok) throw new Error('Failed to fetch attention items');
-      return res.json() as Promise<AttentionItem[]>;
+      const items = (await res.json()) as AttentionItemApi[];
+      return items.map(
+        (item): AttentionItem => ({
+          ...item,
+          createdAt: deserializeDate(item.createdAt, 'attention.createdAt'),
+          updatedAt: deserializeDate(item.updatedAt, 'attention.updatedAt')
+        })
+      );
     },
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 5 // 5 minutes
@@ -111,9 +129,18 @@ export function getAttentionItemsForEntityQueryOptions(refEntityType: string, re
     queryKey: [...attentionKeys.detail(refEntityId), refEntityType],
     queryFn: async () => {
       const params = new URLSearchParams({ refEntityType, refEntityId });
-      const res = await fetch(`/api/automations/attention-list?${params}`);
+      const res = await fetch(`/api/automations/attention-list?${params}`, {
+        credentials: 'same-origin'
+      });
       if (!res.ok) throw new Error('Failed to fetch attention items for entity');
-      return res.json() as Promise<AttentionItem[]>;
+      const items = (await res.json()) as AttentionItemApi[];
+      return items.map(
+        (item): AttentionItem => ({
+          ...item,
+          createdAt: deserializeDate(item.createdAt, 'attention.createdAt'),
+          updatedAt: deserializeDate(item.updatedAt, 'attention.updatedAt')
+        })
+      );
     },
     staleTime: 1000 * 60, // 1 minute
     gcTime: 1000 * 60 * 5 // 5 minutes

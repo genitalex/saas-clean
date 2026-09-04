@@ -10,8 +10,6 @@ import Link from 'next/link';
 import type { AttentionItem } from '../types';
 
 interface AttentionItemsProps {
-  organizationId: string;
-  userId: string;
   compact?: boolean;
 }
 
@@ -23,12 +21,16 @@ const typeLabels: Record<string, { label: string; icon: keyof typeof Icons }> = 
   customer_inactive: { label: 'Cliente inactivo', icon: 'alertCircle' }
 };
 
-export function AttentionItems({ organizationId, userId, compact = false }: AttentionItemsProps) {
+function getItemPath(item: AttentionItem) {
+  if (item.refEntityType === 'task') return `/dashboard/tasks/${item.refEntityId}`;
+  if (item.refEntityType === 'customer') return `/dashboard/customers/${item.refEntityId}`;
+  return '#';
+}
+
+export function AttentionItems({ compact = false }: AttentionItemsProps) {
   const queryClient = useQueryClient();
 
-  const { data: items = [] } = useSuspenseQuery(
-    getAttentionItemsQueryOptions(organizationId, userId, 'active')
-  );
+  const { data: items = [] } = useSuspenseQuery(getAttentionItemsQueryOptions('active'));
 
   const acknowledgeMutation = useMutation({
     mutationFn: (id: string) => client.acknowledgeAttentionItem(id),
@@ -47,16 +49,6 @@ export function AttentionItems({ organizationId, userId, compact = false }: Atte
   if (items.length === 0) {
     return null;
   }
-
-  const getItemPath = (item: (typeof items)[0]) => {
-    if (item.refEntityType === 'task') {
-      return `/dashboard/tasks/${item.refEntityId}`;
-    }
-    if (item.refEntityType === 'customer') {
-      return `/dashboard/customers/${item.refEntityId}`;
-    }
-    return '#';
-  };
 
   const displayItems = compact ? items.slice(0, 3) : items;
 

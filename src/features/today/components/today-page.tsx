@@ -60,15 +60,11 @@ function taskNeedsAttention(task: Task, now: Date) {
 export function TodayPage({
   role,
   userName,
-  initialNow,
-  organizationId,
-  userId
+  initialNow
 }: {
   role: 'owner' | 'manager' | 'member';
   userName: string;
   initialNow: string;
-  organizationId: string;
-  userId: string;
 }) {
   const queryClient = useQueryClient();
   const [now, setNow] = useState(() => new Date(initialNow));
@@ -202,7 +198,7 @@ export function TodayPage({
         <SectionHeader eyebrow='Atención' title='Lo que necesita una decisión' />
         <div className='mt-4'>
           <Suspense fallback={<div className='bg-muted/40 h-16 animate-pulse rounded-xl' />}>
-            <AttentionItems organizationId={organizationId} userId={userId} compact />
+            <AttentionItems compact />
           </Suspense>
         </div>
       </section>

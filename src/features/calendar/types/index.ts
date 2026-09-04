@@ -6,6 +6,13 @@ export type Event = InferSelectModel<typeof events> & {
   assignee: { id: string; name: string } | null;
 };
 
+export type EventApi = Omit<Event, 'startAt' | 'endAt' | 'createdAt' | 'updatedAt'> & {
+  startAt: string;
+  endAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type EventFilters = {
   startDate?: string;
   endDate?: string;

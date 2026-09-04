@@ -888,7 +888,7 @@ function MyWorkExperience({
             <CardTitle className='text-xl'>Decisiones pendientes</CardTitle>
           </CardHeader>
           <CardContent>
-            <AttentionItems organizationId={organizationId} userId={userId} compact />
+            <AttentionItems compact />
           </CardContent>
         </Card>
       )}

@@ -1,5 +1,16 @@
 import type { TaskFilters, TaskStatus } from '../types';
-import type { TaskWorkspace } from '../types';
+import type { Task, TaskApi, TaskWorkspaceApi } from '../types';
+import { deserializeDate, deserializeNullableDate } from '@/lib/date-utils';
+
+function deserializeTask(task: TaskApi): Task {
+  return {
+    ...task,
+    dueAt: deserializeNullableDate(task.dueAt, 'task.dueAt') ?? null,
+    createdAt: deserializeDate(task.createdAt, 'task.createdAt'),
+    updatedAt: deserializeDate(task.updatedAt, 'task.updatedAt'),
+    completedAt: deserializeNullableDate(task.completedAt, 'task.completedAt') ?? null
+  };
+}
 
 function toSearchParams(filters: TaskFilters = {}) {
   const params = new URLSearchParams();
@@ -49,27 +60,31 @@ export const taskKeys = {
 
 export async function getTasks(filters: TaskFilters = {}) {
   const query = toSearchParams(filters);
-  return requestTaskList<import('../types').Task[]>(`/api/tasks${query ? `?${query}` : ''}`);
+  const tasks = await requestTaskList<TaskApi[]>(`/api/tasks${query ? `?${query}` : ''}`);
+  return tasks.map(deserializeTask);
 }
 
 export async function getTask(id: string) {
-  return request<import('../types').Task>(`/api/tasks/${id}`);
+  const task = await request<TaskApi>(`/api/tasks/${id}`);
+  return deserializeTask(task);
 }
 
 export async function createTask(input: import('../types').TaskPayload) {
-  return request<import('../types').Task>('/api/tasks', {
+  const task = await request<TaskApi>('/api/tasks', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input)
   });
+  return deserializeTask(task);
 }
 
 export async function updateTask(id: string, input: import('../types').TaskUpdatePayload) {
-  return request<import('../types').Task>(`/api/tasks/${id}`, {
+  const task = await request<TaskApi>(`/api/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input)
   });
+  return deserializeTask(task);
 }
 
 export async function deleteTask(id: string) {
@@ -81,11 +96,21 @@ export async function updateTaskStatus(id: string, status: TaskStatus) {
 }
 
 export async function getTaskWorkspace(id: string) {
-  return request<TaskWorkspace>(`/api/tasks/${id}/workspace`);
+  const workspace = await request<TaskWorkspaceApi>(`/api/tasks/${id}/workspace`);
+  return {
+    ...workspace,
+    task: deserializeTask(workspace.task),
+    subtasks: workspace.subtasks.map(deserializeTask),
+    followUp: workspace.followUp ? deserializeTask(workspace.followUp) : null,
+    history: workspace.history.map((entry) => ({
+      ...entry,
+      createdAt: deserializeDate(entry.createdAt, 'task.history.createdAt')
+    }))
+  };
 }
 
 export async function addTaskDependency(taskId: string, blockingTaskId: string) {
-  return request<TaskWorkspace>(`/api/tasks/${taskId}/dependencies`, {
+  return request<TaskWorkspaceApi>(`/api/tasks/${taskId}/dependencies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ blockingTaskId })
@@ -93,7 +118,7 @@ export async function addTaskDependency(taskId: string, blockingTaskId: string) 
 }
 
 export async function removeTaskDependency(taskId: string, blockingTaskId: string) {
-  return request<TaskWorkspace>(
+  return request<TaskWorkspaceApi>(
     `/api/tasks/${taskId}/dependencies?blockingTaskId=${encodeURIComponent(blockingTaskId)}`,
     { method: 'DELETE' }
   );

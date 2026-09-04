@@ -1,4 +1,15 @@
-import type { Event, EventFilters, EventPayload, EventUpdatePayload } from '../types';
+import type { Event, EventApi, EventFilters, EventPayload, EventUpdatePayload } from '../types';
+import { deserializeDate } from '@/lib/date-utils';
+
+function deserializeEvent(event: EventApi): Event {
+  return {
+    ...event,
+    startAt: deserializeDate(event.startAt, 'event.startAt'),
+    endAt: deserializeDate(event.endAt, 'event.endAt'),
+    createdAt: deserializeDate(event.createdAt, 'event.createdAt'),
+    updatedAt: deserializeDate(event.updatedAt, 'event.updatedAt')
+  };
+}
 
 function toSearchParams(filters: EventFilters = {}) {
   const params = new URLSearchParams();
@@ -25,27 +36,31 @@ export const eventKeys = {
 
 export async function getEvents(filters: EventFilters = {}) {
   const query = toSearchParams(filters);
-  return request<Event[]>(`/api/events${query ? `?${query}` : ''}`);
+  const events = await request<EventApi[]>(`/api/events${query ? `?${query}` : ''}`);
+  return events.map(deserializeEvent);
 }
 
 export async function getEvent(id: string) {
-  return request<Event>(`/api/events/${id}`);
+  const event = await request<EventApi>(`/api/events/${id}`);
+  return deserializeEvent(event);
 }
 
 export async function createEvent(input: EventPayload) {
-  return request<Event>('/api/events', {
+  const event = await request<EventApi>('/api/events', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input)
   });
+  return deserializeEvent(event);
 }
 
 export async function updateEvent(id: string, input: EventUpdatePayload) {
-  return request<Event>(`/api/events/${id}`, {
+  const event = await request<EventApi>(`/api/events/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input)
   });
+  return deserializeEvent(event);
 }
 
 export async function deleteEvent(id: string) {
@@ -72,6 +87,26 @@ export type EventWorkspace = {
   }>;
 };
 
+type EventWorkspaceApi = {
+  event: EventApi;
+  tasks: Array<Omit<EventWorkspace['tasks'][number], 'dueAt'> & { dueAt: string | null }>;
+  activities: Array<
+    Omit<EventWorkspace['activities'][number], 'createdAt'> & { createdAt: string }
+  >;
+};
+
 export async function getEventWorkspace(id: string) {
-  return request<EventWorkspace>(`/api/events/${id}/workspace`);
+  const workspace = await request<EventWorkspaceApi>(`/api/events/${id}/workspace`);
+  return {
+    ...workspace,
+    event: deserializeEvent(workspace.event),
+    tasks: workspace.tasks.map((task) => ({
+      ...task,
+      dueAt: task.dueAt ? deserializeDate(task.dueAt, 'event.workspace.task.dueAt') : null
+    })),
+    activities: workspace.activities.map((activity) => ({
+      ...activity,
+      createdAt: deserializeDate(activity.createdAt, 'event.workspace.activity.createdAt')
+    }))
+  };
 }
