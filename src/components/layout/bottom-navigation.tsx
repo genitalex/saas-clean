@@ -34,7 +34,7 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='mb-2 w-full max-w-[980px] rounded-[24px] border border-border/60 bg-background/78 p-1.5 shadow-none backdrop-blur-2xl sm:mb-4 md:mb-5'>
+        <div className='glass-nav mb-2 w-full max-w-[980px] rounded-[24px] border border-border/60 bg-background/78 p-1.5 shadow-none backdrop-blur-2xl sm:mb-4 md:mb-5'>
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
             {primaryItems.slice(0, 5).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;

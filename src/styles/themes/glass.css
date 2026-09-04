@@ -43,23 +43,29 @@
   --ring: oklch(0.62 0.13 250);
 
   /* Glass primitives */
-  --glass-surface: rgba(255, 255, 255, 0.42);
-  --glass-surface-strong: rgba(255, 255, 255, 0.6);
-  --glass-surface-solid: rgba(255, 255, 255, 0.78);
-  --glass-surface-soft: rgba(255, 255, 255, 0.28);
+  --glass-surface: rgba(255, 255, 255, 0.52);
+  --glass-surface-strong: rgba(255, 255, 255, 0.72);
+  --glass-surface-solid: rgba(255, 255, 255, 0.88);
+  --glass-surface-soft: rgba(255, 255, 255, 0.34);
 
-  --glass-border: rgba(255, 255, 255, 0.82);
-  --glass-border-soft: rgba(255, 255, 255, 0.56);
-  --glass-highlight: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-border-soft: rgba(56, 69, 91, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.96);
 
-  --glass-blur: 24px;
-  --glass-saturation: 180%;
+  --glass-blur: 22px;
+  --glass-saturation: 140%;
 
-  --glass-shadow: none;
+  --glass-shadow:
+    0 1px 2px rgba(30, 43, 64, 0.04), 0 12px 32px rgba(30, 43, 64, 0.08),
+    inset 0 1px 0 var(--glass-highlight);
 
-  --glass-shadow-hover: none;
+  --glass-shadow-hover:
+    0 2px 4px rgba(30, 43, 64, 0.06), 0 18px 38px rgba(30, 43, 64, 0.12),
+    inset 0 1px 0 var(--glass-highlight);
 
-  --glass-shadow-floating: 0 2px 8px rgba(35, 46, 68, 0.035);
+  --glass-shadow-floating:
+    0 10px 28px rgba(30, 43, 64, 0.13), 0 2px 6px rgba(30, 43, 64, 0.06),
+    inset 0 1px 0 var(--glass-highlight);
 
   --glass-radius: 1.25rem;
   --glass-radius-sm: 0.875rem;
@@ -111,9 +117,48 @@
 /* Ambient canvas behind the whole application */
 [data-theme='glass'] body {
   background:
-    radial-gradient(circle at 10% 0%, rgba(91, 143, 249, 0.055), transparent 28rem),
+    radial-gradient(circle at 8% -5%, rgba(91, 143, 249, 0.08), transparent 32rem),
+    radial-gradient(circle at 92% 18%, rgba(83, 216, 232, 0.045), transparent 26rem),
     var(--background);
   background-attachment: fixed;
+}
+
+[data-theme='glass'] header,
+[data-theme='glass'] .glass-nav {
+  background: color-mix(in srgb, var(--glass-surface-solid) 86%, transparent) !important;
+  border-color: var(--glass-border-soft) !important;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 6px 20px rgba(30, 43, 64, 0.06) !important;
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+[data-theme='glass'] .glass-nav,
+[data-theme='glass'] .glass-sidebar {
+  border-color: var(--glass-border-soft) !important;
+}
+
+[data-theme='glass'] .glass-sidebar {
+  background: color-mix(in srgb, var(--sidebar) 92%, transparent) !important;
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, 0.32),
+    8px 0 26px rgba(30, 43, 64, 0.045) !important;
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+}
+
+[data-theme='glass'] .glass-nav {
+  border-radius: 1.5rem;
+}
+
+@supports not ((backdrop-filter: blur(1px))) {
+  [data-theme='glass'] header,
+  [data-theme='glass'] .glass-nav,
+  [data-theme='glass'] [data-slot='popover-content'],
+  [data-theme='glass'] [data-slot='dialog-content'] {
+    background: var(--glass-surface-solid) !important;
+  }
 }
 
 /* Frost every common shadcn surface without changing markup. */
@@ -133,6 +178,27 @@
   box-shadow: var(--glass-shadow) !important;
 }
 
+/* Physical material: inset top highlight + refractive edge */
+[data-theme='glass'] [data-slot='card']::before,
+[data-theme='glass'] [data-slot='popover-content']::before,
+[data-theme='glass'] [data-slot='dialog-content']::before,
+[data-theme='glass'] [data-slot='sheet-content']::before,
+[data-theme='glass'] [data-slot='dropdown-menu-content']::before,
+[data-theme='glass'] [data-slot='context-menu-content']::before,
+[data-theme='glass'] [data-slot='select-content']::before,
+[data-theme='glass'] [data-slot='command']::before,
+[data-theme='glass'] [data-slot='tooltip-content']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 18%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.08);
+}
+
 [data-theme='glass'] [data-slot='popover-content'],
 [data-theme='glass'] [data-slot='dialog-content'],
 [data-theme='glass'] [data-slot='sheet-content'],
@@ -144,6 +210,7 @@
   background: var(--popover) !important;
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  box-shadow: 0 8px 24px rgba(35, 46, 68, 0.08) !important;
 }
 
 /* Cards respond subtly instead of becoming neon toys. */
@@ -332,11 +399,17 @@
   --glass-border-soft: rgba(255, 255, 255, 0.09);
   --glass-highlight: rgba(255, 255, 255, 0.13);
 
-  --glass-shadow: none;
+  --glass-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.18), 0 14px 34px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 var(--glass-highlight);
 
-  --glass-shadow-hover: none;
+  --glass-shadow-hover:
+    0 2px 4px rgba(0, 0, 0, 0.2), 0 20px 42px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 var(--glass-highlight);
 
-  --glass-shadow-floating: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --glass-shadow-floating:
+    0 12px 30px rgba(0, 0, 0, 0.3), 0 2px 7px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 var(--glass-highlight);
 
   --sidebar: rgba(24, 28, 35, 0.6);
   --sidebar-foreground: oklch(0.93 0.008 260);
