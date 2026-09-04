@@ -132,7 +132,7 @@ export function QuickCapture() {
           onKeyDown={(event) => event.key === 'Enter' && void submit()}
           placeholder='llamar a Ana mañana · reunión con Acme jueves 10'
           aria-label='Nueva captura de trabajo'
-          className='h-11 rounded-[10px] bg-white/75'
+          className='h-11 rounded-[var(--radius-md)] bg-background'
         />
         <Button
           type='button'

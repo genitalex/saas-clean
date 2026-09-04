@@ -3,7 +3,7 @@
 import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
-import { DEFAULT_THEME } from './theme.config';
+import { DEFAULT_THEME, THEMES } from './theme.config';
 
 const COOKIE_NAME = 'active_theme';
 
@@ -27,7 +27,9 @@ export function ActiveThemeProvider({
   children: ReactNode;
   initialTheme?: string;
 }) {
-  const themeToUse = initialTheme || DEFAULT_THEME;
+  const themeToUse = THEMES.some((theme) => theme.value === initialTheme)
+    ? initialTheme!
+    : DEFAULT_THEME;
   const [activeTheme, setActiveTheme] = useState<string>(themeToUse);
   const pathname = usePathname();
 

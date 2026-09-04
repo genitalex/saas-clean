@@ -28,7 +28,7 @@ export function LiquidGlassSurface(props: LiquidGlassSurfaceProps) {
     return (
       <Component
         {...fallbackProps}
-        className={cn('liquid-glass-fallback', className)}
+        className={cn('liquid-glass-fallback bg-card/95 text-card-foreground shadow-xs', className)}
         style={{ ...style, borderRadius: LIQUID_GLASS_BORDER_RADIUS }}
       >
         {children}

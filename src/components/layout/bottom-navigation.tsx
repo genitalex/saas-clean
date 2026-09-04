@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { desktopNavItems, mobileNavItems, navGroups } from '@/config/nav-config';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -38,10 +37,7 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <LiquidGlassSurface
-          as='div'
-          className='mb-2 w-full max-w-[980px] rounded-[16px] p-1 sm:mb-4 md:mb-5'
-        >
+        <div className='mb-2 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card/95 p-1 shadow-md supports-backdrop-filter:backdrop-blur-sm sm:mb-4 md:mb-5'>
           <div className='grid grid-cols-7 gap-0.5 md:hidden'>
             {primaryItems.slice(0, 5).map((item) => {
               const Icon = item.icon ? Icons[item.icon] : Icons.logo;
@@ -173,7 +169,7 @@ export function BottomNavigation() {
               <span className='text-[10px] font-medium leading-none'>Más</span>
             </button>
           </div>
-        </LiquidGlassSurface>
+        </div>
       </nav>
 
       {createOpen && <QuickCreate onClose={() => setCreateOpen(false)} />}

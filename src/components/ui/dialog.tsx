@@ -5,7 +5,6 @@ import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 import { IconX } from '@tabler/icons-react';
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -49,10 +48,9 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
-        render={<LiquidGlassSurface />}
         data-slot='dialog-content'
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-1.5rem)] max-w-215 -translate-x-1/2 -translate-y-1/2 gap-4 border border-white/35 bg-transparent p-5 text-sm text-popover-foreground duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+          'fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-1.5rem)] max-w-215 -translate-x-1/2 -translate-y-1/2 gap-5 rounded-[var(--radius-xl)] border border-border/70 bg-popover p-6 text-sm text-popover-foreground shadow-lg duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 sm:p-7',
           className
         )}
         {...props}
@@ -90,7 +88,7 @@ function DialogFooter({
     <div
       data-slot='dialog-footer'
       className={cn(
-        '-mx-5 -mb-5 flex flex-col-reverse gap-2 rounded-b-2xl border-t border-border/60 bg-muted/30 p-4 sm:flex-row sm:justify-end',
+        '-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-[var(--radius-xl)] border-t border-border/60 bg-muted/30 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:-mx-7 sm:-mb-7 sm:flex-row sm:justify-end sm:pb-4',
         className
       )}
       {...props}

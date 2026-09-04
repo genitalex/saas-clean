@@ -94,7 +94,7 @@ export default function CustomerListing() {
           data-design-id='customers.search'
           data-design-component='Search'
           aria-label='Buscar clientes'
-          className='h-10 w-full max-w-sm rounded-2xl border border-border/60 bg-background/60 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20'
+          className='h-10 w-full max-w-sm rounded-[var(--radius-md)] border border-border/70 bg-background px-3 text-sm outline-none transition-[border-color,box-shadow] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-ring focus:ring-2 focus:ring-ring/20'
           placeholder='Buscar clientes…'
           value={q}
           onChange={(e) => setQ(e.target.value)}

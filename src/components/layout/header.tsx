@@ -11,7 +11,6 @@ import { UserNav } from './user-nav';
 import { useShellMetric } from '@/hooks/use-shell-metric';
 import { useKBar } from 'kbar';
 import { Icons } from '@/components/icons';
-import { LiquidGlassSurface } from '@/components/ui/liquid-glass';
 
 export default function Header() {
   const { query } = useKBar();
@@ -19,13 +18,11 @@ export default function Header() {
   useShellMetric(headerRef, '--app-header-height');
 
   return (
-    <div ref={headerRef} data-glass-header-shell className='sticky top-0 z-20 h-14'>
-      <LiquidGlassSurface
-        as='div'
-        className='pointer-events-none absolute inset-0 rounded-none'
-        aria-hidden='true'
-      />
-
+    <div
+      ref={headerRef}
+      data-glass-header-shell
+      className='sticky top-0 z-20 h-14 border-b border-border/60 bg-background/95 supports-backdrop-filter:backdrop-blur-sm'
+    >
       <header
         data-design-id='shell.header'
         data-design-component='Header'
