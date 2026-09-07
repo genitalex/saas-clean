@@ -2566,9 +2566,67 @@ function WeekTimeline({
           </div>
 
           <div
-            className='grid'
+            className='relative grid'
             style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(0, 1fr))` }}
           >
+            {view === 'week' && !hasEarlyEvents && !earlyExpanded && (
+              <button
+                type='button'
+                onClick={() => setEarlyExpanded(true)}
+                className='absolute inset-x-0 z-[30] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+                style={{ top: ALL_DAY_ROW_PX, height: earlyHeight }}
+                aria-label='Expandir madrugada de 12 AM a 5 AM'
+              >
+                <span className='inline-flex items-center gap-1.5'>
+                  12 AM – 5 AM
+                  <Icons.chevronDown className='size-3.5' />
+                </span>
+              </button>
+            )}
+            {view === 'week' && !hasMiddayEvents && !middayExpanded && (
+              <button
+                type='button'
+                onClick={() => setMiddayExpanded(true)}
+                className='absolute inset-x-0 z-[30] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+                style={{
+                  top: ALL_DAY_ROW_PX + earlyHeight + 4 * hourHeight,
+                  height: middayHeight
+                }}
+                aria-label='Expandir media mañana de 9 AM a 12 PM'
+              >
+                <span className='inline-flex items-center gap-1.5'>
+                  9 AM – 12 PM
+                  <Icons.chevronDown className='size-3.5' />
+                </span>
+              </button>
+            )}
+            {view === 'week' && !hasEarlyEvents && earlyExpanded && (
+              <button
+                type='button'
+                onClick={() => setEarlyExpanded(false)}
+                className='absolute right-3 z-[31] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
+                style={{ top: ALL_DAY_ROW_PX + 6 }}
+                aria-label='Contraer madrugada'
+              >
+                Contraer
+                <Icons.chevronUp className='size-3' />
+              </button>
+            )}
+            {view === 'week' && !hasMiddayEvents && middayExpanded && (
+              <button
+                type='button'
+                onClick={() => setMiddayExpanded(false)}
+                className='absolute right-3 z-[31] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
+                style={{
+                  top: ALL_DAY_ROW_PX + earlyHeight + 4 * hourHeight + 6
+                }}
+                aria-label='Contraer media mañana'
+              >
+                Contraer
+                <Icons.chevronUp className='size-3' />
+              </button>
+            )}
+
             <div className='relative' style={{ height: totalHeight + ALL_DAY_ROW_PX }}>
               <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
               <div className='relative' style={{ height: totalHeight }}>
@@ -2678,64 +2736,14 @@ function WeekTimeline({
                     className='relative'
                     style={{ height: totalHeight }}
                   >
-                    {!hasEarlyEvents && !earlyExpanded ? (
-                      <button
-                        type='button'
-                        onClick={() => setEarlyExpanded((value) => !value)}
-                        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-                        style={{ top: 0, height: earlyHeight }}
-                        aria-label={`${earlyExpanded ? 'Contraer' : 'Expandir'} madrugada`}
-                      >
-                        <span className='inline-flex items-center gap-1.5'>
-                          12 AM – 5 AM
-                          <Icons.chevronDown className='size-3.5' />
-                        </span>
-                      </button>
-                    ) : (
-                      Array.from({ length: 5 }, (_, i) => renderCreateHour(i))
-                    )}
+                    {!hasEarlyEvents && !earlyExpanded
+                      ? null
+                      : Array.from({ length: 5 }, (_, i) => renderCreateHour(i))}
                     {Array.from({ length: 4 }, (_, i) => renderCreateHour(i + 5))}
-                    {!hasMiddayEvents && !middayExpanded ? (
-                      <button
-                        type='button'
-                        onClick={() => setMiddayExpanded((value) => !value)}
-                        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-                        style={{ top: earlyHeight + 4 * hourHeight, height: middayHeight }}
-                        aria-label={`${middayExpanded ? 'Contraer' : 'Expandir'} media mañana`}
-                      >
-                        <span className='inline-flex items-center gap-1.5'>
-                          9 AM – 12 PM
-                          <Icons.chevronDown className='size-3.5' />
-                        </span>
-                      </button>
-                    ) : (
-                      Array.from({ length: 3 }, (_, i) => renderCreateHour(i + 9))
-                    )}
+                    {!hasMiddayEvents && !middayExpanded
+                      ? null
+                      : Array.from({ length: 3 }, (_, i) => renderCreateHour(i + 9))}
                     {Array.from({ length: 12 }, (_, i) => renderCreateHour(i + 12))}
-                    {!hasEarlyEvents && earlyExpanded && (
-                      <button
-                        type='button'
-                        onClick={() => setEarlyExpanded(false)}
-                        className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
-                        aria-label='Contraer madrugada'
-                      >
-                        Contraer
-                        <Icons.chevronUp className='size-3' />
-                      </button>
-                    )}
-                    {!hasMiddayEvents && middayExpanded && (
-                      <button
-                        type='button'
-                        onClick={() => setMiddayExpanded(false)}
-                        className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
-                        style={{ top: earlyHeight + 4 * hourHeight + middayHeight + 6 }}
-                        aria-label='Contraer media mañana'
-                      >
-                        Contraer
-                        <Icons.chevronUp className='size-3' />
-                      </button>
-                    )}
-
                     {dayEvents.map((event) => {
                       const category = categoryFor(event, categories);
                       const startAt = new Date(event.startAt);
