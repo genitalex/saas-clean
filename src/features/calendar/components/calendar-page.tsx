@@ -755,7 +755,7 @@ const ALL_DAY_ROW_PX = 58;
  * side by side and slide via transform so the transition feels like a
  * native navigation push rather than a hard cut.
  */
-const mobileModeOrder: Array<'year' | 'month' | 'day'> = ['year', 'month', 'day'];
+const mobileModeOrder: Array<'year' | 'month' | 'week' | 'day'> = ['year', 'month', 'week', 'day'];
 
 /**
  * Mobile calendar experience: year → month → day, each one a real, distinct
@@ -801,6 +801,7 @@ function MobileCalendar({
   const selectWeekDay = (day: Date) => {
     onSelectDate(day);
     onCursorChange(day);
+    onModeChange('day');
   };
   const openMonthFromYear = (month: Date) => {
     onCursorChange(month);
