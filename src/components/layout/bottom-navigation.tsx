@@ -22,7 +22,7 @@ export function BottomNavigation() {
   const desktopRightItems = [desktopNavItems[3], ...(activityItem ? [activityItem] : [])];
   const primaryUrls = new Set([
     ...mobileNavItems.map((item) => item.url),
-    ...(activityItem ? [activityItem.url] : [])
+    ...(isMobile || !activityItem ? [] : [activityItem.url])
   ]);
 
   React.useEffect(() => {
@@ -41,31 +41,26 @@ export function BottomNavigation() {
         href={item.url}
         className={cn(
           'group flex min-w-0 items-center justify-center rounded-[10px] transition-colors',
-          mobile
-            ? 'min-h-[56px] flex-col gap-1 px-0.5 py-2'
-            : 'min-h-[50px] flex-col gap-1 px-2 py-2',
+          mobile ? 'min-h-[56px] px-0.5 py-2' : 'min-h-[50px] flex-col gap-1 px-2 py-2',
           active
             ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
         )}
       >
-        <Icon className={cn('shrink-0', mobile ? 'size-[19px]' : 'size-[18px]')} />
-        <span
-          className={cn(
-            'max-w-full truncate font-medium leading-none',
-            mobile ? 'text-[10px]' : 'text-[10px]'
-          )}
-        >
-          {item.title === 'Today'
-            ? 'Hoy'
-            : item.title === 'Work'
-              ? 'Trabajo'
-              : item.title === 'Calendar'
-                ? 'Calendario'
-                : item.title === 'Customers'
-                  ? 'Clientes'
-                  : item.title}
-        </span>
+        <Icon className={cn('shrink-0', mobile ? 'size-[20px]' : 'size-[18px]')} />
+        {!mobile && (
+          <span className='max-w-full truncate text-[10px] font-medium leading-none'>
+            {item.title === 'Today'
+              ? 'Hoy'
+              : item.title === 'Work'
+                ? 'Trabajo'
+                : item.title === 'Calendar'
+                  ? 'Calendario'
+                  : item.title === 'Customers'
+                    ? 'Clientes'
+                    : item.title}
+          </span>
+        )}
       </Link>
     );
   };
@@ -81,7 +76,7 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mb-2 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card px-1 py-1 shadow-md sm:mb-4 md:mb-5'>
+        <div className='relative mb-0 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card px-1 py-1 shadow-md sm:mb-4 md:mb-5'>
           <div className='relative min-h-[60px] md:min-h-[54px]'>
             <div className='absolute inset-y-0 left-0 flex w-[calc(50%_-_34px)] items-stretch md:hidden'>
               <div className='grid w-full grid-cols-2 gap-0.5'>
@@ -100,14 +95,14 @@ export function BottomNavigation() {
                     setMoreOpen(true);
                   }}
                   className={cn(
-                    'flex min-w-0 min-h-[56px] flex-col items-center justify-center gap-1 rounded-[10px] px-0.5 py-2 transition-colors',
+                    'flex min-w-0 min-h-[56px] items-center justify-center rounded-[10px] px-0.5 py-2 transition-colors',
                     moreOpen
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                   )}
                 >
-                  <Icons.moreHorizontal className='size-[19px]' />
-                  <span className='text-[10px] font-medium leading-none'>Más</span>
+                  <Icons.moreHorizontal className='size-[20px]' />
+                  <span className='sr-only'>Más</span>
                 </button>
               </div>
             </div>
@@ -291,7 +286,7 @@ function MoreSheet({
       className='fixed inset-0 z-50 flex items-end justify-center bg-foreground/20 p-3'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] max-h-[min(76dvh,680px)] w-full max-w-2xl overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-popover p-0 shadow-lg'>
+      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] flex max-h-[min(82dvh,680px)] w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-popover p-0 shadow-lg sm:mb-4 md:mb-5'>
         <div className='flex items-center justify-between border-b border-border/50 px-5 py-4'>
           <div>
             <h2 className='text-lg font-semibold'>Más</h2>
@@ -306,7 +301,7 @@ function MoreSheet({
           </button>
         </div>
 
-        <div className='min-h-0 overflow-y-auto px-4 py-4'>
+        <div className='min-h-0 flex-1 overflow-y-auto px-4 py-4'>
           {navGroups.map((group) => {
             const items = group.items.filter((item) => !primaryUrls.has(item.url));
             if (!items.length) return null;

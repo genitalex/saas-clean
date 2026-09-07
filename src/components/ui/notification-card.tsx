@@ -146,7 +146,7 @@ export const NotificationCard: FC<NotificationCardProps> = ({
                   event.stopPropagation();
                   onDismiss(id);
                 }}
-                className='text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-1.5 opacity-65 transition-all hover:opacity-100'
+                className='bg-background/70 text-muted-foreground border border-border/60 hover:bg-accent hover:text-foreground rounded-lg p-1.5 opacity-90 shadow-sm transition-all hover:scale-105 hover:opacity-100'
                 aria-label='Cerrar notificación'
               >
                 <Icons.close size={15} />
