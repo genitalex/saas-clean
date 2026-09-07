@@ -2535,7 +2535,7 @@ function WeekTimeline({
                 type='button'
                 onClick={() => setEarlyExpanded(true)}
                 className='absolute inset-x-0 z-[30] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-                style={{ top: ALL_DAY_ROW_PX, height: earlyHeight }}
+                style={{ top: 0, height: earlyHeight }}
                 aria-label='Expandir madrugada de 12 AM a 5 AM'
               >
                 <span className='inline-flex items-center gap-1.5'>
@@ -2550,7 +2550,7 @@ function WeekTimeline({
                 onClick={() => setLateExpanded(true)}
                 className='absolute inset-x-0 z-[30] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
                 style={{
-                  top: ALL_DAY_ROW_PX + earlyHeight + 16 * hourHeight,
+                  top: earlyHeight + 16 * hourHeight,
                   height: lateHeight
                 }}
                 aria-label='Expandir noche de 9 PM a 12 AM'
@@ -2566,7 +2566,7 @@ function WeekTimeline({
                 type='button'
                 onClick={() => setEarlyExpanded(false)}
                 className='absolute right-3 z-[31] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
-                style={{ top: ALL_DAY_ROW_PX + 6 }}
+                style={{ top: 6 }}
                 aria-label='Contraer madrugada'
               >
                 Contraer
@@ -2579,7 +2579,7 @@ function WeekTimeline({
                 onClick={() => setLateExpanded(false)}
                 className='absolute right-3 z-[31] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
                 style={{
-                  top: ALL_DAY_ROW_PX + earlyHeight + 16 * hourHeight + 6
+                  top: earlyHeight + 16 * hourHeight + 6
                 }}
                 aria-label='Contraer noche'
               >
@@ -2588,8 +2588,7 @@ function WeekTimeline({
               </button>
             )}
 
-            <div className='relative' style={{ height: totalHeight + ALL_DAY_ROW_PX }}>
-              <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
+            <div className='relative' style={{ height: totalHeight }}>
               <div className='relative' style={{ height: totalHeight }}>
                 {!hasEarlyEvents && !earlyExpanded ? (
                   <div
@@ -2640,7 +2639,6 @@ function WeekTimeline({
 
             {days.map((day) => {
               const dayEvents = eventsForDay(events, day).filter((event) => !event.allDay);
-              const allDayEvents = eventsForDay(events, day).filter((event) => event.allDay);
               const renderCreateHour = (hour: number) => (
                 <button
                   key={hour}
@@ -2659,30 +2657,6 @@ function WeekTimeline({
                   key={day.toISOString()}
                   className='border-border/60 relative border-r last:border-r-0'
                 >
-                  <div className='border-border/60 bg-surface-subtle/45 flex h-[58px] flex-wrap items-center gap-1.5 overflow-hidden border-b px-2 py-1.5'>
-                    {allDayEvents.map((event) => {
-                      const category = categoryFor(event, categories);
-                      return (
-                        <button
-                          key={event.id}
-                          type='button'
-                          onClick={() => onOpenEvent(event)}
-                          className='min-w-0 max-w-full truncate rounded-md border px-2 py-1 text-[11px] font-medium'
-                          style={{
-                            backgroundColor: `${category.color}14`,
-                            borderColor: `${category.color}35`
-                          }}
-                          title={event.title}
-                        >
-                          <span
-                            className='mr-1 inline-block size-1.5 rounded-full align-middle'
-                            style={{ backgroundColor: category.color }}
-                          />
-                          {event.title}
-                        </button>
-                      );
-                    })}
-                  </div>
                   <div
                     data-calendar-day={format(day, 'yyyy-MM-dd')}
                     className='relative'
