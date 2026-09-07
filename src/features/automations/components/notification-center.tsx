@@ -15,6 +15,7 @@ import {
 import * as client from '@/features/automations/api/client';
 import { useSession } from '@/lib/auth-client';
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MAX_VISIBLE = 5;
 
@@ -37,6 +38,7 @@ function AuthenticatedNotificationCenter({
 }) {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Query for unread count
   const { data: unreadCount = 0 } = useSuspenseQuery(
@@ -66,12 +68,19 @@ function AuthenticatedNotificationCenter({
     }
   });
 
-  const handleNotificationClick = (notificationId: string) => {
-    markAsReadMutation.mutate(notificationId);
+  const deleteNotificationMutation = useMutation({
+    mutationFn: (notificationId: string) => client.deleteNotification(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    }
+  });
+
+  const handleDismiss = (notificationId: string) => {
+    deleteNotificationMutation.mutate(notificationId);
   };
 
-  const handleMarkAllAsRead = () => {
-    markAllAsReadMutation.mutate();
+  const handleNotificationClick = (notificationId: string) => {
+    markAsReadMutation.mutate(notificationId);
   };
 
   const getNotificationPath = (notification: (typeof notifications)[0]) => {
@@ -131,20 +140,43 @@ function AuthenticatedNotificationCenter({
           ) : (
             <div className='flex flex-col gap-1 p-2'>
               {visibleNotifications.map((notification) => (
-                <Link
+                <div
                   key={notification.id}
-                  href={getNotificationPath(notification)}
-                  className={`rounded-md p-3 text-sm transition-colors hover:bg-muted ${
-                    notification.read ? 'text-muted-foreground' : 'bg-muted/50'
-                  }`}
-                  onClick={() => handleNotificationClick(notification.id)}
+                  className={`group relative rounded-2xl p-3.5 pr-12 text-sm transition-all ${
+                    notification.read ? 'bg-muted/40 text-muted-foreground' : 'bg-muted'
+                  } hover:ring-1 hover:ring-border`}
                 >
-                  <div className='font-medium'>{notification.title}</div>
-                  <div className='text-xs'>{notification.message}</div>
-                  <div className='text-xs text-muted-foreground mt-1'>
-                    {new Date(notification.createdAt).toLocaleDateString()}
-                  </div>
-                </Link>
+                  <Link
+                    href={getNotificationPath(notification)}
+                    onClick={() => {
+                      handleNotificationClick(notification.id);
+                      if (isMobile) handleDismiss(notification.id);
+                    }}
+                    className='block outline-none'
+                  >
+                    <div className='font-medium leading-tight text-foreground'>
+                      {notification.title}
+                    </div>
+                    <div className='mt-1 text-xs leading-relaxed text-muted-foreground'>
+                      {notification.message}
+                    </div>
+                    <div className='mt-1.5 text-[11px] text-muted-foreground/60'>
+                      {new Date(notification.createdAt).toLocaleDateString()}
+                    </div>
+                  </Link>
+                  <button
+                    type='button'
+                    aria-label='Cerrar notificación'
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleDismiss(notification.id);
+                    }}
+                    className='absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-[10px] border border-border/70 bg-background text-foreground opacity-90 shadow-sm transition-all hover:scale-105 hover:bg-accent hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
+                  >
+                    <Icons.close size={15} strokeWidth={2.2} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

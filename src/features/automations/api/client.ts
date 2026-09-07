@@ -25,6 +25,18 @@ export async function createAutomation(payload: import('../types').AutomationPay
   return response.json();
 }
 
+export async function deleteNotification(notificationId: string): Promise<void> {
+  const response = await fetch('/api/automations/notifications', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'delete', notificationId })
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete notification');
+  }
+}
+
 export async function markAllNotificationsAsRead(
   organizationId: string,
   userId: string
