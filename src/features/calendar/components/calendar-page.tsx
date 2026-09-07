@@ -1332,6 +1332,30 @@ function MobileWeekView({
         </Button>
       </div>
 
+      <div
+        className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
+        role='tablist'
+        aria-label='Vista del calendario'
+      >
+        <button
+          type='button'
+          role='tab'
+          aria-selected='false'
+          onClick={() => onBack()}
+          className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+        >
+          Mes
+        </button>
+        <button
+          type='button'
+          role='tab'
+          aria-selected='true'
+          className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
+        >
+          Semana
+        </button>
+      </div>
+
       <div className='grid grid-cols-7 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         {days.map((day) => {
           const isSelected = isSameDay(day, selectedDate);
@@ -1372,30 +1396,6 @@ function MobileWeekView({
             </button>
           );
         })}
-      </div>
-
-      <div
-        className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
-        role='tablist'
-        aria-label='Vista del calendario'
-      >
-        <button
-          type='button'
-          role='tab'
-          aria-selected='false'
-          onClick={() => onBack()}
-          className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
-        >
-          Mes
-        </button>
-        <button
-          type='button'
-          role='tab'
-          aria-selected='true'
-          className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
-        >
-          Semana
-        </button>
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card'>
