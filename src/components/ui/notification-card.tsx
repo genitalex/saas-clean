@@ -24,6 +24,8 @@ export interface NotificationCardProps {
   createdAt?: string | Date;
   actions?: NotificationAction[];
   onMarkAsRead?: (id: string) => void;
+  onDismiss?: (id: string) => void;
+  dismissOnClick?: boolean;
   onAction?: (notificationId: string, actionId: string, actionType: ActionType) => void;
   loadingActionId?: string;
   className?: string;
@@ -72,6 +74,8 @@ export const NotificationCard: FC<NotificationCardProps> = ({
   createdAt,
   actions = [],
   onMarkAsRead,
+  onDismiss,
+  dismissOnClick = false,
   onAction,
   loadingActionId,
   className
@@ -81,10 +85,14 @@ export const NotificationCard: FC<NotificationCardProps> = ({
   return (
     <div
       className={cn(
-        'group relative w-full rounded-2xl transition-all',
+        'group relative w-full cursor-default rounded-2xl transition-all',
+        dismissOnClick && 'cursor-pointer hover:ring-1 hover:ring-border',
         isUnread ? 'bg-muted' : 'bg-muted/40',
         className
       )}
+      onClick={() => {
+        if (dismissOnClick) onDismiss?.(id);
+      }}
     >
       <div className='px-4 py-3.5'>
         <div className='flex items-start justify-between gap-3'>
@@ -114,20 +122,37 @@ export const NotificationCard: FC<NotificationCardProps> = ({
             </p>
           </div>
 
-          {/* Mark as read button */}
-          {isUnread && onMarkAsRead && (
-            <button
-              type='button'
-              onClick={() => onMarkAsRead(id)}
-              className={cn(
-                'rounded-lg p-1.5 transition-colors',
-                'text-muted-foreground hover:bg-accent hover:text-foreground'
-              )}
-              aria-label='Mark as read'
-            >
-              <Icons.check size={16} />
-            </button>
-          )}
+          <div className='flex shrink-0 items-start gap-1'>
+            {isUnread && onMarkAsRead && (
+              <button
+                type='button'
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMarkAsRead(id);
+                }}
+                className={cn(
+                  'rounded-lg p-1.5 transition-colors',
+                  'text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+                aria-label='Marcar como leída'
+              >
+                <Icons.check size={16} />
+              </button>
+            )}
+            {onDismiss && (
+              <button
+                type='button'
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onDismiss(id);
+                }}
+                className='text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-1.5 opacity-65 transition-all hover:opacity-100'
+                aria-label='Cerrar notificación'
+              >
+                <Icons.close size={15} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className='mt-3 flex items-end justify-between'>
@@ -144,7 +169,10 @@ export const NotificationCard: FC<NotificationCardProps> = ({
                     key={action.id}
                     type='button'
                     disabled={isLoading || isExecuted}
-                    onClick={() => onAction?.(id, action.id, action.type)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onAction?.(id, action.id, action.type);
+                    }}
                     className={cn(
                       'flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-normal transition',
                       action.style === 'primary'

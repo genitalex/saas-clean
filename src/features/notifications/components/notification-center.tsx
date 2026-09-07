@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { NotificationCard } from '@/components/ui/notification-card';
 import { useNotificationStore } from '../utils/store';
 import { useRouter } from 'next/navigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MAX_VISIBLE = 5;
 
@@ -21,7 +22,9 @@ const actionRoutes: Record<string, string> = {
 };
 
 export function NotificationCenter() {
-  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotificationStore();
+  const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } =
+    useNotificationStore();
+  const isMobile = useIsMobile();
   const router = useRouter();
   const count = unreadCount();
   const visibleNotifications = notifications.slice(0, MAX_VISIBLE);
@@ -80,6 +83,8 @@ export function NotificationCenter() {
                   createdAt={notification.createdAt}
                   actions={notification.actions}
                   onMarkAsRead={markAsRead}
+                  onDismiss={removeNotification}
+                  dismissOnClick={isMobile}
                   onAction={(notifId, actionId) => {
                     const route = actionRoutes[actionId];
                     if (route) {

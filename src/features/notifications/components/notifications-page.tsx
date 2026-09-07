@@ -17,7 +17,8 @@ const actionRoutes: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
-  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotificationStore();
+  const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } =
+    useNotificationStore();
   const router = useRouter();
   const count = unreadCount();
 
@@ -46,6 +47,7 @@ export default function NotificationsPage() {
             createdAt={notification.createdAt}
             actions={notification.actions}
             onMarkAsRead={markAsRead}
+            onDismiss={removeNotification}
             onAction={(notifId, actionId) => {
               const route = actionRoutes[actionId];
               if (route) {
