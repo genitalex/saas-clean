@@ -76,7 +76,7 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-4px_18px_rgb(23_32_25_/_0.07)] sm:mb-4 sm:rounded-[var(--radius-xl)] sm:border sm:px-1 sm:py-1 sm:shadow-md md:mb-5'>
+        <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-6px_20px_rgb(23_32_25_/_0.07)] sm:mb-4 sm:rounded-[var(--radius-xl)] sm:border sm:px-1 sm:py-1 sm:shadow-md md:mb-5'>
           <div className='relative min-h-[60px] md:min-h-[54px]'>
             <div className='absolute inset-y-0 left-0 flex w-[calc(50%_-_34px)] items-stretch md:hidden'>
               <div className='grid w-full grid-cols-3 gap-0.5'>
@@ -116,8 +116,8 @@ export function BottomNavigation() {
                 setCreateOpen((value) => !value);
               }}
               className={cn(
-                'group absolute left-1/2 z-10 flex -translate-x-1/2 items-center justify-center rounded-[14px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_10px_24px_rgb(23_32_25_/_0.16)] transition duration-200 ease-out hover:-translate-x-1/2 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgb(23_32_25_/_0.19)] active:-translate-x-1/2 active:scale-[0.94] md:left-1/2',
-                'h-[44px] w-[58px] -top-[8px] md:h-[46px] md:w-[64px] md:-top-[10px]',
+                'group absolute left-1/2 z-10 flex -translate-x-1/2 items-center justify-center rounded-[12px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_8px_20px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-x-1/2 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgb(23_32_25_/_0.18)] active:-translate-x-1/2 active:scale-[0.96] md:left-1/2',
+                'h-[58px] w-[68px] -top-[3px] md:h-[54px] md:w-[74px] md:-top-0',
                 createOpen && 'bg-[#49674F]'
               )}
             >
