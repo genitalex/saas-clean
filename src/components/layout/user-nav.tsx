@@ -101,16 +101,19 @@ export function UserNav() {
         aria-expanded={open}
         aria-label={`Abrir menú de ${name}`}
         onClick={() => setOpen((value) => !value)}
-        className='inline-flex h-10 items-center gap-2 rounded-[12px] border border-border/70 bg-background px-1.5 pr-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[background-color,border-color,box-shadow] hover:border-border hover:bg-muted/40 hover:shadow-[0_2px_6px_rgba(15,23,42,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        className='inline-flex h-9 items-center gap-1.5 rounded-[12px] sm:h-10 sm:gap-2 border border-border/70 bg-background px-2 pr-2.5 sm:px-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[background-color,border-color,box-shadow] hover:border-border hover:bg-muted/40 hover:shadow-[0_2px_6px_rgba(15,23,42,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
-        <Avatar size='sm'>
+        <Avatar size='sm' className='hidden sm:flex'>
           <AvatarImage src={photo ?? session?.user.image ?? undefined} alt={name} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
+        <span className='block max-w-16 truncate text-left text-xs font-medium sm:hidden'>
+          {name.split(' ')[0]}
+        </span>
         <span className='hidden max-w-28 truncate text-left text-xs font-medium sm:block'>
           {name}
         </span>
-        <Icons.chevronDown className='hidden size-3.5 sm:block' />
+        <Icons.chevronDown className='size-3.5' />
       </button>
 
       {open && (

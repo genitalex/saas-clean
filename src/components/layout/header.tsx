@@ -29,9 +29,10 @@ export default function Header() {
             type='button'
             aria-label='Abrir búsqueda'
             onClick={query.toggle}
-            className='text-muted-foreground hover:bg-muted hover:text-foreground flex size-9 items-center justify-center rounded-[10px] transition-colors md:hidden'
+            className='text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-9 items-center gap-1.5 rounded-[10px] border border-border/70 bg-background px-2.5 text-xs font-medium shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors md:hidden'
           >
-            <Icons.search className='size-4' />
+            <Icons.search className='size-3.5' />
+            <span>Buscar</span>
           </button>
 
           <div className='hidden md:flex'>

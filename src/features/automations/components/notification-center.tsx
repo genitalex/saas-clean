@@ -123,7 +123,7 @@ function AuthenticatedNotificationCenter({
                 variant='ghost'
                 size='sm'
                 className='text-muted-foreground h-auto px-2 py-1 text-xs'
-                onClick={handleMarkAllAsRead}
+                onClick={() => markAllAsReadMutation.mutate()}
               >
                 Mark all as read
               </Button>
