@@ -49,9 +49,9 @@ import { EventInspector } from './event-inspector';
 type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 type Category = { id: string; name: string; color: string };
 const defaultCategories: Category[] = [
-  { id: 'work', name: 'Trabajo', color: '#c56a2d' },
-  { id: 'important', name: 'Importante', color: '#d97706' },
-  { id: 'personal', name: 'Personal', color: '#64706a' }
+  { id: 'work', name: 'Trabajo', color: '#5f8065' },
+  { id: 'important', name: 'Importante', color: '#49674f' },
+  { id: 'personal', name: 'Personal', color: '#6f776f' }
 ];
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -2702,7 +2702,7 @@ function CategoryDialog({
   onChange: (categories: Category[]) => void;
 }) {
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#c56a2d');
+  const [color, setColor] = useState('#5f8065');
   const [editing, setEditing] = useState<string | null>(null);
   const save = () => {
     if (!name.trim()) return;
@@ -2715,7 +2715,7 @@ function CategoryDialog({
         : [...categories, { id: crypto.randomUUID(), name: name.trim(), color }]
     );
     setName('');
-    setColor('#c56a2d');
+    setColor('#5f8065');
     setEditing(null);
   };
   return (

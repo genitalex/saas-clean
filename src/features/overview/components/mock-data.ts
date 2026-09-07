@@ -46,9 +46,9 @@ export const overviewMock = {
   ],
   kanban: [
     { label: 'Por hacer', count: 6, tone: 'bg-muted-foreground/40' },
-    { label: 'En curso', count: 3, tone: 'bg-blue-500' },
-    { label: 'Esperando', count: 2, tone: 'bg-amber-500' },
-    { label: 'Hecho', count: 12, tone: 'bg-emerald-500' }
+    { label: 'En curso', count: 3, tone: 'bg-primary' },
+    { label: 'Esperando', count: 2, tone: 'bg-secondary' },
+    { label: 'Hecho', count: 12, tone: 'bg-accent' }
   ],
   customers: [
     { initials: 'EG', name: 'Estudio Gris', type: 'Agencia', activity: 'Propuesta enviada' },

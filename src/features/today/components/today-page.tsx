@@ -43,9 +43,9 @@ function priorityLabel(priority: Task['priority']) {
 
 function priorityTone(priority: Task['priority']) {
   if (priority === 'high')
-    return 'border-rose-300/60 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200';
+    return 'border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/50 dark:bg-destructive/15';
   if (priority === 'low') return 'border-border/60 bg-muted/50 text-muted-foreground';
-  return 'border-amber-300/60 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200';
+  return 'border-border bg-secondary text-secondary-foreground';
 }
 
 function taskNeedsAttention(task: Task, now: Date) {
@@ -514,7 +514,7 @@ export function TodayPage({
                   softButton
                 )}
               >
-                <span className='bg-amber-500/10 text-amber-600 flex size-8 items-center justify-center rounded-full dark:text-amber-300'>
+                <span className='flex size-8 items-center justify-center rounded-full bg-accent text-accent-foreground'>
                   <Icons.clock className='size-4' />
                 </span>
                 <span className='min-w-0 flex-1 truncate text-sm'>{task.title}</span>

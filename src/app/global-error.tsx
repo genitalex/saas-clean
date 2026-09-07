@@ -30,7 +30,7 @@ export default function GlobalError({
       >
         <div style={{ textAlign: 'center', padding: '1rem' }}>
           <h1 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Something went wrong</h1>
-          <p style={{ color: '#6b7280', marginBottom: '1.25rem' }}>
+          <p style={{ color: 'var(--muted-foreground)', marginBottom: '1.25rem' }}>
             An unexpected error occurred. Please try again.
           </p>
           <button

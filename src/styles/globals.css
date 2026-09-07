@@ -65,22 +65,22 @@
    regardless of which theme is selected.
    ------------------------------------------------------------------------ */
 :root {
-  --success: oklch(0.6 0.14 152);
-  --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.77 0.15 80);
-  --warning-foreground: oklch(0.28 0.06 80);
-  --info: oklch(0.6 0.15 240);
-  --info-foreground: oklch(0.99 0 0);
+  --success: #5f8065;
+  --success-foreground: #ffffff;
+  --warning: #c5b57c;
+  --warning-foreground: #2d2b24;
+  --info: #6f776f;
+  --info-foreground: #ffffff;
   --surface-subtle: color-mix(in oklab, var(--foreground) 4%, var(--background));
 }
 
 .dark {
-  --success: oklch(0.72 0.16 152);
-  --success-foreground: oklch(0.16 0.03 152);
-  --warning: oklch(0.8 0.15 80);
-  --warning-foreground: oklch(0.2 0.04 80);
-  --info: oklch(0.72 0.13 240);
-  --info-foreground: oklch(0.16 0.03 240);
+  --success: #8aa18a;
+  --success-foreground: #111a15;
+  --warning: #d5c79a;
+  --warning-foreground: #1c1b17;
+  --info: #a7b3a9;
+  --info-foreground: #101714;
 }
 
 /* ------------------------------------------------------------------------

@@ -134,19 +134,19 @@ export function statusLabel(status: IntegrationStatus) {
 }
 export function statusClass(status: IntegrationStatus) {
   return {
-    connected: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-    attention: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    connected: 'bg-accent text-accent-foreground',
+    attention: 'bg-secondary text-secondary-foreground',
     available: 'bg-muted text-muted-foreground',
     'coming-soon': 'bg-muted text-muted-foreground'
   }[status];
 }
 export function toneClass(tone: Integration['tone']) {
   return {
-    blue: 'bg-blue-500/10 text-blue-600',
+    blue: 'bg-accent text-accent-foreground',
     slate: 'bg-muted text-foreground',
-    orange: 'bg-orange-500/10 text-orange-600',
-    green: 'bg-emerald-500/10 text-emerald-600',
-    violet: 'bg-violet-500/10 text-violet-600'
+    orange: 'bg-secondary text-secondary-foreground',
+    green: 'bg-primary/10 text-primary',
+    violet: 'bg-muted text-foreground'
   }[tone];
 }
 export function getIntegration(id: string) {

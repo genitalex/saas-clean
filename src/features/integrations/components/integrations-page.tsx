@@ -127,7 +127,7 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
       <div className='flex h-full w-full max-w-md flex-col overflow-hidden border-l border-border/70 bg-background shadow-[0_18px_48px_-24px_rgba(15,23,42,0.3)]'>
         <div className='flex shrink-0 items-center justify-between border-b border-border/60 px-5 py-5'>
           <div className='flex items-center gap-3'>
-            <div className='bg-blue-500/10 flex size-10 items-center justify-center rounded-xl font-semibold text-blue-600'>
+            <div className='flex size-10 items-center justify-center rounded-xl bg-accent font-semibold text-accent-foreground'>
               G
             </div>
             <div>
@@ -140,9 +140,9 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
         <div className='flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-5'>
-          <div className='rounded-xl border border-blue-500/20 bg-blue-500/5 p-4'>
+          <div className='rounded-xl border border-border bg-accent/70 p-4'>
             <div className='flex items-start gap-3'>
-              <IconCalendar className='mt-0.5 text-blue-600' />
+              <IconCalendar className='mt-0.5 text-accent-foreground' />
               <div>
                 <p className='font-medium'>Preview mode</p>
                 <p className='mt-1 text-sm leading-relaxed text-muted-foreground'>
@@ -189,7 +189,7 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
                       <p className='text-xs text-muted-foreground'>alex@northstar.studio</p>
                     </div>
                   </div>
-                  <IconCheck className='text-emerald-600' />
+                  <IconCheck className='text-primary' />
                 </div>
               </div>
               <div>
@@ -229,7 +229,7 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
                     <p className='text-sm font-medium'>Last synced</p>
                     <p className='text-xs text-muted-foreground'>Today at 9:42 AM</p>
                   </div>
-                  <Badge className='bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'>
+                  <Badge className='bg-accent text-accent-foreground'>
                     <IconCheck /> Healthy
                   </Badge>
                 </div>
@@ -243,10 +243,10 @@ function CalendarPanel({ onClose }: { onClose: () => void }) {
                   </Button>
                 </div>
               </div>
-              <Card className='border-amber-500/30 bg-amber-500/5 shadow-none'>
+              <Card className='border-border bg-secondary shadow-none'>
                 <CardHeader className='pb-3'>
                   <CardTitle className='flex items-center gap-2 text-sm'>
-                    <IconAlertTriangle className='text-amber-600' />
+                    <IconAlertTriangle className='text-muted-foreground' />
                     Conflict resolution
                   </CardTitle>
                   <CardDescription>
@@ -320,7 +320,7 @@ function DeveloperSurface({ kind }: { kind: 'api' | 'webhooks' }) {
           </Button>
         </div>
         {kind === 'api' && created && (
-          <div className='rounded-lg bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300'>
+          <div className='rounded-lg bg-secondary p-3 text-xs text-secondary-foreground'>
             Copy this secret now. It will be masked after you leave this view.
           </div>
         )}
@@ -372,7 +372,7 @@ export default function IntegrationsPage() {
         <div className='grid gap-3 sm:grid-cols-3'>
           <Card className='shadow-none'>
             <CardContent className='flex items-center gap-3 p-4'>
-              <div className='rounded-lg bg-emerald-500/10 p-2 text-emerald-600'>
+              <div className='rounded-lg bg-accent p-2 text-accent-foreground'>
                 <IconCheck />
               </div>
               <div>
@@ -383,7 +383,7 @@ export default function IntegrationsPage() {
           </Card>
           <Card className='shadow-none'>
             <CardContent className='flex items-center gap-3 p-4'>
-              <div className='rounded-lg bg-amber-500/10 p-2 text-amber-600'>
+              <div className='rounded-lg bg-secondary p-2 text-secondary-foreground'>
                 <IconAlertTriangle />
               </div>
               <div>
@@ -394,7 +394,7 @@ export default function IntegrationsPage() {
           </Card>
           <Card className='shadow-none'>
             <CardContent className='flex items-center gap-3 p-4'>
-              <div className='rounded-lg bg-blue-500/10 p-2 text-blue-600'>
+              <div className='rounded-lg bg-accent p-2 text-accent-foreground'>
                 <IconBolt />
               </div>
               <div>
@@ -479,7 +479,7 @@ export default function IntegrationsPage() {
             <div className='flex flex-col gap-4'>
               {activity.map(([time, label, source]) => (
                 <div key={time} className='flex items-center gap-3 text-sm'>
-                  <div className='size-2 rounded-full bg-emerald-500' />
+                  <div className='size-2 rounded-full bg-primary' />
                   <span className='flex-1'>
                     {label}
                     <span className='ml-2 text-muted-foreground'>· {source}</span>

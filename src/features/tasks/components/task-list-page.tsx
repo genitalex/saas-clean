@@ -708,7 +708,7 @@ export function TaskListPage({
                     onClick={() => openTask(task)}
                   >
                     <span
-                      className={`mt-0.5 size-2.5 shrink-0 rounded-full ${task.status === 'done' ? 'bg-emerald-500' : task.status === 'in_progress' ? 'bg-blue-500' : task.status === 'waiting' ? 'bg-amber-500' : 'bg-muted-foreground/40'}`}
+                      className={`mt-0.5 size-2.5 shrink-0 rounded-full ${task.status === 'done' ? 'bg-primary' : task.status === 'in_progress' ? 'bg-accent-foreground' : task.status === 'waiting' ? 'bg-muted-foreground' : 'bg-muted-foreground/40'}`}
                     />
                     <span className='min-w-0 flex-1'>
                       <span className='block truncate text-sm font-medium'>{task.title}</span>
@@ -1013,7 +1013,7 @@ function TaskInspector({
               </a>
             )}
             {workspace?.blockedBy.length ? (
-              <div className='rounded-2xl border border-amber-300/40 bg-amber-50/50 p-3 dark:border-amber-400/20 dark:bg-amber-400/5'>
+              <div className='rounded-2xl border border-border bg-secondary/80 p-3'>
                 <p className='text-xs font-medium'>Bloqueada por</p>
                 {workspace.blockedBy.map((blockingTask) => (
                   <div key={blockingTask.id} className='mt-2 flex items-center gap-2 text-sm'>
@@ -1021,7 +1021,7 @@ function TaskInspector({
                       href={`/dashboard/my-work?mode=list&task=${blockingTask.id}`}
                       className='flex min-w-0 flex-1 items-center gap-2 hover:underline'
                     >
-                      <Icons.lock className='size-3.5 shrink-0 text-amber-600' />
+                      <Icons.lock className='size-3.5 shrink-0 text-muted-foreground' />
                       <span className='truncate'>{blockingTask.title}</span>
                     </Link>
                     <button

@@ -193,12 +193,12 @@ export default function TeamWorkPage() {
                   {summary}
                 </span>
                 {activeMember.overdue > 0 && (
-                  <span className='rounded-full border border-amber-500/30 bg-amber-500/5 px-2.5 py-1 text-amber-700 dark:text-amber-300'>
+                  <span className='rounded-full border border-border bg-muted px-2.5 py-1 text-muted-foreground'>
                     {activeMember.overdue} vencida{activeMember.overdue > 1 ? 's' : ''}
                   </span>
                 )}
                 {activeMember.blocked > 0 && (
-                  <span className='rounded-full border border-blue-500/30 bg-blue-500/5 px-2.5 py-1 text-blue-700 dark:text-blue-300'>
+                  <span className='rounded-full border border-primary/30 bg-accent px-2.5 py-1 text-accent-foreground'>
                     {activeMember.blocked} pendiente{activeMember.blocked > 1 ? 's' : ''}
                   </span>
                 )}
@@ -218,9 +218,9 @@ export default function TeamWorkPage() {
                       <span
                         className={cn(
                           'size-2.5 rounded-full',
-                          normalizeStatus(task.status) === 'done' && 'bg-emerald-500',
-                          normalizeStatus(task.status) === 'in_progress' && 'bg-blue-500',
-                          normalizeStatus(task.status) === 'waiting' && 'bg-amber-500',
+                          normalizeStatus(task.status) === 'done' && 'bg-primary',
+                          normalizeStatus(task.status) === 'in_progress' && 'bg-accent-foreground',
+                          normalizeStatus(task.status) === 'waiting' && 'bg-muted-foreground',
                           normalizeStatus(task.status) === 'todo' && 'bg-muted-foreground/60'
                         )}
                       />

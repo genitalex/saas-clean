@@ -67,9 +67,7 @@ export function AttentionItems({ compact = false }: AttentionItemsProps) {
         return (
           <Card key={item.id} className='p-3'>
             <div className='flex items-start gap-3'>
-              {IconComponent && (
-                <IconComponent className='h-4 w-4 text-amber-600 mt-0.5 shrink-0' />
-              )}
+              {IconComponent && <IconComponent className='mt-0.5 h-4 w-4 shrink-0 text-primary' />}
 
               <div className='flex-1 min-w-0'>
                 <Link

@@ -243,14 +243,14 @@ function SortableNote({
             autoFocus
             value={note.title}
             onChange={(e) => onChange({ title: e.target.value })}
-            className='min-w-0 flex-1 bg-transparent text-base font-semibold text-black outline-none'
+            className='min-w-0 flex-1 bg-transparent text-base font-semibold text-foreground outline-none'
             placeholder='Título'
           />
         ) : (
           <button
             type='button'
             onClick={onEdit}
-            className='min-w-0 flex-1 truncate text-left text-base font-semibold text-black'
+            className='min-w-0 flex-1 truncate text-left text-base font-semibold text-foreground'
           >
             {note.title || 'Sin título'}
           </button>
@@ -259,7 +259,7 @@ function SortableNote({
         <button
           type='button'
           onClick={onDelete}
-          className='text-black/35 flex size-7 shrink-0 items-center justify-center rounded-lg opacity-0 hover:bg-black/8 hover:text-red-700 group-hover:opacity-100'
+          className='text-foreground/40 flex size-7 shrink-0 items-center justify-center rounded-lg opacity-0 hover:bg-foreground/5 hover:text-destructive group-hover:opacity-100'
           aria-label='Eliminar nota'
         >
           <Icons.trash className='size-4' />
@@ -273,7 +273,7 @@ function SortableNote({
             value={note.content}
             onChange={(e) => onChange({ content: e.target.value })}
             placeholder='Escribe aquí…'
-            className='mt-4 min-h-[145px] w-full resize-none bg-transparent text-sm leading-6 text-black outline-none placeholder:text-black/45'
+            className='mt-4 min-h-[145px] w-full resize-none bg-transparent text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground'
           />
           <div className='mt-3 flex items-center justify-between gap-3'>
             <div className='flex items-center gap-1.5'>
@@ -302,7 +302,7 @@ function SortableNote({
         </>
       ) : (
         <button type='button' onClick={onEdit} className='mt-4 min-h-[135px] w-full text-left'>
-          <span className='whitespace-pre-wrap text-sm leading-6 text-black/75'>
+          <span className='whitespace-pre-wrap text-sm leading-6 text-foreground/80'>
             {note.content || 'Escribe algo…'}
           </span>
         </button>
