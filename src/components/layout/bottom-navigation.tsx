@@ -95,7 +95,7 @@ export function BottomNavigation() {
                 }}
                 className={cn(
                   'group z-10 flex self-center items-center justify-center justify-self-center rounded-[13px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_7px_18px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgb(23_32_25_/_0.18)] active:scale-[0.96] md:hidden',
-                  'h-[54px] w-[56px]',
+                  'h-[50px] w-[42px]',
                   createOpen && 'bg-[#49674F]'
                 )}
               >
