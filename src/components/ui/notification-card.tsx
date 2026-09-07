@@ -97,7 +97,7 @@ export const NotificationCard: FC<NotificationCardProps> = ({
       <div className='px-4 py-3.5'>
         <div className='flex items-start justify-between gap-3'>
           {/* Main content */}
-          <div className='min-w-0 flex-1 space-y-1'>
+          <div className='min-w-0 flex-1 space-y-1 pr-16'>
             {/* Title with unread indicator */}
             <div className='flex items-center gap-2'>
               <h3
@@ -122,7 +122,7 @@ export const NotificationCard: FC<NotificationCardProps> = ({
             </p>
           </div>
 
-          <div className='flex shrink-0 items-start gap-1'>
+          <div className='absolute right-2.5 top-2.5 flex items-center gap-1'>
             {isUnread && onMarkAsRead && (
               <button
                 type='button'
@@ -130,13 +130,10 @@ export const NotificationCard: FC<NotificationCardProps> = ({
                   event.stopPropagation();
                   onMarkAsRead(id);
                 }}
-                className={cn(
-                  'rounded-lg p-1.5 transition-colors',
-                  'text-muted-foreground hover:bg-accent hover:text-foreground'
-                )}
+                className='text-muted-foreground hover:bg-background/80 hover:text-foreground rounded-lg p-1.5 opacity-70 transition-all hover:opacity-100'
                 aria-label='Marcar como leída'
               >
-                <Icons.check size={16} />
+                <Icons.check size={15} />
               </button>
             )}
             {onDismiss && (
@@ -146,7 +143,7 @@ export const NotificationCard: FC<NotificationCardProps> = ({
                   event.stopPropagation();
                   onDismiss(id);
                 }}
-                className='bg-background/70 text-muted-foreground border border-border/60 hover:bg-accent hover:text-foreground rounded-lg p-1.5 opacity-90 shadow-sm transition-all hover:scale-105 hover:opacity-100'
+                className='bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground rounded-lg border border-border/60 p-1.5 opacity-80 shadow-sm transition-all hover:scale-105 hover:opacity-100'
                 aria-label='Cerrar notificación'
               >
                 <Icons.close size={15} />

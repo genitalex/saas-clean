@@ -16,13 +16,13 @@ export function BottomNavigation() {
   const isMobile = useIsMobile();
   const [moreOpen, setMoreOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
-  const mobileLeftItems = mobileNavItems.slice(0, 2);
-  const mobileRightItems = mobileNavItems.slice(2, 4);
+  const mobileLeftItems = desktopNavItems.slice(0, 3);
+  const mobileRightItems = [desktopNavItems[3], ...(activityItem ? [activityItem] : [])];
   const desktopLeftItems = desktopNavItems.slice(0, 3);
   const desktopRightItems = [desktopNavItems[3], ...(activityItem ? [activityItem] : [])];
   const primaryUrls = new Set([
     ...mobileNavItems.map((item) => item.url),
-    ...(isMobile || !activityItem ? [] : [activityItem.url])
+    ...(!activityItem ? [] : [activityItem.url])
   ]);
 
   React.useEffect(() => {
@@ -70,16 +70,16 @@ export function BottomNavigation() {
       <nav
         aria-label='Primary navigation'
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 flex justify-center px-2 sm:px-4',
+          'fixed inset-x-0 bottom-0 z-40 flex justify-center px-0 sm:px-4',
           'transition-transform duration-300 ease-out will-change-transform',
           visible || moreOpen || createOpen ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mb-0 w-full max-w-[980px] rounded-[var(--radius-xl)] border border-border/70 bg-card px-1 py-1 shadow-md sm:mb-4 md:mb-5'>
+        <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-4px_18px_rgb(23_32_25_/_0.07)] sm:mb-4 sm:rounded-[var(--radius-xl)] sm:border sm:px-1 sm:py-1 sm:shadow-md md:mb-5'>
           <div className='relative min-h-[60px] md:min-h-[54px]'>
             <div className='absolute inset-y-0 left-0 flex w-[calc(50%_-_34px)] items-stretch md:hidden'>
-              <div className='grid w-full grid-cols-2 gap-0.5'>
+              <div className='grid w-full grid-cols-3 gap-0.5'>
                 {mobileLeftItems.map((item) => renderNavItem(item, true))}
               </div>
             </div>
@@ -116,8 +116,8 @@ export function BottomNavigation() {
                 setCreateOpen((value) => !value);
               }}
               className={cn(
-                'group absolute left-1/2 z-10 flex -translate-x-1/2 items-center justify-center rounded-full border-[3px] border-card bg-primary text-primary-foreground shadow-[0_10px_24px_rgb(23_32_25_/_0.16)] transition duration-200 ease-out hover:-translate-x-1/2 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgb(23_32_25_/_0.19)] active:-translate-x-1/2 active:scale-[0.94] md:left-1/2',
-                'size-[52px] -top-[10px] md:size-[58px] md:-top-[14px]',
+                'group absolute left-1/2 z-10 flex -translate-x-1/2 items-center justify-center rounded-[14px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_10px_24px_rgb(23_32_25_/_0.16)] transition duration-200 ease-out hover:-translate-x-1/2 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgb(23_32_25_/_0.19)] active:-translate-x-1/2 active:scale-[0.94] md:left-1/2',
+                'h-[44px] w-[58px] -top-[8px] md:h-[46px] md:w-[64px] md:-top-[10px]',
                 createOpen && 'bg-[#49674F]'
               )}
             >
@@ -286,7 +286,7 @@ function MoreSheet({
       className='fixed inset-0 z-50 flex items-end justify-center bg-foreground/20 p-3'
       onMouseDown={(event) => event.currentTarget === event.target && onClose()}
     >
-      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] flex max-h-[min(82dvh,680px)] w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-popover p-0 shadow-lg sm:mb-4 md:mb-5'>
+      <section className='mb-[calc(var(--mobile-nav-height,72px)+0.75rem)] flex h-[min(78dvh,680px)] max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-popover p-0 shadow-lg sm:mb-4 md:mb-5'>
         <div className='flex items-center justify-between border-b border-border/50 px-5 py-4'>
           <div>
             <h2 className='text-lg font-semibold'>Más</h2>
