@@ -133,8 +133,8 @@ export function CalendarPage({
   // a day's hourly timeline, rather than the desktop grid shrunk down. It
   // tracks its own month cursor, selected day and year/month/day mode.
   const [mobileCursor, setMobileCursor] = useState(initialCursor);
-  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'day'>(
-    initialView === 'agenda' || initialView === 'week' ? 'month' : (initialView ?? 'month')
+  const [mobileMode, setMobileMode] = useState<'year' | 'month' | 'week' | 'day'>(
+    initialView === 'agenda' ? 'month' : (initialView ?? 'month')
   );
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(initialCursor));
   const range = useMemo(() => rangeForView(cursor, view), [cursor, view]);
@@ -779,8 +779,8 @@ function MobileCalendar({
   onMoveEvent,
   onOpenSettings
 }: {
-  mode: 'year' | 'month' | 'day';
-  onModeChange: (mode: 'year' | 'month' | 'day') => void;
+  mode: 'year' | 'month' | 'week' | 'day';
+  onModeChange: (mode: 'year' | 'month' | 'week' | 'day') => void;
   cursor: Date;
   onCursorChange: (date: Date) => void;
   selectedDate: Date;
@@ -798,34 +798,53 @@ function MobileCalendar({
     if (!isSameMonth(day, cursor)) onCursorChange(day);
     onModeChange('day');
   };
+  const selectWeekDay = (day: Date) => {
+    onSelectDate(day);
+    onCursorChange(day);
+  };
   const openMonthFromYear = (month: Date) => {
     onCursorChange(month);
     onModeChange('month');
   };
+  const goToday = () => {
+    const now = startOfDay(new Date());
+    onCursorChange(now);
+    onSelectDate(now);
+  };
+  const changeSelectedDay = (delta: number) => {
+    const next = addDays(selectedDate, delta);
+    onSelectDate(next);
+    onCursorChange(next);
+  };
+  const changeWeek = (delta: number) => {
+    const nextCursor = addWeeks(cursor, delta);
+    const nextSelected = addWeeks(selectedDate, delta);
+    onCursorChange(nextCursor);
+    onSelectDate(nextSelected);
+  };
   const index = mobileModeOrder.indexOf(mode);
+
+  // Blur controls before their panel becomes inert so focus never remains in
+  // a panel that has just been moved off-screen.
+  useEffect(() => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+  }, [mode]);
 
   return (
     <div className='relative h-full overflow-hidden'>
       <div
-        className='flex h-full w-[300%] transition-transform duration-300 ease-out motion-reduce:transition-none'
-        style={{ transform: `translateX(-${index * (100 / 3)}%)` }}
+        className='flex h-full w-[400%] transition-transform duration-300 ease-out motion-reduce:transition-none'
+        style={{ transform: `translateX(-${index * 25}%)` }}
       >
-        <div
-          className='h-full w-1/3 shrink-0'
-          aria-hidden={mode !== 'year'}
-          inert={mode !== 'year'}
-        >
+        <div className='h-full w-1/4 shrink-0' inert={mode !== 'year'}>
           <MobileYearView
             year={cursor.getFullYear()}
             onYearChange={(year) => onCursorChange(new Date(year, cursor.getMonth(), 1))}
             onSelectMonth={openMonthFromYear}
           />
         </div>
-        <div
-          className='h-full w-1/3 shrink-0'
-          aria-hidden={mode !== 'month'}
-          inert={mode !== 'month'}
-        >
+        <div className='h-full w-1/4 shrink-0' inert={mode !== 'month'}>
           <MobileMonthView
             cursor={cursor}
             selectedDate={selectedDate}
@@ -835,15 +854,37 @@ function MobileCalendar({
             onCursorChange={onCursorChange}
             onSelectDay={openDay}
             onOpenYear={() => onModeChange('year')}
+            onOpenWeek={() => onModeChange('week')}
+            onGoToday={goToday}
+            onCreate={onCreate}
             onOpenSettings={onOpenSettings}
           />
         </div>
-        <div className='h-full w-1/3 shrink-0' aria-hidden={mode !== 'day'} inert={mode !== 'day'}>
+        <div className='h-full w-1/4 shrink-0' inert={mode !== 'week'}>
+          <MobileWeekView
+            cursor={cursor}
+            selectedDate={selectedDate}
+            events={events}
+            categories={categories}
+            onCursorChange={onCursorChange}
+            onSelectDay={selectWeekDay}
+            onShiftWeek={changeWeek}
+            onGoToday={goToday}
+            onOpenEvent={onOpenEvent}
+            onCreate={onCreate}
+            onOpenSettings={onOpenSettings}
+            isLoading={isLoading}
+            onBack={() => onModeChange('month')}
+          />
+        </div>
+        <div className='h-full w-1/4 shrink-0' inert={mode !== 'day'}>
           <MobileDayTimeline
             date={selectedDate}
             events={events}
             categories={categories}
-            onBack={() => onModeChange('month')}
+            onBack={() => onModeChange('week')}
+            onPreviousDay={() => changeSelectedDay(-1)}
+            onNextDay={() => changeSelectedDay(1)}
             onOpenEvent={onOpenEvent}
             onCreate={onCreate}
             onMoveEvent={onMoveEvent}
@@ -987,6 +1028,9 @@ function MobileMonthView({
   onCursorChange,
   onSelectDay,
   onOpenYear,
+  onOpenWeek,
+  onGoToday,
+  onCreate,
   onOpenSettings
 }: {
   cursor: Date;
@@ -997,6 +1041,9 @@ function MobileMonthView({
   onCursorChange: (date: Date) => void;
   onSelectDay: (date: Date) => void;
   onOpenYear: () => void;
+  onOpenWeek: () => void;
+  onGoToday: () => void;
+  onCreate: (date: Date) => void;
   onOpenSettings: () => void;
 }) {
   const today = new Date();
@@ -1014,7 +1061,7 @@ function MobileMonthView({
           size='icon-sm'
           onClick={() => onCursorChange(subMonths(cursor, 1))}
           aria-label='Mes anterior'
-          className='h-8 rounded-[8px]'
+          className='h-9 w-9 rounded-[10px]'
         >
           <Icons.chevronLeft className='size-4' />
         </Button>
@@ -1022,7 +1069,7 @@ function MobileMonthView({
           type='button'
           onClick={onOpenYear}
           aria-label='Elegir otro mes del año'
-          className='hover:bg-accent/30 rounded-xl px-3 py-2 text-[1.15rem] font-semibold tracking-tight capitalize transition-colors active:scale-[0.98]'
+          className='min-w-0 rounded-xl px-3 py-2 text-[1.15rem] font-semibold tracking-tight capitalize transition-colors hover:bg-accent/30 active:scale-[0.98]'
         >
           {format(cursor, 'LLLL yyyy', { locale: es })}
         </button>
@@ -1031,17 +1078,17 @@ function MobileMonthView({
           size='icon-sm'
           onClick={() => onCursorChange(addMonths(cursor, 1))}
           aria-label='Mes siguiente'
-          className='h-8 rounded-[8px]'
+          className='h-9 w-9 rounded-[10px]'
         >
           <Icons.chevronRight className='size-4' />
         </Button>
       </div>
       <div className='flex items-center justify-between gap-2'>
-        <div className='flex flex-1 items-center justify-center gap-2'>
+        <div className='flex items-center gap-1.5'>
           <Button
             variant='ghost'
             size='sm'
-            onClick={() => onCursorChange(new Date())}
+            onClick={onGoToday}
             className='rounded-lg px-3 text-xs font-medium'
           >
             Hoy
@@ -1049,9 +1096,9 @@ function MobileMonthView({
           <Button
             variant='ghost'
             size='icon-sm'
-            onClick={() => onSelectDay(startOfDay(new Date()))}
+            onClick={() => onCreate(startOfDay(new Date()))}
             aria-label='Nuevo evento hoy'
-            className='h-8 rounded-[8px]'
+            className='h-8 w-8 rounded-[8px]'
           >
             <Icons.add className='size-4' />
           </Button>
@@ -1061,10 +1108,33 @@ function MobileMonthView({
           size='icon-sm'
           onClick={onOpenSettings}
           aria-label='Configuración del calendario'
-          className='text-muted-foreground h-10 shrink-0 rounded-[10px]'
+          className='text-muted-foreground h-8 w-8 shrink-0 rounded-[9px]'
         >
           <Icons.settings className='size-4' />
         </Button>
+      </div>
+      <div
+        className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
+        role='tablist'
+        aria-label='Vista del calendario'
+      >
+        <button
+          type='button'
+          role='tab'
+          aria-selected='true'
+          className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
+        >
+          Mes
+        </button>
+        <button
+          type='button'
+          role='tab'
+          aria-selected='false'
+          onClick={onOpenWeek}
+          className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+        >
+          Semana
+        </button>
       </div>
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
@@ -1152,6 +1222,241 @@ function MobileMonthView({
               );
             })}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MobileWeekView({
+  cursor,
+  selectedDate,
+  events,
+  categories,
+  onCursorChange,
+  onSelectDay,
+  onShiftWeek,
+  onGoToday,
+  onOpenEvent,
+  onCreate,
+  onOpenSettings,
+  isLoading,
+  onBack
+}: {
+  cursor: Date;
+  selectedDate: Date;
+  events: Event[];
+  categories: Category[];
+  onCursorChange: (date: Date) => void;
+  onSelectDay: (date: Date) => void;
+  onShiftWeek: (delta: number) => void;
+  onGoToday: () => void;
+  onOpenEvent: (event: Event) => void;
+  onCreate: (date: Date) => void;
+  onOpenSettings: () => void;
+  isLoading: boolean;
+  onBack: () => void;
+}) {
+  const weekStart = startOfWeek(cursor, { weekStartsOn: 1 });
+  const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+  const today = new Date();
+  const selectedEvents = eventsForDay(events, selectedDate).sort(
+    (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+  );
+
+  return (
+    <div className='flex h-full min-h-0 flex-col gap-3 px-3 pt-3 pb-2 sm:px-4'>
+      <div className='flex items-center gap-2'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={onBack}
+          aria-label='Volver al mes'
+          className='h-9 w-9 shrink-0 rounded-[10px]'
+        >
+          <Icons.chevronLeft className='size-4' />
+        </Button>
+        <div className='min-w-0 flex-1 text-center'>
+          <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.12em]'>
+            Semana
+          </p>
+          <p className='truncate text-base font-semibold tracking-tight'>
+            {format(weekStart, 'd MMM', { locale: es })} –{' '}
+            {format(addDays(weekStart, 6), 'd MMM', { locale: es })}
+          </p>
+        </div>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={onOpenSettings}
+          aria-label='Configuración del calendario'
+          className='text-muted-foreground h-9 w-9 shrink-0 rounded-[10px]'
+        >
+          <Icons.settings className='size-4' />
+        </Button>
+      </div>
+
+      <div className='flex items-center justify-between gap-2'>
+        <div className='flex items-center gap-1'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onShiftWeek(-1)}
+            aria-label='Semana anterior'
+            className='h-8 w-8 rounded-[9px]'
+          >
+            <Icons.chevronLeft className='size-4' />
+          </Button>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={onGoToday}
+            className='rounded-lg px-3 text-xs font-medium'
+          >
+            Hoy
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onShiftWeek(1)}
+            aria-label='Semana siguiente'
+            className='h-8 w-8 rounded-[9px]'
+          >
+            <Icons.chevronRight className='size-4' />
+          </Button>
+        </div>
+        <Button onClick={() => onCreate(selectedDate)} className='h-8 rounded-[9px] px-3 text-xs'>
+          <Icons.add className='size-3.5' />
+          Nuevo
+        </Button>
+      </div>
+
+      <div className='grid grid-cols-7 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+        {days.map((day) => {
+          const isSelected = isSameDay(day, selectedDate);
+          const isToday = isSameDay(day, today);
+          const count = eventsForDay(events, day).length;
+          return (
+            <button
+              key={day.toISOString()}
+              type='button'
+              onClick={() => onSelectDay(day)}
+              className={cn(
+                'min-w-0 border-r border-border/60 px-0.5 py-2.5 text-center transition-colors last:border-r-0',
+                isSelected ? 'bg-accent' : 'hover:bg-muted/45'
+              )}
+            >
+              <span className='block text-[9px] font-medium uppercase text-muted-foreground'>
+                {format(day, 'EEE', { locale: es }).slice(0, 1)}
+              </span>
+              <span
+                className={cn(
+                  'mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
+                  isSelected && isToday
+                    ? 'bg-primary text-primary-foreground'
+                    : isToday
+                      ? 'text-primary ring-1 ring-primary/40'
+                      : isSelected
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-foreground'
+                )}
+              >
+                {format(day, 'd')}
+              </span>
+              <span className='mt-1 flex h-1 justify-center gap-0.5'>
+                {Array.from({ length: Math.min(count, 3) }, (_, index) => (
+                  <span key={index} className='size-1 rounded-full bg-primary/70' />
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
+        role='tablist'
+        aria-label='Vista del calendario'
+      >
+        <button
+          type='button'
+          role='tab'
+          aria-selected='false'
+          onClick={() => onBack()}
+          className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+        >
+          Mes
+        </button>
+        <button
+          type='button'
+          role='tab'
+          aria-selected='true'
+          className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
+        >
+          Semana
+        </button>
+      </div>
+
+      <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+        <div className='border-b border-border/60 px-4 py-3'>
+          <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.12em]'>
+            Día seleccionado
+          </p>
+          <h2 className='mt-0.5 text-base font-semibold capitalize'>
+            {format(selectedDate, 'EEEE d MMMM', { locale: es })}
+          </h2>
+        </div>
+        {isLoading ? (
+          <div className='space-y-2 p-4'>
+            <div className='bg-muted h-10 animate-pulse rounded-xl' />
+            <div className='bg-muted h-10 animate-pulse rounded-xl' />
+          </div>
+        ) : selectedEvents.length ? (
+          <div className='divide-y divide-border/60'>
+            {selectedEvents.map((event) => {
+              const category = categoryFor(event, categories);
+              return (
+                <button
+                  key={event.id}
+                  type='button'
+                  onClick={() => onOpenEvent(event)}
+                  className='flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/35 active:bg-accent/40'
+                >
+                  <span className='flex w-12 shrink-0 flex-col text-right'>
+                    <span className='text-xs font-semibold tabular-nums'>
+                      {event.allDay ? '—' : format(new Date(event.startAt), 'HH:mm')}
+                    </span>
+                    {!event.allDay && (
+                      <span className='text-muted-foreground text-[10px] tabular-nums'>
+                        {format(new Date(event.endAt), 'HH:mm')}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className='size-2 shrink-0 rounded-full'
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <span className='min-w-0 flex-1'>
+                    <span className='block truncate text-sm font-medium'>{event.title}</span>
+                    <span className='text-muted-foreground mt-0.5 block truncate text-[11px]'>
+                      {event.allDay ? 'Todo el día' : 'Evento programado'}
+                      {event.customer ? ` · ${event.customer.name}` : ''}
+                    </span>
+                  </span>
+                  <Icons.chevronRight className='text-muted-foreground size-4 shrink-0' />
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <button
+            type='button'
+            onClick={() => onCreate(selectedDate)}
+            className='flex w-full flex-col items-center justify-center px-4 py-12 text-center transition-colors hover:bg-muted/25'
+          >
+            <span className='text-sm font-medium'>Nada programado</span>
+            <span className='text-muted-foreground mt-1 text-xs'>Pulsa para crear un evento</span>
+          </button>
         )}
       </div>
     </div>
@@ -1398,6 +1703,8 @@ function MobileDayTimeline({
   events,
   categories,
   onBack,
+  onPreviousDay,
+  onNextDay,
   onOpenEvent,
   onCreate,
   onMoveEvent
@@ -1406,6 +1713,8 @@ function MobileDayTimeline({
   events: Event[];
   categories: Category[];
   onBack: () => void;
+  onPreviousDay: () => void;
+  onNextDay: () => void;
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
   onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
@@ -1520,30 +1829,50 @@ function MobileDayTimeline({
 
   return (
     <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
-      <div className='flex shrink-0 items-center gap-2.5'>
+      <div className='flex shrink-0 items-center gap-2'>
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={onBack}
-          aria-label='Volver al mes'
-          className='shrink-0 rounded-xl'
+          aria-label='Volver a la semana'
+          className='h-9 w-9 shrink-0 rounded-[10px]'
         >
           <Icons.chevronLeft className='size-4' />
         </Button>
-        <div className='min-w-0 flex-1'>
-          <p className='text-muted-foreground truncate text-xs capitalize'>
-            {format(date, 'MMMM yyyy', { locale: es })}
-          </p>
-          <p className='truncate text-xl font-semibold tracking-tight capitalize'>
-            {format(date, 'EEEE d', { locale: es })}
-          </p>
+        <div className='flex min-w-0 flex-1 items-center justify-center gap-1'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={onPreviousDay}
+            aria-label='Día anterior'
+            className='h-8 w-8 shrink-0 rounded-[9px]'
+          >
+            <Icons.chevronLeft className='size-4' />
+          </Button>
+          <div className='min-w-0 text-center'>
+            <p className='truncate text-base font-semibold tracking-tight capitalize'>
+              {format(date, 'EEEE d', { locale: es })}
+            </p>
+            <p className='text-muted-foreground truncate text-[11px] capitalize'>
+              {format(date, 'MMMM yyyy', { locale: es })}
+            </p>
+          </div>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={onNextDay}
+            aria-label='Día siguiente'
+            className='h-8 w-8 shrink-0 rounded-[9px]'
+          >
+            <Icons.chevronRight className='size-4' />
+          </Button>
         </div>
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={() => onCreate(date)}
           aria-label='Añadir evento'
-          className='rounded-xl'
+          className='h-9 w-9 shrink-0 rounded-[10px]'
         >
           <Icons.add className='size-4' />
         </Button>
@@ -2436,6 +2765,7 @@ function WeekTimeline({
   });
   const [earlyExpanded, setEarlyExpanded] = useState(false);
   const [lateExpanded, setLateExpanded] = useState(false);
+  const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
   const earlyHeight = hasEarlyEvents || earlyExpanded ? 5 * hourHeight : compactEarlyHeight;
   const lateHeight = hasLateEvents || lateExpanded ? 3 * hourHeight : compactLateHeight;
   const totalHeight = earlyHeight + 16 * hourHeight + lateHeight;
@@ -2498,7 +2828,14 @@ function WeekTimeline({
                   key={day.toISOString()}
                   type='button'
                   onClick={() => view === 'week' && onOpenDay?.(day)}
-                  className='border-border/60 hover:bg-surface-subtle/60 focus-visible:bg-surface-subtle/60 border-r px-4 py-3 text-left transition-colors last:border-r-0'
+                  onMouseEnter={() => setHoveredDayKey(day.toISOString())}
+                  onMouseLeave={() => setHoveredDayKey(null)}
+                  className={cn(
+                    'border-border/60 border-r px-4 py-3 text-left transition-colors last:border-r-0',
+                    hoveredDayKey === day.toISOString()
+                      ? 'bg-accent/45'
+                      : 'hover:bg-accent/25 focus-visible:bg-accent/25'
+                  )}
                   aria-label={
                     view === 'week'
                       ? `Ver día ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`
@@ -2655,7 +2992,12 @@ function WeekTimeline({
               return (
                 <div
                   key={day.toISOString()}
-                  className='border-border/60 relative border-r last:border-r-0'
+                  className={cn(
+                    'border-border/60 relative border-r last:border-r-0 transition-colors',
+                    hoveredDayKey === day.toISOString() && 'bg-accent/20'
+                  )}
+                  onMouseEnter={() => setHoveredDayKey(day.toISOString())}
+                  onMouseLeave={() => setHoveredDayKey(null)}
                 >
                   <div
                     data-calendar-day={format(day, 'yyyy-MM-dd')}
