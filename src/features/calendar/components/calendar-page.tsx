@@ -1414,9 +1414,10 @@ function MobileDayTimeline({
   const isToday = isSameDay(date, today);
   const hourHeight = MOBILE_HOUR_ROW_PX;
   const earlyEnd = 300;
-  const lateStart = 1260;
+  const middayStart = 540;
+  const middayEnd = 720;
   const compactEarlyHeight = 30;
-  const compactLateHeight = 26;
+  const compactMiddayHeight = 26;
   const dayEvents = eventsForDay(events, date).filter((event) => !event.allDay);
   const allDayEvents = eventsForDay(events, date).filter((event) => event.allDay);
 
@@ -1428,33 +1429,46 @@ function MobileDayTimeline({
     return s < end && e > start;
   };
   const hasEarly = dayEvents.some((e) => overlap(e, 0, earlyEnd));
-  const hasLate = dayEvents.some((e) => overlap(e, lateStart, 1440));
+  const hasMidday = dayEvents.some((e) => overlap(e, middayStart, middayEnd));
   const [earlyExpanded, setEarlyExpanded] = useState(false);
-  const [lateExpanded, setLateExpanded] = useState(false);
+  const [middayExpanded, setMiddayExpanded] = useState(false);
 
   const earlyHeight = hasEarly || earlyExpanded ? 5 * hourHeight : compactEarlyHeight;
-  const lateHeight = hasLate || lateExpanded ? 3 * hourHeight : compactLateHeight;
-  const workHeight = 16 * hourHeight;
-  const totalHeight = earlyHeight + workHeight + lateHeight;
+  const middayHeight = hasMidday || middayExpanded ? 3 * hourHeight : compactMiddayHeight;
+  const totalHeight = earlyHeight + 4 * hourHeight + middayHeight + 12 * hourHeight;
 
   const offset = useCallback(
     (minutes: number) => {
       const m = Math.max(0, Math.min(1440, minutes));
       if (m <= earlyEnd) return (m / earlyEnd) * earlyHeight;
-      if (m <= lateStart) return earlyHeight + ((m - earlyEnd) / 60) * hourHeight;
-      return earlyHeight + workHeight + ((m - lateStart) / 60) * (lateHeight / 3);
+      if (m <= middayStart) return earlyHeight + ((m - earlyEnd) / 60) * hourHeight;
+      if (m <= middayEnd) {
+        return (
+          earlyHeight +
+          4 * hourHeight +
+          ((m - middayStart) / (middayEnd - middayStart)) * middayHeight
+        );
+      }
+      return earlyHeight + 4 * hourHeight + middayHeight + ((m - middayEnd) / 60) * hourHeight;
     },
-    [earlyHeight, lateHeight]
+    [earlyHeight, middayHeight]
   );
 
   const fromPointer = useCallback(
     (clientY: number, rect: DOMRect) => {
       const y = Math.max(0, Math.min(totalHeight, clientY - rect.top));
       if (y <= earlyHeight) return (y / earlyHeight) * earlyEnd;
-      if (y <= earlyHeight + workHeight) return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
-      return lateStart + ((y - earlyHeight - workHeight) / (lateHeight / 3)) * 60;
+      if (y <= earlyHeight + 4 * hourHeight)
+        return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
+      if (y <= earlyHeight + 4 * hourHeight + middayHeight) {
+        return (
+          middayStart +
+          ((y - earlyHeight - 4 * hourHeight) / middayHeight) * (middayEnd - middayStart)
+        );
+      }
+      return middayEnd + ((y - earlyHeight - 4 * hourHeight - middayHeight) / hourHeight) * 60;
     },
-    [earlyHeight, lateHeight, totalHeight]
+    [earlyHeight, middayHeight, totalHeight]
   );
 
   const moveEvent = useCallback(
@@ -1470,7 +1484,7 @@ function MobileDayTimeline({
   });
   const renderHour = (hour: number) => {
     const top = offset(hour * 60);
-    const h = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : hourHeight;
+    const h = hour < 5 ? earlyHeight / 5 : hour >= 9 && hour < 12 ? middayHeight / 3 : hourHeight;
     return (
       <div
         key={hour}
@@ -1493,20 +1507,20 @@ function MobileDayTimeline({
   };
 
   const band = (early: boolean) => {
-    const locked = early ? hasEarly : hasLate;
+    const locked = early ? hasEarly : hasMidday;
     if (locked) return null;
-    const expanded = early ? earlyExpanded : lateExpanded;
-    const top = early ? 0 : earlyHeight + workHeight;
-    const height = early ? earlyHeight : lateHeight;
+    const expanded = early ? earlyExpanded : middayExpanded;
+    const top = early ? 0 : earlyHeight + 4 * hourHeight;
+    const height = early ? earlyHeight : middayHeight;
     return (
       <button
         type='button'
-        onClick={() => (early ? setEarlyExpanded((v) => !v) : setLateExpanded((v) => !v))}
-        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
+        onClick={() => (early ? setEarlyExpanded((v) => !v) : setMiddayExpanded((v) => !v))}
+        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-white text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
         style={{ top, height }}
       >
         <span className='inline-flex items-center gap-1.5'>
-          {early ? '12 AM – 5 AM' : '9 PM – 12 AM'}
+          {early ? '12 AM – 5 AM' : '9 AM – 12 PM'}
           {expanded ? (
             <Icons.chevronUp className='size-3' />
           ) : (
@@ -1582,10 +1596,11 @@ function MobileDayTimeline({
           {!hasEarly && !earlyExpanded
             ? band(true)
             : Array.from({ length: 5 }, (_, i) => renderHour(i))}
-          {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
-          {!hasLate && !lateExpanded
+          {Array.from({ length: 4 }, (_, i) => renderHour(i + 5))}
+          {!hasMidday && !middayExpanded
             ? band(false)
-            : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
+            : Array.from({ length: 3 }, (_, i) => renderHour(i + 9))}
+          {Array.from({ length: 12 }, (_, i) => renderHour(i + 12))}
 
           {!hasEarly && earlyExpanded && (
             <button
@@ -1598,13 +1613,13 @@ function MobileDayTimeline({
               <Icons.chevronUp className='size-3' />
             </button>
           )}
-          {!hasLate && lateExpanded && (
+          {!hasMidday && middayExpanded && (
             <button
               type='button'
-              onClick={() => setLateExpanded(false)}
+              onClick={() => setMiddayExpanded(false)}
               className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
-              style={{ top: earlyHeight + workHeight + 6 }}
-              aria-label='Contraer noche'
+              style={{ top: earlyHeight + 4 * hourHeight + middayHeight + 6 }}
+              aria-label='Contraer media mañana'
             >
               Contraer
               <Icons.chevronUp className='size-3' />
@@ -2087,9 +2102,9 @@ function CompressedDayTimeline({
 }) {
   const hourHeight = 72;
   const compactEarlyHeight = 34;
-  const compactLateHeight = 30;
   const earlyEnd = 5 * 60;
-  const lateStart = 21 * 60;
+  const middayStart = 9 * 60;
+  const middayEnd = 12 * 60;
 
   const dayEvents = eventsForDay(events, cursor).filter((event) => !event.allDay);
   const allDayEvents = eventsForDay(events, cursor).filter((event) => event.allDay);
@@ -2103,33 +2118,46 @@ function CompressedDayTimeline({
   };
 
   const hasEarlyEvents = dayEvents.some((event) => overlap(event, 0, earlyEnd));
-  const hasLateEvents = dayEvents.some((event) => overlap(event, lateStart, 1440));
+  const hasMiddayEvents = dayEvents.some((event) => overlap(event, middayStart, middayEnd));
   const [earlyExpanded, setEarlyExpanded] = useState(false);
-  const [lateExpanded, setLateExpanded] = useState(false);
+  const [middayExpanded, setMiddayExpanded] = useState(false);
 
   const earlyHeight = hasEarlyEvents || earlyExpanded ? 5 * hourHeight : compactEarlyHeight;
-  const lateHeight = hasLateEvents || lateExpanded ? 3 * hourHeight : compactLateHeight;
-  const workHeight = 16 * hourHeight;
-  const totalHeight = earlyHeight + workHeight + lateHeight;
+  const middayHeight = hasMiddayEvents || middayExpanded ? 3 * hourHeight : compactEarlyHeight;
+  const totalHeight = earlyHeight + 4 * hourHeight + middayHeight + 12 * hourHeight;
 
   const offset = useCallback(
     (minutes: number) => {
       const m = Math.max(0, Math.min(1440, minutes));
       if (m <= earlyEnd) return (m / earlyEnd) * earlyHeight;
-      if (m <= lateStart) return earlyHeight + ((m - earlyEnd) / 60) * hourHeight;
-      return earlyHeight + workHeight + ((m - lateStart) / 60) * (lateHeight / 3);
+      if (m <= middayStart) return earlyHeight + ((m - earlyEnd) / 60) * hourHeight;
+      if (m <= middayEnd) {
+        return (
+          earlyHeight +
+          4 * hourHeight +
+          ((m - middayStart) / (middayEnd - middayStart)) * middayHeight
+        );
+      }
+      return earlyHeight + 4 * hourHeight + middayHeight + ((m - middayEnd) / 60) * hourHeight;
     },
-    [earlyHeight, lateHeight]
+    [earlyHeight, middayHeight]
   );
 
   const fromPointer = useCallback(
     (clientY: number, rect: DOMRect) => {
       const y = Math.max(0, Math.min(totalHeight, clientY - rect.top));
       if (y <= earlyHeight) return (y / earlyHeight) * earlyEnd;
-      if (y <= earlyHeight + workHeight) return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
-      return lateStart + ((y - earlyHeight - workHeight) / (lateHeight / 3)) * 60;
+      if (y <= earlyHeight + 4 * hourHeight)
+        return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
+      if (y <= earlyHeight + 4 * hourHeight + middayHeight) {
+        return (
+          middayStart +
+          ((y - earlyHeight - 4 * hourHeight) / middayHeight) * (middayEnd - middayStart)
+        );
+      }
+      return middayEnd + ((y - earlyHeight - 4 * hourHeight - middayHeight) / hourHeight) * 60;
     },
-    [earlyHeight, lateHeight, totalHeight]
+    [earlyHeight, middayHeight, totalHeight]
   );
 
   const moveEvent = useCallback(
@@ -2155,7 +2183,7 @@ function CompressedDayTimeline({
 
   const renderHour = (hour: number) => {
     const top = offset(hour * 60);
-    const h = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : hourHeight;
+    const h = hour < 5 ? earlyHeight / 5 : hour >= 9 && hour < 12 ? middayHeight / 3 : hourHeight;
     return (
       <div
         key={hour}
@@ -2178,20 +2206,20 @@ function CompressedDayTimeline({
   };
 
   const band = (early: boolean) => {
-    const top = early ? 0 : earlyHeight + workHeight;
-    const height = early ? earlyHeight : lateHeight;
-    const expanded = early ? earlyExpanded : lateExpanded;
-    if (early ? hasEarlyEvents : hasLateEvents) return null;
+    const top = early ? 0 : earlyHeight + 4 * hourHeight;
+    const height = early ? earlyHeight : middayHeight;
+    const expanded = early ? earlyExpanded : middayExpanded;
+    if (early ? hasEarlyEvents : hasMiddayEvents) return null;
     return (
       <button
         type='button'
-        onClick={() => (early ? setEarlyExpanded((v) => !v) : setLateExpanded((v) => !v))}
-        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-surface-subtle text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+        onClick={() => (early ? setEarlyExpanded((v) => !v) : setMiddayExpanded((v) => !v))}
+        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
         style={{ top, height }}
-        aria-label={`${expanded ? 'Contraer' : 'Expandir'} ${early ? 'madrugada' : 'noche'}`}
+        aria-label={`${expanded ? 'Contraer' : 'Expandir'} ${early ? 'madrugada' : 'media mañana'}`}
       >
         <span className='inline-flex items-center gap-1.5'>
-          {early ? '12 AM – 5 AM' : '9 PM – 12 AM'}
+          {early ? '12 AM – 5 AM' : '9 AM – 12 PM'}
           {expanded ? (
             <Icons.chevronUp className='size-3.5' />
           ) : (
@@ -2251,13 +2279,13 @@ function CompressedDayTimeline({
                   Array.from({ length: 5 }, (_, i) => renderHour(i))
                 )}
                 {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
-                {!hasLateEvents && !lateExpanded ? (
+                {!hasMiddayEvents && !middayExpanded ? (
                   <div
                     className='absolute inset-x-0 border-b border-border/50'
-                    style={{ top: earlyHeight + workHeight, height: lateHeight }}
+                    style={{ top: earlyHeight + 4 * hourHeight, height: middayHeight }}
                   />
                 ) : (
-                  Array.from({ length: 3 }, (_, i) => renderHour(i + 21))
+                  Array.from({ length: 3 }, (_, i) => renderHour(i + 9))
                 )}
               </div>
             </div>
@@ -2297,10 +2325,11 @@ function CompressedDayTimeline({
                 {!hasEarlyEvents && !earlyExpanded
                   ? band(true)
                   : Array.from({ length: 5 }, (_, i) => renderHour(i))}
-                {Array.from({ length: 16 }, (_, i) => renderHour(i + 5))}
-                {!hasLateEvents && !lateExpanded
+                {Array.from({ length: 4 }, (_, i) => renderHour(i + 5))}
+                {!hasMiddayEvents && !middayExpanded
                   ? band(false)
-                  : Array.from({ length: 3 }, (_, i) => renderHour(i + 21))}
+                  : Array.from({ length: 3 }, (_, i) => renderHour(i + 9))}
+                {Array.from({ length: 12 }, (_, i) => renderHour(i + 12))}
                 {!hasEarlyEvents && earlyExpanded && (
                   <button
                     type='button'
@@ -2312,13 +2341,13 @@ function CompressedDayTimeline({
                     <Icons.chevronUp className='size-3' />
                   </button>
                 )}
-                {!hasLateEvents && lateExpanded && (
+                {!hasMiddayEvents && middayExpanded && (
                   <button
                     type='button'
-                    onClick={() => setLateExpanded(false)}
+                    onClick={() => setMiddayExpanded(false)}
                     className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
-                    style={{ top: earlyHeight + workHeight + 6 }}
-                    aria-label='Contraer noche'
+                    style={{ top: earlyHeight + 4 * hourHeight + middayHeight + 6 }}
+                    aria-label='Contraer media mañana'
                   >
                     Contraer
                     <Icons.chevronUp className='size-3' />
@@ -2417,10 +2446,62 @@ function WeekTimeline({
   const startHour = 0;
   const endHour = 24;
   const hourHeight = 72;
-  const totalHeight = (endHour - startHour) * hourHeight;
+  const earlyEnd = 5 * 60;
+  const middayStart = 9 * 60;
+  const middayEnd = 12 * 60;
+  const compactEarlyHeight = 34;
+  const compactMiddayHeight = 34;
+  const weekEvents = events.filter((event) => !event.allDay);
+  const hasEarlyEvents = weekEvents.some((event) => {
+    const startMinutes = minutesFromDate(new Date(event.startAt));
+    const endMinutes = minutesFromDate(new Date(event.endAt));
+    return startMinutes < earlyEnd && endMinutes > 0;
+  });
+  const hasMiddayEvents = weekEvents.some((event) => {
+    const startMinutes = minutesFromDate(new Date(event.startAt));
+    const endMinutes = minutesFromDate(new Date(event.endAt));
+    return startMinutes < middayEnd && endMinutes > middayStart;
+  });
+  const [earlyExpanded, setEarlyExpanded] = useState(false);
+  const [middayExpanded, setMiddayExpanded] = useState(false);
+  const earlyHeight = hasEarlyEvents || earlyExpanded ? 5 * hourHeight : compactEarlyHeight;
+  const middayHeight = hasMiddayEvents || middayExpanded ? 3 * hourHeight : compactMiddayHeight;
+  const totalHeight = earlyHeight + 4 * hourHeight + middayHeight + 12 * hourHeight;
   const today = new Date();
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
-  const nowOffset = ((nowMinutes - startHour * 60) / 60) * hourHeight;
+  const offset = useCallback(
+    (minutes: number) => {
+      const value = Math.max(0, Math.min(1440, minutes));
+      if (value <= earlyEnd) return (value / earlyEnd) * earlyHeight;
+      if (value <= middayStart) return earlyHeight + ((value - earlyEnd) / 60) * hourHeight;
+      if (value <= middayEnd) {
+        return (
+          earlyHeight +
+          4 * hourHeight +
+          ((value - middayStart) / (middayEnd - middayStart)) * middayHeight
+        );
+      }
+      return earlyHeight + 4 * hourHeight + middayHeight + ((value - middayEnd) / 60) * hourHeight;
+    },
+    [earlyHeight, middayHeight]
+  );
+  const fromPointer = useCallback(
+    (clientY: number, rect: DOMRect) => {
+      const y = Math.max(0, Math.min(totalHeight, clientY - rect.top));
+      if (y <= earlyHeight) return (y / earlyHeight) * earlyEnd;
+      if (y <= earlyHeight + 4 * hourHeight)
+        return earlyEnd + ((y - earlyHeight) / hourHeight) * 60;
+      if (y <= earlyHeight + 4 * hourHeight + middayHeight) {
+        return (
+          middayStart +
+          ((y - earlyHeight - 4 * hourHeight) / middayHeight) * (middayEnd - middayStart)
+        );
+      }
+      return middayEnd + ((y - earlyHeight - 4 * hourHeight - middayHeight) / hourHeight) * 60;
+    },
+    [earlyHeight, middayHeight, totalHeight]
+  );
+  const nowOffset = offset(nowMinutes);
   const showNow = nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
   const moveEvent = useCallback(
     async (event: Event, nextStart: Date) => onMoveEvent(event, nextStart),
@@ -2430,7 +2511,8 @@ function WeekTimeline({
     startHour,
     endHour,
     hourHeight,
-    onMove: moveEvent
+    onMove: moveEvent,
+    minutesFromPointer: fromPointer
   });
   const resize = useEventResize({
     hourHeight,
@@ -2490,22 +2572,59 @@ function WeekTimeline({
             <div className='relative' style={{ height: totalHeight + ALL_DAY_ROW_PX }}>
               <div className='h-[58px] border-b border-border/60 bg-surface-subtle/45' />
               <div className='relative' style={{ height: totalHeight }}>
-                {Array.from({ length: endHour - startHour }, (_, i) => {
-                  const hour = startHour + i;
+                {!hasEarlyEvents && !earlyExpanded ? (
+                  <div
+                    className='absolute inset-x-0 border-b border-border/60'
+                    style={{ height: earlyHeight }}
+                  />
+                ) : (
+                  Array.from({ length: 5 }, (_, i) => (
+                    <div
+                      key={i}
+                      className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
+                      style={{ top: i * (earlyHeight / 5), height: earlyHeight / 5 }}
+                    >
+                      {formatHourLabel(i)}
+                    </div>
+                  ))
+                )}
+                {Array.from({ length: 4 }, (_, i) => {
+                  const hour = i + 5;
                   return (
                     <div
                       key={hour}
                       className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
-                      style={{ top: i * hourHeight, height: hourHeight }}
+                      style={{ top: offset(hour * 60), height: hourHeight }}
                     >
                       {formatHourLabel(hour)}
-                      {[1, 2, 3].map((quarter) => (
-                        <span
-                          key={quarter}
-                          className='pointer-events-none absolute left-[72px] right-0 h-px bg-border/20'
-                          style={{ top: quarter * (hourHeight / 4) }}
-                        />
-                      ))}
+                    </div>
+                  );
+                })}
+                {!hasMiddayEvents && !middayExpanded ? (
+                  <div
+                    className='absolute inset-x-0 border-b border-border/60'
+                    style={{ top: earlyHeight + 4 * hourHeight, height: middayHeight }}
+                  />
+                ) : (
+                  Array.from({ length: 3 }, (_, i) => (
+                    <div
+                      key={i + 9}
+                      className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
+                      style={{ top: offset((i + 9) * 60), height: middayHeight / 3 }}
+                    >
+                      {formatHourLabel(i + 9)}
+                    </div>
+                  ))
+                )}
+                {Array.from({ length: 12 }, (_, i) => {
+                  const hour = i + 12;
+                  return (
+                    <div
+                      key={hour}
+                      className='border-border/60 text-muted-foreground absolute inset-x-0 border-b px-3 pt-2 text-right text-[11px] font-medium tabular-nums'
+                      style={{ top: offset(hour * 60), height: hourHeight }}
+                    >
+                      {formatHourLabel(hour)}
                     </div>
                   );
                 })}
@@ -2515,6 +2634,16 @@ function WeekTimeline({
             {days.map((day) => {
               const dayEvents = eventsForDay(events, day).filter((event) => !event.allDay);
               const allDayEvents = eventsForDay(events, day).filter((event) => event.allDay);
+              const renderCreateHour = (hour: number) => (
+                <button
+                  key={hour}
+                  type='button'
+                  aria-label={`Crear evento a las ${String(hour).padStart(2, '0')}:00`}
+                  onClick={() => onCreate(withLocalTime(day, hour))}
+                  className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
+                  style={{ top: offset(hour * 60), height: hourHeight }}
+                />
+              );
               return (
                 <div
                   key={day.toISOString()}
@@ -2549,16 +2678,63 @@ function WeekTimeline({
                     className='relative'
                     style={{ height: totalHeight }}
                   >
-                    {Array.from({ length: endHour - startHour }, (_, i) => (
+                    {!hasEarlyEvents && !earlyExpanded ? (
                       <button
-                        key={i}
                         type='button'
-                        aria-label={`Crear evento a las ${String(startHour + i).padStart(2, '0')}:00`}
-                        onClick={() => onCreate(withLocalTime(day, startHour + i))}
-                        className='hover:bg-primary/[0.035] absolute inset-x-0 border-b text-left transition-colors'
-                        style={{ top: i * hourHeight, height: hourHeight }}
-                      />
-                    ))}
+                        onClick={() => setEarlyExpanded((value) => !value)}
+                        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+                        style={{ top: 0, height: earlyHeight }}
+                        aria-label={`${earlyExpanded ? 'Contraer' : 'Expandir'} madrugada`}
+                      >
+                        <span className='inline-flex items-center gap-1.5'>
+                          12 AM – 5 AM
+                          <Icons.chevronDown className='size-3.5' />
+                        </span>
+                      </button>
+                    ) : (
+                      Array.from({ length: 5 }, (_, i) => renderCreateHour(i))
+                    )}
+                    {Array.from({ length: 4 }, (_, i) => renderCreateHour(i + 5))}
+                    {!hasMiddayEvents && !middayExpanded ? (
+                      <button
+                        type='button'
+                        onClick={() => setMiddayExpanded((value) => !value)}
+                        className='absolute inset-x-0 z-[2] flex items-center justify-center border-b border-border/50 bg-white text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
+                        style={{ top: earlyHeight + 4 * hourHeight, height: middayHeight }}
+                        aria-label={`${middayExpanded ? 'Contraer' : 'Expandir'} media mañana`}
+                      >
+                        <span className='inline-flex items-center gap-1.5'>
+                          9 AM – 12 PM
+                          <Icons.chevronDown className='size-3.5' />
+                        </span>
+                      </button>
+                    ) : (
+                      Array.from({ length: 3 }, (_, i) => renderCreateHour(i + 9))
+                    )}
+                    {Array.from({ length: 12 }, (_, i) => renderCreateHour(i + 12))}
+                    {!hasEarlyEvents && earlyExpanded && (
+                      <button
+                        type='button'
+                        onClick={() => setEarlyExpanded(false)}
+                        className='absolute right-3 top-2 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
+                        aria-label='Contraer madrugada'
+                      >
+                        Contraer
+                        <Icons.chevronUp className='size-3' />
+                      </button>
+                    )}
+                    {!hasMiddayEvents && middayExpanded && (
+                      <button
+                        type='button'
+                        onClick={() => setMiddayExpanded(false)}
+                        className='absolute right-3 z-[3] inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-1 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
+                        style={{ top: earlyHeight + 4 * hourHeight + middayHeight + 6 }}
+                        aria-label='Contraer media mañana'
+                      >
+                        Contraer
+                        <Icons.chevronUp className='size-3' />
+                      </button>
+                    )}
 
                     {dayEvents.map((event) => {
                       const category = categoryFor(event, categories);
@@ -2578,8 +2754,11 @@ function WeekTimeline({
                         ? localDateAtMinutes(day, preview.minutes)
                         : startAt;
                       const displayEnd = new Date(displayStart.getTime() + durationMinutes * 60000);
-                      const clampedTop = Math.max(0, (minutesFromStart / 60) * hourHeight);
-                      const height = Math.max(34, (durationMinutes / 60) * hourHeight - 6);
+                      const clampedTop = Math.max(0, offset(minutesFromStart));
+                      const height = Math.max(
+                        34,
+                        offset(Math.min(1440, minutesFromStart + durationMinutes)) - clampedTop - 6
+                      );
                       return (
                         <button
                           key={event.id}
@@ -2647,8 +2826,11 @@ function WeekTimeline({
                         );
                         const ghostStartAt = localDateAtMinutes(day, dragPreview.minutes);
                         const ghostEndAt = new Date(ghostStartAt.getTime() + ghostDuration * 60000);
-                        const ghostTop = ((dragPreview.minutes - startHour * 60) / 60) * hourHeight;
-                        const ghostHeight = Math.max(34, (ghostDuration / 60) * hourHeight - 6);
+                        const ghostTop = offset(dragPreview.minutes);
+                        const ghostHeight = Math.max(
+                          34,
+                          offset(Math.min(1440, dragPreview.minutes + ghostDuration)) - ghostTop - 6
+                        );
                         return (
                           <div
                             className='pointer-events-none absolute left-1.5 right-1.5 z-30 overflow-hidden rounded-xl border border-dashed'
