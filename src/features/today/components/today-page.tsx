@@ -153,7 +153,7 @@ export function TodayPage({
   return (
     <main className='mx-auto flex w-full max-w-[var(--page-max-width)] min-w-0 flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-10 sm:pt-7'>
       <section className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-7 lg:p-8'>
-        <div className='flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(160px,0.65fr)_minmax(0,2.8fr)_minmax(170px,0.55fr)] lg:items-stretch lg:gap-6 xl:grid-cols-[minmax(180px,0.65fr)_minmax(0,3fr)_minmax(185px,0.55fr)] xl:gap-8'>
+        <div className='flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,2.2fr)_minmax(190px,0.75fr)] lg:items-stretch lg:gap-6 xl:grid-cols-[minmax(220px,0.9fr)_minmax(0,2.4fr)_minmax(210px,0.75fr)] xl:gap-8'>
           <div className='min-w-0'>
             <div className='mb-2 flex items-center gap-2'>
               <span className='size-1.5 rounded-full bg-primary' />
