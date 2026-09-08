@@ -152,7 +152,7 @@ export function BottomNavigation() {
               </button>
             </div>
 
-            <div className='hidden md:contents'>
+            <div className='hidden h-full w-full grid-cols-7 items-stretch gap-0 md:grid'>
               {desktopLeftItems.map((item) => renderNavItem(item))}
               <button
                 type='button'
