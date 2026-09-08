@@ -130,7 +130,7 @@ export function WeatherIndicator({ userId }: { userId: string }) {
 
   return (
     <>
-      <div className='min-h-6 text-sm text-white/90'>
+      <div className='min-h-7 text-base text-white/90'>
         {weather ? (
           <button
             type='button'
@@ -232,12 +232,12 @@ function WeatherValue({ weather, city }: { weather: WeatherData; city?: string }
   const WeatherIcon = getWeatherIcon(weather.weatherCode, weather.isDay);
   return (
     <span className={cn('inline-flex items-center gap-2')}>
-      <WeatherIcon className='size-7 stroke-[1.7] drop-shadow-sm' aria-hidden='true' />
-      <span className='font-medium'>{weather.temperature} °C</span>
+      <WeatherIcon className='size-8 stroke-[1.7] drop-shadow-sm' aria-hidden='true' />
+      <span className='font-semibold'>{weather.temperature} °C</span>
       {city && (
         <>
           <span className='text-white/50'>·</span>
-          <span>{city}</span>
+          <span className='text-white/90'>{city}</span>
         </>
       )}
     </span>

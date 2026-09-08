@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, format, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -81,19 +81,33 @@ export function QuickActions() {
 }
 
 export function WeeklyAgenda({
-  weekDays,
   today,
   events,
   tasks,
   now
 }: {
-  weekDays: Date[];
   today: Date;
   events: Event[];
   tasks: Task[];
   now: Date;
 }) {
   const queryClient = useQueryClient();
+  const agendaRef = useRef<HTMLDivElement>(null);
+  const weekDays = useMemo(
+    () => Array.from({ length: 121 }, (_, index) => addDays(today, index - 60)),
+    [today]
+  );
+  useEffect(() => {
+    agendaRef.current
+      ?.querySelector<HTMLElement>(`[data-day='${format(today, 'yyyy-MM-dd')}']`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, [today]);
+  function handleAgendaWheel(event: React.WheelEvent<HTMLDivElement>) {
+    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+      event.currentTarget.scrollLeft += event.deltaY;
+      event.preventDefault();
+    }
+  }
   const linkedEventIds = new Set(tasks.flatMap((task) => (task.eventId ? [task.eventId] : [])));
   const todayPlan = [
     ...tasks
@@ -113,8 +127,12 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='-mx-1 px-1 pb-1'>
-        <div className='flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 [scrollbar-width:none] touch-pan-x [&::-webkit-scrollbar]:hidden'>
+      <div className='-mx-1 px-1 py-2'>
+        <div
+          ref={agendaRef}
+          onWheel={handleAgendaWheel}
+          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 touch-pan-x [&::-webkit-scrollbar]:hidden'
+        >
           {weekDays.map((day) => {
             const selected = isSameDay(day, today);
             const dayEvents = events
@@ -124,10 +142,11 @@ export function WeeklyAgenda({
             return (
               <Link
                 key={dayKey}
+                data-day={dayKey}
                 href={`/dashboard/calendar?date=${dayKey}&view=day`}
                 aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
-                  'group flex min-h-28 min-w-[148px] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:bg-muted/45 sm:min-h-33 sm:p-3',
+                  'group flex min-h-28 min-w-0 flex-[0_0_calc((100%-1rem)/3)] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_calc((100%-3rem)/7)] sm:p-3',
                   selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                 )}
               >

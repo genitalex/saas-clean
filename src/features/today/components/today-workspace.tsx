@@ -99,9 +99,8 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
   }, [activeAmbient]);
 
   const today = startOfDay(now);
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = addDays(weekStart, 7);
-  const weekDays = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+  const agendaStart = addDays(today, -60);
+  const agendaEnd = addDays(today, 61);
   const tasksQuery = useQuery({
     queryKey: taskKeys.list(),
     queryFn: () => getTasks(),
@@ -109,11 +108,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
   });
   const eventsQuery = useQuery({
     queryKey: eventKeys.list({
-      startDate: weekStart.toISOString(),
-      endDate: weekEnd.toISOString()
+      startDate: agendaStart.toISOString(),
+      endDate: agendaEnd.toISOString()
     }),
     queryFn: () =>
-      getEvents({ startDate: weekStart.toISOString(), endDate: weekEnd.toISOString() }),
+      getEvents({ startDate: agendaStart.toISOString(), endDate: agendaEnd.toISOString() }),
     staleTime: 20_000
   });
   const activityQuery = useQuery({
@@ -200,9 +199,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       defaultHeight: 6,
       minHeight: 6,
       maxHeight: 6,
-      content: (
-        <WeeklyAgenda weekDays={weekDays} today={today} events={events} tasks={tasks} now={now} />
-      )
+      content: <WeeklyAgenda today={today} events={events} tasks={tasks} now={now} />
     },
     {
       id: 'tasks',
@@ -347,7 +344,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
           <div className='absolute inset-0 bg-black/18' />
         </div>
 
-        <div className='flex min-w-0 flex-col gap-4'>
+        <div className='flex min-w-0 flex-col gap-4 lg:justify-center'>
           <div className='flex items-center gap-2'>
             <span className='size-1.5 rounded-full bg-white/80' />
             <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85'>
@@ -357,9 +354,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
           <h1 className='mt-1 text-2xl font-semibold tracking-tight sm:text-3xl'>
             {ambient.greeting}, {userName}
           </h1>
-          <div className='flex items-center gap-3 text-sm text-white/85'>
+        </div>
+        <div className='flex flex-col items-start gap-3 self-start text-white sm:self-end sm:pb-1 lg:items-end'>
+          <div className='flex items-center gap-3 text-sm text-white/90 sm:text-base'>
             <span className='inline-flex items-center gap-2'>
-              <Icons.calendar className='size-3.5 text-white/75' />
+              <Icons.calendar className='size-4 text-white/80' />
               <span className='capitalize'>{format(now, 'EEEE d MMMM', { locale: es })}</span>
             </span>
             <span className='text-white/45'>·</span>
@@ -367,8 +366,6 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
               {format(now, 'HH:mm')}
             </time>
           </div>
-        </div>
-        <div className='self-start sm:self-end sm:pb-1'>
           <WeatherIndicator userId={userId} />
         </div>
       </header>
