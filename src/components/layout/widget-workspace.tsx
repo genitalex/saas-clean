@@ -59,6 +59,7 @@ interface WidgetWorkspaceProps {
 const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
+const HEIGHT_UNIT_PX = 96;
 function subscribeToDesktop(callback: () => void) {
   const media = window.matchMedia('(min-width: 768px)');
   media.addEventListener('change', callback);
@@ -248,10 +249,7 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
           items={visibleWidgets.map((widget) => widget.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div
-            className='grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:grid-cols-12 md:gap-4'
-            style={{ gridAutoRows: '8px' }}
-          >
+          <div className='grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:grid-cols-12 md:gap-4'>
             {visibleWidgets.map((widget) => {
               const position = positions.find((item) => item.id === widget.id)!;
               return (
@@ -316,7 +314,7 @@ function SortableWidget({
     transform: CSS.Transform.toString(transform),
     transition,
     gridColumn: `span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)} / span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)}`,
-    gridRowEnd: `span ${height * 4}`
+    height: `${height * HEIGHT_UNIT_PX}px`
   };
 
   return (
