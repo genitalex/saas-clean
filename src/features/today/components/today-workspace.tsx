@@ -26,6 +26,43 @@ import { QuickActions, WeeklyAgenda } from './today-widget-content';
 const surfaceLink =
   'flex min-w-0 items-center gap-3 rounded-xl bg-background/45 px-3 py-2.5 transition-colors hover:bg-muted/55';
 
+type TodayPeriod = 'morning' | 'afternoon' | 'night';
+
+interface TodayAmbient {
+  period: TodayPeriod;
+  image: string;
+  greeting: string;
+}
+
+const TODAY_AMBIENTS: Record<TodayPeriod, TodayAmbient> = {
+  morning: {
+    period: 'morning',
+    image: '/images/today/mañana.webp',
+    greeting: 'Buenos días'
+  },
+  afternoon: {
+    period: 'afternoon',
+    image: '/images/today/tarde.webp',
+    greeting: 'Buenas tardes'
+  },
+  night: {
+    period: 'night',
+    image: '/images/today/noche.webp',
+    greeting: 'Buenas noches'
+  }
+};
+
+function getTodayPeriod(now: Date): TodayPeriod {
+  const hour = now.getHours();
+  if (hour >= 6 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 20) return 'afternoon';
+  return 'night';
+}
+
+export function getTodayAmbient(now: Date): TodayAmbient {
+  return TODAY_AMBIENTS[getTodayPeriod(now)];
+}
+
 function taskNeedsAttention(task: Task, now: Date) {
   return (
     task.status !== 'done' &&
@@ -37,10 +74,28 @@ function taskNeedsAttention(task: Task, now: Date) {
 
 export function TodayWorkspace({ userId, userName }: { userId: string; userName: string }) {
   const [now, setNow] = useState(() => new Date());
+  const ambient = getTodayAmbient(now);
+  const [activeAmbient, setActiveAmbient] = useState(ambient);
+  const [previousAmbient, setPreviousAmbient] = useState<TodayAmbient | null>(null);
+  const [ambientVisible, setAmbientVisible] = useState(true);
+
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    const timer = window.setInterval(() => {
+      const nextNow = new Date();
+      const nextAmbient = getTodayAmbient(nextNow);
+      setNow(nextNow);
+
+      if (nextAmbient.period !== activeAmbient.period) {
+        setPreviousAmbient(activeAmbient);
+        setActiveAmbient(nextAmbient);
+        setAmbientVisible(false);
+
+        window.requestAnimationFrame(() => setAmbientVisible(true));
+        window.setTimeout(() => setPreviousAmbient(null), 900);
+      }
+    }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [activeAmbient]);
 
   const today = startOfDay(now);
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
@@ -268,29 +323,46 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
     }
   ];
 
-  const greeting =
-    now.getHours() < 12 ? 'Buenos días' : now.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches';
-
   return (
     <main className='mx-auto flex w-full max-w-(--page-max-width) min-w-0 flex-1 flex-col gap-4 px-(--page-padding) pt-5 pb-10 sm:gap-5 sm:pt-7'>
-      <header className='flex flex-col gap-4 border-b border-border/45 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-5'>
+      <header className='relative isolate flex min-h-44 flex-col justify-between gap-6 overflow-hidden rounded-xl px-5 py-5 text-white sm:min-h-48 sm:flex-row sm:items-end sm:px-7 sm:py-7'>
+        <div className='absolute inset-0 -z-10 overflow-hidden bg-muted' aria-hidden='true'>
+          {previousAmbient && (
+            <div
+              className={cn(
+                'absolute inset-0 bg-cover bg-center transition-opacity duration-900 ease-[cubic-bezier(0.32,0.72,0,1)]',
+                ambientVisible ? 'opacity-0' : 'opacity-100'
+              )}
+              style={{ backgroundImage: `url("${previousAmbient.image}")` }}
+            />
+          )}
+          <div
+            className={cn(
+              'absolute inset-0 bg-cover bg-center transition-opacity duration-900 ease-[cubic-bezier(0.32,0.72,0,1)]',
+              ambientVisible ? 'opacity-100' : 'opacity-0'
+            )}
+            style={{ backgroundImage: `url("${activeAmbient.image}")` }}
+          />
+          <div className='absolute inset-0 bg-black/18' />
+        </div>
+
         <div className='min-w-0'>
           <div className='flex items-center gap-2'>
-            <span className='size-1.5 rounded-full bg-primary' />
-            <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.22em]'>
+            <span className='size-1.5 rounded-full bg-white/80' />
+            <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85'>
               Hoy
             </p>
           </div>
           <h1 className='mt-1 text-2xl font-semibold tracking-tight sm:text-3xl'>
-            {greeting}, {userName}
+            {ambient.greeting}, {userName}
           </h1>
         </div>
         <div className='flex items-center gap-3 self-start sm:self-end'>
-          <div className='text-muted-foreground flex items-center gap-2 rounded-full bg-card px-3 py-2 text-xs ring-1 ring-border/55'>
-            <Icons.calendar className='size-3.5 text-primary' />
+          <div className='flex items-center gap-2 rounded-full bg-black/15 px-3 py-2 text-xs text-white/90 ring-1 ring-white/20'>
+            <Icons.calendar className='size-3.5 text-white/85' />
             <span className='capitalize'>{format(now, 'EEEE d MMMM', { locale: es })}</span>
           </div>
-          <time className='text-foreground text-lg font-semibold tabular-nums tracking-tight sm:text-xl'>
+          <time className='text-lg font-semibold tabular-nums tracking-tight text-white sm:text-xl'>
             {format(now, 'HH:mm')}
           </time>
         </div>
