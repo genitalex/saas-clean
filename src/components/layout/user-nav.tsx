@@ -101,15 +101,12 @@ export function UserNav() {
         aria-expanded={open}
         aria-label={`Abrir menú de ${name}`}
         onClick={() => setOpen((value) => !value)}
-        className='inline-flex h-10 max-w-full items-center gap-1.5 rounded-[12px] border border-border/50 bg-background/60 px-1.5 pr-2 shadow-none transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:gap-2 sm:pr-2.5'
+        className='inline-flex h-10 max-w-full items-center gap-1 rounded-full border-0 bg-transparent p-0 shadow-none transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
         <Avatar className='size-9 shrink-0'>
           <AvatarImage src={photo ?? session?.user.image ?? undefined} alt={name} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <span className='hidden max-w-16 truncate text-left text-xs font-medium sm:block sm:max-w-24 md:max-w-28'>
-          {name}
-        </span>
         <Icons.chevronDown className='size-3.5 shrink-0' />
       </button>
 

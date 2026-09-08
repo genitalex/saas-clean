@@ -118,7 +118,7 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='relative -mx-1 px-2 py-2 sm:px-3'>
+      <div className='relative -mx-1 px-3 py-2 sm:px-10'>
         <button
           type='button'
           aria-label='Días anteriores'
@@ -137,7 +137,7 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
+          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-2 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
         >
           {agendaDays.map((day) => {
             const selected = isSameDay(day, today);
