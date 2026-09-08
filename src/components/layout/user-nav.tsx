@@ -103,7 +103,7 @@ export function UserNav() {
         onClick={() => setOpen((value) => !value)}
         className='inline-flex h-10 items-center gap-2 rounded-[12px] border border-border/70 bg-background px-1.5 pr-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[background-color,border-color,box-shadow] hover:border-border hover:bg-muted/40 hover:shadow-[0_2px_6px_rgba(15,23,42,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
-        <Avatar className='size-8 shrink-0'>
+        <Avatar className='size-9 shrink-0'>
           <AvatarImage src={photo ?? session?.user.image ?? undefined} alt={name} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
