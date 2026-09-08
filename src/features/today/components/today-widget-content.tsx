@@ -113,8 +113,8 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='-mx-1 overflow-x-auto px-1 pb-1'>
-        <div className='grid min-w-140 grid-cols-7 gap-1.5 sm:min-w-0 sm:gap-2'>
+      <div className='-mx-1 px-1 pb-1'>
+        <div className='grid grid-cols-7 gap-1 sm:gap-2'>
           {weekDays.map((day) => {
             const selected = isSameDay(day, today);
             const dayEvents = events
@@ -170,7 +170,7 @@ export function WeeklyAgenda({
           </span>
         </div>
         <div className='mt-2 divide-y divide-border/45'>
-          {todayPlan.slice(0, 6).map((item) => (
+          {todayPlan.slice(0, 3).map((item) => (
             <TodayPlanRow
               key={`${item.type}-${item.type === 'task' ? item.task.id : item.event.id}`}
               item={item}
@@ -186,7 +186,7 @@ export function WeeklyAgenda({
       </div>
 
       <div className='mt-4 grid gap-2 sm:grid-cols-2'>
-        {upcomingEvents.slice(0, 4).map((event) => (
+        {upcomingEvents.slice(0, 2).map((event) => (
           <Link
             key={event.id}
             href={`/dashboard/calendar?event=${event.id}&date=${format(new Date(event.startAt), 'yyyy-MM-dd')}`}

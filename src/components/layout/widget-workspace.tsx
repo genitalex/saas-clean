@@ -59,7 +59,8 @@ interface WidgetWorkspaceProps {
 const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
-const HEIGHT_UNIT_PX = 96;
+const GRID_ROW_HEIGHT = 8;
+const HEIGHT_ROWS = 12;
 function subscribeToDesktop(callback: () => void) {
   const media = window.matchMedia('(min-width: 768px)');
   media.addEventListener('change', callback);
@@ -249,7 +250,10 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
           items={visibleWidgets.map((widget) => widget.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className='grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:grid-cols-12 md:gap-4'>
+          <div
+            className='grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:grid-cols-12 md:gap-4'
+            style={{ gridAutoRows: `${GRID_ROW_HEIGHT}px` }}
+          >
             {visibleWidgets.map((widget) => {
               const position = positions.find((item) => item.id === widget.id)!;
               return (
@@ -314,7 +318,7 @@ function SortableWidget({
     transform: CSS.Transform.toString(transform),
     transition,
     gridColumn: `span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)} / span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)}`,
-    height: `${height * HEIGHT_UNIT_PX}px`
+    gridRowEnd: `span ${height * HEIGHT_ROWS}`
   };
 
   return (
@@ -354,7 +358,8 @@ function SortableWidget({
         <Icon className='size-4 text-primary' />
         <h2 className='text-sm font-semibold'>{widget.title}</h2>
       </div>
-      <div className='min-h-0 min-w-0 flex-1 overflow-auto p-4'>{widget.content}</div>
+      <div className='min-h-0 min-w-0 flex-1 p-4'>{widget.content}</div>
+      <div className='min-h-0 min-w-0 flex-1 p-4'>{widget.content}</div>
       {editing && (
         <ResizeHandle
           size={size}

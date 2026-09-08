@@ -14,6 +14,7 @@ import type { Task } from '@/features/tasks/types';
 import { eventKeys, getEvents } from '@/features/calendar/queries';
 import { activityKeys, getActivities } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
+import { getAttentionItemsQueryOptions } from '@/features/automations/api/queries';
 import { AttentionItems } from '@/features/automations/components/attention-items';
 import { QuickCapture } from './quick-capture';
 import { QuickActions, WeeklyAgenda } from './today-widget-content';
@@ -60,6 +61,10 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
     queryFn: getActivities,
     staleTime: 20_000
   });
+  const attentionQuery = useQuery({
+    ...getAttentionItemsQueryOptions('active'),
+    staleTime: 20_000
+  });
   const customersQuery = useQuery({
     queryKey: ['today-customers'],
     queryFn: async () => {
@@ -78,13 +83,14 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
 
   const tasks = tasksQuery.data ?? [];
   const events = eventsQuery.data ?? [];
-  const activities = (activityQuery.data ?? []).slice(0, 5);
+  const activities = (activityQuery.data ?? []).slice(0, 4);
+  const attentionItems = attentionQuery.data ?? [];
   const customers = customersQuery.data ?? [];
   const staleCustomers = customers
     .filter(
       (customer) => customer.nextActionAt && new Date(customer.nextActionAt) < addDays(today, -7)
     )
-    .slice(0, 4);
+    .slice(0, 3);
 
   const widgets: WidgetDefinition[] = [
     {
@@ -182,19 +188,23 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
         </div>
       )
     },
-    {
-      id: 'attention',
-      title: 'Atención',
-      icon: Icons.warning,
-      defaultSize: 6,
-      mobileSize: 2,
-      allowedSizes: [4, 6],
-      mobileAllowedSizes: [2],
-      defaultHeight: 2,
-      minHeight: 2,
-      maxHeight: 3,
-      content: <AttentionItems compact />
-    },
+    ...(attentionItems.length > 0
+      ? ([
+          {
+            id: 'attention',
+            title: 'Atención',
+            icon: Icons.warning,
+            defaultSize: 6,
+            mobileSize: 2,
+            allowedSizes: [4, 6],
+            mobileAllowedSizes: [2],
+            defaultHeight: 2,
+            minHeight: 2,
+            maxHeight: 3,
+            content: <AttentionItems compact />
+          }
+        ] as WidgetDefinition[])
+      : []),
     {
       id: 'activity',
       title: 'Actividad',
