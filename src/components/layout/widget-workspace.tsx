@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   closestCenter,
   useSensor,
@@ -60,7 +61,7 @@ const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
 const GRID_ROW_HEIGHT = 8;
-const HEIGHT_ROWS = 12;
+const HEIGHT_ROWS = 8;
 function subscribeToDesktop(callback: () => void) {
   const media = window.matchMedia('(min-width: 768px)');
   media.addEventListener('change', callback);
@@ -172,6 +173,11 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
     getDesktopServerSnapshot
   );
   const [editing, setEditing] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeDimensions, setActiveDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   useEffect(() => {
@@ -253,7 +259,24 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
         </Button>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={({ active }) => {
+          setActiveId(String(active.id));
+          const rect = active.rect.current.initial;
+          if (rect) setActiveDimensions({ width: rect.width, height: rect.height });
+        }}
+        onDragCancel={() => {
+          setActiveId(null);
+          setActiveDimensions(null);
+        }}
+        onDragEnd={(event) => {
+          handleDragEnd(event);
+          setActiveId(null);
+          setActiveDimensions(null);
+        }}
+      >
         <SortableContext
           items={visibleWidgets.map((widget) => widget.id)}
           strategy={verticalListSortingStrategy}
@@ -288,6 +311,17 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
           </div>
         </SortableContext>
       </DndContext>
+      <DragOverlay dropAnimation={null}>
+        {activeId ? (
+          <div
+            className='rounded-xl bg-card/85 opacity-90 ring-1 ring-primary/20 shadow-[0_8px_24px_rgba(31,57,45,0.08)]'
+            style={{
+              width: activeDimensions?.width,
+              height: activeDimensions?.height
+            }}
+          />
+        ) : null}
+      </DragOverlay>
     </div>
   );
 }
@@ -362,11 +396,23 @@ function SortableWidget({
           </button>
         </div>
       )}
-      <div className='flex items-center gap-2 border-b border-border/45 px-4 py-3'>
+      <div
+        className={cn(
+          'flex items-center gap-2 border-b border-border/45 px-4 py-3',
+          isDragging && 'invisible'
+        )}
+      >
         <Icon className='size-4 text-primary' />
         <h2 className='text-sm font-semibold'>{widget.title}</h2>
       </div>
-      <div className='min-h-0 min-w-0 flex-1 p-4'>{widget.content}</div>
+      <div
+        className={cn(
+          'min-h-0 min-w-0 flex-1 overflow-y-auto scrollbar-none p-4',
+          isDragging && 'invisible'
+        )}
+      >
+        {widget.content}
+      </div>
       {editing && (
         <ResizeHandle
           size={size}
