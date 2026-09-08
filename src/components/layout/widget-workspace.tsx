@@ -403,7 +403,7 @@ function SortableWidget({
       {...(editing ? listeners : {})}
       style={style}
       className={cn(
-        'relative mb-3 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:mb-4',
+        'relative mb-3 flex min-w-0 flex-col overflow-visible rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:mb-4',
         isDragging && 'z-10 scale-[1.01] opacity-95 shadow-[0_10px_28px_rgba(31,57,45,0.10)]',
         isOver && !isDragging && 'bg-primary/5 ring-2 ring-primary/25',
         editing && 'ring-primary/25'
@@ -439,14 +439,7 @@ function SortableWidget({
         <Icon className='size-4 text-primary' />
         <h2 className='text-sm font-semibold'>{widget.title}</h2>
       </div>
-      <div
-        className={cn(
-          'min-h-0 min-w-0 flex-1 overflow-y-auto scrollbar-none p-4',
-          isDragging && 'invisible'
-        )}
-      >
-        {widget.content}
-      </div>
+      <div className={cn('min-w-0 p-4', isDragging && 'invisible')}>{widget.content}</div>
       {editing && isDesktop && (
         <ResizeHandle size={size} allowedSizes={allowedSizes} onResize={onResize} />
       )}
