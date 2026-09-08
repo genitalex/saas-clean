@@ -118,7 +118,7 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='relative -mx-1 px-1 py-2'>
+      <div className='relative -mx-1 px-2 py-2 sm:px-3'>
         <button
           type='button'
           aria-label='Días anteriores'
