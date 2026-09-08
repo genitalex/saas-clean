@@ -107,8 +107,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       allowedSizes: [4, 6, 8],
       mobileAllowedSizes: [2],
       defaultHeight: 3,
+      mobileDefaultHeight: 2,
       minHeight: 3,
       maxHeight: 3,
+      mobileMinHeight: 2,
+      mobileMaxHeight: 2,
       content: <QuickCapture />
     },
     {
@@ -121,8 +124,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       allowedSizes: [8, 12],
       mobileAllowedSizes: [2],
       defaultHeight: 3,
+      mobileDefaultHeight: 5,
       minHeight: 3,
-      maxHeight: 3,
+      maxHeight: 5,
+      mobileMinHeight: 5,
+      mobileMaxHeight: 5,
       content: <QuickActions />
     },
     {
@@ -267,16 +273,27 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
 
   return (
     <main className='mx-auto flex w-full max-w-(--page-max-width) min-w-0 flex-1 flex-col gap-4 px-(--page-padding) pt-5 pb-10 sm:gap-5 sm:pt-7'>
-      <header className='flex items-end justify-between gap-4'>
-        <div>
-          <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>Hoy</p>
+      <header className='flex flex-col gap-4 border-b border-border/45 pb-4 sm:flex-row sm:items-end sm:justify-between sm:pb-5'>
+        <div className='min-w-0'>
+          <div className='flex items-center gap-2'>
+            <span className='size-1.5 rounded-full bg-primary' />
+            <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.22em]'>
+              Hoy
+            </p>
+          </div>
           <h1 className='mt-1 text-2xl font-semibold tracking-tight sm:text-3xl'>
             {greeting}, {userName}
           </h1>
         </div>
-        <time className='text-muted-foreground text-sm tabular-nums'>
-          {format(now, 'EEE d MMM · HH:mm', { locale: es })}
-        </time>
+        <div className='flex items-center gap-3 self-start sm:self-end'>
+          <div className='text-muted-foreground flex items-center gap-2 rounded-full bg-card px-3 py-2 text-xs ring-1 ring-border/55'>
+            <Icons.calendar className='size-3.5 text-primary' />
+            <span className='capitalize'>{format(now, 'EEEE d MMMM', { locale: es })}</span>
+          </div>
+          <time className='text-foreground text-lg font-semibold tabular-nums tracking-tight sm:text-xl'>
+            {format(now, 'HH:mm')}
+          </time>
+        </div>
       </header>
       <WidgetWorkspace widgets={widgets} storageKey={todayWorkspaceStorageKey(userId)} />
     </main>

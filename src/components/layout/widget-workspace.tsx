@@ -37,8 +37,11 @@ export interface WidgetDefinition {
   allowedSizes?: WidgetSize[];
   mobileAllowedSizes?: (1 | 2)[];
   defaultHeight?: WidgetHeight;
+  mobileDefaultHeight?: WidgetHeight;
   minHeight?: WidgetHeight;
   maxHeight?: WidgetHeight;
+  mobileMinHeight?: WidgetHeight;
+  mobileMaxHeight?: WidgetHeight;
 }
 
 interface WidgetPosition {
@@ -89,7 +92,7 @@ function makeDefaultLayout(widgets: WidgetDefinition[]): StoredLayout {
     desktop: orderedWidgets.map((widget) => ({
       id: widget.id,
       size: widget.defaultSize ?? 6,
-      height: widget.defaultHeight ?? 2
+      height: widget.mobileDefaultHeight ?? widget.defaultHeight ?? 2
     })),
     mobile: orderedWidgets.map((widget) => ({
       id: widget.id,
@@ -169,8 +172,11 @@ function mergeLayout(
           ...position,
           size,
           height: Math.max(
-            widget.minHeight ?? 1,
-            Math.min(widget.maxHeight ?? 4, position.height ?? widget.defaultHeight ?? 2)
+            desktop ? (widget.minHeight ?? 1) : (widget.mobileMinHeight ?? widget.minHeight ?? 1),
+            Math.min(
+              desktop ? (widget.maxHeight ?? 4) : (widget.mobileMaxHeight ?? widget.maxHeight ?? 4),
+              position.height ?? (desktop ? widget.defaultHeight : widget.mobileDefaultHeight) ?? 2
+            )
           ) as WidgetHeight
         };
       });
@@ -393,6 +399,8 @@ function SortableWidget({
   return (
     <section
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={style}
       className={cn(
         'relative mb-3 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:mb-4',
@@ -403,10 +411,7 @@ function SortableWidget({
       aria-label={widget.title}
     >
       {editing && (
-        <div
-          className='absolute right-2 top-2 z-10 flex items-center gap-1 rounded-lg bg-background/90 p-1 shadow-sm ring-1 ring-border/60'
-          onPointerDown={(event) => event.stopPropagation()}
-        >
+        <div className='absolute right-2 top-2 z-10 flex items-center gap-1 rounded-lg bg-background/90 p-1 shadow-sm ring-1 ring-border/60'>
           <button
             type='button'
             className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -418,6 +423,7 @@ function SortableWidget({
             type='button'
             className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
             onClick={onHide}
+            onPointerDown={(event) => event.stopPropagation()}
             aria-label={`Ocultar ${widget.title}`}
           >
             <Icons.eyeOff className='size-4' />
@@ -425,10 +431,8 @@ function SortableWidget({
         </div>
       )}
       <div
-        {...attributes}
-        {...listeners}
         className={cn(
-          'flex cursor-grab touch-none items-center gap-2 border-b border-border/45 px-4 py-3 active:cursor-grabbing',
+          'flex items-center gap-2 border-b border-border/45 px-4 py-3',
           isDragging && 'invisible'
         )}
       >
