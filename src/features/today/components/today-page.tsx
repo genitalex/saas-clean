@@ -195,12 +195,12 @@ export function TodayPage({
               </p>
             </div>
           </div>
+
+          <div className='min-w-0 lg:hidden'>
+            <QuickCapture />
+          </div>
         </div>
       </section>
-
-      <div className='lg:hidden'>
-        <QuickCapture />
-      </div>
 
       <section className={cn(solidSurface, 'p-5 sm:p-6')} aria-labelledby='automated-attention'>
         <SectionHeader eyebrow='Atención' title='Lo que necesita una decisión' />
