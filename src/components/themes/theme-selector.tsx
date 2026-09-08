@@ -33,14 +33,13 @@ export function ThemeSelector() {
       >
         <SelectTrigger
           id='theme-selector'
-          className='h-9 justify-start *:data-[slot=select-value]:w-24'
+          className='h-9 w-9 justify-center px-0 sm:w-auto sm:justify-start sm:px-3 *:data-[slot=select-value]:hidden sm:*:data-[slot=select-value]:block sm:*:data-[slot=select-value]:w-24'
         >
-          <span className='text-muted-foreground hidden sm:block'>
+          <span className='text-muted-foreground'>
             <Icons.palette />
           </span>
-          <span className='text-muted-foreground block sm:hidden'>Theme</span>
           <SelectValue placeholder='Select a theme' />
-          <Kbd>T T</Kbd>
+          <Kbd className='hidden sm:inline-flex'>T T</Kbd>
         </SelectTrigger>
         <SelectContent align='end'>
           {THEMES.length > 0 && (

@@ -245,6 +245,12 @@ function LegacyTodayPage({
           hint='Haz crecer el negocio'
         />
         <QuickAction
+          href='/dashboard/quotes'
+          icon={Icons.post}
+          label='Nuevo presupuesto'
+          hint='Prepara una propuesta'
+        />
+        <QuickAction
           href='/dashboard/notes'
           icon={Icons.post}
           label='Nota rápida'

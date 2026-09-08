@@ -20,16 +20,16 @@ export default function Header() {
   return (
     <div ref={headerRef} className='sticky top-0 z-20 h-14 border-b border-border/60 bg-background'>
       <header className='relative flex h-14 shrink-0 items-center justify-between gap-3 px-3 sm:px-5'>
-        <div className='flex min-w-0 items-center gap-2'>
+        <div className='hidden min-w-0 items-center gap-2 md:flex'>
           <Breadcrumbs />
         </div>
 
-        <div className='flex shrink-0 items-center gap-1.5 sm:gap-2'>
+        <div className='flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2'>
           <button
             type='button'
             aria-label='Abrir búsqueda'
             onClick={query.toggle}
-            className='text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-10 w-[116px] items-center justify-center gap-1.5 rounded-[11px] border border-border/70 bg-background px-3 text-xs font-medium shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors md:hidden'
+            className='text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-10 min-w-0 flex-1 items-center justify-start gap-1.5 rounded-[11px] border border-border/70 bg-background px-3 text-xs font-medium shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-colors md:hidden'
           >
             <Icons.search className='size-3.5' />
             <span>Buscar</span>
@@ -41,13 +41,13 @@ export default function Header() {
 
           <ThemeModeToggle />
 
-          <div className='hidden sm:block'>
-            <ThemeSelector />
-          </div>
+          <ThemeSelector />
 
           <Separator orientation='vertical' className='mx-0.5 hidden h-5 sm:block' />
 
-          <NotificationCenter />
+          <div className='hidden sm:block'>
+            <NotificationCenter />
+          </div>
           <UserNav />
         </div>
       </header>
