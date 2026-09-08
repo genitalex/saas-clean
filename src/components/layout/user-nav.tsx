@@ -107,7 +107,7 @@ export function UserNav() {
           <AvatarImage src={photo ?? session?.user.image ?? undefined} alt={name} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <span className='block max-w-16 truncate text-left text-xs font-medium sm:max-w-28'>
+        <span className='hidden max-w-16 truncate text-left text-xs font-medium sm:block sm:max-w-28'>
           {name}
         </span>
         <Icons.chevronDown className='size-3.5 shrink-0' />
