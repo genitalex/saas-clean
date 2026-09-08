@@ -41,13 +41,15 @@ export function BottomNavigation() {
         href={item.url}
         className={cn(
           'group flex min-w-0 items-center justify-center rounded-[10px] transition-colors',
-          mobile ? 'h-[54px] w-full max-w-10 p-0' : 'min-h-[50px] flex-col gap-1 px-2 py-2',
+          mobile
+            ? 'h-[54px] w-full max-w-10 p-0'
+            : 'min-h-[50px] flex-col gap-1 px-2 py-2 md:h-[48px] md:min-h-0 md:w-[calc(100%_-_4px)] md:self-center',
           active
             ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
         )}
       >
-        <Icon className={cn('shrink-0', mobile ? 'size-[20px]' : 'size-[18px]')} />
+        <Icon className={cn('shrink-0', mobile ? 'size-[19px]' : 'size-[18px]')} />
         {!mobile && (
           <span className='max-w-full truncate text-[10px] font-medium leading-none'>
             {item.title === 'Today'
@@ -150,7 +152,7 @@ export function BottomNavigation() {
               </button>
             </div>
 
-            <div className='hidden h-full w-full grid-cols-7 items-stretch gap-0 md:grid'>
+            <div className='hidden md:contents'>
               {desktopLeftItems.map((item) => renderNavItem(item))}
               <button
                 type='button'
@@ -195,7 +197,7 @@ export function BottomNavigation() {
                   setMoreOpen(true);
                 }}
                 className={cn(
-                  'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[10px] px-2 py-2 transition-colors',
+                  'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[10px] px-2 py-2 transition-colors md:h-[48px] md:min-h-0 md:w-[calc(100%_-_4px)] md:self-center',
                   moreOpen
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
