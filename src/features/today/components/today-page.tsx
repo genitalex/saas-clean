@@ -153,7 +153,7 @@ export function TodayPage({
   return (
     <main className='mx-auto flex w-full max-w-[var(--page-max-width)] min-w-0 flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-10 sm:pt-7'>
       <section className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-7 lg:p-8'>
-        <div className='flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-8'>
+        <div className='flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(200px,0.8fr)_minmax(440px,2.2fr)_minmax(190px,0.7fr)] lg:items-stretch lg:gap-6 xl:grid-cols-[minmax(220px,0.8fr)_minmax(480px,2.2fr)_minmax(200px,0.7fr)] xl:gap-8'>
           <div className='min-w-0'>
             <div className='mb-2 flex items-center gap-2'>
               <span className='size-1.5 rounded-full bg-primary' />
@@ -161,7 +161,7 @@ export function TodayPage({
                 Hoy
               </p>
             </div>
-            <h1 className='max-w-[760px] text-balance text-xl font-semibold tracking-[-0.03em] sm:text-2xl lg:text-2xl xl:text-3xl'>
+            <h1 className='max-w-[760px] text-balance text-xl font-semibold tracking-[-0.03em] sm:text-2xl lg:text-xl xl:text-2xl'>
               {greeting}, {userName}.
             </h1>
             <p className='text-muted-foreground mt-2 text-base sm:text-lg'>
