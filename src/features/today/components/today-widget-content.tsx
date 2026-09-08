@@ -118,12 +118,12 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='relative -mx-1 px-2 py-2 sm:px-3'>
+      <div className='-mx-1 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-1 py-2'>
         <button
           type='button'
           aria-label='Días anteriores'
           onClick={() => shiftAgenda(-1)}
-          className='absolute top-1/2 -left-1.25 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
+          className='hidden size-8 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
         >
           <Icons.chevronLeft className='size-4' />
         </button>
@@ -137,7 +137,7 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
+          className='scrollbar-none flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
         >
           {agendaDays.map((day) => {
             const selected = isSameDay(day, today);
@@ -189,7 +189,7 @@ export function WeeklyAgenda({
           type='button'
           aria-label='Días siguientes'
           onClick={() => shiftAgenda(1)}
-          className='absolute top-1/2 -right-1.25 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
+          className='hidden size-8 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
         >
           <Icons.chevronRight className='size-4' />
         </button>
