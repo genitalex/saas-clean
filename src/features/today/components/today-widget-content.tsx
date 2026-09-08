@@ -60,7 +60,7 @@ export function QuickActions() {
 
   return (
     <div
-      className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5'
+      className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6'
       aria-label='Acciones rápidas'
     >
       {actions.map(({ href, icon: Icon, label, hint }) => (
@@ -69,15 +69,15 @@ export function QuickActions() {
           href={href}
           className={cn(
             solidSurface,
-            'group flex min-w-0 items-center gap-3 px-3.5 py-3',
+            'group flex min-w-0 items-center gap-2 px-2.5 py-2.5',
             softButton
           )}
         >
-          <span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105'>
-            <Icon className='size-4' />
+          <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105'>
+            <Icon className='size-3.5' />
           </span>
           <span className='min-w-0'>
-            <span className='block truncate text-sm font-medium'>{label}</span>
+            <span className='block truncate text-xs font-medium'>{label}</span>
             <span className='text-muted-foreground block truncate text-[10px]'>{hint}</span>
           </span>
         </Link>
@@ -164,8 +164,16 @@ export function WeeklyAgenda({
   }
   function handleAgendaPointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (!dragState.current) return;
+    event.preventDefault();
     event.currentTarget.scrollLeft =
       dragState.current.scrollLeft - (event.clientX - dragState.current.x);
+  }
+  function shiftAgenda(days: number) {
+    const container = agendaRef.current;
+    if (!container) return;
+    const firstCard = container.querySelector<HTMLElement>('[data-day]');
+    const step = (firstCard?.offsetWidth ?? 180) + 8;
+    container.scrollBy({ left: step * days, behavior: 'smooth' });
   }
   const linkedEventIds = new Set(tasks.flatMap((task) => (task.eventId ? [task.eventId] : [])));
   const todayPlan = [
@@ -186,7 +194,15 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='-mx-1 px-1 py-2'>
+      <div className='relative -mx-1 px-1 py-2'>
+        <button
+          type='button'
+          aria-label='Días anteriores'
+          onClick={() => shiftAgenda(-7)}
+          className='absolute top-1/2 left-0 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
+        >
+          <Icons.chevronLeft className='size-4' />
+        </button>
         <div
           ref={agendaRef}
           onScroll={handleAgendaScroll}
@@ -199,7 +215,7 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
+          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
         >
           {agendaDays.map((day) => {
             const selected = isSameDay(day, today);
@@ -214,7 +230,7 @@ export function WeeklyAgenda({
                 href={`/dashboard/calendar?date=${dayKey}&view=day`}
                 aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
-                  'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_31%] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_14.2857%] sm:p-3',
+                  'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_31%] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_180px] sm:p-3',
                   selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                 )}
               >
@@ -247,6 +263,14 @@ export function WeeklyAgenda({
             );
           })}
         </div>
+        <button
+          type='button'
+          aria-label='Días siguientes'
+          onClick={() => shiftAgenda(7)}
+          className='absolute top-1/2 right-0 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
+        >
+          <Icons.chevronRight className='size-4' />
+        </button>
       </div>
 
       <div className='mt-4 rounded-xl bg-primary/4 p-3 ring-1 ring-primary/12 sm:p-4'>

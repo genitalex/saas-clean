@@ -217,7 +217,7 @@ function LegacyTodayPage({
       </section>
 
       <section
-        className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5'
+        className='grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6'
         aria-label='Acciones rápidas'
       >
         <QuickAction
@@ -787,11 +787,11 @@ function QuickAction({
       href={href}
       className={cn(solidSurface, 'group flex min-w-0 items-center gap-3 px-3.5 py-3', softButton)}
     >
-      <span className='bg-primary/[0.08] text-primary flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105'>
-        <Icon className='size-4.5' />
+      <span className='bg-primary/[0.08] text-primary flex size-8 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105'>
+        <Icon className='size-3.5' />
       </span>
       <span className='min-w-0'>
-        <span className='block truncate text-sm font-medium'>{label}</span>
+        <span className='block truncate text-xs font-medium'>{label}</span>
         <span className='text-muted-foreground block truncate text-[10px]'>{hint}</span>
       </span>
     </Link>
