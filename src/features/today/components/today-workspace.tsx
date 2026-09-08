@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
+import { addDays, format, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
@@ -16,6 +16,7 @@ import { activityKeys, getActivities } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
 import { AttentionItems } from '@/features/automations/components/attention-items';
 import { QuickCapture } from './quick-capture';
+import { QuickActions, WeeklyAgenda } from './today-widget-content';
 
 const surfaceLink =
   'flex min-w-0 items-center gap-3 rounded-xl bg-background/45 px-3 py-2.5 transition-colors hover:bg-muted/55';
@@ -90,56 +91,45 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       id: 'capture',
       title: 'Captura rápida',
       icon: Icons.add,
+      kind: 'widget',
       defaultSize: 4,
       mobileSize: 2,
+      allowedSizes: [4, 6, 8],
+      mobileAllowedSizes: [2],
+      defaultHeight: 2,
+      minHeight: 2,
+      maxHeight: 2,
       content: <QuickCapture />
+    },
+    {
+      id: 'quick-actions',
+      title: 'Acciones rápidas',
+      icon: Icons.sparkles,
+      kind: 'widget',
+      defaultSize: 12,
+      mobileSize: 2,
+      allowedSizes: [8, 12],
+      mobileAllowedSizes: [2],
+      defaultHeight: 2,
+      minHeight: 2,
+      maxHeight: 2,
+      content: <QuickActions />
     },
     {
       id: 'agenda',
       title: 'Agenda',
       icon: Icons.calendar,
-      defaultSize: 8,
+      kind: 'view',
+      source: 'calendar',
+      defaultSize: 12,
       mobileSize: 2,
+      allowedSizes: [8, 12],
+      mobileAllowedSizes: [2],
+      defaultHeight: 4,
+      minHeight: 4,
+      maxHeight: 4,
       content: (
-        <div className='grid grid-cols-7 gap-1.5 sm:gap-2'>
-          {weekDays.map((day) => {
-            const selected = isSameDay(day, today);
-            const dayEvents = events.filter((event) => isSameDay(new Date(event.startAt), day));
-            const dayKey = format(day, 'yyyy-MM-dd');
-            return (
-              <Link
-                key={dayKey}
-                href={`/dashboard/calendar?date=${dayKey}&view=day`}
-                aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
-                className={cn(
-                  'group flex min-w-0 flex-col items-center rounded-xl px-1 py-2 text-center transition-colors hover:bg-muted/55 sm:px-2',
-                  selected && 'bg-primary/8'
-                )}
-              >
-                <span className='text-muted-foreground text-[10px] font-semibold uppercase'>
-                  {format(day, 'EEE', { locale: es })}
-                </span>
-                <span
-                  className={cn(
-                    'mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold',
-                    selected && 'bg-primary text-primary-foreground'
-                  )}
-                >
-                  {format(day, 'd')}
-                </span>
-                <span className='mt-2 flex h-2 gap-1'>
-                  {dayEvents.slice(0, 3).map((event) => (
-                    <i
-                      key={event.id}
-                      className='size-1.5 rounded-full bg-primary'
-                      title={event.title}
-                    />
-                  ))}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+        <WeeklyAgenda weekDays={weekDays} today={today} events={events} tasks={tasks} now={now} />
       )
     },
     {
@@ -148,6 +138,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       icon: Icons.check,
       defaultSize: 6,
       mobileSize: 2,
+      allowedSizes: [4, 6, 8],
+      mobileAllowedSizes: [2],
+      defaultHeight: 3,
+      minHeight: 2,
+      maxHeight: 3,
       content: (
         <div className='space-y-1'>
           {tasks
@@ -193,6 +188,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       icon: Icons.warning,
       defaultSize: 6,
       mobileSize: 2,
+      allowedSizes: [4, 6],
+      mobileAllowedSizes: [2],
+      defaultHeight: 2,
+      minHeight: 2,
+      maxHeight: 3,
       content: <AttentionItems compact />
     },
     {
@@ -201,6 +201,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       icon: Icons.pulse,
       defaultSize: 6,
       mobileSize: 2,
+      allowedSizes: [4, 6, 8],
+      mobileAllowedSizes: [2],
+      defaultHeight: 2,
+      minHeight: 2,
+      maxHeight: 3,
       content: <ActivityList activities={activities} loading={activityQuery.isLoading} />
     },
     {
@@ -209,6 +214,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       icon: Icons.user,
       defaultSize: 6,
       mobileSize: 2,
+      allowedSizes: [4, 6, 8],
+      mobileAllowedSizes: [2],
+      defaultHeight: 2,
+      minHeight: 2,
+      maxHeight: 3,
       content: (
         <div className='space-y-1'>
           {staleCustomers.map((customer) => (
