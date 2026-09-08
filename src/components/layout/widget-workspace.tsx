@@ -282,7 +282,7 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
           strategy={verticalListSortingStrategy}
         >
           <div
-            className='grid grid-flow-row-dense grid-cols-2 items-start gap-3 md:grid-cols-12 md:gap-4'
+            className='grid grid-flow-row-dense grid-cols-2 items-stretch gap-x-3 gap-y-0 md:grid-cols-12 md:gap-x-4'
             style={{ gridAutoRows: `${GRID_ROW_HEIGHT}px` }}
           >
             {visibleWidgets.map((widget) => {
@@ -368,7 +368,7 @@ function SortableWidget({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]',
+        'relative mb-3 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:mb-4',
         isDragging && 'z-10 scale-[1.01] opacity-95 shadow-[0_10px_28px_rgba(31,57,45,0.10)]',
         isOver && !isDragging && 'bg-primary/5 ring-2 ring-primary/25',
         editing && 'ring-primary/25'
