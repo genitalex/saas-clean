@@ -1,12 +1,14 @@
 import type {
   GeocodingResponse,
   GeocodingResult,
+  ReverseGeocodingResponse,
   WeatherData,
   WeatherLocation,
   WeatherResponse
 } from './types';
 
 const GEOCODING_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+const REVERSE_GEOCODING_URL = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
 const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast';
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -31,6 +33,27 @@ export async function geocodeCity(query: string): Promise<GeocodingResult[]> {
     longitude: result.longitude,
     timezone: result.timezone
   }));
+}
+
+export async function reverseGeocode(latitude: number, longitude: number): Promise<string | null> {
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    localityLanguage: 'es'
+  });
+  const data = await fetchJson<ReverseGeocodingResponse>(`${REVERSE_GEOCODING_URL}?${params}`);
+  return (
+    [
+      data.city,
+      data.town,
+      data.village,
+      data.municipality,
+      data.locality,
+      data.county,
+      data.principalSubdivision,
+      data.countryName
+    ].find((value) => value?.trim()) ?? null
+  );
 }
 
 export async function getCurrentWeather(location: WeatherLocation): Promise<WeatherData> {

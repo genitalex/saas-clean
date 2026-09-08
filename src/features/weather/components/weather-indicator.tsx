@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { currentWeatherQueryOptions } from '../api/queries';
-import { geocodeCity } from '../api/service';
+import { geocodeCity, reverseGeocode } from '../api/service';
 import type {
   GeocodingResult,
   WeatherData,
@@ -84,6 +84,18 @@ export function WeatherIndicator({ userId }: { userId: string }) {
         setPreference(nextPreference);
         setLocationState('idle');
         setDialogOpen(false);
+
+        void reverseGeocode(coords.latitude, coords.longitude)
+          .then((city) => {
+            if (!city) return;
+            const resolvedPreference: WeatherPreference = {
+              ...nextPreference,
+              location: { ...location, city }
+            };
+            savePreference(userId, resolvedPreference);
+            setPreference(resolvedPreference);
+          })
+          .catch(() => undefined);
       },
       () => setLocationState('denied'),
       { enableHighAccuracy: false, maximumAge: 30 * 60 * 1000, timeout: 10_000 }
@@ -126,10 +138,7 @@ export function WeatherIndicator({ userId }: { userId: string }) {
             onClick={() => setDialogOpen(true)}
             aria-label='Configurar tiempo'
           >
-            <WeatherValue
-              weather={weather}
-              city={preference?.source === 'geolocation' ? 'Tu ubicación' : weather.city}
-            />
+            <WeatherValue weather={weather} city={preference?.location.city ?? weather.city} />
           </button>
         ) : preference && weatherQuery.isPending ? (
           <span className='text-white/70'>Cargando tiempo…</span>
@@ -221,9 +230,11 @@ export function WeatherIndicator({ userId }: { userId: string }) {
 
 function WeatherValue({ weather, city }: { weather: WeatherData; city?: string }) {
   return (
-    <span className={cn('inline-flex items-center gap-1.5')}>
-      <span aria-hidden='true'>{getWeatherIcon(weather.weatherCode, weather.isDay)}</span>
-      <span>{weather.temperature} °C</span>
+    <span className={cn('inline-flex items-center gap-2')}>
+      <span className='text-[1.65rem] leading-none drop-shadow-sm' aria-hidden='true'>
+        {getWeatherIcon(weather.weatherCode, weather.isDay)}
+      </span>
+      <span className='font-medium'>{weather.temperature} °C</span>
       {city && (
         <>
           <span className='text-white/50'>·</span>

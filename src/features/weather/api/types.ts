@@ -41,3 +41,14 @@ export interface WeatherResponse {
     is_day?: number;
   };
 }
+
+export interface ReverseGeocodingResponse {
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+  locality?: string;
+  county?: string;
+  principalSubdivision?: string;
+  countryName?: string;
+}
