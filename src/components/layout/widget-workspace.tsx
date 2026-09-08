@@ -115,9 +115,15 @@ function mergeLayout(
   const defaults = makeDefaultLayout(widgets);
   if (!saved) return defaults;
   const validIds = new Set(widgets.map((widget) => widget.id));
-  const mergePositions = (positions: WidgetPosition[], fallback: WidgetPosition[]) =>
-    positions
+  const mergePositions = (positions: WidgetPosition[], fallback: WidgetPosition[]) => {
+    const seen = new Set<string>();
+    const savedPositions = positions
       .filter((position) => validIds.has(position.id))
+      .filter((position) => {
+        if (seen.has(position.id)) return false;
+        seen.add(position.id);
+        return true;
+      })
       .map((position) => {
         const widget = widgets.find((item) => item.id === position.id)!;
         const allowed = desktop
@@ -134,8 +140,10 @@ function mergeLayout(
             Math.min(widget.maxHeight ?? 4, position.height ?? widget.defaultHeight ?? 2)
           ) as WidgetHeight
         };
-      })
-      .concat(fallback.filter((position) => !positions.some((item) => item.id === position.id)));
+      });
+    const newPositions = fallback.filter((position) => !seen.has(position.id));
+    return savedPositions.concat(newPositions);
+  };
   return {
     desktop: mergePositions(saved.desktop ?? [], defaults.desktop),
     mobile: mergePositions(saved.mobile ?? [], defaults.mobile),
