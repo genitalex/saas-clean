@@ -78,12 +78,17 @@ export function BottomNavigation() {
       >
         <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-6px_20px_rgb(23_32_25_/_0.07)] sm:mb-4 sm:rounded-[var(--radius-xl)] sm:border sm:px-1 sm:py-1 sm:shadow-md md:mb-5'>
           <div className='relative min-h-[60px] md:min-h-[54px]'>
-            <div className='mx-auto grid h-full w-[calc(100%_-_34px)] grid-cols-7 items-stretch gap-0 md:w-full'>
-              {mobileLeftItems.map((item) => (
-                <div key={`mobile-${item.url}`} className='md:hidden'>
-                  {renderNavItem(item, true)}
-                </div>
-              ))}
+            <div className='mx-auto grid h-full w-full grid-cols-[1fr_auto_1fr] items-stretch px-2 md:w-full md:grid-cols-7 md:px-0'>
+              <div className='flex min-w-0 items-stretch justify-end gap-[10px] md:contents'>
+                {mobileLeftItems.map((item) => (
+                  <div
+                    key={`mobile-${item.url}`}
+                    className='flex h-[54px] w-[20px] shrink-0 items-center justify-center md:hidden'
+                  >
+                    {renderNavItem(item, true)}
+                  </div>
+                ))}
+              </div>
 
               <button
                 type='button'
@@ -95,11 +100,11 @@ export function BottomNavigation() {
                 }}
                 className={cn(
                   'group z-10 flex self-center items-center justify-center justify-self-center rounded-[13px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_7px_18px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgb(23_32_25_/_0.18)] active:scale-[0.96] md:hidden',
-                  'h-[54px] w-[56px]',
+                  'h-[54px] w-[56px] shrink-0',
                   createOpen && 'bg-[#49674F]'
                 )}
               >
-                <span className='relative block size-5'>
+                <span className='relative flex size-7 items-center justify-center'>
                   <Icons.add
                     className={cn(
                       'absolute inset-0 m-auto transition-all duration-200 ease-out',
@@ -120,29 +125,34 @@ export function BottomNavigation() {
                 <span className='sr-only'>Nuevo</span>
               </button>
 
-              {mobileRightItems.map((item) => (
-                <div key={`mobile-${item.url}`} className='md:hidden'>
-                  {renderNavItem(item, true)}
-                </div>
-              ))}
+              <div className='flex min-w-0 items-stretch justify-start gap-[10px] md:contents'>
+                {mobileRightItems.map((item) => (
+                  <div
+                    key={`mobile-${item.url}`}
+                    className='flex h-[54px] w-[20px] shrink-0 items-center justify-center md:hidden'
+                  >
+                    {renderNavItem(item, true)}
+                  </div>
+                ))}
 
-              <button
-                type='button'
-                aria-expanded={moreOpen}
-                onClick={() => {
-                  setCreateOpen(false);
-                  setMoreOpen(true);
-                }}
-                className={cn(
-                  'flex min-w-0 min-h-[56px] items-center justify-center rounded-[10px] px-0.5 py-2 transition-colors md:hidden',
-                  moreOpen
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
-                )}
-              >
-                <Icons.moreHorizontal className='size-[20px]' />
-                <span className='sr-only'>Más</span>
-              </button>
+                <button
+                  type='button'
+                  aria-expanded={moreOpen}
+                  onClick={() => {
+                    setCreateOpen(false);
+                    setMoreOpen(true);
+                  }}
+                  className={cn(
+                    'flex h-[54px] w-[20px] shrink-0 items-center justify-center rounded-[10px] p-0 transition-colors md:hidden',
+                    moreOpen
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  )}
+                >
+                  <Icons.moreHorizontal className='size-[20px]' />
+                  <span className='sr-only'>Más</span>
+                </button>
+              </div>
 
               <div className='hidden md:contents'>
                 {desktopLeftItems.map((item) => renderNavItem(item))}
