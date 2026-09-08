@@ -153,7 +153,7 @@ export function TodayPage({
   return (
     <main className='mx-auto flex w-full max-w-[var(--page-max-width)] min-w-0 flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-10 sm:pt-7'>
       <section className='rounded-[var(--radius-xl)] border border-border/70 bg-card p-5 sm:p-7 lg:p-8'>
-        <div className='flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,0.75fr)_minmax(420px,2.5fr)_minmax(180px,0.55fr)] lg:items-stretch lg:gap-6 xl:grid-cols-[minmax(0,0.75fr)_minmax(620px,2.5fr)_minmax(180px,0.55fr)] xl:gap-8'>
+        <div className='flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(160px,0.65fr)_minmax(0,2.8fr)_minmax(170px,0.55fr)] lg:items-stretch lg:gap-6 xl:grid-cols-[minmax(180px,0.65fr)_minmax(0,3fr)_minmax(185px,0.55fr)] xl:gap-8'>
           <div className='min-w-0'>
             <div className='mb-2 flex items-center gap-2'>
               <span className='size-1.5 rounded-full bg-primary' />
@@ -172,21 +172,21 @@ export function TodayPage({
           </div>
 
           <div className='hidden min-w-0 self-stretch lg:flex'>
-            <div className='flex w-full [&>section]:h-full'>
+            <div className='flex w-full min-w-0 [&>section]:h-full [&>section]:w-full'>
               <QuickCapture />
             </div>
           </div>
 
-          <div className='flex min-w-0 items-center justify-between gap-6 rounded-xl border border-border/50 bg-background/50 px-4 py-3'>
-            <div>
+          <div className='flex min-w-0 items-center justify-between gap-6 rounded-xl border border-border/50 bg-background/50 px-4 py-3 lg:gap-3'>
+            <div className='min-w-0'>
               <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.18em]'>
                 Ahora
               </p>
-              <time className='mt-1 block text-3xl font-semibold tracking-tight tabular-nums'>
+              <time className='mt-1 block text-3xl font-semibold tracking-tight tabular-nums lg:text-2xl xl:text-3xl'>
                 {format(now, 'HH:mm')}
               </time>
             </div>
-            <div className='text-right'>
+            <div className='text-right lg:min-w-0 lg:max-w-[76px]'>
               <p className='text-muted-foreground text-xs capitalize'>
                 {format(now, 'EEEE', { locale: es })}
               </p>
