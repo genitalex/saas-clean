@@ -5,6 +5,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -221,7 +222,12 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
     width: number;
     height: number;
   } | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 180, tolerance: 10 }
+    })
+  );
 
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(layout));
@@ -395,6 +401,7 @@ function SortableWidget({
       style={style}
       className={cn(
         'relative mb-3 flex min-w-0 flex-col overflow-visible rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:mb-4',
+        editing && 'touch-none',
         isDragging && 'z-10 scale-[1.01] opacity-95 shadow-[0_10px_28px_rgba(31,57,45,0.10)]',
         isOver && !isDragging && 'bg-primary/5 ring-2 ring-primary/25',
         editing && 'ring-primary/25'
