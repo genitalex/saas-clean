@@ -41,13 +41,13 @@ export function BottomNavigation() {
         href={item.url}
         className={cn(
           'group flex min-w-0 items-center justify-center rounded-[10px] transition-colors',
-          mobile ? 'h-[54px] w-[18px] p-0' : 'min-h-[50px] flex-col gap-1 px-2 py-2',
+          mobile ? 'h-[54px] w-[20px] p-0' : 'min-h-[50px] flex-col gap-1 px-2 py-2',
           active
             ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
         )}
       >
-        <Icon className={cn('shrink-0', mobile ? 'size-[19px]' : 'size-[18px]')} />
+        <Icon className={cn('shrink-0', mobile ? 'size-[20px]' : 'size-[18px]')} />
         {!mobile && (
           <span className='max-w-full truncate text-[10px] font-medium leading-none'>
             {item.title === 'Today'
@@ -70,19 +70,19 @@ export function BottomNavigation() {
       <nav
         aria-label='Primary navigation'
         className={cn(
-          'fixed inset-x-0 bottom-0 z-40 flex justify-center px-0 sm:px-4',
+          'fixed inset-x-0 bottom-0 z-40 flex justify-center px-0 md:px-4',
           'transition-transform duration-300 ease-out will-change-transform',
           visible || moreOpen || createOpen ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]'
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-6px_20px_rgb(23_32_25_/_0.07)] sm:mb-4 sm:rounded-[var(--radius-xl)] sm:border sm:px-1 sm:py-1 sm:shadow-md md:mb-5'>
+        <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-6px_20px_rgb(23_32_25_/_0.07)] md:rounded-[var(--radius-xl)] md:border md:px-1 md:py-1 md:shadow-md md:mb-5'>
           <div className='relative min-h-[60px] md:min-h-[54px]'>
-            <div className='mx-auto grid h-full w-max grid-cols-[repeat(3,18px)_58px_repeat(3,18px)] items-center gap-[8px] md:w-full md:grid-cols-7 md:items-stretch md:gap-0'>
+            <div className='mx-auto flex h-[60px] w-max items-center justify-center gap-[10px] md:hidden'>
               {mobileLeftItems.map((item) => (
                 <div
                   key={`mobile-${item.url}`}
-                  className='flex h-[54px] w-[18px] shrink-0 items-center justify-center md:hidden'
+                  className='flex h-[54px] w-[20px] shrink-0 items-center justify-center'
                 >
                   {renderNavItem(item, true)}
                 </div>
@@ -97,27 +97,27 @@ export function BottomNavigation() {
                   setCreateOpen((value) => !value);
                 }}
                 className={cn(
-                  'group z-10 flex h-[56px] w-[58px] shrink-0 items-center justify-center self-center rounded-[12px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_7px_18px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgb(23_32_25_/_0.18)] active:scale-[0.96] md:hidden',
+                  'group z-10 flex h-[54px] w-[56px] shrink-0 items-center justify-center self-center rounded-[12px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_7px_18px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgb(23_32_25_/_0.18)] active:scale-[0.96]',
                   createOpen && 'bg-[#49674F]'
                 )}
               >
-                <span className='relative grid size-8 place-items-center'>
-                  <Icons.add
+                <span className='relative block size-[38px]'>
+                  <span
                     className={cn(
-                      'absolute inset-0 m-auto transition-all duration-200 ease-out',
-                      createOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100',
-                      'size-[29px]'
+                      'absolute inset-0 m-auto flex items-center justify-center transition-all duration-200 ease-out',
+                      createOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'
                     )}
-                  />
-                  <Icons.close
+                  >
+                    <Icons.add className='size-[29px]' />
+                  </span>
+                  <span
                     className={cn(
-                      'absolute inset-0 m-auto transition-all duration-200 ease-out',
-                      createOpen
-                        ? 'rotate-0 scale-110 opacity-100'
-                        : '-rotate-90 scale-0 opacity-0',
-                      'size-[29px]'
+                      'absolute inset-0 m-auto flex items-center justify-center transition-all duration-200 ease-out',
+                      createOpen ? 'rotate-0 scale-110 opacity-100' : '-rotate-90 scale-0 opacity-0'
                     )}
-                  />
+                  >
+                    <Icons.close className='size-[29px]' />
+                  </span>
                 </span>
                 <span className='sr-only'>Nuevo</span>
               </button>
@@ -125,7 +125,7 @@ export function BottomNavigation() {
               {mobileRightItems.map((item) => (
                 <div
                   key={`mobile-${item.url}`}
-                  className='flex h-[54px] w-[18px] shrink-0 items-center justify-center md:hidden'
+                  className='flex h-[54px] w-[20px] shrink-0 items-center justify-center'
                 >
                   {renderNavItem(item, true)}
                 </div>
@@ -139,7 +139,7 @@ export function BottomNavigation() {
                   setMoreOpen(true);
                 }}
                 className={cn(
-                  'flex h-[54px] w-[20px] shrink-0 items-center justify-center rounded-[10px] p-0 transition-colors md:hidden',
+                  'flex h-[54px] w-[20px] shrink-0 items-center justify-center rounded-[10px] p-0 transition-colors',
                   moreOpen
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
@@ -148,64 +148,62 @@ export function BottomNavigation() {
                 <Icons.moreHorizontal className='size-[20px]' />
                 <span className='sr-only'>Más</span>
               </button>
+            </div>
 
-              <div className='hidden md:contents'>
-                {desktopLeftItems.map((item) => renderNavItem(item))}
-                <button
-                  type='button'
-                  aria-expanded={createOpen}
-                  aria-label={createOpen ? 'Cerrar crear' : 'Nuevo'}
-                  onClick={() => {
-                    setMoreOpen(false);
-                    setCreateOpen((value) => !value);
-                  }}
-                  className={cn(
-                    'group z-10 flex self-center items-center justify-center justify-self-center rounded-[13px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_7px_18px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgb(23_32_25_/_0.18)] active:scale-[0.96]',
-                    'h-[50px] w-[70px]',
-                    createOpen && 'bg-[#49674F]'
-                  )}
-                >
-                  <span className='relative block size-6'>
-                    <Icons.add
-                      className={cn(
-                        'absolute inset-0 m-auto transition-all duration-200 ease-out',
-                        createOpen
-                          ? 'rotate-90 scale-0 opacity-0'
-                          : 'rotate-0 scale-100 opacity-100',
-                        'size-[22px]'
-                      )}
-                    />
-                    <Icons.close
-                      className={cn(
-                        'absolute inset-0 m-auto transition-all duration-200 ease-out',
-                        createOpen
-                          ? 'rotate-0 scale-100 opacity-100'
-                          : '-rotate-90 scale-0 opacity-0',
-                        'size-[22px]'
-                      )}
-                    />
-                  </span>
-                  <span className='sr-only'>Nuevo</span>
-                </button>
-                {desktopRightItems.map((item) => renderNavItem(item))}
-                <button
-                  type='button'
-                  aria-expanded={moreOpen}
-                  onClick={() => {
-                    setCreateOpen(false);
-                    setMoreOpen(true);
-                  }}
-                  className={cn(
-                    'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[10px] px-2 py-2 transition-colors',
-                    moreOpen
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
-                  )}
-                >
-                  <Icons.moreHorizontal className='size-[18px]' />
-                  <span className='text-[10px] font-medium leading-none'>Más</span>
-                </button>
-              </div>
+            <div className='hidden h-full w-full grid-cols-7 items-stretch gap-0 md:grid'>
+              {desktopLeftItems.map((item) => renderNavItem(item))}
+              <button
+                type='button'
+                aria-expanded={createOpen}
+                aria-label={createOpen ? 'Cerrar crear' : 'Nuevo'}
+                onClick={() => {
+                  setMoreOpen(false);
+                  setCreateOpen((value) => !value);
+                }}
+                className={cn(
+                  'group z-10 flex self-center items-center justify-center justify-self-center rounded-[13px] border-[3px] border-card bg-primary text-primary-foreground shadow-[0_7px_18px_rgb(23_32_25_/_0.14)] transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_rgb(23_32_25_/_0.18)] active:scale-[0.96]',
+                  'h-[50px] w-[70px]',
+                  createOpen && 'bg-[#49674F]'
+                )}
+              >
+                <span className='relative block size-6'>
+                  <Icons.add
+                    className={cn(
+                      'absolute inset-0 m-auto transition-all duration-200 ease-out',
+                      createOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100',
+                      'size-[22px]'
+                    )}
+                  />
+                  <Icons.close
+                    className={cn(
+                      'absolute inset-0 m-auto transition-all duration-200 ease-out',
+                      createOpen
+                        ? 'rotate-0 scale-100 opacity-100'
+                        : '-rotate-90 scale-0 opacity-0',
+                      'size-[22px]'
+                    )}
+                  />
+                </span>
+                <span className='sr-only'>Nuevo</span>
+              </button>
+              {desktopRightItems.map((item) => renderNavItem(item))}
+              <button
+                type='button'
+                aria-expanded={moreOpen}
+                onClick={() => {
+                  setCreateOpen(false);
+                  setMoreOpen(true);
+                }}
+                className={cn(
+                  'flex min-w-0 min-h-[50px] flex-col items-center justify-center gap-1 rounded-[10px] px-2 py-2 transition-colors',
+                  moreOpen
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                )}
+              >
+                <Icons.moreHorizontal className='size-[18px]' />
+                <span className='text-[10px] font-medium leading-none'>Más</span>
+              </button>
             </div>
           </div>
         </div>
