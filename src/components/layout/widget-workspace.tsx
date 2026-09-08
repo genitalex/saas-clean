@@ -367,7 +367,6 @@ function SortableWidget({
         <h2 className='text-sm font-semibold'>{widget.title}</h2>
       </div>
       <div className='min-h-0 min-w-0 flex-1 p-4'>{widget.content}</div>
-      <div className='min-h-0 min-w-0 flex-1 p-4'>{widget.content}</div>
       {editing && (
         <ResizeHandle
           size={size}
