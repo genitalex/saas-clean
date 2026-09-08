@@ -132,7 +132,7 @@ export function QuickCapture() {
           onKeyDown={(event) => event.key === 'Enter' && void submit()}
           placeholder='llamar a Ana mañana · reunión con Acme jueves 10'
           aria-label='Nueva captura de trabajo'
-          className='h-11 rounded-[var(--radius-md)] bg-background'
+          className='h-10 rounded-[var(--radius-md)] bg-background'
         />
         <Button
           type='button'
@@ -140,7 +140,7 @@ export function QuickCapture() {
           onClick={() => void submit()}
           disabled={pending || !value.trim()}
           aria-label='Guardar captura'
-          className='rounded-[10px]'
+          className='size-10 rounded-[10px]'
         >
           <Icons.arrowRight className='size-4' />
         </Button>
