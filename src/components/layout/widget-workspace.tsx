@@ -68,7 +68,6 @@ export function todayWorkspaceStorageKey(userId: string) {
 const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
-const HEIGHT_UNIT_PX = 128;
 function subscribeToDesktop(callback: () => void) {
   const media = window.matchMedia('(min-width: 768px)');
   media.addEventListener('change', callback);
@@ -91,7 +90,7 @@ function makeDefaultLayout(widgets: WidgetDefinition[]): StoredLayout {
     desktop: orderedWidgets.map((widget) => ({
       id: widget.id,
       size: widget.defaultSize ?? 6,
-      height: widget.defaultHeight ?? 2
+      height: widget.mobileDefaultHeight ?? widget.defaultHeight ?? 2
     })),
     mobile: orderedWidgets.map((widget) => ({
       id: widget.id,
@@ -334,7 +333,6 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
                   key={widget.id}
                   widget={widget}
                   size={position.size}
-                  height={position.height}
                   isDesktop={isDesktop}
                   editing={editing}
                   allowedSizes={getAllowedSizes(widget)}
@@ -364,7 +362,6 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
 function SortableWidget({
   widget,
   size,
-  height,
   isDesktop,
   editing,
   allowedSizes,
@@ -373,7 +370,6 @@ function SortableWidget({
 }: {
   widget: WidgetDefinition;
   size: WidgetSize;
-  height: WidgetHeight;
   isDesktop: boolean;
   editing: boolean;
   allowedSizes: WidgetSize[];
@@ -388,8 +384,7 @@ function SortableWidget({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    gridColumn: `span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)} / span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)}`,
-    minHeight: `${height * HEIGHT_UNIT_PX}px`
+    gridColumn: `span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)} / span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)}`
   };
 
   return (
