@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export type WidgetSize = 1 | 2 | 3 | 4 | 6 | 8 | 12;
-export type WidgetHeight = 1 | 2 | 3 | 4 | 5;
+export type WidgetHeight = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface WidgetDefinition {
   id: string;
@@ -296,15 +296,8 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
                   isDesktop={isDesktop}
                   editing={editing}
                   allowedSizes={getAllowedSizes(widget)}
-                  minHeight={widget.minHeight ?? 1}
-                  maxHeight={widget.maxHeight ?? 4}
                   onHide={() => hideWidget(widget.id)}
                   onResize={(size) => resizeWidget(widget.id, size)}
-                  onHeightChange={(height) =>
-                    updatePositions(
-                      positions.map((item) => (item.id === widget.id ? { ...item, height } : item))
-                    )
-                  }
                 />
               );
             })}
@@ -333,11 +326,8 @@ function SortableWidget({
   isDesktop,
   editing,
   allowedSizes,
-  minHeight,
-  maxHeight,
   onHide,
-  onResize,
-  onHeightChange
+  onResize
 }: {
   widget: WidgetDefinition;
   size: WidgetSize;
@@ -345,11 +335,8 @@ function SortableWidget({
   isDesktop: boolean;
   editing: boolean;
   allowedSizes: WidgetSize[];
-  minHeight: WidgetHeight;
-  maxHeight: WidgetHeight;
   onHide: () => void;
   onResize: (size: WidgetSize) => void;
-  onHeightChange: (height: WidgetHeight) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
     useSortable({
@@ -413,17 +400,7 @@ function SortableWidget({
       >
         {widget.content}
       </div>
-      {editing && (
-        <ResizeHandle
-          size={size}
-          allowedSizes={allowedSizes}
-          onResize={onResize}
-          height={height}
-          minHeight={minHeight}
-          maxHeight={maxHeight}
-          onHeightChange={onHeightChange}
-        />
-      )}
+      {editing && <ResizeHandle size={size} allowedSizes={allowedSizes} onResize={onResize} />}
     </section>
   );
 }
@@ -431,19 +408,11 @@ function SortableWidget({
 function ResizeHandle({
   size,
   allowedSizes,
-  onResize,
-  height,
-  minHeight,
-  maxHeight,
-  onHeightChange
+  onResize
 }: {
   size: WidgetSize;
   allowedSizes: WidgetSize[];
   onResize: (size: WidgetSize) => void;
-  height: WidgetHeight;
-  minHeight: WidgetHeight;
-  maxHeight: WidgetHeight;
-  onHeightChange: (height: WidgetHeight) => void;
 }) {
   const index = allowedSizes.indexOf(size);
   function startResize(event: React.PointerEvent<HTMLButtonElement>) {
@@ -463,29 +432,14 @@ function ResizeHandle({
     window.addEventListener('pointerup', stopResize);
   }
 
-  function cycleHeight() {
-    const nextHeight = height >= maxHeight ? minHeight : ((height + 1) as WidgetHeight);
-    onHeightChange(nextHeight);
-  }
-
   return (
-    <>
-      <button
-        type='button'
-        className='absolute bottom-1 right-1 cursor-ew-resize rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
-        aria-label='Cambiar ancho del widget'
-        onPointerDown={startResize}
-      >
-        <Icons.chevronsRight className='size-4' />
-      </button>
-      <button
-        type='button'
-        className='absolute bottom-1 left-1 cursor-ns-resize rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
-        aria-label='Cambiar altura del widget'
-        onClick={cycleHeight}
-      >
-        <Icons.chevronDown className='size-4' />
-      </button>
-    </>
+    <button
+      type='button'
+      className='absolute bottom-1 right-1 cursor-ew-resize rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground'
+      aria-label='Cambiar ancho del widget'
+      onPointerDown={startResize}
+    >
+      <Icons.chevronsRight className='size-4' />
+    </button>
   );
 }

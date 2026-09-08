@@ -110,29 +110,17 @@ export function QuickCapture() {
 
   return (
     <section
-      className='border-primary/10 bg-background/60 rounded-[16px] border p-4 sm:p-5'
+      className='border-primary/10 bg-background/60 rounded-2xl border p-4 sm:p-5'
       aria-label='Captura rápida'
     >
-      <div className='flex items-center gap-3'>
-        <span className='bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-[10px]'>
-          <Icons.add className='size-4' />
-        </span>
-        <div>
-          <p className='text-sm font-semibold'>Captura rápida</p>
-          <p className='text-muted-foreground text-xs'>
-            Escribe una tarea o reunión y sigue trabajando.
-          </p>
-        </div>
-      </div>
-
-      <div className='mt-4 flex gap-2'>
+      <div className='flex items-center gap-2'>
         <Input
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && void submit()}
           placeholder='llamar a Ana mañana · reunión con Acme jueves 10'
           aria-label='Nueva captura de trabajo'
-          className='h-10 rounded-[var(--radius-md)] bg-background'
+          className='h-10 rounded-md bg-background'
         />
         <Button
           type='button'
