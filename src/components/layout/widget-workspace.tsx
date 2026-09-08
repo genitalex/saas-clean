@@ -68,8 +68,7 @@ export function todayWorkspaceStorageKey(userId: string) {
 const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
-const GRID_ROW_HEIGHT = 8;
-const HEIGHT_ROWS = 8;
+const HEIGHT_UNIT_PX = 128;
 function subscribeToDesktop(callback: () => void) {
   const media = window.matchMedia('(min-width: 768px)');
   media.addEventListener('change', callback);
@@ -92,7 +91,7 @@ function makeDefaultLayout(widgets: WidgetDefinition[]): StoredLayout {
     desktop: orderedWidgets.map((widget) => ({
       id: widget.id,
       size: widget.defaultSize ?? 6,
-      height: widget.mobileDefaultHeight ?? widget.defaultHeight ?? 2
+      height: widget.defaultHeight ?? 2
     })),
     mobile: orderedWidgets.map((widget) => ({
       id: widget.id,
@@ -327,10 +326,7 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
           items={visibleWidgets.map((widget) => widget.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div
-            className='grid grid-flow-row-dense grid-cols-2 items-stretch gap-x-3 gap-y-0 md:grid-cols-12 md:gap-x-4'
-            style={{ gridAutoRows: `${GRID_ROW_HEIGHT}px` }}
-          >
+          <div className='grid grid-flow-row-dense grid-cols-2 items-stretch gap-x-3 gap-y-0 md:grid-cols-12 md:gap-x-4'>
             {visibleWidgets.map((widget) => {
               const position = positions.find((item) => item.id === widget.id)!;
               return (
@@ -393,7 +389,7 @@ function SortableWidget({
     transform: CSS.Transform.toString(transform),
     transition,
     gridColumn: `span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)} / span ${isDesktop ? Math.min(size, DESKTOP_COLUMNS) : Math.min(size, 2)}`,
-    gridRowEnd: `span ${height * HEIGHT_ROWS}`
+    minHeight: `${height * HEIGHT_UNIT_PX}px`
   };
 
   return (

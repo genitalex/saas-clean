@@ -109,10 +109,7 @@ export function QuickCapture() {
   }
 
   return (
-    <section
-      className='border-primary/10 bg-background/60 rounded-2xl border p-4 sm:p-5'
-      aria-label='Captura rápida'
-    >
+    <div aria-label='Captura rápida'>
       <div className='flex items-center gap-2'>
         <Input
           value={value}
@@ -133,6 +130,6 @@ export function QuickCapture() {
           <Icons.arrowRight className='size-4' />
         </Button>
       </div>
-    </section>
+    </div>
   );
 }
