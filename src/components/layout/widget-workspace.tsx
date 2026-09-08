@@ -10,6 +10,7 @@ import {
   useSensors,
   type DragEndEvent
 } from '@dnd-kit/core';
+import { restrictToParentElement } from '@dnd-kit/modifiers';
 import {
   SortableContext,
   arrayMove,
@@ -57,6 +58,10 @@ interface WidgetWorkspaceProps {
   storageKey: string;
 }
 
+export function todayWorkspaceStorageKey(userId: string) {
+  return `today-workspace:${userId}`;
+}
+
 const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
@@ -98,6 +103,11 @@ function makeDefaultLayout(widgets: WidgetDefinition[]): StoredLayout {
 export function addWidgetToToday(storageKey: string, widgetId: string) {
   if (typeof window === 'undefined') return;
   const raw = window.localStorage.getItem(storageKey);
+  const pendingKey = `${storageKey}:pending`;
+  const pending = JSON.parse(window.localStorage.getItem(pendingKey) ?? '[]') as string[];
+  if (!pending.includes(widgetId)) {
+    window.localStorage.setItem(pendingKey, JSON.stringify([...pending, widgetId]));
+  }
   if (!raw) return;
   try {
     const layout = JSON.parse(raw) as StoredLayout;
@@ -106,6 +116,28 @@ export function addWidgetToToday(storageKey: string, widgetId: string) {
       JSON.stringify({ ...layout, hidden: layout.hidden.filter((id) => id !== widgetId) })
     );
   } catch {}
+}
+
+export function AddToTodayButton({
+  storageKey,
+  widgetId,
+  className
+}: {
+  storageKey: string;
+  widgetId: string;
+  className?: string;
+}) {
+  return (
+    <Button
+      type='button'
+      variant='ghost'
+      size='sm'
+      className={className}
+      onClick={() => addWidgetToToday(storageKey, widgetId)}
+    >
+      <Icons.pin data-icon='inline-start' /> Añadir a Today
+    </Button>
+  );
 }
 
 function mergeLayout(
@@ -158,11 +190,18 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
     const raw = window.localStorage.getItem(storageKey);
     if (!raw) return makeDefaultLayout(widgets);
     try {
-      return mergeLayout(
+      const merged = mergeLayout(
         widgets,
         JSON.parse(raw) as StoredLayout,
         window.matchMedia('(min-width: 768px)').matches
       );
+      const pendingKey = `${storageKey}:pending`;
+      const pending = JSON.parse(window.localStorage.getItem(pendingKey) ?? '[]') as string[];
+      if (pending.length > 0) {
+        merged.hidden = merged.hidden.filter((id) => !pending.includes(id));
+        window.localStorage.removeItem(pendingKey);
+      }
+      return merged;
     } catch {
       return makeDefaultLayout(widgets);
     }
@@ -178,7 +217,7 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
     width: number;
     height: number;
   } | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(layout));
@@ -261,6 +300,7 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
 
       <DndContext
         sensors={sensors}
+        modifiers={[restrictToParentElement]}
         collisionDetection={closestCenter}
         onDragStart={({ active }) => {
           setActiveId(String(active.id));
@@ -363,13 +403,14 @@ function SortableWidget({
       aria-label={widget.title}
     >
       {editing && (
-        <div className='absolute right-2 top-2 z-10 flex items-center gap-1 rounded-lg bg-background/90 p-1 shadow-sm ring-1 ring-border/60'>
+        <div
+          className='absolute right-2 top-2 z-10 flex items-center gap-1 rounded-lg bg-background/90 p-1 shadow-sm ring-1 ring-border/60'
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <button
             type='button'
-            className='cursor-grab rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
+            className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground'
             aria-label={`Mover ${widget.title}`}
-            {...attributes}
-            {...listeners}
           >
             <Icons.gripVertical className='size-4' />
           </button>
@@ -384,8 +425,10 @@ function SortableWidget({
         </div>
       )}
       <div
+        {...attributes}
+        {...listeners}
         className={cn(
-          'flex items-center gap-2 border-b border-border/45 px-4 py-3',
+          'flex cursor-grab touch-none items-center gap-2 border-b border-border/45 px-4 py-3 active:cursor-grabbing',
           isDragging && 'invisible'
         )}
       >
@@ -400,7 +443,9 @@ function SortableWidget({
       >
         {widget.content}
       </div>
-      {editing && <ResizeHandle size={size} allowedSizes={allowedSizes} onResize={onResize} />}
+      {editing && isDesktop && (
+        <ResizeHandle size={size} allowedSizes={allowedSizes} onResize={onResize} />
+      )}
     </section>
   );
 }

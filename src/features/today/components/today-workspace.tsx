@@ -7,7 +7,11 @@ import { addDays, format, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
-import { WidgetWorkspace, type WidgetDefinition } from '@/components/layout/widget-workspace';
+import {
+  todayWorkspaceStorageKey,
+  WidgetWorkspace,
+  type WidgetDefinition
+} from '@/components/layout/widget-workspace';
 import { cn } from '@/lib/utils';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
@@ -274,7 +278,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
           {format(now, 'EEE d MMM · HH:mm', { locale: es })}
         </time>
       </header>
-      <WidgetWorkspace widgets={widgets} storageKey={`today-workspace:${userId}`} />
+      <WidgetWorkspace widgets={widgets} storageKey={todayWorkspaceStorageKey(userId)} />
     </main>
   );
 }
