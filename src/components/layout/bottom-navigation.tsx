@@ -41,7 +41,7 @@ export function BottomNavigation() {
         href={item.url}
         className={cn(
           'group flex min-w-0 items-center justify-center rounded-[10px] transition-colors',
-          mobile ? 'h-[54px] w-[20px] p-0' : 'min-h-[50px] flex-col gap-1 px-2 py-2',
+          mobile ? 'h-[54px] w-full max-w-10 p-0' : 'min-h-[50px] flex-col gap-1 px-2 py-2',
           active
             ? 'bg-primary/10 text-primary'
             : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
@@ -82,7 +82,7 @@ export function BottomNavigation() {
               {mobileLeftItems.map((item) => (
                 <div
                   key={`mobile-${item.url}`}
-                  className='flex h-[54px] w-[20px] shrink-0 items-center justify-center'
+                  className='flex h-[54px] w-full shrink-0 items-center justify-center'
                 >
                   {renderNavItem(item, true)}
                 </div>
@@ -125,7 +125,7 @@ export function BottomNavigation() {
               {mobileRightItems.map((item) => (
                 <div
                   key={`mobile-${item.url}`}
-                  className='flex h-[54px] w-[20px] shrink-0 items-center justify-center'
+                  className='flex h-[54px] w-full shrink-0 items-center justify-center'
                 >
                   {renderNavItem(item, true)}
                 </div>
@@ -139,7 +139,7 @@ export function BottomNavigation() {
                   setMoreOpen(true);
                 }}
                 className={cn(
-                  'flex h-[54px] w-[20px] shrink-0 items-center justify-center rounded-[10px] p-0 transition-colors',
+                  'flex h-[54px] w-full max-w-10 items-center justify-center rounded-[10px] p-0 transition-colors',
                   moreOpen
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
