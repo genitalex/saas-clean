@@ -98,40 +98,24 @@ export function WeeklyAgenda({
 }) {
   const queryClient = useQueryClient();
   const agendaRef = useRef<HTMLDivElement>(null);
-  const todayKey = format(today, 'yyyy-MM-dd');
-  const [windowStart, setWindowStart] = useState(() => addDays(today, -30));
+  const [windowStart, setWindowStart] = useState(() => today);
   const pendingScrollAdjustment = useRef(0);
   const shiftingWindow = useRef(false);
-  const initialPositioned = useRef(false);
   const dragState = useRef<{ x: number; scrollLeft: number } | null>(null);
   const agendaDays = useMemo(
     () => Array.from({ length: 61 }, (_, index) => addDays(windowStart, index)),
     [windowStart]
   );
   useEffect(() => {
-    setWindowStart(addDays(today, -30));
-  }, [todayKey]);
-  useEffect(() => {
-    const container = agendaRef.current;
-    if (!container) return;
     const adjustment = pendingScrollAdjustment.current;
-    if (adjustment !== 0) {
-      window.requestAnimationFrame(() => {
-        container.scrollLeft += adjustment;
-        pendingScrollAdjustment.current = 0;
-        shiftingWindow.current = false;
-      });
-      return;
-    }
-    if (initialPositioned.current) return;
-    initialPositioned.current = true;
+    const container = agendaRef.current;
+    if (adjustment === 0 || !container) return;
     window.requestAnimationFrame(() => {
-      const todayCard = container.querySelector<HTMLElement>(`[data-day='${todayKey}']`);
-      if (!todayCard) return;
-      container.scrollLeft =
-        todayCard.offsetLeft - (container.clientWidth - todayCard.offsetWidth) / 2;
+      container.scrollLeft += adjustment;
+      pendingScrollAdjustment.current = 0;
+      shiftingWindow.current = false;
     });
-  }, [todayKey, windowStart]);
+  }, [windowStart]);
   function handleAgendaScroll(event: React.UIEvent<HTMLDivElement>) {
     const container = event.currentTarget;
     if (shiftingWindow.current || container.scrollWidth <= container.clientWidth) return;
@@ -150,12 +134,6 @@ export function WeeklyAgenda({
       shiftingWindow.current = true;
       pendingScrollAdjustment.current = -shift;
       setWindowStart((current) => addDays(current, 30));
-    }
-  }
-  function handleAgendaWheel(event: React.WheelEvent<HTMLDivElement>) {
-    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-      event.currentTarget.scrollLeft += event.deltaY;
-      event.preventDefault();
     }
   }
   function handleAgendaPointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -200,7 +178,7 @@ export function WeeklyAgenda({
         <button
           type='button'
           aria-label='Días anteriores'
-          onClick={() => shiftAgenda(-7)}
+          onClick={() => shiftAgenda(-1)}
           className='absolute top-1/2 left-0 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
         >
           <Icons.chevronLeft className='size-4' />
@@ -208,7 +186,7 @@ export function WeeklyAgenda({
         <div
           ref={agendaRef}
           onScroll={handleAgendaScroll}
-          onWheel={handleAgendaWheel}
+          onWheel={(event) => event.preventDefault()}
           onPointerDown={handleAgendaPointerDown}
           onPointerMove={handleAgendaPointerMove}
           onPointerUp={() => {
@@ -268,7 +246,7 @@ export function WeeklyAgenda({
         <button
           type='button'
           aria-label='Días siguientes'
-          onClick={() => shiftAgenda(7)}
+          onClick={() => shiftAgenda(1)}
           className='absolute top-1/2 right-0 z-10 hidden size-8 -translate-y-1/2 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
         >
           <Icons.chevronRight className='size-4' />
