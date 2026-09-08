@@ -399,8 +399,8 @@ function SortableWidget({
   return (
     <section
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
+      {...(editing ? attributes : {})}
+      {...(editing ? listeners : {})}
       style={style}
       className={cn(
         'relative mb-3 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-card ring-1 ring-border/65 transition-[box-shadow,ring-color,background-color,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:mb-4',
