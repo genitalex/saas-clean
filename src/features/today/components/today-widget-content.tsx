@@ -193,7 +193,7 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pt-3 pb-3 touch-pan-x cursor-grab active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
+          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing sm:gap-0 [&::-webkit-scrollbar]:hidden'
         >
           {agendaDays.map((day) => {
             const selected = isSameDay(day, today);
@@ -208,7 +208,7 @@ export function WeeklyAgenda({
                 href={`/dashboard/calendar?date=${dayKey}&view=day`}
                 aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
-                  'group flex min-h-28 min-w-0 flex-[0_0_calc((100%-1rem)/3)] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_calc((100%-3rem)/7)] sm:p-3',
+                  'group flex min-h-28 min-w-0 flex-[0_0_31%] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_14.2857%] sm:p-3',
                   selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                 )}
               >
