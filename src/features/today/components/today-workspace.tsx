@@ -20,6 +20,7 @@ import { activityKeys, getActivities } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
 import { getAttentionItemsQueryOptions } from '@/features/automations/api/queries';
 import { AttentionItems } from '@/features/automations/components/attention-items';
+import { WeatherIndicator } from '@/features/weather/components/weather-indicator';
 import { QuickCapture } from './quick-capture';
 import { QuickActions, WeeklyAgenda } from './today-widget-content';
 
@@ -325,7 +326,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
 
   return (
     <main className='mx-auto flex w-full max-w-(--page-max-width) min-w-0 flex-1 flex-col gap-4 px-(--page-padding) pt-5 pb-10 sm:gap-5 sm:pt-7'>
-      <header className='relative isolate flex min-h-44 flex-col justify-between gap-6 overflow-hidden rounded-xl px-5 py-5 text-white sm:min-h-48 sm:flex-row sm:items-end sm:px-7 sm:py-7'>
+      <header className='relative isolate flex min-h-44 flex-col justify-between gap-5 overflow-hidden rounded-xl px-5 py-5 text-white sm:min-h-48 sm:flex-row sm:items-start sm:px-7 sm:py-7'>
         <div className='absolute inset-0 -z-10 overflow-hidden bg-muted' aria-hidden='true'>
           {previousAmbient && (
             <div
@@ -346,7 +347,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
           <div className='absolute inset-0 bg-black/18' />
         </div>
 
-        <div className='min-w-0'>
+        <div className='flex min-w-0 flex-col gap-4'>
           <div className='flex items-center gap-2'>
             <span className='size-1.5 rounded-full bg-white/80' />
             <p className='text-[10px] font-semibold uppercase tracking-[0.22em] text-white/85'>
@@ -356,15 +357,19 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
           <h1 className='mt-1 text-2xl font-semibold tracking-tight sm:text-3xl'>
             {ambient.greeting}, {userName}
           </h1>
-        </div>
-        <div className='flex items-center gap-3 self-start sm:self-end'>
-          <div className='flex items-center gap-2 rounded-full bg-black/15 px-3 py-2 text-xs text-white/90 ring-1 ring-white/20'>
-            <Icons.calendar className='size-3.5 text-white/85' />
-            <span className='capitalize'>{format(now, 'EEEE d MMMM', { locale: es })}</span>
+          <div className='flex items-center gap-3 text-sm text-white/85'>
+            <span className='inline-flex items-center gap-2'>
+              <Icons.calendar className='size-3.5 text-white/75' />
+              <span className='capitalize'>{format(now, 'EEEE d MMMM', { locale: es })}</span>
+            </span>
+            <span className='text-white/45'>·</span>
+            <time className='font-semibold tabular-nums tracking-tight text-white'>
+              {format(now, 'HH:mm')}
+            </time>
           </div>
-          <time className='text-lg font-semibold tabular-nums tracking-tight text-white sm:text-xl'>
-            {format(now, 'HH:mm')}
-          </time>
+        </div>
+        <div className='self-start sm:self-end sm:pb-1'>
+          <WeatherIndicator userId={userId} />
         </div>
       </header>
       <WidgetWorkspace widgets={widgets} storageKey={todayWorkspaceStorageKey(userId)} />
