@@ -26,6 +26,11 @@ import type { GlobalActivity } from '@/features/activities/types';
 import { QuickCapture } from './quick-capture';
 import { toast } from 'sonner';
 import { AttentionItems } from '@/features/automations/components/attention-items';
+import { TodayWorkspace } from './today-workspace';
+
+export function TodayPage({ userId, userName }: { userId: string; userName: string }) {
+  return <TodayWorkspace userId={userId} userName={userName} />;
+}
 
 type TodayPlanItem =
   | { type: 'task'; task: Task; at: Date }
@@ -57,7 +62,7 @@ function taskNeedsAttention(task: Task, now: Date) {
   );
 }
 
-export function TodayPage({
+function LegacyTodayPage({
   role,
   userName,
   initialNow
