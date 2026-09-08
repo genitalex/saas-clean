@@ -118,12 +118,12 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='-mx-1 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-1 py-2'>
+      <div className='-mx-1 grid grid-cols-[28px_minmax(0,1fr)_28px] items-center gap-0 px-0 py-2'>
         <button
           type='button'
           aria-label='Días anteriores'
           onClick={() => shiftAgenda(-1)}
-          className='hidden size-8 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
+          className='hidden size-7 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
         >
           <Icons.chevronLeft className='size-4' />
         </button>
@@ -137,59 +137,61 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none flex min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-1 pt-3 pb-3 touch-pan-x cursor-grab select-none active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
+          className='scrollbar-none min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden'
         >
-          {agendaDays.map((day) => {
-            const selected = isSameDay(day, today);
-            const dayEvents = events
-              .filter((event) => isSameDay(new Date(event.startAt), day))
-              .slice(0, 4);
-            const dayKey = format(day, 'yyyy-MM-dd');
-            return (
-              <Link
-                key={dayKey}
-                data-day={dayKey}
-                href={`/dashboard/calendar?date=${dayKey}&view=day`}
-                aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
-                className={cn(
-                  'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_31%] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_180px] sm:p-3',
-                  selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
-                )}
-              >
-                <span className='text-muted-foreground block w-full text-[10px] font-semibold uppercase tracking-wide'>
-                  {format(day, 'EEE', { locale: es })}
-                </span>
-                <span
+          <div className='flex min-w-max snap-x snap-mandatory gap-2 touch-pan-x cursor-grab select-none active:cursor-grabbing'>
+            {agendaDays.map((day) => {
+              const selected = isSameDay(day, today);
+              const dayEvents = events
+                .filter((event) => isSameDay(new Date(event.startAt), day))
+                .slice(0, 4);
+              const dayKey = format(day, 'yyyy-MM-dd');
+              return (
+                <Link
+                  key={dayKey}
+                  data-day={dayKey}
+                  href={`/dashboard/calendar?date=${dayKey}&view=day`}
+                  aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                   className={cn(
-                    'mt-1 flex size-8 shrink-0 items-center justify-center self-center rounded-full text-sm font-semibold',
-                    selected ? 'bg-primary text-primary-foreground' : 'group-hover:bg-muted/70'
+                    'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_31%] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_180px] sm:p-3',
+                    selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                   )}
                 >
-                  {format(day, 'd')}
-                </span>
-                <span className='mt-2 flex flex-1 flex-col items-start gap-1 overflow-hidden text-left'>
-                  {dayEvents.map((event) => (
-                    <span
-                      key={event.id}
-                      className='flex w-full min-w-0 items-center gap-1 text-[10px] leading-4'
-                    >
-                      <i
-                        className='size-1.5 shrink-0 rounded-full bg-primary'
-                        title={event.title}
-                      />
-                      <span className='truncate'>{event.title}</span>
-                    </span>
-                  ))}
-                </span>
-              </Link>
-            );
-          })}
+                  <span className='text-muted-foreground block w-full text-[10px] font-semibold uppercase tracking-wide'>
+                    {format(day, 'EEE', { locale: es })}
+                  </span>
+                  <span
+                    className={cn(
+                      'mt-1 flex size-8 shrink-0 items-center justify-center self-center rounded-full text-sm font-semibold',
+                      selected ? 'bg-primary text-primary-foreground' : 'group-hover:bg-muted/70'
+                    )}
+                  >
+                    {format(day, 'd')}
+                  </span>
+                  <span className='mt-2 flex flex-1 flex-col items-start gap-1 overflow-hidden text-left'>
+                    {dayEvents.map((event) => (
+                      <span
+                        key={event.id}
+                        className='flex w-full min-w-0 items-center gap-1 text-[10px] leading-4'
+                      >
+                        <i
+                          className='size-1.5 shrink-0 rounded-full bg-primary'
+                          title={event.title}
+                        />
+                        <span className='truncate'>{event.title}</span>
+                      </span>
+                    ))}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
         <button
           type='button'
           aria-label='Días siguientes'
           onClick={() => shiftAgenda(1)}
-          className='hidden size-8 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
+          className='hidden size-7 shrink-0 items-center justify-center rounded-full bg-card/95 text-muted-foreground shadow-sm ring-1 ring-border/70 hover:bg-muted hover:text-foreground sm:flex'
         >
           <Icons.chevronRight className='size-4' />
         </button>
