@@ -78,7 +78,7 @@ export function BottomNavigation() {
       >
         <div className='relative mb-0 w-full max-w-[980px] rounded-none border border-x-0 border-b-0 border-border/70 bg-card px-1 pt-1 pb-0 shadow-[0_-6px_20px_rgb(23_32_25_/_0.07)] md:rounded-[var(--radius-xl)] md:border md:px-1 md:py-1 md:shadow-md md:mb-5'>
           <div className='relative min-h-[60px] md:min-h-[54px]'>
-            <div className='mx-auto flex h-[60px] w-max items-center justify-center gap-[10px] md:hidden'>
+            <div className='mx-auto grid h-[60px] w-[calc(100%-24px)] max-w-[360px] grid-cols-[repeat(3,minmax(0,1fr))_56px_repeat(3,minmax(0,1fr))] items-center gap-2 md:hidden'>
               {mobileLeftItems.map((item) => (
                 <div
                   key={`mobile-${item.url}`}
