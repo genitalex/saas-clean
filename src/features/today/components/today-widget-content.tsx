@@ -93,20 +93,73 @@ export function WeeklyAgenda({
 }) {
   const queryClient = useQueryClient();
   const agendaRef = useRef<HTMLDivElement>(null);
-  const weekDays = useMemo(
-    () => Array.from({ length: 121 }, (_, index) => addDays(today, index - 60)),
-    [today]
+  const todayKey = format(today, 'yyyy-MM-dd');
+  const [windowStart, setWindowStart] = useState(() => addDays(today, -30));
+  const pendingScrollAdjustment = useRef(0);
+  const shiftingWindow = useRef(false);
+  const dragState = useRef<{ x: number; scrollLeft: number } | null>(null);
+  const agendaDays = useMemo(
+    () => Array.from({ length: 61 }, (_, index) => addDays(windowStart, index)),
+    [windowStart]
   );
   useEffect(() => {
-    agendaRef.current
-      ?.querySelector<HTMLElement>(`[data-day='${format(today, 'yyyy-MM-dd')}']`)
-      ?.scrollIntoView({ block: 'nearest', inline: 'center' });
-  }, [today]);
+    setWindowStart(addDays(today, -30));
+  }, [todayKey]);
+  useEffect(() => {
+    const container = agendaRef.current;
+    if (!container) return;
+    const adjustment = pendingScrollAdjustment.current;
+    if (adjustment !== 0) {
+      window.requestAnimationFrame(() => {
+        container.scrollLeft += adjustment;
+        pendingScrollAdjustment.current = 0;
+        shiftingWindow.current = false;
+      });
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      const todayCard = container.querySelector<HTMLElement>(`[data-day='${todayKey}']`);
+      if (!todayCard) return;
+      container.scrollLeft =
+        todayCard.offsetLeft - (container.clientWidth - todayCard.offsetWidth) / 2;
+    });
+  }, [todayKey, windowStart]);
+  function handleAgendaScroll(event: React.UIEvent<HTMLDivElement>) {
+    const container = event.currentTarget;
+    if (shiftingWindow.current || container.scrollWidth <= container.clientWidth) return;
+    const firstCard = container.querySelector<HTMLElement>('[data-day]');
+    if (!firstCard) return;
+    const cardStep = firstCard.offsetWidth + 8;
+    const shift = cardStep * 30;
+    if (container.scrollLeft < shift * 0.35) {
+      shiftingWindow.current = true;
+      pendingScrollAdjustment.current = shift;
+      setWindowStart((current) => addDays(current, -30));
+    } else if (
+      container.scrollLeft + container.clientWidth >
+      container.scrollWidth - shift * 0.35
+    ) {
+      shiftingWindow.current = true;
+      pendingScrollAdjustment.current = -shift;
+      setWindowStart((current) => addDays(current, 30));
+    }
+  }
   function handleAgendaWheel(event: React.WheelEvent<HTMLDivElement>) {
     if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
       event.currentTarget.scrollLeft += event.deltaY;
       event.preventDefault();
     }
+  }
+  function handleAgendaPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === 'mouse') {
+      dragState.current = { x: event.clientX, scrollLeft: event.currentTarget.scrollLeft };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+  }
+  function handleAgendaPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!dragState.current) return;
+    event.currentTarget.scrollLeft =
+      dragState.current.scrollLeft - (event.clientX - dragState.current.x);
   }
   const linkedEventIds = new Set(tasks.flatMap((task) => (task.eventId ? [task.eventId] : [])));
   const todayPlan = [
@@ -130,10 +183,19 @@ export function WeeklyAgenda({
       <div className='-mx-1 px-1 py-2'>
         <div
           ref={agendaRef}
+          onScroll={handleAgendaScroll}
           onWheel={handleAgendaWheel}
-          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 touch-pan-x [&::-webkit-scrollbar]:hidden'
+          onPointerDown={handleAgendaPointerDown}
+          onPointerMove={handleAgendaPointerMove}
+          onPointerUp={() => {
+            dragState.current = null;
+          }}
+          onPointerCancel={() => {
+            dragState.current = null;
+          }}
+          className='scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pt-3 pb-3 touch-pan-x cursor-grab active:cursor-grabbing [&::-webkit-scrollbar]:hidden'
         >
-          {weekDays.map((day) => {
+          {agendaDays.map((day) => {
             const selected = isSameDay(day, today);
             const dayEvents = events
               .filter((event) => isSameDay(new Date(event.startAt), day))

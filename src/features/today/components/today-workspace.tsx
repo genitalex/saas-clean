@@ -99,8 +99,8 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
   }, [activeAmbient]);
 
   const today = startOfDay(now);
-  const agendaStart = addDays(today, -60);
-  const agendaEnd = addDays(today, 61);
+  const agendaStart = addDays(today, -365);
+  const agendaEnd = addDays(today, 366);
   const tasksQuery = useQuery({
     queryKey: taskKeys.list(),
     queryFn: () => getTasks(),
