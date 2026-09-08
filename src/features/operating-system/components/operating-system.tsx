@@ -185,8 +185,18 @@ function Pulse() {
   );
 }
 
-export function OpportunitiesPage({ detailId }: { detailId?: string }) {
+export function OpportunitiesPage({
+  detailId,
+  initialCreate
+}: {
+  detailId?: string;
+  initialCreate?: boolean;
+}) {
   const [opportunities, setOpportunities] = useState(seed);
+  const [createOpen, setCreateOpen] = useState(Boolean(initialCreate));
+  const [newTitle, setNewTitle] = useState('');
+  const [newCustomer, setNewCustomer] = useState('');
+  const [newValue, setNewValue] = useState('');
   const [selected, setSelected] = useState<Opportunity | null>(
     detailId ? (seed.find((item) => String(item.id) === detailId) ?? null) : null
   );
@@ -202,6 +212,25 @@ export function OpportunitiesPage({ detailId }: { detailId?: string }) {
   );
   const move = (id: number, stage: string) =>
     setOpportunities((items) => items.map((item) => (item.id === id ? { ...item, stage } : item)));
+  const createOpportunity = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newTitle.trim() || !newCustomer.trim()) return;
+    const opportunity: Opportunity = {
+      id: Date.now(),
+      title: newTitle.trim(),
+      customer: newCustomer.trim(),
+      value: Number(newValue) || 0,
+      probability: 20,
+      stage: 'Prospecto',
+      close: 'Por definir',
+      owner: 'Alex'
+    };
+    setOpportunities((items) => [opportunity, ...items]);
+    setNewTitle('');
+    setNewCustomer('');
+    setNewValue('');
+    setCreateOpen(false);
+  };
   if (detailId && selected)
     return (
       <OpportunityDetail
@@ -228,9 +257,44 @@ export function OpportunitiesPage({ detailId }: { detailId?: string }) {
             onChange={(event) => setQuery(event.target.value)}
             placeholder='Buscar oportunidad'
           />
-          <Button>Nueva oportunidad</Button>
+          <Button onClick={() => setCreateOpen(true)}>Nueva oportunidad</Button>
         </div>
       </div>
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nueva oportunidad</DialogTitle>
+          </DialogHeader>
+          <form className='space-y-4' onSubmit={createOpportunity}>
+            <Input
+              autoFocus
+              placeholder='Nombre de la oportunidad'
+              value={newTitle}
+              onChange={(event) => setNewTitle(event.target.value)}
+            />
+            <Input
+              placeholder='Cliente'
+              value={newCustomer}
+              onChange={(event) => setNewCustomer(event.target.value)}
+            />
+            <Input
+              type='number'
+              min='0'
+              placeholder='Valor estimado'
+              value={newValue}
+              onChange={(event) => setNewValue(event.target.value)}
+            />
+            <div className='flex justify-end gap-2'>
+              <Button type='button' variant='outline' onClick={() => setCreateOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type='submit' disabled={!newTitle.trim() || !newCustomer.trim()}>
+                Crear oportunidad
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Pulse />
       <DndContext
         sensors={sensors}

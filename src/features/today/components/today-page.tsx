@@ -227,19 +227,19 @@ function LegacyTodayPage({
           hint='Organiza trabajo'
         />
         <QuickAction
-          href='/dashboard/calendar'
+          href='/dashboard/calendar?create=1'
           icon={Icons.calendar}
           label='Nuevo evento'
           hint='Reserva tiempo'
         />
         <QuickAction
-          href='/dashboard/customers'
+          href='/dashboard/customers?create=1'
           icon={Icons.user}
           label='Nuevo cliente'
           hint='Añade contexto'
         />
         <QuickAction
-          href='/dashboard/opportunities'
+          href='/dashboard/opportunities?create=1'
           icon={Icons.opportunities}
           label='Nueva oportunidad'
           hint='Haz crecer el negocio'

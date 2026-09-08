@@ -32,19 +32,19 @@ export function QuickActions() {
       hint: 'Organiza trabajo'
     },
     {
-      href: '/dashboard/calendar',
+      href: '/dashboard/calendar?create=1',
       icon: Icons.calendar,
       label: 'Nuevo evento',
       hint: 'Reserva tiempo'
     },
     {
-      href: '/dashboard/customers',
+      href: '/dashboard/customers?create=1',
       icon: Icons.user,
       label: 'Nuevo cliente',
       hint: 'Añade contexto'
     },
     {
-      href: '/dashboard/opportunities',
+      href: '/dashboard/opportunities?create=1',
       icon: Icons.opportunities,
       label: 'Nueva oportunidad',
       hint: 'Haz crecer el negocio'
@@ -114,7 +114,7 @@ export function WeeklyAgenda({
   return (
     <div>
       <div className='-mx-1 px-1 pb-1'>
-        <div className='grid grid-cols-7 gap-1 sm:gap-2'>
+        <div className='flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 [scrollbar-width:none] touch-pan-x [&::-webkit-scrollbar]:hidden'>
           {weekDays.map((day) => {
             const selected = isSameDay(day, today);
             const dayEvents = events
@@ -127,7 +127,7 @@ export function WeeklyAgenda({
                 href={`/dashboard/calendar?date=${dayKey}&view=day`}
                 aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                 className={cn(
-                  'group flex min-h-28 min-w-0 flex-col rounded-xl p-2 text-center ring-1 transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:bg-muted/45 sm:min-h-33 sm:p-3',
+                  'group flex min-h-28 min-w-[148px] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:bg-muted/45 sm:min-h-33 sm:p-3',
                   selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                 )}
               >

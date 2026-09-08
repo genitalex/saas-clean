@@ -27,14 +27,14 @@ import type {
 const weatherStorageKey = (userId: string) => `weather-preference:${userId}`;
 
 function getWeatherIcon(weatherCode: number, isDay: boolean) {
-  if (weatherCode === 0) return isDay ? '☀️' : '🌙';
-  if ([1, 2, 3].includes(weatherCode)) return isDay ? '🌤️' : '☁️';
-  if ([45, 48].includes(weatherCode)) return '🌫️';
-  if ([51, 53, 55, 56, 57].includes(weatherCode)) return '🌦️';
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) return '🌧️';
-  if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) return '🌨️';
-  if ([95, 96, 99].includes(weatherCode)) return '⛈️';
-  return '🌡️';
+  if (weatherCode === 0) return isDay ? Icons.sun : Icons.moon;
+  if ([1, 2, 3, 45, 48].includes(weatherCode)) return Icons.cloud;
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) {
+    return Icons.cloudRain;
+  }
+  if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) return Icons.cloudSnow;
+  if ([95, 96, 99].includes(weatherCode)) return Icons.cloudStorm;
+  return Icons.sun;
 }
 
 function readPreference(userId: string): WeatherPreference | null {
@@ -229,11 +229,10 @@ export function WeatherIndicator({ userId }: { userId: string }) {
 }
 
 function WeatherValue({ weather, city }: { weather: WeatherData; city?: string }) {
+  const WeatherIcon = getWeatherIcon(weather.weatherCode, weather.isDay);
   return (
     <span className={cn('inline-flex items-center gap-2')}>
-      <span className='text-[1.65rem] leading-none drop-shadow-sm' aria-hidden='true'>
-        {getWeatherIcon(weather.weatherCode, weather.isDay)}
-      </span>
+      <WeatherIcon className='size-7 stroke-[1.7] drop-shadow-sm' aria-hidden='true' />
       <span className='font-medium'>{weather.temperature} °C</span>
       {city && (
         <>

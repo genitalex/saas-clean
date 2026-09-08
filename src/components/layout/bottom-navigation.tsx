@@ -229,25 +229,25 @@ function QuickCreate({ onClose, isMobile }: { onClose: () => void; isMobile: boo
     {
       label: 'Nueva tarea',
       description: 'Organiza trabajo pendiente',
-      href: '/dashboard/tasks',
+      href: '/dashboard/my-work?mode=list&create=1',
       icon: Icons.check
     },
     {
       label: 'Nuevo evento',
       description: 'Reserva un espacio en tu calendario',
-      href: '/dashboard/calendar',
+      href: '/dashboard/calendar?create=1',
       icon: Icons.calendar
     },
     {
       label: 'Nuevo cliente',
       description: 'Añade una relación al equipo',
-      href: '/dashboard/customers',
+      href: '/dashboard/customers?create=1',
       icon: Icons.teams
     },
     {
       label: 'Nueva oportunidad',
       description: 'Convierte una posibilidad en trabajo',
-      href: '/dashboard/opportunities',
+      href: '/dashboard/opportunities?create=1',
       icon: Icons.opportunities
     },
     {
