@@ -791,8 +791,7 @@ function QuickAction({
         <Icon className='size-3.5' />
       </span>
       <span className='min-w-0'>
-        <span className='block truncate text-xs font-medium'>{label}</span>
-        <span className='text-muted-foreground block truncate text-[10px]'>{hint}</span>
+        <span className='block truncate text-sm font-medium'>{label}</span>
       </span>
     </Link>
   );

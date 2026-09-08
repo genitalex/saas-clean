@@ -77,8 +77,7 @@ export function QuickActions() {
             <Icon className='size-3.5' />
           </span>
           <span className='min-w-0'>
-            <span className='block truncate text-xs font-medium'>{label}</span>
-            <span className='text-muted-foreground block truncate text-[10px]'>{hint}</span>
+            <span className='block truncate text-sm font-medium'>{label}</span>
           </span>
         </Link>
       ))}
@@ -103,6 +102,7 @@ export function WeeklyAgenda({
   const [windowStart, setWindowStart] = useState(() => addDays(today, -30));
   const pendingScrollAdjustment = useRef(0);
   const shiftingWindow = useRef(false);
+  const initialPositioned = useRef(false);
   const dragState = useRef<{ x: number; scrollLeft: number } | null>(null);
   const agendaDays = useMemo(
     () => Array.from({ length: 61 }, (_, index) => addDays(windowStart, index)),
@@ -123,6 +123,8 @@ export function WeeklyAgenda({
       });
       return;
     }
+    if (initialPositioned.current) return;
+    initialPositioned.current = true;
     window.requestAnimationFrame(() => {
       const todayCard = container.querySelector<HTMLElement>(`[data-day='${todayKey}']`);
       if (!todayCard) return;
