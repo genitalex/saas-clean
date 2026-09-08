@@ -102,9 +102,9 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       mobileSize: 2,
       allowedSizes: [4, 6, 8],
       mobileAllowedSizes: [2],
-      defaultHeight: 2,
-      minHeight: 2,
-      maxHeight: 2,
+      defaultHeight: 3,
+      minHeight: 3,
+      maxHeight: 3,
       content: <QuickCapture />
     },
     {
@@ -116,9 +116,9 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       mobileSize: 2,
       allowedSizes: [8, 12],
       mobileAllowedSizes: [2],
-      defaultHeight: 2,
-      minHeight: 2,
-      maxHeight: 2,
+      defaultHeight: 3,
+      minHeight: 3,
+      maxHeight: 3,
       content: <QuickActions />
     },
     {
@@ -131,9 +131,9 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       mobileSize: 2,
       allowedSizes: [8, 12],
       mobileAllowedSizes: [2],
-      defaultHeight: 4,
-      minHeight: 4,
-      maxHeight: 4,
+      defaultHeight: 5,
+      minHeight: 5,
+      maxHeight: 5,
       content: (
         <WeeklyAgenda weekDays={weekDays} today={today} events={events} tasks={tasks} now={now} />
       )

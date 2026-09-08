@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export type WidgetSize = 1 | 2 | 3 | 4 | 6 | 8 | 12;
-export type WidgetHeight = 1 | 2 | 3 | 4;
+export type WidgetHeight = 1 | 2 | 3 | 4 | 5;
 
 export interface WidgetDefinition {
   id: string;
