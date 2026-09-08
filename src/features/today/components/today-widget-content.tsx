@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { addDays, format, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -25,37 +25,16 @@ type TodayPlanItem =
 
 export function QuickActions() {
   const actions = [
-    {
-      href: '/dashboard/my-work?mode=list&create=1',
-      icon: Icons.check,
-      label: 'Nueva tarea',
-      hint: 'Organiza trabajo'
-    },
-    {
-      href: '/dashboard/calendar?create=1',
-      icon: Icons.calendar,
-      label: 'Nuevo evento',
-      hint: 'Reserva tiempo'
-    },
-    {
-      href: '/dashboard/customers?create=1',
-      icon: Icons.user,
-      label: 'Nuevo cliente',
-      hint: 'Añade contexto'
-    },
+    { href: '/dashboard/my-work?mode=list&create=1', icon: Icons.check, label: 'Nueva tarea' },
+    { href: '/dashboard/calendar?create=1', icon: Icons.calendar, label: 'Nuevo evento' },
+    { href: '/dashboard/customers?create=1', icon: Icons.user, label: 'Nuevo cliente' },
     {
       href: '/dashboard/opportunities?create=1',
       icon: Icons.opportunities,
-      label: 'Nueva oportunidad',
-      hint: 'Haz crecer el negocio'
+      label: 'Nueva oportunidad'
     },
-    {
-      href: '/dashboard/quotes',
-      icon: Icons.post,
-      label: 'Nuevo presupuesto',
-      hint: 'Prepara una propuesta'
-    },
-    { href: '/dashboard/notes', icon: Icons.post, label: 'Nota rápida', hint: 'Guarda una idea' }
+    { href: '/dashboard/quotes', icon: Icons.post, label: 'Nuevo presupuesto' },
+    { href: '/dashboard/notes', icon: Icons.post, label: 'Nota rápida' }
   ];
 
   return (
@@ -63,7 +42,7 @@ export function QuickActions() {
       className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6'
       aria-label='Acciones rápidas'
     >
-      {actions.map(({ href, icon: Icon, label, hint }) => (
+      {actions.map(({ href, icon: Icon, label }) => (
         <Link
           key={href}
           href={href}
@@ -98,44 +77,9 @@ export function WeeklyAgenda({
 }) {
   const queryClient = useQueryClient();
   const agendaRef = useRef<HTMLDivElement>(null);
-  const [windowStart, setWindowStart] = useState(() => today);
-  const pendingScrollAdjustment = useRef(0);
-  const shiftingWindow = useRef(false);
   const dragState = useRef<{ x: number; scrollLeft: number } | null>(null);
-  const agendaDays = useMemo(
-    () => Array.from({ length: 61 }, (_, index) => addDays(windowStart, index)),
-    [windowStart]
-  );
-  useEffect(() => {
-    const adjustment = pendingScrollAdjustment.current;
-    const container = agendaRef.current;
-    if (adjustment === 0 || !container) return;
-    window.requestAnimationFrame(() => {
-      container.scrollLeft += adjustment;
-      pendingScrollAdjustment.current = 0;
-      shiftingWindow.current = false;
-    });
-  }, [windowStart]);
-  function handleAgendaScroll(event: React.UIEvent<HTMLDivElement>) {
-    const container = event.currentTarget;
-    if (shiftingWindow.current || container.scrollWidth <= container.clientWidth) return;
-    const firstCard = container.querySelector<HTMLElement>('[data-day]');
-    if (!firstCard) return;
-    const cardStep = firstCard.offsetWidth + 8;
-    const shift = cardStep * 30;
-    if (container.scrollLeft < shift * 0.35) {
-      shiftingWindow.current = true;
-      pendingScrollAdjustment.current = shift;
-      setWindowStart((current) => addDays(current, -30));
-    } else if (
-      container.scrollLeft + container.clientWidth >
-      container.scrollWidth - shift * 0.35
-    ) {
-      shiftingWindow.current = true;
-      pendingScrollAdjustment.current = -shift;
-      setWindowStart((current) => addDays(current, 30));
-    }
-  }
+  const agendaDays = Array.from({ length: 61 }, (_, index) => addDays(today, index));
+
   function handleAgendaPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse') {
       dragState.current = { x: event.clientX, scrollLeft: event.currentTarget.scrollLeft };
@@ -185,8 +129,6 @@ export function WeeklyAgenda({
         </button>
         <div
           ref={agendaRef}
-          onScroll={handleAgendaScroll}
-          onWheel={(event) => event.preventDefault()}
           onPointerDown={handleAgendaPointerDown}
           onPointerMove={handleAgendaPointerMove}
           onPointerUp={() => {

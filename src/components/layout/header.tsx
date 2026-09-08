@@ -24,7 +24,7 @@ export default function Header() {
           <Breadcrumbs />
         </div>
 
-        <div className='flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2'>
+        <div className='flex min-w-0 flex-1 items-center justify-start gap-1.5 sm:gap-2'>
           <button
             type='button'
             aria-label='Abrir búsqueda'

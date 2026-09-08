@@ -33,7 +33,7 @@ export function ThemeSelector() {
       >
         <SelectTrigger
           id='theme-selector'
-          className='h-9 w-9 justify-center px-0 sm:w-auto sm:justify-start sm:px-3 *:data-[slot=select-value]:hidden sm:*:data-[slot=select-value]:block sm:*:data-[slot=select-value]:w-24'
+          className='h-9 w-9 min-w-9 justify-center px-0 [&>svg:last-child]:hidden sm:w-auto sm:min-w-0 sm:justify-start sm:px-3 sm:[&>svg:last-child]:block *:data-[slot=select-value]:hidden sm:*:data-[slot=select-value]:block sm:*:data-[slot=select-value]:w-24'
         >
           <span className='text-muted-foreground'>
             <Icons.palette />
