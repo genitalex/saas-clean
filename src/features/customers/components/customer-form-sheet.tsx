@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -8,6 +9,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { createActivity } from '@/features/activities/queries';
+
 export default function CustomerFormSheet({ initialOpen = false }: { initialOpen?: boolean }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -20,9 +22,11 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
   const [notes, setNotes] = useState('');
   const [nextAction, setNextAction] = useState('');
   const [nextActionAt, setNextActionAt] = useState('');
+
   useEffect(() => {
     if (initialOpen) setOpen(true);
   }, [initialOpen]);
+
   async function create() {
     setPending(true);
     try {
@@ -42,7 +46,7 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
       });
       const customer = (await response.json().catch(() => ({}))) as { id?: string; error?: string };
       if (!response.ok || !customer.id) {
-        toast.error(customer.error || 'Could not create customer');
+        toast.error(customer.error || 'No se pudo crear el cliente');
         return;
       }
       if (notes.trim()) {
@@ -52,7 +56,7 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
           content: notes.trim()
         });
       }
-      toast.success('Customer created');
+      toast.success('Cliente creado');
       setName('');
       setEmail('');
       setPhone('');
@@ -64,32 +68,38 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
       setOpen(false);
       window.dispatchEvent(new CustomEvent('customers:refresh'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not create customer');
+      toast.error(error instanceof Error ? error.message : 'No se pudo crear el cliente');
     } finally {
       setPending(false);
     }
   }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!initialOpen && <Button onClick={() => setOpen(true)}>Add customer</Button>}
-      <DialogContent className='max-h-[calc(100dvh-2rem)] overflow-y-auto sm:p-6'>
+      {!initialOpen && <Button onClick={() => setOpen(true)}>Nuevo cliente</Button>}
+      <DialogContent className='max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border-border/70 bg-popover sm:max-w-xl sm:p-6'>
         <DialogHeader>
-          <DialogTitle className='font-medium'>New customer</DialogTitle>
+          <DialogTitle className='text-xl font-semibold tracking-tight'>Nuevo cliente</DialogTitle>
         </DialogHeader>
-        <div className='mt-4 space-y-4'>
-          <NativeSelect
-            value={kind}
-            onChange={(e) => setKind(e.target.value as 'person' | 'company')}
-          >
-            <NativeSelectOption value='person'>Person</NativeSelectOption>
-            <NativeSelectOption value='company'>Company</NativeSelectOption>
-          </NativeSelect>
-          <Input
-            aria-label='Customer name'
-            placeholder='Name'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        <div className='mt-3 space-y-4'>
+          <div className='grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)]'>
+            <NativeSelect
+              aria-label='Tipo de cliente'
+              value={kind}
+              onChange={(e) => setKind(e.target.value as 'person' | 'company')}
+            >
+              <NativeSelectOption value='person'>Persona</NativeSelectOption>
+              <NativeSelectOption value='company'>Empresa</NativeSelectOption>
+            </NativeSelect>
+            <Input
+              aria-label='Nombre del cliente'
+              placeholder='Nombre del cliente'
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+          </div>
+
           <div className='grid gap-3 sm:grid-cols-2'>
             <Input
               aria-label='Email'
@@ -99,60 +109,68 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
               onChange={(e) => setEmail(e.target.value)}
             />
             <Input
-              aria-label='Phone'
-              placeholder='Phone'
+              aria-label='Teléfono'
+              placeholder='Teléfono'
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
-          <details className='rounded-[12px] border border-border/40 px-3 py-2'>
-            <summary className='cursor-pointer text-sm font-medium'>More information</summary>
-            <div className='mt-3 space-y-3'>
-              <Input
-                aria-label='Address'
-                placeholder='Address'
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <Input
-                aria-label='Website'
-                type='url'
-                placeholder='https://website.com'
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-              />
-              <Textarea
-                aria-label='Notes'
-                placeholder='Notes for this customer'
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+
+          <div className='grid gap-3 sm:grid-cols-2'>
+            <Input
+              aria-label='Dirección'
+              placeholder='Dirección'
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <Input
+              aria-label='Sitio web'
+              type='url'
+              placeholder='https://sitio.com'
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </div>
+
+          <Textarea
+            aria-label='Notas'
+            placeholder='Notas del cliente (opcional)'
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className='min-h-24 resize-none'
+          />
+
+          <div className='rounded-xl border border-border/55 bg-muted/20 p-3.5'>
+            <div className='flex items-center justify-between gap-3'>
+              <div>
+                <p className='text-sm font-semibold'>Próximo paso</p>
+                <p className='mt-0.5 text-xs text-muted-foreground'>
+                  Qué quieres hacer a continuación.
+                </p>
+              </div>
             </div>
-          </details>
-          <div className='rounded-[12px] border border-border/40 px-3 py-2'>
-            <p className='text-sm font-medium'>Next action</p>
-            <div className='mt-3 space-y-3'>
+            <div className='mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_150px]'>
               <Input
-                aria-label='Next action'
-                placeholder='What needs to happen next?'
+                aria-label='Próximo paso'
+                placeholder='Ej. Llamar para confirmar'
                 value={nextAction}
                 onChange={(e) => setNextAction(e.target.value)}
               />
               <DatePicker
                 value={nextActionAt}
                 onChange={setNextActionAt}
-                aria-label='Next action date'
+                aria-label='Fecha del próximo paso'
                 className='w-full'
               />
             </div>
           </div>
         </div>
         <div className='mt-5 flex justify-end gap-2'>
-          <Button variant='outline' onClick={() => setOpen(false)}>
-            Cancel
+          <Button variant='ghost' onClick={() => setOpen(false)}>
+            Cancelar
           </Button>
           <Button disabled={!name.trim() || pending} onClick={() => void create()}>
-            {pending ? 'Creating…' : 'Create'}
+            {pending ? 'Creando…' : 'Crear cliente'}
           </Button>
         </div>
       </DialogContent>

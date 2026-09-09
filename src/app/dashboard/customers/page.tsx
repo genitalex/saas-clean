@@ -13,7 +13,7 @@ export default async function CustomersPage({
   return (
     <PageContainer
       pageTitle='Clientes'
-      pageDescription='Tu lista de trabajo con el contexto de cada cliente.'
+      pageDescription=''
       pageHeaderAction={<CustomerFormSheet initialOpen={params.create === '1'} />}
     >
       <CustomerListing />
