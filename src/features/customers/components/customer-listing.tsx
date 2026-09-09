@@ -148,21 +148,21 @@ export default function CustomerListing() {
               key={customer.id}
               type='button'
               onClick={() => openCustomer(customer)}
-              className='group grid w-full grid-cols-1 gap-3 border-b border-border/55 px-4 py-4 text-left transition-colors hover:bg-muted/20 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(250px,1.5fr)_minmax(190px,1fr)_minmax(220px,1.1fr)_minmax(180px,0.9fr)_32px] lg:items-center lg:gap-4 lg:px-5'
+              className='group grid w-full grid-cols-1 gap-2.5 border-b border-border/55 px-4 py-3 text-left transition-colors hover:bg-muted/20 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3 lg:grid-cols-[minmax(240px,1.5fr)_minmax(180px,1fr)_minmax(200px,1.1fr)_minmax(170px,0.9fr)_32px] lg:items-center lg:gap-3 lg:px-4 lg:py-2.5'
             >
-              <span className='flex min-w-0 items-center gap-3'>
-                <span className='bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold ring-1 ring-primary/10'>
+              <span className='flex min-w-0 items-center gap-2.5'>
+                <span className='bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ring-1 ring-primary/10'>
                   {initials(customer.name)}
                 </span>
                 <span className='min-w-0'>
-                  <span className='block truncate text-sm font-semibold'>{customer.name}</span>
+                  <span className='block truncate text-[13px] font-semibold'>{customer.name}</span>
                   <span className='mt-0.5 block text-xs text-muted-foreground'>
                     {customer.kind === 'person' ? 'Persona' : 'Empresa'}
                   </span>
                 </span>
               </span>
 
-              <span className='flex min-w-0 flex-col gap-1 pl-13 text-sm lg:pl-0'>
+              <span className='flex min-w-0 flex-col gap-0.5 pl-10 text-[13px] sm:pl-0'>
                 {customer.email ? <span className='truncate'>{customer.email}</span> : null}
                 {customer.phone ? (
                   <span className='truncate text-xs text-muted-foreground'>{customer.phone}</span>
@@ -171,7 +171,7 @@ export default function CustomerListing() {
                 ) : null}
               </span>
 
-              <span className='flex min-w-0 flex-col gap-1 pl-13 text-sm lg:pl-0'>
+              <span className='flex min-w-0 flex-col gap-0.5 pl-10 text-[13px] sm:pl-0'>
                 <span className='truncate text-muted-foreground'>
                   {customer.address || 'Sin dirección'}
                 </span>
@@ -180,7 +180,7 @@ export default function CustomerListing() {
                 ) : null}
               </span>
 
-              <span className='flex min-w-0 items-center gap-2 pl-13 lg:pl-0'>
+              <span className='flex min-w-0 items-center gap-2 pl-10 text-[13px] sm:pl-0'>
                 {customer.nextAction ? (
                   <span className='min-w-0'>
                     <span className='block truncate text-sm font-medium'>
