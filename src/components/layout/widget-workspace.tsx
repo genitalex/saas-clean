@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -69,19 +69,6 @@ export function todayWorkspaceStorageKey(userId: string) {
 const DESKTOP_COLUMNS = 12;
 const DESKTOP_SIZES: WidgetSize[] = [1, 2, 3, 4, 6, 8, 12];
 const MOBILE_SIZES: (1 | 2)[] = [1, 2];
-function subscribeToDesktop(callback: () => void) {
-  const media = window.matchMedia('(min-width: 768px)');
-  media.addEventListener('change', callback);
-  return () => media.removeEventListener('change', callback);
-}
-
-function getDesktopSnapshot() {
-  return window.matchMedia('(min-width: 768px)').matches;
-}
-
-function getDesktopServerSnapshot() {
-  return true;
-}
 
 function makeDefaultLayout(widgets: WidgetDefinition[]): StoredLayout {
   const orderedWidgets = widgets.toSorted((left, right) =>
@@ -211,11 +198,7 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
       return makeDefaultLayout(widgets);
     }
   });
-  const isDesktop = useSyncExternalStore(
-    subscribeToDesktop,
-    getDesktopSnapshot,
-    getDesktopServerSnapshot
-  );
+  const [isDesktop, setIsDesktop] = useState(true);
   const [editing, setEditing] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeDimensions, setActiveDimensions] = useState<{
@@ -232,6 +215,14 @@ export function WidgetWorkspace({ widgets, storageKey }: WidgetWorkspaceProps) {
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(layout));
   }, [layout, storageKey]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)');
+    const updateViewport = () => setIsDesktop(media.matches);
+    updateViewport();
+    media.addEventListener('change', updateViewport);
+    return () => media.removeEventListener('change', updateViewport);
+  }, []);
 
   const positions = isDesktop ? layout.desktop : layout.mobile;
   const visibleIds = new Set(layout.hidden);

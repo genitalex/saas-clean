@@ -137,9 +137,9 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden sm:flex-1'
+          className='scrollbar-none w-full min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden sm:flex-1'
         >
-          <div className='flex min-w-max snap-x snap-mandatory gap-2 touch-pan-x cursor-grab select-none active:cursor-grabbing'>
+          <div className='flex w-full snap-x snap-mandatory gap-2 touch-pan-x cursor-grab select-none active:cursor-grabbing sm:w-max sm:min-w-full'>
             {agendaDays.map((day) => {
               const selected = isSameDay(day, today);
               const dayEvents = events
@@ -153,7 +153,7 @@ export function WeeklyAgenda({
                   href={`/dashboard/calendar?date=${dayKey}&view=day`}
                   aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
                   className={cn(
-                    'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_31%] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_180px] sm:p-3',
+                    'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_calc((100%-1rem)/3)] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_180px] sm:p-3',
                     selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                   )}
                 >
