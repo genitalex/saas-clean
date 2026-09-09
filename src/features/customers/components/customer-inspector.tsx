@@ -6,13 +6,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { Icons } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -217,72 +217,116 @@ export function CustomerInspector({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-[var(--radius-xl)] border-border/70 bg-popover p-0 sm:max-w-205'>
+        <DialogContent className='grid max-h-[calc(100dvh-1rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-[24px] border-border/50 bg-background p-0 shadow-[0_28px_80px_-42px_rgba(23,32,25,0.42)] sm:max-w-225'>
           {customerQuery.isPending ? (
-            <div className='space-y-4 p-5'>
-              <div className='bg-muted h-8 w-2/3 animate-pulse rounded' />
-              <div className='bg-muted h-24 animate-pulse rounded-2xl' />
-              <div className='bg-muted h-32 animate-pulse rounded-2xl' />
+            <div className='space-y-4 p-5 sm:p-7'>
+              <div className='flex items-center gap-4'>
+                <div className='h-12 w-12 animate-pulse rounded-[16px] bg-muted' />
+                <div className='space-y-2'>
+                  <div className='h-6 w-56 animate-pulse rounded bg-muted' />
+                  <div className='h-4 w-32 animate-pulse rounded bg-muted' />
+                </div>
+              </div>
+              <div className='h-24 animate-pulse rounded-[18px] bg-muted' />
+              <div className='h-48 animate-pulse rounded-[18px] bg-muted' />
             </div>
           ) : customerQuery.isError || !customer ? (
             <div className='flex h-full flex-col items-center justify-center gap-3 p-8 text-center'>
-              <p className='text-destructive text-sm'>No se pudo cargar el contexto.</p>
+              <p className='text-sm text-destructive'>No se pudo cargar el contexto.</p>
               <Button variant='outline' size='sm' onClick={() => void customerQuery.refetch()}>
                 Reintentar
               </Button>
             </div>
           ) : (
             <>
-              <DialogHeader className='shrink-0 border-b border-border/50 bg-background p-4 pb-3 sm:p-5 sm:pb-4'>
-                <div className='flex items-start gap-4'>
-                  <span className='bg-primary/10 text-primary flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] text-base font-normal'>
-                    {customer.name.slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className='min-w-0 flex-1'>
-                    <DialogTitle className='sr-only'>Inspector del cliente</DialogTitle>
-                    <Input
-                      defaultValue={customer.name}
-                      key={customer.id + customer.name}
-                      onBlur={(event) => void saveName(event.target.value)}
-                      aria-label='Nombre del cliente'
-                      className='h-10 border-transparent bg-transparent px-0 text-[1.35rem] font-normal tracking-tight shadow-none transition-[background-color,padding] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:border-transparent focus-visible:bg-muted/35 focus-visible:px-2 focus-visible:ring-0'
+              <DialogHeader className='shrink-0 border-b border-border/50 bg-background px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5'>
+                <DialogTitle className='sr-only'>Cliente {customer.name}</DialogTitle>
+                <DialogDescription className='sr-only'>
+                  Contexto y acciones del cliente
+                </DialogDescription>
+
+                <div className='flex items-start gap-3 sm:gap-4'>
+                  <div className='relative shrink-0'>
+                    <span className='flex size-12 items-center justify-center rounded-[16px] bg-primary/[0.10] text-sm font-semibold text-primary ring-1 ring-primary/[0.12] sm:size-14 sm:rounded-[18px] sm:text-base'>
+                      {customer.name.slice(0, 2).toUpperCase()}
+                    </span>
+                    <span
+                      className={cn(
+                        'absolute -bottom-1 -right-1 size-3 rounded-full border-2 border-background',
+                        customer.archived ? 'bg-muted-foreground' : 'bg-primary'
+                      )}
                     />
-                    <DialogDescription className='mt-1.5 flex items-center gap-2 text-sm'>
-                      {customer.kind === 'person' ? 'Persona' : 'Empresa'}
-                      <Badge variant={customer.archived ? 'destructive' : 'secondary'}>
+                  </div>
+
+                  <div className='min-w-0 flex-1'>
+                    <div className='flex items-start gap-2 pr-8'>
+                      <Input
+                        defaultValue={customer.name}
+                        key={customer.id + customer.name}
+                        onBlur={(event) => void saveName(event.target.value)}
+                        aria-label='Nombre del cliente'
+                        className='h-9 min-w-0 border-transparent bg-transparent px-0 text-[1.25rem] font-semibold tracking-[-0.02em] shadow-none transition-[background-color,padding] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:border-transparent focus-visible:bg-muted/40 focus-visible:px-2 focus-visible:ring-0 sm:h-10 sm:text-[1.55rem]'
+                      />
+                    </div>
+                    <div className='mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground sm:text-sm'>
+                      <span>{customer.kind === 'person' ? 'Persona' : 'Empresa'}</span>
+                      <span className='text-border'>·</span>
+                      <Badge
+                        variant='secondary'
+                        className='h-6 rounded-full bg-muted/65 px-2.5 text-[11px] font-medium text-muted-foreground'
+                      >
                         {customer.archived ? 'Archivado' : 'Activo'}
                       </Badge>
-                    </DialogDescription>
+                      {customer.owner?.name ? (
+                        <>
+                          <span className='hidden text-border sm:inline'>·</span>
+                          <span className='hidden sm:inline'>
+                            Responsable {customer.owner.name}
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
+
+                  <button
+                    type='button'
+                    onClick={() => onOpenChange(false)}
+                    aria-label='Cerrar cliente'
+                    className='absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-[background-color,transform,color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground active:scale-[0.97] sm:right-5 sm:top-5'
+                  >
+                    <Icons.close className='size-4' />
+                  </button>
                 </div>
-                <div className='mt-4 flex max-w-full flex-wrap items-center gap-2 border-t border-border/45 pt-3'>
-                  <div className='flex items-center rounded-[11px] border border-border/55 bg-background p-0.5 shadow-none'>
+
+                <div className='mt-4 flex flex-wrap items-center gap-2'>
+                  <div className='flex items-center rounded-[13px] border border-border/55 bg-background p-0.5 shadow-[0_1px_1px_rgba(23,32,25,0.02)]'>
                     <Button
                       size='sm'
                       variant='ghost'
                       onClick={() => setEventDialogOpen(true)}
-                      className='h-8 rounded-[8px] px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                      className='group h-8 rounded-[10px] px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 active:scale-[0.98] sm:px-3'
                     >
-                      <Icons.calendar className='size-3.5' /> <span>Nuevo evento</span>
+                      <Icons.calendar className='size-3.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-px' />
+                      <span className='sm:inline'>Nuevo evento</span>
                     </Button>
                     <AddNoteDialog
                       customerId={customer.id}
-                      triggerClassName='h-8 rounded-[8px] px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                      triggerClassName='h-8 rounded-[10px] px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 active:scale-[0.98] sm:px-3'
                       triggerIcon={<Icons.post className='size-3.5' />}
                     />
                     <NewTaskDialog
                       customerId={customer.id}
-                      triggerClassName='h-8 rounded-[8px] px-2.5 text-xs font-medium shadow-none hover:bg-muted/60'
+                      triggerClassName='h-8 rounded-[10px] px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 active:scale-[0.98] sm:px-3'
                       triggerIcon={<Icons.check className='size-3.5' />}
                     />
                   </div>
 
-                  <div className='flex items-center rounded-[11px] border border-border/45 bg-muted/25 p-0.5'>
+                  <div className='flex items-center rounded-[13px] border border-border/45 bg-muted/25 p-0.5'>
                     <Button
                       size='sm'
                       variant='ghost'
                       onClick={() => void createFollowUp('task')}
-                      className='h-8 rounded-[8px] px-2.5 text-xs font-normal shadow-none hover:bg-background/80'
+                      className='h-8 rounded-[10px] px-2.5 text-xs shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background/85 active:scale-[0.98] sm:px-3'
                     >
                       <Icons.check className='size-3.5' /> <span>Seguimiento</span>
                     </Button>
@@ -290,201 +334,317 @@ export function CustomerInspector({
                       size='sm'
                       variant='ghost'
                       onClick={() => void createFollowUp('event')}
-                      className='h-8 rounded-[8px] px-2.5 text-xs font-normal shadow-none hover:bg-background/80'
+                      className='h-8 rounded-[10px] px-2.5 text-xs shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background/85 active:scale-[0.98] sm:px-3'
                     >
                       <Icons.calendar className='size-3.5' /> <span>Reunión</span>
                     </Button>
                   </div>
 
-                  {(customer.phone || customer.email || customer.website) && (
-                    <div className='ml-auto flex items-center rounded-[11px] border border-border/45 bg-background p-0.5'>
-                      {customer.phone && (
-                        <a
-                          href={`tel:${customer.phone}`}
-                          aria-label='Llamar al cliente'
-                          className='inline-flex size-8 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
-                        >
-                          <Icons.phone className='size-3.5' />
-                        </a>
-                      )}
-                      {customer.email && (
-                        <a
-                          href={`mailto:${customer.email}`}
-                          aria-label='Enviar email al cliente'
-                          className='inline-flex size-8 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
-                        >
-                          <Icons.send className='size-3.5' />
-                        </a>
-                      )}
-                      {customer.website && (
-                        <a
-                          href={customer.website}
-                          target='_blank'
-                          rel='noreferrer'
-                          aria-label='Abrir sitio web'
-                          className='inline-flex size-8 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
-                        >
-                          <Icons.externalLink className='size-3.5' />
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  <CustomerLifecycleActions
-                    customerId={customer.id}
-                    archived={customer.archived}
-                    triggerClassName='h-8 w-8 rounded-[9px] border border-border/45 bg-background p-0 text-muted-foreground shadow-none hover:bg-muted/60 hover:text-foreground'
-                    onCompleted={(action) => {
-                      if (action === 'deleted' || action === 'archived') onOpenChange(false);
-                    }}
-                  />
+                  <div className='ml-auto flex items-center gap-1 rounded-[13px] border border-border/45 bg-background p-0.5'>
+                    {customer.phone && (
+                      <a
+                        href={`tel:${customer.phone}`}
+                        aria-label='Llamar al cliente'
+                        className='inline-flex size-8 items-center justify-center rounded-[10px] text-muted-foreground transition-[background-color,transform,color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 hover:text-foreground active:scale-[0.96]'
+                      >
+                        <Icons.phone className='size-3.5' />
+                      </a>
+                    )}
+                    {customer.email && (
+                      <a
+                        href={`mailto:${customer.email}`}
+                        aria-label='Enviar email al cliente'
+                        className='inline-flex size-8 items-center justify-center rounded-[10px] text-muted-foreground transition-[background-color,transform,color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 hover:text-foreground active:scale-[0.96]'
+                      >
+                        <Icons.send className='size-3.5' />
+                      </a>
+                    )}
+                    {customer.website && (
+                      <a
+                        href={customer.website}
+                        target='_blank'
+                        rel='noreferrer'
+                        aria-label='Abrir sitio web'
+                        className='inline-flex size-8 items-center justify-center rounded-[10px] text-muted-foreground transition-[background-color,transform,color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 hover:text-foreground active:scale-[0.96]'
+                      >
+                        <Icons.externalLink className='size-3.5' />
+                      </a>
+                    )}
+                    <CustomerLifecycleActions
+                      customerId={customer.id}
+                      archived={customer.archived}
+                      triggerClassName='h-8 w-8 rounded-[10px] border-0 bg-transparent p-0 text-muted-foreground shadow-none hover:bg-muted/65 hover:text-foreground active:scale-[0.96]'
+                      onCompleted={(action) => {
+                        if (action === 'deleted' || action === 'archived') onOpenChange(false);
+                      }}
+                    />
+                  </div>
                 </div>
               </DialogHeader>
-              <div className='min-h-0 flex-1 space-y-7 overflow-y-auto p-4 sm:p-6'>
-                <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
-                  <div className='border-b border-border/50 px-4 py-3'>
-                    <p className='text-xs font-normal uppercase tracking-[0.14em] text-muted-foreground'>
-                      Resumen
-                    </p>
-                  </div>
-                  <div className='grid grid-cols-1 gap-px bg-border/50 sm:grid-cols-2'>
-                    <EditableDetail
-                      label='Correo'
-                      value={contact.email}
-                      placeholder='Sin correo'
-                      onChange={(value) => setContact((current) => ({ ...current, email: value }))}
-                      onBlur={(value) => void saveContact({ email: value })}
-                      type='email'
-                    />
-                    <EditableDetail
-                      label='Teléfono'
-                      value={contact.phone}
-                      placeholder='Sin teléfono'
-                      onChange={(value) => setContact((current) => ({ ...current, phone: value }))}
-                      onBlur={(value) => void saveContact({ phone: value })}
-                    />
-                    <Detail label='Responsable' value={customer.owner?.name || 'Sin asignar'} />
-                    <EditableDetail
-                      label='Próximo paso'
-                      value={contact.nextAction}
-                      placeholder='Sin definir'
-                      onChange={(value) =>
-                        setContact((current) => ({ ...current, nextAction: value }))
-                      }
-                      onBlur={(value) => void saveContact({ nextAction: value })}
-                    />
-                  </div>
-                </section>
-                <section className='overflow-hidden rounded-[10px] border border-border/30 bg-background'>
-                  <div className='border-b border-border/50 px-4 py-3'>
-                    <p className='text-xs font-normal uppercase tracking-[0.14em] text-muted-foreground'>
-                      Contacto adicional
-                    </p>
-                  </div>
-                  <div className='space-y-7 px-4 py-4'>
-                    <EditableDetail
-                      label='Dirección'
-                      value={contact.address}
-                      placeholder='Sin dirección'
-                      onChange={(value) =>
-                        setContact((current) => ({ ...current, address: value }))
-                      }
-                      onBlur={(value) => void saveContact({ address: value })}
-                      className='bg-transparent px-0 py-3.5 text-sm'
-                    />
-                    <EditableDetail
-                      label='Sitio web'
-                      value={contact.website}
-                      placeholder='Sin sitio web'
-                      onChange={(value) =>
-                        setContact((current) => ({ ...current, website: value }))
-                      }
-                      onBlur={(value) => void saveContact({ website: value })}
-                      type='url'
-                      className='bg-transparent px-0 py-3.5 text-sm'
-                    />
-                    <div className='border-t border-border/30 pt-3'>
-                      <span className='text-muted-foreground block text-[11px]'>
-                        Próxima acción
-                      </span>
-                      <CustomerDatePicker
-                        value={contact.nextActionAt}
-                        onChange={(value) => {
-                          setContact((current) => ({ ...current, nextActionAt: value }));
-                          void saveContact({ nextActionAt: value });
-                        }}
-                      />
-                    </div>
-                  </div>
-                </section>
-                <section className='space-y-3'>
-                  <SectionTitle title='Próximos eventos' href='/dashboard/calendar' />
-                  {eventsQuery.isPending ? (
-                    <LoadingLine />
-                  ) : events.length === 0 ? (
-                    <Empty text='No hay eventos próximos.' />
-                  ) : (
-                    events.slice(0, 4).map((event) => (
-                      <Link
-                        key={event.id}
-                        href={`/dashboard/calendar?event=${event.id}`}
-                        className='group flex items-center gap-3 rounded-[9px] border border-border/25 bg-background px-3 py-2.5 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border/55 hover:bg-muted/20'
-                      >
-                        <Icons.calendar className='text-primary size-4' />
-                        <span className='min-w-0 flex-1 truncate text-sm font-medium transition-colors group-hover:text-primary'>
-                          {event.title}
-                        </span>
-                        <span className='text-muted-foreground text-xs'>
-                          {format(new Date(event.startAt), 'd MMM · HH:mm', { locale: es })}
-                        </span>
-                      </Link>
-                    ))
-                  )}
-                </section>
-                <Separator />
-                <section className='space-y-3'>
-                  <SectionTitle title='Tareas abiertas' href='/dashboard/my-work?mode=list' />
-                  {tasksQuery.isPending ? (
-                    <LoadingLine />
-                  ) : (
-                    tasks
-                      .filter((task) => task.status !== 'done')
-                      .slice(0, 5)
-                      .map((task) => (
-                        <Link
-                          key={task.id}
-                          href={`/dashboard/my-work?mode=list&task=${task.id}`}
-                          className='group flex items-center gap-3 rounded-[9px] border border-border/25 bg-background px-3 py-2.5 transition-[background-color,border-color] duration-150 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border/55 hover:bg-muted/20'
-                        >
-                          <span className='bg-primary/10 text-primary flex size-7 items-center justify-center rounded-full'>
-                            <Icons.check className='size-4' />
+
+              <div className='min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5'>
+                <div className='space-y-4'>
+                  <section className='rounded-[18px] border border-border/45 bg-muted/[0.18] p-1'>
+                    <div className='rounded-[15px] bg-background px-4 py-4 sm:px-5'>
+                      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+                        <div className='min-w-0'>
+                          <p className='text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground'>
+                            Próximo paso
+                          </p>
+                          <div className='mt-2 flex min-w-0 items-center gap-2'>
+                            <span className='flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-primary/[0.10] text-primary'>
+                              <Icons.check className='size-4' />
+                            </span>
+                            <p className='min-w-0 truncate text-sm font-medium sm:text-base'>
+                              {contact.nextAction || 'Sin definir'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2 text-xs text-muted-foreground sm:justify-end'>
+                          <span className='hidden sm:inline'>Programado</span>
+                          <span className='rounded-full bg-muted/70 px-2.5 py-1 text-[11px] font-medium text-foreground'>
+                            {contact.nextActionAt
+                              ? format(new Date(`${contact.nextActionAt}T00:00:00`), 'd MMM yyyy', {
+                                  locale: es
+                                })
+                              : 'Sin fecha'}
                           </span>
-                          <span className='min-w-0 flex-1 truncate text-sm'>{task.title}</span>
-                          <span className='text-muted-foreground text-xs'>{task.priority}</span>
-                        </Link>
-                      ))
-                  )}
-                  {!tasksQuery.isPending &&
-                    tasks.filter((task) => task.status !== 'done').length === 0 && (
-                      <Empty text='No hay tareas pendientes.' />
-                    )}
-                </section>
-                <Separator />
-                <section className='space-y-3'>
-                  <SectionTitle title='Actividad' href='/dashboard/activity' />
-                  {activitiesQuery.isPending ? (
-                    <LoadingLine />
-                  ) : (
-                    <div className='space-y-4'>
-                      {(activitiesQuery.data ?? []).slice(0, 6).map((activity) => (
-                        <ActivityItem key={activity.id} activity={activity} />
-                      ))}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  {!activitiesQuery.isPending && activitiesQuery.data?.length === 0 && (
-                    <Empty text='Todavía no hay actividad.' />
-                  )}
-                </section>
+                  </section>
+
+                  <div className='grid gap-4 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]'>
+                    <section className='rounded-[18px] border border-border/45 bg-background'>
+                      <div className='border-b border-border/40 px-4 py-3.5 sm:px-5'>
+                        <div className='flex items-center justify-between gap-3'>
+                          <div>
+                            <p className='text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground'>
+                              Contacto
+                            </p>
+                            <p className='mt-1 text-xs text-muted-foreground'>
+                              Datos rápidos y editables
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className='divide-y divide-border/35'>
+                        <EditableDetail
+                          label='Correo'
+                          value={contact.email}
+                          placeholder='Sin correo'
+                          onChange={(value) =>
+                            setContact((current) => ({ ...current, email: value }))
+                          }
+                          onBlur={(value) => void saveContact({ email: value })}
+                          type='email'
+                          className='block bg-transparent px-4 py-3.5 sm:px-5'
+                        />
+                        <EditableDetail
+                          label='Teléfono'
+                          value={contact.phone}
+                          placeholder='Sin teléfono'
+                          onChange={(value) =>
+                            setContact((current) => ({ ...current, phone: value }))
+                          }
+                          onBlur={(value) => void saveContact({ phone: value })}
+                          className='block bg-transparent px-4 py-3.5 sm:px-5'
+                        />
+                        <EditableDetail
+                          label='Dirección'
+                          value={contact.address}
+                          placeholder='Sin dirección'
+                          onChange={(value) =>
+                            setContact((current) => ({ ...current, address: value }))
+                          }
+                          onBlur={(value) => void saveContact({ address: value })}
+                          className='block bg-transparent px-4 py-3.5 sm:px-5'
+                        />
+                        <EditableDetail
+                          label='Sitio web'
+                          value={contact.website}
+                          placeholder='Sin sitio web'
+                          onChange={(value) =>
+                            setContact((current) => ({ ...current, website: value }))
+                          }
+                          onBlur={(value) => void saveContact({ website: value })}
+                          type='url'
+                          className='block bg-transparent px-4 py-3.5 sm:px-5'
+                        />
+                        <div className='px-4 py-3.5 sm:px-5'>
+                          <span className='text-[11px] font-normal text-muted-foreground'>
+                            Fecha del próximo paso
+                          </span>
+                          <CustomerDatePicker
+                            value={contact.nextActionAt}
+                            onChange={(value) => {
+                              setContact((current) => ({ ...current, nextActionAt: value }));
+                              void saveContact({ nextActionAt: value });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    <div className='space-y-4'>
+                      <section className='rounded-[18px] border border-border/45 bg-background'>
+                        <div className='border-b border-border/40 px-4 py-3.5 sm:px-5'>
+                          <div className='flex items-center justify-between gap-3'>
+                            <div>
+                              <p className='text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground'>
+                                Actividad reciente
+                              </p>
+                              <p className='mt-1 text-xs text-muted-foreground'>
+                                Qué ha pasado con este cliente
+                              </p>
+                            </div>
+                            <Link
+                              className='inline-flex h-8 items-center rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-[background-color,color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 hover:text-foreground'
+                              href='/dashboard/activity'
+                            >
+                              Ver todo
+                            </Link>
+                          </div>
+                        </div>
+                        <div className='px-4 py-4 sm:px-5'>
+                          {activitiesQuery.isPending ? (
+                            <LoadingLine />
+                          ) : (activitiesQuery.data ?? []).length === 0 ? (
+                            <Empty text='Todavía no hay actividad.' />
+                          ) : (
+                            <div className='space-y-4'>
+                              {(activitiesQuery.data ?? []).slice(0, 5).map((activity) => (
+                                <ActivityItem key={activity.id} activity={activity} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </section>
+
+                      <section className='rounded-[18px] border border-border/45 bg-background'>
+                        <div className='border-b border-border/40 px-4 py-3.5 sm:px-5'>
+                          <div className='flex items-center justify-between gap-3'>
+                            <div>
+                              <p className='text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground'>
+                                Agenda
+                              </p>
+                              <p className='mt-1 text-xs text-muted-foreground'>
+                                Próximos eventos y tareas
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className='grid gap-4 px-4 py-4 sm:px-5 lg:grid-cols-2'>
+                          <div>
+                            <div className='mb-2 flex items-center justify-between gap-2'>
+                              <span className='text-xs font-medium'>Eventos</span>
+                              <Link
+                                className='text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
+                                href='/dashboard/calendar'
+                              >
+                                Ver todo
+                              </Link>
+                            </div>
+                            {eventsQuery.isPending ? (
+                              <LoadingLine />
+                            ) : events.length === 0 ? (
+                              <Empty text='No hay eventos próximos.' />
+                            ) : (
+                              <div className='space-y-2'>
+                                {events.slice(0, 3).map((event) => (
+                                  <Link
+                                    key={event.id}
+                                    href={`/dashboard/calendar?event=${event.id}`}
+                                    className='group flex items-center gap-2.5 rounded-[12px] border border-border/35 bg-muted/[0.14] px-3 py-2.5 transition-[background-color,border-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-border/60 hover:bg-muted/35'
+                                  >
+                                    <Icons.calendar className='size-3.5 shrink-0 text-primary' />
+                                    <span className='min-w-0 flex-1 truncate text-xs font-medium group-hover:text-primary'>
+                                      {event.title}
+                                    </span>
+                                    <span className='shrink-0 text-[11px] text-muted-foreground'>
+                                      {format(new Date(event.startAt), 'd MMM · HH:mm', {
+                                        locale: es
+                                      })}
+                                    </span>
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <div className='mb-2 flex items-center justify-between gap-2'>
+                              <span className='text-xs font-medium'>Tareas abiertas</span>
+                              <Link
+                                className='text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
+                                href='/dashboard/my-work?mode=list'
+                              >
+                                Ver todo
+                              </Link>
+                            </div>
+                            {tasksQuery.isPending ? (
+                              <LoadingLine />
+                            ) : tasks.filter((task) => task.status !== 'done').length === 0 ? (
+                              <Empty text='No hay tareas pendientes.' />
+                            ) : (
+                              <div className='space-y-2'>
+                                {tasks
+                                  .filter((task) => task.status !== 'done')
+                                  .slice(0, 3)
+                                  .map((task) => (
+                                    <Link
+                                      key={task.id}
+                                      href={`/dashboard/my-work?mode=list&task=${task.id}`}
+                                      className='group flex items-center gap-2.5 rounded-[12px] border border-border/35 bg-muted/[0.14] px-3 py-2.5 transition-[background-color,border-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-border/60 hover:bg-muted/35'
+                                    >
+                                      <span className='flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/[0.10] text-primary'>
+                                        <Icons.check className='size-3.5' />
+                                      </span>
+                                      <span className='min-w-0 flex-1 truncate text-xs font-medium'>
+                                        {task.title}
+                                      </span>
+                                      <span className='shrink-0 text-[11px] text-muted-foreground'>
+                                        {task.priority}
+                                      </span>
+                                    </Link>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className='shrink-0 border-t border-border/50 bg-background px-4 py-3 sm:px-6'>
+                <div className='flex items-center justify-between gap-3'>
+                  <p className='hidden text-xs text-muted-foreground sm:block'>
+                    Los cambios se guardan al salir de cada campo.
+                  </p>
+                  <div className='ml-auto flex items-center gap-2'>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      onClick={() => setEventDialogOpen(true)}
+                      className='h-9 rounded-full border-border/55 bg-background px-3.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/60 active:scale-[0.98]'
+                    >
+                      <Icons.calendar className='size-3.5' />
+                      <span>Planificar</span>
+                    </Button>
+                    <Button
+                      type='button'
+                      onClick={() => void createFollowUp('task')}
+                      className='group h-9 rounded-full bg-primary px-3.5 text-xs font-medium text-primary-foreground shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 active:scale-[0.98]'
+                    >
+                      <span>Nuevo seguimiento</span>
+                      <span className='flex size-5 items-center justify-center rounded-full bg-primary-foreground/10 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5'>
+                        <Icons.arrowRight className='size-3' />
+                      </span>
+                    </Button>
+                  </div>
+                </div>
               </div>
             </>
           )}
