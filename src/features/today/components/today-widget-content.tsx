@@ -118,7 +118,7 @@ export function WeeklyAgenda({
 
   return (
     <div>
-      <div className='-mx-1 grid grid-cols-[28px_minmax(0,1fr)_28px] items-center gap-0 px-0 py-2'>
+      <div className='py-2 sm:flex sm:items-center sm:gap-1'>
         <button
           type='button'
           aria-label='Días anteriores'
@@ -137,7 +137,7 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden'
+          className='scrollbar-none min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden sm:flex-1'
         >
           <div className='flex min-w-max snap-x snap-mandatory gap-2 touch-pan-x cursor-grab select-none active:cursor-grabbing'>
             {agendaDays.map((day) => {
