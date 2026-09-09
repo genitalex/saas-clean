@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { addDays, format, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -77,8 +77,29 @@ export function WeeklyAgenda({
 }) {
   const queryClient = useQueryClient();
   const agendaRef = useRef<HTMLDivElement>(null);
+  const [agendaCardWidth, setAgendaCardWidth] = useState(160);
   const dragState = useRef<{ x: number; scrollLeft: number } | null>(null);
   const agendaDays = Array.from({ length: 61 }, (_, index) => addDays(today, index));
+  useEffect(() => {
+    const container = agendaRef.current;
+    if (!container) return;
+
+    const updateCardWidth = () => {
+      const width = container.clientWidth;
+      const desktop = window.matchMedia('(min-width: 640px)').matches;
+      const visibleDays = desktop ? 7 : 3;
+      const sideInset = 4;
+      const totalGap = 8 * (visibleDays - 1);
+      const nextWidth = Math.floor((width - sideInset - totalGap) / visibleDays);
+      const minimum = desktop ? 144 : 104;
+      setAgendaCardWidth(Math.max(minimum, nextWidth));
+    };
+
+    updateCardWidth();
+    const observer = new ResizeObserver(updateCardWidth);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   function handleAgendaPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse') {
@@ -137,9 +158,10 @@ export function WeeklyAgenda({
           onPointerCancel={() => {
             dragState.current = null;
           }}
-          className='scrollbar-none w-full min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-1 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden sm:flex-1'
+          className='scrollbar-none w-full min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-0 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden sm:flex-1'
+          style={{ scrollPaddingInline: 8 }}
         >
-          <div className='flex w-full snap-x snap-mandatory gap-2 touch-pan-x cursor-grab select-none active:cursor-grabbing sm:w-max sm:min-w-full'>
+          <div className='flex w-max min-w-full snap-x snap-mandatory gap-2 px-[2px] touch-pan-x cursor-grab select-none active:cursor-grabbing'>
             {agendaDays.map((day) => {
               const selected = isSameDay(day, today);
               const dayEvents = events
@@ -152,8 +174,9 @@ export function WeeklyAgenda({
                   data-day={dayKey}
                   href={`/dashboard/calendar?date=${dayKey}&view=day`}
                   aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
+                  style={{ width: `${agendaCardWidth}px` }}
                   className={cn(
-                    'group flex min-h-28 min-w-0 shrink-0 flex-[0_0_calc((100%-1rem)/3)] snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:flex-[0_0_180px] sm:p-3',
+                    'group flex min-h-28 min-w-0 shrink-0 snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:p-3',
                     selected ? 'bg-primary/8 ring-primary/20' : 'bg-background/35 ring-border/45'
                   )}
                 >
