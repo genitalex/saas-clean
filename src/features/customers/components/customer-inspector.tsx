@@ -287,15 +287,6 @@ export function CustomerInspector({
                       ) : null}
                     </div>
                   </div>
-
-                  <button
-                    type='button'
-                    onClick={() => onOpenChange(false)}
-                    aria-label='Cerrar cliente'
-                    className='absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-[background-color,transform,color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70 hover:text-foreground active:scale-[0.97] sm:right-5 sm:top-5'
-                  >
-                    <Icons.close className='size-4' />
-                  </button>
                 </div>
 
                 <div className='mt-4 flex flex-wrap items-center gap-2'>
@@ -623,7 +614,7 @@ export function CustomerInspector({
                   <p className='hidden text-xs text-muted-foreground sm:block'>
                     Los cambios se guardan al salir de cada campo.
                   </p>
-                  <div className='ml-auto flex items-center gap-2'>
+                  <div className='flex w-full items-center justify-center gap-2 sm:ml-auto sm:w-auto sm:justify-end'>
                     <Button
                       type='button'
                       variant='outline'
