@@ -338,12 +338,6 @@ export function OpportunitiesPage({
   }, [opportunities]);
 
   React.useEffect(() => {
-    if (customerData.length > 0 && customerMode === 'new' && !newCustomer.trim()) {
-      setCustomerMode('existing');
-    }
-  }, [customerData.length, customerMode, newCustomer]);
-
-  React.useEffect(() => {
     columnsRef.current = columns;
   }, [columns]);
 
@@ -567,7 +561,16 @@ export function OpportunitiesPage({
             onChange={(event) => setQuery(event.target.value)}
             placeholder='Buscar oportunidad'
           />
-          <Button onClick={() => setCreateOpen(true)}>Nueva oportunidad</Button>
+          <Button
+            onClick={() => {
+              setCustomerMode(customerData.length ? 'existing' : 'new');
+              setSelectedCustomerId('');
+              setNewCustomer('');
+              setCreateOpen(true);
+            }}
+          >
+            Nueva oportunidad
+          </Button>
         </div>
       </div>
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
