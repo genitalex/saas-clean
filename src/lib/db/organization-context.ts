@@ -81,6 +81,8 @@ async function findFirstMembership(userId: string) {
     .limit(1);
 }
 
+export type AuthContext = Awaited<ReturnType<typeof getAuthContext>>;
+
 export async function getAuthContext(requestHeaders?: Headers) {
   return withTransientDbRetry(async () => {
     const session = await auth.api.getSession({ headers: requestHeaders ?? (await headers()) });

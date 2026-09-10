@@ -44,7 +44,15 @@ export async function POST(request: NextRequest) {
       }-${crypto.randomUUID().slice(0, 8)}`;
       const [created] = await tx
         .insert(organizations)
-        .values({ id, name: parsed.data.name, slug, createdAt: now, updatedAt: now })
+        .values({
+          id,
+          name: parsed.data.name,
+          slug,
+          plan: 'solo',
+          seatLimit: 1,
+          createdAt: now,
+          updatedAt: now
+        })
         .returning();
       await tx
         .insert(organizationMembers)

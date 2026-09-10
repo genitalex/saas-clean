@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Icons } from '@/components/icons';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 export function UserNav() {
   const router = useRouter();
@@ -17,6 +18,20 @@ export function UserNav() {
 
   const name = session?.user.name ?? 'Alex Morgan';
   const email = session?.user.email ?? 'alex@workspace.co';
+  const { data: organizationContext } = useQuery<{ user: { role: 'owner' | 'member' } }>({
+    queryKey: ['organization-context', 'user-nav'],
+    queryFn: async () => {
+      const response = await fetch('/api/organization-context', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Organization context unavailable');
+      return response.json();
+    },
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    enabled: Boolean(session)
+  });
+
+  const isOwner = organizationContext?.user.role === 'owner';
+
   const initials = name
     .split(' ')
     .filter(Boolean)
@@ -123,7 +138,9 @@ export function UserNav() {
 
           {[
             [Icons.profile, 'Perfil', () => router.push('/dashboard/profile')],
-            [Icons.settings, 'Configuración', () => router.push('/dashboard/settings')]
+            ...(isOwner
+              ? [[Icons.settings, 'Configuración', () => router.push('/dashboard/settings')]]
+              : [])
           ].map(([Icon, label, action]) => (
             <button
               key={label as string}

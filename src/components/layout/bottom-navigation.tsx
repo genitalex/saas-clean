@@ -6,6 +6,7 @@ import { Icons } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { desktopNavItems, mobileNavItems, navGroups } from '@/config/nav-config';
+import { useFilteredNavGroups } from '@/hooks/use-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const opportunitiesItem = desktopNavItems[4];
@@ -16,10 +17,22 @@ export function BottomNavigation() {
   const isMobile = useIsMobile();
   const [moreOpen, setMoreOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
-  const mobileLeftItems = desktopNavItems.slice(0, 3);
-  const mobileRightItems = [desktopNavItems[3], opportunitiesItem];
-  const desktopLeftItems = desktopNavItems.slice(0, 3);
-  const desktopRightItems = [desktopNavItems[3], opportunitiesItem];
+  const filteredGroups = useFilteredNavGroups(navGroups);
+  const visibleNavItems = filteredGroups[0]?.items ?? [];
+  const resolvedDesktopItems =
+    visibleNavItems.length >= 5
+      ? visibleNavItems.slice(0, 5)
+      : [
+          desktopNavItems[0],
+          desktopNavItems[1],
+          desktopNavItems[2],
+          desktopNavItems[3],
+          desktopNavItems[4]
+        ];
+  const mobileLeftItems = resolvedDesktopItems.slice(0, 3);
+  const mobileRightItems = [resolvedDesktopItems[3], opportunitiesItem].filter(Boolean);
+  const desktopLeftItems = resolvedDesktopItems.slice(0, 3);
+  const desktopRightItems = [resolvedDesktopItems[3], opportunitiesItem].filter(Boolean);
   const primaryUrls = new Set([...mobileNavItems.map((item) => item.url), opportunitiesItem.url]);
 
   React.useEffect(() => {
@@ -215,6 +228,7 @@ export function BottomNavigation() {
           isMobile={isMobile}
           onClose={() => setMoreOpen(false)}
           primaryUrls={primaryUrls}
+          filteredGroups={filteredGroups}
         />
       )}
     </>
@@ -314,12 +328,14 @@ function MoreSheet({
   pathname,
   isMobile,
   onClose,
-  primaryUrls
+  primaryUrls,
+  filteredGroups
 }: {
   pathname: string;
   isMobile: boolean;
   onClose: () => void;
   primaryUrls: Set<string>;
+  filteredGroups: typeof navGroups;
 }) {
   return (
     <div
@@ -342,7 +358,7 @@ function MoreSheet({
         </div>
 
         <div className='min-h-0 flex-1 overflow-y-auto px-4 py-4'>
-          {navGroups.map((group) => {
+          {filteredGroups.map((group) => {
             const items = group.items.filter((item) => !primaryUrls.has(item.url));
             if (!items.length) return null;
 

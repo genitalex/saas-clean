@@ -67,7 +67,7 @@ function LegacyTodayPage({
   userName,
   initialNow
 }: {
-  role: 'owner' | 'manager' | 'member';
+  role: 'owner' | 'member';
   userName: string;
   initialNow: string;
 }) {

@@ -148,6 +148,8 @@ export const verifications = pgTable(
 /* Organizations / Workspaces                                                */
 /* -------------------------------------------------------------------------- */
 
+export const organizationPlan = pgEnum('organization_plan', ['solo', 'team']);
+
 export const organizations = pgTable(
   'organizations',
   {
@@ -156,6 +158,10 @@ export const organizations = pgTable(
     name: text('name').notNull(),
 
     slug: text('slug').notNull(),
+
+    plan: organizationPlan('plan').notNull().default('solo'),
+
+    seatLimit: integer('seat_limit').notNull().default(1),
 
     createdAt: timestamp('created_at', {
       withTimezone: true

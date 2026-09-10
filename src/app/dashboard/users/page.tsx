@@ -4,6 +4,8 @@ import { searchParamsCache } from '@/lib/searchparams';
 import type { SearchParams } from 'nuqs/server';
 import { usersInfoContent } from '@/features/users/info-content';
 import { UserFormSheetTrigger } from '@/features/users/components/user-form-sheet';
+import { getAuthContext } from '@/lib/db/organization-context';
+import { getOrganizationPermissions } from '@/lib/auth/permissions';
 
 export const metadata = {
   title: 'Dashboard: Users'
@@ -14,6 +16,10 @@ type PageProps = {
 };
 
 export default async function UsersPage(props: PageProps) {
+  const context = await getAuthContext();
+  if (!getOrganizationPermissions(context).canManageUsers) {
+    return <PageContainer access={false}> </PageContainer>;
+  }
   const searchParams = await props.searchParams;
   searchParamsCache.parse(searchParams);
 

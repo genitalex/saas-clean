@@ -18,10 +18,15 @@ import { auth } from '@/lib/auth';
 
 import { fakeUsers } from '@/constants/mock-api-users';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthContext } from '@/lib/db/organization-context';
+import { getOrganizationPermissions } from '@/lib/auth/permissions';
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
+  const context = await getAuthContext(request.headers);
+  if (!getOrganizationPermissions(context).canManageUsers)
+    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
   const { searchParams } = request.nextUrl;
 
   const page = Number(searchParams.get('page') ?? 1);
@@ -44,6 +49,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) return NextResponse.json({ error: 'AUTHENTICATION_REQUIRED' }, { status: 401 });
+  const context = await getAuthContext(request.headers);
+  if (!getOrganizationPermissions(context).canManageUsers)
+    return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
   const body = await request.json();
   const data = await fakeUsers.createUser(body);
   return NextResponse.json(data, { status: 201 });

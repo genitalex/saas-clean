@@ -40,18 +40,54 @@ export const navGroups: NavGroup[] = [
       { title: 'Templates', url: '/dashboard/templates', icon: 'send', items: [] },
       { title: 'Goals', url: '/dashboard/goals', icon: 'goals', items: [] },
       { title: 'Documents', url: '/dashboard/documents', icon: 'documents', items: [] },
-      { title: 'Team', url: '/dashboard/team', icon: 'teams', items: [] }
+      {
+        title: 'Team',
+        url: '/dashboard/team',
+        icon: 'teams',
+        items: [],
+        access: { role: 'owner', plan: 'team' }
+      }
     ]
   },
   {
     label: 'Settings',
     variant: 'secondary',
     items: [
-      { title: 'Automations', url: '/dashboard/automations', icon: 'automations', items: [] },
-      { title: 'Integrations', url: '/dashboard/integrations', icon: 'integrations', items: [] },
-      { title: 'Users', url: '/dashboard/users', icon: 'teams', items: [] },
-      { title: 'Workspaces', url: '/dashboard/workspaces', icon: 'workspace', items: [] },
-      { title: 'Settings', url: '/dashboard/settings', icon: 'settings', items: [] }
+      {
+        title: 'Automations',
+        url: '/dashboard/automations',
+        icon: 'automations',
+        items: [],
+        access: { role: 'owner' }
+      },
+      {
+        title: 'Integrations',
+        url: '/dashboard/integrations',
+        icon: 'integrations',
+        items: [],
+        access: { role: 'owner' }
+      },
+      {
+        title: 'Users',
+        url: '/dashboard/users',
+        icon: 'teams',
+        items: [],
+        access: { role: 'owner', plan: 'team' }
+      },
+      {
+        title: 'Workspaces',
+        url: '/dashboard/workspaces',
+        icon: 'workspace',
+        items: [],
+        access: { role: 'owner' }
+      },
+      {
+        title: 'Settings',
+        url: '/dashboard/settings',
+        icon: 'settings',
+        items: [],
+        access: { role: 'owner' }
+      }
     ]
   }
 ];

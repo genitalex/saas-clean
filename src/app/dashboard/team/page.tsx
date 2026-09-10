@@ -1,14 +1,15 @@
 import TeamWorkPage from '@/features/team/components/team-work-page';
 import PageContainer from '@/components/layout/page-container';
 import { getAuthContext } from '@/lib/db/organization-context';
+import { getOrganizationPermissions } from '@/lib/auth/permissions';
 
 export const metadata = { title: 'Equipo' };
 
 export default async function Page() {
-  const { membership } = await getAuthContext();
-  const canManage = membership.role === 'owner' || membership.role === 'manager';
+  const context = await getAuthContext();
+  const permissions = getOrganizationPermissions(context);
 
-  if (!canManage) {
+  if (!permissions.canManageTeam) {
     return <PageContainer access={false}> </PageContainer>;
   }
 
