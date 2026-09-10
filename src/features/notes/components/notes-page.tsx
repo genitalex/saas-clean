@@ -189,6 +189,18 @@ export function NotesPage() {
   );
 }
 
+function formatNoteDate(value: string) {
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  }).format(new Date(value));
+}
+
+function countWords(text: string) {
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
 function SortableNote({
   note,
   index,
@@ -212,6 +224,7 @@ function SortableNote({
     id: note.id
   });
   const selected = colors.find((item) => item.color === note.color)?.id;
+  const words = countWords(note.content);
 
   return (
     <article
@@ -220,62 +233,106 @@ function SortableNote({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        backgroundColor: note.color
+        ['--note-color' as string]: note.color
       }}
       className={cn(
-        'relative min-h-[220px] overflow-hidden group rounded-[6px] border border-black/8 p-5',
-        'before:absolute before:left-1/2 before:top-[-9px] before:size-[18px] before:-translate-x-1/2 before:rotate-45 before:bg-black/8',
-        isDragging && 'z-20 scale-[1.02] rotate-1 shadow-[0_24px_50px_-22px_rgba(0,0,0,0.4)]'
+        'group relative min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[0_14px_34px_-26px_rgba(15,23,42,0.5)] backdrop-blur-[2px] transition-shadow',
+        'hover:shadow-[0_20px_42px_-28px_rgba(15,23,42,0.5)]',
+        isDragging && 'z-20 scale-[1.02] rotate-[0.6deg] shadow-[0_24px_50px_-22px_rgba(0,0,0,0.4)]'
       )}
     >
-      <div className='flex items-start gap-2'>
-        <button
-          type='button'
-          {...listeners}
-          className='text-black/35 mt-0.5 flex size-7 shrink-0 cursor-grab items-center justify-center rounded-lg hover:bg-black/5 active:cursor-grabbing'
-          aria-label={`Mover nota ${index + 1}`}
-        >
-          <Icons.gripVertical className='size-4' />
-        </button>
+      <div
+        className='flex items-start justify-between gap-3 border-b border-border/60 px-4 py-3'
+        style={{ backgroundColor: `${note.color}55` }}
+      >
+        <div className='min-w-0'>
+          <div className='flex items-center gap-2'>
+            <button
+              type='button'
+              {...listeners}
+              className='text-foreground/35 flex size-7 shrink-0 cursor-grab items-center justify-center rounded-lg hover:bg-foreground/5 hover:text-foreground active:cursor-grabbing'
+              aria-label={`Mover nota ${index + 1}`}
+            >
+              <Icons.gripVertical className='size-4' />
+            </button>
 
-        {editing ? (
-          <input
-            autoFocus
-            value={note.title}
-            onChange={(e) => onChange({ title: e.target.value })}
-            className='min-w-0 flex-1 bg-transparent text-base font-semibold text-foreground outline-none'
-            placeholder='Título'
-          />
-        ) : (
+            {editing ? (
+              <input
+                autoFocus
+                value={note.title}
+                onChange={(e) => onChange({ title: e.target.value })}
+                className='min-w-0 flex-1 bg-transparent text-sm font-semibold text-foreground outline-none placeholder:text-muted-foreground'
+                placeholder='Título'
+              />
+            ) : (
+              <button
+                type='button'
+                onClick={onEdit}
+                className='min-w-0 flex-1 truncate text-left text-sm font-semibold text-foreground'
+              >
+                {note.title || 'Sin título'}
+              </button>
+            )}
+          </div>
+          <p className='ml-9 mt-0.5 text-[10px] capitalize text-muted-foreground'>
+            {formatNoteDate(note.updatedAt)}
+          </p>
+        </div>
+
+        <div className='flex shrink-0 items-center gap-1'>
+          <Icons.edit className='text-foreground/45 size-4' />
           <button
             type='button'
-            onClick={onEdit}
-            className='min-w-0 flex-1 truncate text-left text-base font-semibold text-foreground'
+            onClick={onDelete}
+            className='text-foreground/35 flex size-7 items-center justify-center rounded-lg opacity-0 transition-opacity hover:bg-foreground/5 hover:text-destructive group-hover:opacity-100'
+            aria-label='Eliminar nota'
           >
-            {note.title || 'Sin título'}
+            <Icons.trash className='size-4' />
           </button>
-        )}
-
-        <button
-          type='button'
-          onClick={onDelete}
-          className='text-foreground/40 flex size-7 shrink-0 items-center justify-center rounded-lg opacity-0 hover:bg-foreground/5 hover:text-destructive group-hover:opacity-100'
-          aria-label='Eliminar nota'
-        >
-          <Icons.trash className='size-4' />
-        </button>
+        </div>
       </div>
 
-      {editing ? (
-        <>
+      <div
+        className='relative min-h-[210px] bg-background/55'
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(transparent, transparent 27px, hsl(var(--border) / 0.38) 27px, hsl(var(--border) / 0.38) 28px)',
+          backgroundPosition: '0 12px'
+        }}
+      >
+        <div
+          className='absolute left-4 top-0 h-full w-px opacity-70'
+          style={{ backgroundColor: note.color }}
+        />
+
+        {editing ? (
           <textarea
             rows={7}
             value={note.content}
             onChange={(e) => onChange({ content: e.target.value })}
             placeholder='Escribe aquí…'
-            className='mt-4 min-h-[145px] w-full resize-none bg-transparent text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground'
+            className='relative z-10 min-h-[210px] w-full resize-none bg-transparent px-7 pb-4 pt-4 font-serif text-[14px] leading-7 text-foreground outline-none placeholder:text-muted-foreground/45 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
           />
-          <div className='mt-3 flex items-center justify-between gap-3'>
+        ) : (
+          <button
+            type='button'
+            onClick={onEdit}
+            className='relative z-10 block min-h-[210px] w-full px-7 pb-4 pt-4 text-left'
+          >
+            <span className='whitespace-pre-wrap text-sm leading-7 text-foreground/80'>
+              {note.content || 'Escribe algo…'}
+            </span>
+          </button>
+        )}
+      </div>
+
+      <div className='flex min-h-10 items-center justify-between gap-3 border-t border-border/60 bg-card/55 px-4'>
+        <span className='text-[11px] text-muted-foreground'>
+          {words} {words === 1 ? 'palabra' : 'palabras'}
+        </span>
+
+        <div className='flex items-center gap-2'>
+          {editing && (
             <div className='flex items-center gap-1.5'>
               {colors.map((item) => (
                 <button
@@ -283,30 +340,31 @@ function SortableNote({
                   type='button'
                   onClick={() => onChange({ color: item.color })}
                   className={cn(
-                    'size-6 rounded-full border border-black/10 shadow-sm hover:scale-110',
-                    selected === item.id && 'ring-2 ring-black/35 ring-offset-1'
+                    'size-5 rounded-full border border-black/10 shadow-sm transition-transform hover:scale-110',
+                    selected === item.id &&
+                      'ring-2 ring-foreground/35 ring-offset-1 ring-offset-background'
                   )}
                   style={{ backgroundColor: item.color }}
                   aria-label={`Color ${item.name}`}
                 />
               ))}
+              <button
+                type='button'
+                onClick={() => onDone()}
+                className='ml-1 rounded-lg bg-muted/70 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted'
+              >
+                Listo
+              </button>
             </div>
-            <button
-              type='button'
-              onClick={onDone}
-              className='rounded-xl bg-black/10 px-3 py-1.5 text-xs font-semibold text-black hover:bg-black/15'
-            >
-              Listo
-            </button>
-          </div>
-        </>
-      ) : (
-        <button type='button' onClick={onEdit} className='mt-4 min-h-[135px] w-full text-left'>
-          <span className='whitespace-pre-wrap text-sm leading-6 text-foreground/80'>
-            {note.content || 'Escribe algo…'}
-          </span>
-        </button>
-      )}
+          )}
+          {!editing && (
+            <span className='flex items-center gap-1.5 text-[10px] text-muted-foreground'>
+              <span className='size-1.5 rounded-full' style={{ backgroundColor: note.color }} />
+              Guardada
+            </span>
+          )}
+        </div>
+      </div>
     </article>
   );
 }
