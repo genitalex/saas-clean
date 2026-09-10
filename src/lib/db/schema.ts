@@ -221,6 +221,30 @@ export const taskRecurrence = pgEnum('task_recurrence', ['daily', 'weekly', 'mon
 
 export const eventStatus = pgEnum('event_status', ['planned', 'in_progress', 'done', 'cancelled']);
 
+export const opportunities = pgTable(
+  'opportunities',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+    title: text('title').notNull(),
+    customer: text('customer').notNull(),
+    value: integer('value').notNull().default(0),
+    probability: integer('probability').notNull().default(20),
+    stage: text('stage').notNull().default('Contactado'),
+    close: text('close').notNull().default('Por definir'),
+    owner: text('owner').notNull().default('Alex'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    index('opportunities_organization_id_idx').on(table.organizationId),
+    index('opportunities_organization_stage_idx').on(table.organizationId, table.stage)
+  ]
+);
+
 export const customers = pgTable(
   'customers',
   {

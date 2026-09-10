@@ -1,19 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Icons } from '@/components/icons';
 import { authClient } from '@/lib/auth-client';
-
-const AVATAR_STORAGE_KEY = 'profile-avatar-preview';
+import { toast } from 'sonner';
 
 export function UserNav() {
   const router = useRouter();
-  const pathname = usePathname();
   const { data: session } = authClient.useSession();
   const [open, setOpen] = React.useState(false);
-  const [photo, setPhoto] = React.useState<string>();
+  const [savingPhoto, setSavingPhoto] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const rootRef = React.useRef<HTMLDivElement>(null);
 
@@ -26,15 +24,6 @@ export function UserNav() {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-
-  React.useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(AVATAR_STORAGE_KEY);
-      if (stored) setPhoto(stored);
-    } catch {
-      // Optional local avatar preview.
-    }
-  }, []);
 
   React.useEffect(() => {
     if (!open) return;
@@ -56,25 +45,29 @@ export function UserNav() {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       if (typeof reader.result !== 'string') return;
-      setPhoto(reader.result);
-      try {
-        window.localStorage.setItem(AVATAR_STORAGE_KEY, reader.result);
-      } catch {
-        // Optional local preference.
+      setSavingPhoto(true);
+      const result = await authClient.updateUser({ image: reader.result });
+      setSavingPhoto(false);
+      if (result.error) {
+        toast.error(result.error.message || 'No se pudo guardar la foto');
+      } else {
+        toast.success('Foto de perfil actualizada');
       }
     };
     reader.readAsDataURL(file);
     event.target.value = '';
   }
 
-  function removePhoto() {
-    setPhoto(undefined);
-    try {
-      window.localStorage.removeItem(AVATAR_STORAGE_KEY);
-    } catch {
-      // Optional local preference.
+  async function removePhoto() {
+    setSavingPhoto(true);
+    const result = await authClient.updateUser({ image: null });
+    setSavingPhoto(false);
+    if (result.error) {
+      toast.error(result.error.message || 'No se pudo quitar la foto');
+    } else {
+      toast.success('Foto de perfil eliminada');
     }
   }
 
@@ -104,7 +97,7 @@ export function UserNav() {
         className='inline-flex h-10 max-w-full items-center gap-1 rounded-full border-0 bg-transparent p-0 shadow-none transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
         <Avatar className='size-9 shrink-0'>
-          <AvatarImage src={photo ?? session?.user.image ?? undefined} alt={name} />
+          <AvatarImage src={session?.user.image ?? undefined} alt={name} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <Icons.chevronDown className='size-3.5 shrink-0' />
@@ -117,7 +110,7 @@ export function UserNav() {
         >
           <div className='flex items-center gap-3 px-3 py-3'>
             <Avatar className='size-11'>
-              <AvatarImage src={photo ?? session?.user.image ?? undefined} alt={name} />
+              <AvatarImage src={session?.user.image ?? undefined} alt={name} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className='min-w-0 flex-1'>
@@ -151,17 +144,23 @@ export function UserNav() {
             type='button'
             role='menuitem'
             onClick={() => inputRef.current?.click()}
+            disabled={savingPhoto}
             className='flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors hover:bg-muted/70'
           >
             <Icons.upload className='size-4' />
-            {photo ? 'Cambiar foto' : 'Añadir foto'}
+            {savingPhoto
+              ? 'Guardando foto...'
+              : session?.user.image
+                ? 'Cambiar foto'
+                : 'Añadir foto'}
           </button>
 
-          {photo && (
+          {session?.user.image && (
             <button
               type='button'
               role='menuitem'
-              onClick={removePhoto}
+              onClick={() => void removePhoto()}
+              disabled={savingPhoto}
               className='flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground'
             >
               <Icons.trash className='size-4' />

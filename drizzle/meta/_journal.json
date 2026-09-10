@@ -113,6 +113,13 @@
       "when": 1788462030875,
       "tag": "0015_redundant_warbound",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788463000000,
+      "tag": "0016_opportunities",
+      "breakpoints": true
     }
   ]
 }

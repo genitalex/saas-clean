@@ -14,7 +14,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const MAX_VISIBLE = 5;
 
 const actionRoutes: Record<string, string> = {
-  view: '/dashboard/overview',
+  view: '/dashboard/today',
   'view-product': '/dashboard/product',
   billing: '/dashboard/overview',
   open: '/dashboard/kanban',

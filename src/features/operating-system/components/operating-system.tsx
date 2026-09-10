@@ -32,53 +32,18 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Icons } from '@/components/icons';
-import { createEvent, eventKeys, getEvents, updateEvent } from '@/features/calendar/queries';
+import { createEvent, eventKeys, getEvents } from '@/features/calendar/queries';
+import {
+  createOpportunity,
+  deleteOpportunity,
+  getOpportunities,
+  updateOpportunity
+} from '@/features/opportunities/api/service';
+import type { Opportunity } from '@/features/opportunities/api/types';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 
-type Opportunity = {
-  id: number;
-  title: string;
-  customer: string;
-  value: number;
-  probability: number;
-  stage: string;
-  close: string;
-  owner: string;
-};
-const stages = ['Prospecto', 'Contactado', 'Propuesta', 'Negociación', 'Ganado', 'Perdido'];
-const seed: Opportunity[] = [
-  {
-    id: 1,
-    title: 'Rediseño web',
-    customer: 'María López',
-    value: 7500,
-    probability: 70,
-    stage: 'Propuesta',
-    close: '30 ago',
-    owner: 'Alex'
-  },
-  {
-    id: 2,
-    title: 'Proyecto expansión',
-    customer: 'Juan García',
-    value: 4000,
-    probability: 35,
-    stage: 'Prospecto',
-    close: '12 sep',
-    owner: 'Alex'
-  },
-  {
-    id: 3,
-    title: 'Soporte anual',
-    customer: 'Estudio Norte',
-    value: 12000,
-    probability: 80,
-    stage: 'Negociación',
-    close: '4 sep',
-    owner: 'María'
-  }
-];
+const stages = ['Contactado', 'Propuesta', 'Negociación', 'Ganado'];
 const money = (value: number) =>
   new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -93,7 +58,7 @@ function OpportunityCard({
 }: {
   opportunity: Opportunity;
   onOpen: () => void;
-  onMove: (id: number, stage: string) => void;
+  onMove: (id: string, stage: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: opportunity.id,
@@ -164,6 +129,37 @@ function OpportunityColumn({ stage, children }: { stage: string; children: React
   );
 }
 
+function OpportunityTrashDropZone({ active, over }: { active: boolean; over: boolean }) {
+  const { setNodeRef } = useDroppable({ id: 'opportunity-trash', data: { type: 'trash' } });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`fixed bottom-5 left-1/2 z-[120] flex min-h-16 w-[min(92vw,340px)] -translate-x-1/2 items-center gap-3 rounded-[var(--radius-xl)] border px-4 py-3 shadow-lg transition-all duration-150 ${
+        active ? 'opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
+      } ${
+        over
+          ? 'scale-[1.03] border-destructive bg-destructive text-destructive-foreground'
+          : 'border-destructive/60 bg-background/95 text-destructive'
+      }`}
+      aria-label='Papelera: suelta aquí para eliminar'
+    >
+      <span
+        className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${over ? 'bg-muted' : 'bg-destructive/10'}`}
+      >
+        <Icons.trash className='size-4' />
+      </span>
+      <div className='min-w-0'>
+        <p className='text-sm font-semibold'>{over ? 'Suelta para eliminar' : 'Papelera'}</p>
+        <p
+          className={`truncate text-xs ${over ? 'text-destructive-foreground/75' : 'text-destructive/70'}`}
+        >
+          {over ? 'La oportunidad se eliminará' : 'Arrastra una oportunidad aquí'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Pulse() {
   return (
     <Card className='border-primary/20 bg-primary/[0.04]'>
@@ -192,17 +188,22 @@ export function OpportunitiesPage({
   detailId?: string;
   initialCreate?: boolean;
 }) {
-  const [opportunities, setOpportunities] = useState(seed);
+  const queryClient = useQueryClient();
+  const { data: opportunityData = [] } = useQuery({
+    queryKey: ['opportunities'],
+    queryFn: getOpportunities
+  });
   const [createOpen, setCreateOpen] = useState(Boolean(initialCreate));
   const [newTitle, setNewTitle] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newValue, setNewValue] = useState('');
-  const [selected, setSelected] = useState<Opportunity | null>(
-    detailId ? (seed.find((item) => String(item.id) === detailId) ?? null) : null
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [activeId, setActiveId] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const opportunities = opportunityData;
+  const selected = opportunities.find((item) => item.id === (detailId ?? selectedId)) ?? null;
   const filtered = useMemo(
     () =>
       opportunities.filter((item) =>
@@ -210,36 +211,40 @@ export function OpportunitiesPage({
       ),
     [opportunities, query]
   );
-  const move = (id: number, stage: string) =>
-    setOpportunities((items) => items.map((item) => (item.id === id ? { ...item, stage } : item)));
-  const createOpportunity = (event: React.FormEvent<HTMLFormElement>) => {
+  const move = async (id: string, stage: string) => {
+    try {
+      await updateOpportunity(id, stage);
+      await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+    } catch {
+      toast.error('No se pudo mover la oportunidad.');
+    }
+  };
+  const handleCreateOpportunity = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!newTitle.trim() || !newCustomer.trim()) return;
-    const opportunity: Opportunity = {
-      id: Date.now(),
-      title: newTitle.trim(),
-      customer: newCustomer.trim(),
-      value: Number(newValue) || 0,
-      probability: 20,
-      stage: 'Prospecto',
-      close: 'Por definir',
-      owner: 'Alex'
-    };
-    setOpportunities((items) => [opportunity, ...items]);
-    setNewTitle('');
-    setNewCustomer('');
-    setNewValue('');
-    setCreateOpen(false);
+    try {
+      await createOpportunity({
+        title: newTitle.trim(),
+        customer: newCustomer.trim(),
+        value: Number(newValue) || 0,
+        probability: 20,
+        stage: 'Contactado',
+        close: 'Por definir',
+        owner: 'Alex'
+      });
+      await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      setNewTitle('');
+      setNewCustomer('');
+      setNewValue('');
+      setCreateOpen(false);
+      toast.success('Oportunidad creada');
+    } catch {
+      toast.error('No se pudo crear la oportunidad.');
+    }
   };
   if (detailId && selected)
     return (
-      <OpportunityDetail
-        opportunity={selected}
-        onMove={(stage) => {
-          move(selected.id, stage);
-          setSelected({ ...selected, stage });
-        }}
-      />
+      <OpportunityDetail opportunity={selected} onMove={(stage) => void move(selected.id, stage)} />
     );
   return (
     <main className='flex flex-1 flex-col gap-6 py-2'>
@@ -265,7 +270,7 @@ export function OpportunitiesPage({
           <DialogHeader>
             <DialogTitle>Nueva oportunidad</DialogTitle>
           </DialogHeader>
-          <form className='space-y-4' onSubmit={createOpportunity}>
+          <form className='space-y-4' onSubmit={handleCreateOpportunity}>
             <Input
               autoFocus
               placeholder='Nombre de la oportunidad'
@@ -299,14 +304,33 @@ export function OpportunitiesPage({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragStart={(event: DragStartEvent) => setActiveId(Number(event.active.id))}
-        onDragCancel={() => setActiveId(null)}
-        onDragEnd={(event: DragEndEvent) => {
-          const destination = event.over?.id;
-          if (typeof destination === 'string' && stages.includes(destination)) {
-            move(Number(event.active.id), destination);
-          }
+        onDragStart={(event: DragStartEvent) => {
+          setActiveId(String(event.active.id));
+          setOverId(String(event.active.id));
+        }}
+        onDragOver={(event) => setOverId(event.over ? String(event.over.id) : null)}
+        onDragCancel={() => {
           setActiveId(null);
+          setOverId(null);
+        }}
+        onDragEnd={async (event: DragEndEvent) => {
+          const activeOpportunityId = String(event.active.id);
+          const destination = event.over?.id;
+          setActiveId(null);
+          setOverId(null);
+          if (destination === 'opportunity-trash') {
+            try {
+              await deleteOpportunity(activeOpportunityId);
+              await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+              toast.success('Oportunidad eliminada');
+            } catch {
+              toast.error('No se pudo eliminar la oportunidad.');
+            }
+            return;
+          }
+          if (typeof destination === 'string' && stages.includes(destination)) {
+            await move(activeOpportunityId, destination);
+          }
         }}
       >
         <div className='min-w-0 overflow-x-auto pb-2'>
@@ -319,7 +343,7 @@ export function OpportunitiesPage({
                     <OpportunityCard
                       key={item.id}
                       opportunity={item}
-                      onOpen={() => setSelected(item)}
+                      onOpen={() => setSelectedId(item.id)}
                       onMove={move}
                     />
                   ))}
@@ -331,13 +355,17 @@ export function OpportunitiesPage({
           {activeId ? (
             <div className='w-[250px] rotate-[1deg] rounded-xl shadow-2xl'>
               <OpportunityCard
-                opportunity={opportunities.find((item) => item.id === activeId) ?? seed[0]}
+                opportunity={opportunities.find((item) => item.id === activeId) ?? opportunities[0]}
                 onOpen={() => undefined}
                 onMove={move}
               />
             </div>
           ) : null}
         </DragOverlay>
+        <OpportunityTrashDropZone
+          active={Boolean(activeId)}
+          over={overId === 'opportunity-trash'}
+        />
       </DndContext>
     </main>
   );

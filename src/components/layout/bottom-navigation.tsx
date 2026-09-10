@@ -8,7 +8,7 @@ import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { desktopNavItems, mobileNavItems, navGroups } from '@/config/nav-config';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const activityItem = navGroups[1].items.find((item) => item.url === '/dashboard/activity');
+const opportunitiesItem = desktopNavItems[4];
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -17,13 +17,10 @@ export function BottomNavigation() {
   const [moreOpen, setMoreOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
   const mobileLeftItems = desktopNavItems.slice(0, 3);
-  const mobileRightItems = [desktopNavItems[3], ...(activityItem ? [activityItem] : [])];
+  const mobileRightItems = [desktopNavItems[3], opportunitiesItem];
   const desktopLeftItems = desktopNavItems.slice(0, 3);
-  const desktopRightItems = [desktopNavItems[3], ...(activityItem ? [activityItem] : [])];
-  const primaryUrls = new Set([
-    ...mobileNavItems.map((item) => item.url),
-    ...(!activityItem ? [] : [activityItem.url])
-  ]);
+  const desktopRightItems = [desktopNavItems[3], opportunitiesItem];
+  const primaryUrls = new Set([...mobileNavItems.map((item) => item.url), opportunitiesItem.url]);
 
   React.useEffect(() => {
     setMoreOpen(false);

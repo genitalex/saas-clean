@@ -23,7 +23,7 @@ export default async function OnboardingPage() {
         .set({ activeOrganizationId: memberships[0].organizationId, updatedAt: new Date() })
         .where(eq(sessions.id, session.session.id));
     }
-    redirect('/dashboard/overview');
+    redirect('/dashboard/today');
   }
 
   return <OnboardingForm />;

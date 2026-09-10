@@ -57,7 +57,7 @@ function ModeChrome({
   return (
     <main className='mx-auto flex min-h-screen w-full max-w-4xl flex-col px-5 py-6 sm:px-10 sm:py-10'>
       <header className='flex items-center justify-between'>
-        <Link href='/dashboard/overview' className='flex items-center gap-2 text-sm font-semibold'>
+        <Link href='/dashboard/today' className='flex items-center gap-2 text-sm font-semibold'>
           <span className='grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground'>
             <Icons.logo />
           </span>

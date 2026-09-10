@@ -20,6 +20,12 @@ export const navGroups: NavGroup[] = [
         icon: 'teams',
         shortcut: ['c', 'u'],
         items: []
+      },
+      {
+        title: 'Opportunities',
+        url: '/dashboard/opportunities',
+        icon: 'opportunities',
+        items: []
       }
     ]
   },
@@ -27,8 +33,6 @@ export const navGroups: NavGroup[] = [
     label: 'More',
     variant: 'primary',
     items: [
-      { title: 'Weekly Review', url: '/dashboard/weekly-review', icon: 'calendar', items: [] },
-      { title: 'Activity', url: '/dashboard/activity', icon: 'trendingUp', items: [] },
       { title: 'Notifications', url: '/dashboard/notifications', icon: 'notification', items: [] },
       { title: 'Notes', url: '/dashboard/notes', icon: 'page', items: [] },
       { title: 'Opportunities', url: '/dashboard/opportunities', icon: 'opportunities', items: [] },
@@ -63,5 +67,6 @@ export const desktopNavItems = [
   navGroups[0].items[0],
   navGroups[0].items[1],
   navGroups[0].items[2],
-  navGroups[0].items[3]
+  navGroups[0].items[3],
+  navGroups[0].items[4]
 ];

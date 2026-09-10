@@ -23,7 +23,7 @@ export default function SignInPage() {
       setError(result.error.message || 'Unable to sign in');
       return;
     }
-    router.push('/dashboard/overview');
+    router.push('/dashboard/today');
     router.refresh();
   }
 
