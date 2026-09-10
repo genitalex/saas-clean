@@ -8,8 +8,10 @@ import {
   organizationInvitations,
   organizationMembers,
   organizations,
-  sessions
+  sessions,
+  users
 } from '@/lib/db/schema';
+import { notifyOrganizationMembers } from '@/features/automations/api/service';
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
@@ -100,5 +102,18 @@ export async function POST(request: NextRequest) {
   });
 
   if (result.error) return NextResponse.json({ error: result.error }, { status: 409 });
+
+  try {
+    await notifyOrganizationMembers(result.organizationId, session.user.id, {
+      type: 'team_member_joined',
+      title: 'Nuevo miembro en el equipo',
+      message: `${session.user.name} se ha unido al espacio.`,
+      refEntityType: null,
+      refEntityId: null
+    });
+  } catch (error) {
+    console.error('[organization-invitations:notify-joined]', error);
+  }
+
   return NextResponse.json({ organizationId: result.organizationId });
 }

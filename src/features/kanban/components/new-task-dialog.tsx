@@ -19,7 +19,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { createTask, taskKeys } from '@/features/tasks/queries';
 import { activityKeys } from '@/features/activities/queries';
 import { taskPayloadSchema } from '@/features/tasks/schemas/task';
-import type { CustomerOption, TaskPriority } from '@/features/tasks/types';
+import type { CustomerOption, TaskPriority, UserOption } from '@/features/tasks/types';
 import { authClient } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +55,16 @@ export default function NewTaskDialog({
       const response = await fetch('/api/customers', { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not load customers');
       return (await response.json()) as CustomerOption[];
+    },
+    enabled: open
+  });
+
+  const { data: members = [] } = useQuery({
+    queryKey: ['organization-members', 'task-options'],
+    queryFn: async () => {
+      const response = await fetch('/api/organization-members', { cache: 'no-store' });
+      if (!response.ok) return [];
+      return (await response.json()) as UserOption[];
     },
     enabled: open
   });
@@ -171,11 +181,11 @@ export default function NewTaskDialog({
               onChange={(event) => setAssigneeId(event.target.value)}
             >
               <NativeSelectOption value=''>Sin responsable</NativeSelectOption>
-              {session?.user.id && (
-                <NativeSelectOption value={session.user.id}>
-                  {session.user.name} (tú)
+              {members.map((member) => (
+                <NativeSelectOption key={member.id} value={member.id}>
+                  {member.id === session?.user.id ? `${member.name} (tú)` : member.name}
                 </NativeSelectOption>
-              )}
+              ))}
             </NativeSelect>
           </label>
         </form>

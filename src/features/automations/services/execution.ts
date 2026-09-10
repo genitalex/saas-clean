@@ -91,7 +91,7 @@ async function createAutomationNotificationOnce(
     )
   });
   if (existing) return existing;
-  return service.createNotification(organizationId, userId, {
+  return service.createNotificationIfAllowed(organizationId, userId, {
     type: 'automation_executed',
     title,
     message,

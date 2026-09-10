@@ -15,7 +15,6 @@ import {
 import * as client from '@/features/automations/api/client';
 import { useSession } from '@/lib/auth-client';
 import { useState } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const MAX_VISIBLE = 5;
 
@@ -38,7 +37,6 @@ function AuthenticatedNotificationCenter({
 }) {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const isMobile = useIsMobile();
 
   // Query for unread count
   const { data: unreadCount = 0 } = useSuspenseQuery(
@@ -89,6 +87,9 @@ function AuthenticatedNotificationCenter({
     }
     if (notification.refEntityType === 'event') {
       return `/dashboard/calendar?eventId=${notification.refEntityId}`;
+    }
+    if (notification.refEntityType === 'opportunity') {
+      return `/dashboard/opportunities/${notification.refEntityId}`;
     }
     return '/dashboard/notifications';
   };
@@ -150,7 +151,6 @@ function AuthenticatedNotificationCenter({
                     href={getNotificationPath(notification)}
                     onClick={() => {
                       handleNotificationClick(notification.id);
-                      if (isMobile) handleDismiss(notification.id);
                     }}
                     className='block outline-none'
                   >

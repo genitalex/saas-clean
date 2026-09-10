@@ -26,6 +26,7 @@ export interface NotificationCardProps {
   onMarkAsRead?: (id: string) => void;
   onDismiss?: (id: string) => void;
   dismissOnClick?: boolean;
+  onOpen?: (id: string) => void;
   onAction?: (notificationId: string, actionId: string, actionType: ActionType) => void;
   loadingActionId?: string;
   className?: string;
@@ -39,14 +40,14 @@ const formatDate = (date: string | Date): string => {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return 'Ahora';
+  if (diffMins < 60) return `Hace ${diffMins} min`;
+  if (diffHours < 24) return `Hace ${diffHours} h`;
+  if (diffDays < 7) return `Hace ${diffDays} d`;
 
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
+  return d.toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short'
   });
 };
 
@@ -75,6 +76,7 @@ export const NotificationCard: FC<NotificationCardProps> = ({
   actions = [],
   onMarkAsRead,
   onDismiss,
+  onOpen,
   dismissOnClick = false,
   onAction,
   loadingActionId,
@@ -86,12 +88,13 @@ export const NotificationCard: FC<NotificationCardProps> = ({
     <div
       className={cn(
         'group relative w-full cursor-default rounded-2xl transition-all',
-        dismissOnClick && 'cursor-pointer hover:ring-1 hover:ring-border',
+        (dismissOnClick || onOpen) && 'cursor-pointer hover:ring-1 hover:ring-border',
         isUnread ? 'bg-muted' : 'bg-muted/40',
         className
       )}
       onClick={() => {
         if (dismissOnClick) onDismiss?.(id);
+        else onOpen?.(id);
       }}
     >
       <div className='px-4 py-3.5'>

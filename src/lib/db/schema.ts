@@ -615,8 +615,45 @@ export const notificationType = pgEnum('notification_type', [
   'task_blocked',
   'waiting_ready',
   'automation_executed',
-  'event_important'
+  'event_important',
+  'task_status_changed',
+  'team_member_joined',
+  'customer_updated',
+  'event_updated',
+  'opportunity_updated'
 ]);
+
+export const notificationPreferences = pgTable(
+  'notification_preferences',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    taskAssigned: boolean('task_assigned').notNull().default(true),
+    taskOverdue: boolean('task_overdue').notNull().default(true),
+    followUpOverdue: boolean('follow_up_overdue').notNull().default(true),
+    taskBlocked: boolean('task_blocked').notNull().default(true),
+    waitingReady: boolean('waiting_ready').notNull().default(true),
+    automationExecuted: boolean('automation_executed').notNull().default(true),
+    eventImportant: boolean('event_important').notNull().default(true),
+    taskStatusChanged: boolean('task_status_changed').notNull().default(true),
+    teamMemberJoined: boolean('team_member_joined').notNull().default(true),
+    customerUpdated: boolean('customer_updated').notNull().default(true),
+    eventUpdated: boolean('event_updated').notNull().default(true),
+    opportunityUpdated: boolean('opportunity_updated').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    uniqueIndex('notification_preferences_org_user_idx').on(table.organizationId, table.userId),
+    index('notification_preferences_organization_id_idx').on(table.organizationId),
+    index('notification_preferences_user_id_idx').on(table.userId)
+  ]
+);
 
 export const notifications = pgTable(
   'notifications',

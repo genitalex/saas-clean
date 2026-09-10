@@ -5,6 +5,7 @@ import { and, desc, eq, ilike, or } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { customerSchema } from '@/features/customers/schemas/customer';
 import { recordSystemActivity } from '@/features/activities/actions/service';
+import { notifyOrganizationMembers } from '@/features/automations/api/service';
 
 export async function GET(request: NextRequest) {
   let context;
@@ -90,6 +91,13 @@ export async function POST(request: NextRequest) {
       })
       .returning();
     await recordSystemActivity(customer.id, 'Cliente creado');
+    await notifyOrganizationMembers(organizationId, context.session.user.id, {
+      type: 'customer_updated',
+      title: `${context.user.name} ha creado un cliente`,
+      message: customer.name,
+      refEntityType: 'customer',
+      refEntityId: customer.id
+    });
     return NextResponse.json(customer, { status: 201 });
   } catch (error) {
     console.error('[customers:create]', error);

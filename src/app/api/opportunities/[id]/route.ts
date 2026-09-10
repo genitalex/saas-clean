@@ -4,6 +4,7 @@ import { opportunities } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { notifyOrganizationMembers } from '@/features/automations/api/service';
 
 const updateSchema = z
   .object({
@@ -33,12 +34,30 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!parsed.success)
     return NextResponse.json({ error: 'INVALID_OPPORTUNITY_UPDATE' }, { status: 400 });
   const { id } = await params;
+  const [existing] = await db
+    .select({ title: opportunities.title, stage: opportunities.stage })
+    .from(opportunities)
+    .where(and(eq(opportunities.id, id), eq(opportunities.organizationId, context.organization.id)))
+    .limit(1);
+  if (!existing) return NextResponse.json({ error: 'OPPORTUNITY_NOT_FOUND' }, { status: 404 });
   const [updated] = await db
     .update(opportunities)
     .set({ ...parsed.data, updatedAt: new Date() })
     .where(and(eq(opportunities.id, id), eq(opportunities.organizationId, context.organization.id)))
     .returning();
   if (!updated) return NextResponse.json({ error: 'OPPORTUNITY_NOT_FOUND' }, { status: 404 });
+  if (parsed.data.stage !== undefined && parsed.data.stage !== existing.stage) {
+    const closing = /cerr|won|ganad|closed/i.test(parsed.data.stage);
+    await notifyOrganizationMembers(context.organization.id, context.user.id, {
+      type: 'opportunity_updated',
+      title: closing
+        ? `${context.user.name} ha cerrado una oportunidad`
+        : `${context.user.name} ha actualizado una oportunidad`,
+      message: `“${existing.title}” → ${parsed.data.stage}`,
+      refEntityType: 'opportunity',
+      refEntityId: id
+    });
+  }
   return NextResponse.json(updated);
 }
 

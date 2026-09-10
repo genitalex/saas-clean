@@ -23,6 +23,7 @@ import type {
 } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
 import { executeAutomationsForTaskCompletion } from '@/features/automations/services/execution';
+import { notifyOrganizationMembers } from '@/features/automations/api/service';
 
 export class TaskServiceError extends Error {
   constructor(
@@ -198,7 +199,7 @@ export async function getTask(id: string) {
 }
 
 export async function createTask(input: TaskPayload) {
-  const { organization } = await getAuthContext();
+  const { organization, user } = await getAuthContext();
   const parsed = taskPayloadSchema.safeParse(input);
   if (!parsed.success) throw new TaskServiceError('Invalid task payload', 'INVALID_PAYLOAD');
   await validateReferences(
@@ -236,6 +237,16 @@ export async function createTask(input: TaskPayload) {
       parsed.data.eventId
     );
   await recordTaskHistory(created.id, 'created', 'Tarea creada');
+  if (parsed.data.assigneeId && parsed.data.assigneeId !== user.id) {
+    await notifyOrganizationMembers(organization.id, user.id, {
+      type: 'task_assigned',
+      title: `${user.name} te ha asignado una tarea`,
+      message: `“${parsed.data.title}”`,
+      refEntityType: 'task',
+      refEntityId: created.id,
+      userIds: [parsed.data.assigneeId]
+    });
+  }
   if (parsed.data.parentTaskId)
     await recordTaskHistory(
       parsed.data.parentTaskId,
@@ -350,6 +361,50 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
   if (parsed.data.status && parsed.data.status !== previous.status) {
     const labels = { todo: 'Todo', in_progress: 'En curso', waiting: 'Esperando', done: 'Hecha' };
     await recordTaskHistory(id, 'status_changed', `Pasó a “${labels[parsed.data.status]}”`);
+
+    const recipients = new Set<string>();
+    const [owners] = await Promise.all([
+      db
+        .select({ userId: organizationMembers.userId })
+        .from(organizationMembers)
+        .where(
+          and(
+            eq(organizationMembers.organizationId, organization.id),
+            eq(organizationMembers.role, 'owner')
+          )
+        )
+    ]);
+    for (const owner of owners) recipients.add(owner.userId);
+    if (previous.assigneeId) recipients.add(previous.assigneeId);
+    if (parsed.data.assigneeId) recipients.add(parsed.data.assigneeId);
+
+    await notifyOrganizationMembers(organization.id, user.id, {
+      type: 'task_status_changed',
+      title:
+        parsed.data.status === 'done'
+          ? `${user.name} ha completado una tarea`
+          : `${user.name} ha movido una tarea`,
+      message: `“${previous.title}” → ${labels[parsed.data.status]}`,
+      refEntityType: 'task',
+      refEntityId: id,
+      userIds: Array.from(recipients)
+    });
+  }
+
+  if (
+    parsed.data.assigneeId !== undefined &&
+    parsed.data.assigneeId !== previous.assigneeId &&
+    parsed.data.assigneeId &&
+    parsed.data.assigneeId !== user.id
+  ) {
+    await notifyOrganizationMembers(organization.id, user.id, {
+      type: 'task_assigned',
+      title: `${user.name} te ha asignado una tarea`,
+      message: `“${previous.title}”`,
+      refEntityType: 'task',
+      refEntityId: id,
+      userIds: [parsed.data.assigneeId]
+    });
   }
   if (parsed.data.waitingOn !== undefined && parsed.data.waitingOn !== previous.waitingOn) {
     await recordTaskHistory(

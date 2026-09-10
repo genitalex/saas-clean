@@ -1,5 +1,13 @@
 import { db } from '@/lib/db';
-import { automations, notifications, attentionItems, customers } from '@/lib/db/schema';
+import {
+  automations,
+  notifications,
+  attentionItems,
+  customers,
+  notificationPreferences,
+  organizationMembers,
+  users
+} from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import type {
   Automation,
@@ -82,6 +90,76 @@ export async function deleteAutomation(automationId: string): Promise<void> {
 }
 
 /* ---------- Notifications ---------- */
+
+const notificationPreferenceKey = {
+  task_assigned: 'taskAssigned',
+  task_overdue: 'taskOverdue',
+  follow_up_overdue: 'followUpOverdue',
+  task_blocked: 'taskBlocked',
+  waiting_ready: 'waitingReady',
+  automation_executed: 'automationExecuted',
+  event_important: 'eventImportant',
+  task_status_changed: 'taskStatusChanged',
+  team_member_joined: 'teamMemberJoined',
+  customer_updated: 'customerUpdated',
+  event_updated: 'eventUpdated',
+  opportunity_updated: 'opportunityUpdated'
+} as const;
+
+type NotificationPreferenceKey =
+  (typeof notificationPreferenceKey)[keyof typeof notificationPreferenceKey];
+
+async function notificationAllowed(
+  organizationId: string,
+  userId: string,
+  type: Notification['type']
+) {
+  const [preferences] = await db
+    .select()
+    .from(notificationPreferences)
+    .where(
+      and(
+        eq(notificationPreferences.organizationId, organizationId),
+        eq(notificationPreferences.userId, userId)
+      )
+    )
+    .limit(1);
+  if (!preferences) return true;
+  const key = notificationPreferenceKey[type] as NotificationPreferenceKey;
+  return preferences[key] !== false;
+}
+
+export async function createNotificationIfAllowed(
+  organizationId: string,
+  userId: string,
+  payload: NotificationPayload
+) {
+  if (!(await notificationAllowed(organizationId, userId, payload.type))) return null;
+  return createNotification(organizationId, userId, payload);
+}
+
+export async function notifyOrganizationMembers(
+  organizationId: string,
+  actorId: string,
+  payload: Omit<NotificationPayload, 'type'> & { type: Notification['type']; userIds?: string[] }
+) {
+  const targetUserIds =
+    payload.userIds ??
+    (
+      await db
+        .select({ userId: organizationMembers.userId })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.organizationId, organizationId))
+    ).map((row) => row.userId);
+
+  const created = [];
+  for (const userId of targetUserIds) {
+    if (userId === actorId) continue;
+    if (!(await notificationAllowed(organizationId, userId, payload.type))) continue;
+    created.push(await createNotification(organizationId, userId, payload));
+  }
+  return created;
+}
 
 export async function getNotifications(
   organizationId: string,
@@ -234,13 +312,21 @@ export async function createAttentionItem(
 
   const created = result[0];
   try {
-    await createNotification(organizationId, userId, {
-      type: payload.type === 'task_overdue' ? 'task_overdue' : 'waiting_ready',
-      title: payload.title,
-      message: payload.message,
-      refEntityType: payload.refEntityType,
-      refEntityId: payload.refEntityId
-    });
+    if (
+      await notificationAllowed(
+        organizationId,
+        userId,
+        payload.type === 'task_overdue' ? 'task_overdue' : 'waiting_ready'
+      )
+    ) {
+      await createNotificationIfAllowed(organizationId, userId, {
+        type: payload.type === 'task_overdue' ? 'task_overdue' : 'waiting_ready',
+        title: payload.title,
+        message: payload.message,
+        refEntityType: payload.refEntityType,
+        refEntityId: payload.refEntityId
+      });
+    }
   } catch (error) {
     console.error('[automations:notification]', error);
   }

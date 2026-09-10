@@ -76,8 +76,10 @@ export function getNotificationsQueryOptions(
         })
       );
     },
-    staleTime: 1000 * 30, // 30 seconds - notifications should refresh frequently
-    gcTime: 1000 * 60 // 1 minute
+    staleTime: 5_000,
+    gcTime: 1000 * 60,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true
   });
 }
 
@@ -95,8 +97,10 @@ export function getUnreadNotificationCountQueryOptions(organizationId: string, u
       const notifications = (await res.json()) as Notification[];
       return notifications.length;
     },
-    staleTime: 1000 * 30, // 30 seconds
-    gcTime: 1000 * 60 // 1 minute
+    staleTime: 5_000,
+    gcTime: 1000 * 60,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true
   });
 }
 

@@ -5,6 +5,7 @@ import { customerSchema } from '@/features/customers/schemas/customer';
 import { and, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { recordSystemActivity } from '@/features/activities/actions/service';
+import { notifyOrganizationMembers } from '@/features/automations/api/service';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let context;
@@ -82,7 +83,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     })
     .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
     .returning();
-  if (row) await recordSystemActivity(row.id, 'Cliente actualizado');
+  if (row) {
+    await recordSystemActivity(row.id, 'Cliente actualizado');
+    await notifyOrganizationMembers(organizationId, context.session.user.id, {
+      type: 'customer_updated',
+      title: `${context.user.name} ha actualizado un cliente`,
+      message: row.name,
+      refEntityType: 'customer',
+      refEntityId: row.id
+    });
+  }
   return row
     ? NextResponse.json(row)
     : NextResponse.json({ error: 'CUSTOMER_NOT_FOUND' }, { status: 404 });

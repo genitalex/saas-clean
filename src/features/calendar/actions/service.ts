@@ -8,6 +8,7 @@ import { eventFiltersSchema, eventPayloadSchema, eventUpdateSchema } from '../sc
 import type { EventFilters, EventPayload, EventUpdatePayload } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
 import { executeAutomationsForEventCompletion } from '@/features/automations/services/execution';
+import { notifyOrganizationMembers } from '@/features/automations/api/service';
 
 export class EventServiceError extends Error {
   constructor(
@@ -156,7 +157,7 @@ export async function getEvent(id: string) {
 }
 
 export async function createEvent(input: EventPayload) {
-  const { organization } = await getAuthContext();
+  const { organization, user } = await getAuthContext();
   const parsed = eventPayloadSchema.safeParse(input);
   if (!parsed.success) throw new EventServiceError('Invalid event payload', 'INVALID_PAYLOAD');
   await validateReferences(organization.id, parsed.data.customerId, parsed.data.assigneeId);
@@ -182,6 +183,16 @@ export async function createEvent(input: EventPayload) {
       updatedAt: now
     })
     .returning({ id: events.id });
+  if (parsed.data.assigneeId && parsed.data.assigneeId !== user.id) {
+    await notifyOrganizationMembers(organization.id, user.id, {
+      type: 'event_updated',
+      title: `${user.name} te ha asignado un evento`,
+      message: `“${parsed.data.title}”`,
+      refEntityType: 'event',
+      refEntityId: created.id,
+      userIds: [parsed.data.assigneeId]
+    });
+  }
   if (parsed.data.customerId) {
     try {
       await recordSystemActivity(
@@ -284,6 +295,23 @@ export async function updateEvent(id: string, input: EventUpdatePayload) {
       console.error('[automations:event-completed]', error);
     }
   }
+  const eventRecipient =
+    parsed.data.assigneeId && parsed.data.assigneeId !== user.id
+      ? parsed.data.assigneeId
+      : existing.assigneeId && existing.assigneeId !== user.id
+        ? existing.assigneeId
+        : null;
+  if (eventRecipient) {
+    await notifyOrganizationMembers(organization.id, user.id, {
+      type: 'event_updated',
+      title: `${user.name} ha actualizado un evento`,
+      message: `“${parsed.data.title ?? existing.title}”`,
+      refEntityType: 'event',
+      refEntityId: id,
+      userIds: [eventRecipient]
+    });
+  }
+
   return getEvent(updated.id);
 }
 

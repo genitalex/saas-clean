@@ -125,6 +125,7 @@ export function KanbanBoard() {
   const tasksRef = React.useRef(tasks);
   const columnsRef = React.useRef(columns);
   const suppressClickRef = React.useRef(false);
+  const originalColumnRef = React.useRef<TaskStatus | null>(null);
 
   React.useEffect(() => {
     tasksRef.current = tasks;
@@ -145,6 +146,7 @@ export function KanbanBoard() {
 
   const handleDragStart = React.useCallback((event: DragStartEvent) => {
     const task = findTask(columnsRef.current, String(event.active.id));
+    originalColumnRef.current = task?.status ?? null;
     setActiveTask(task);
     setOverId(String(event.active.id));
     suppressClickRef.current = false;
@@ -203,6 +205,7 @@ export function KanbanBoard() {
 
   const handleDragCancel = React.useCallback(() => {
     setActiveTask(null);
+    originalColumnRef.current = null;
     setOverId(null);
     columnsRef.current = toColumns(tasksRef.current);
     setColumns(columnsRef.current);
@@ -245,10 +248,11 @@ export function KanbanBoard() {
       }
       if (!targetColumn) return;
 
-      const sourceColumn = findTaskColumn(finalColumns, activeId);
+      const sourceColumn = originalColumnRef.current;
+      originalColumnRef.current = null;
       if (!sourceColumn) return;
 
-      if (targetColumn !== dragged.status) {
+      if (targetColumn !== sourceColumn) {
         try {
           await updateTaskStatus(activeId, targetColumn);
           await queryClient.invalidateQueries({ queryKey: taskKeys.all });

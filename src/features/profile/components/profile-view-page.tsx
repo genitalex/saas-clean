@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import PageContainer from '@/components/layout/page-container';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 function useOrganizationContext() {
   return useQuery<{
@@ -146,12 +147,15 @@ export default function ProfileViewPage() {
             <CardTitle>Cómo quieres trabajar</CardTitle>
           </CardHeader>
           <CardContent className='grid min-w-0 gap-3 md:grid-cols-3'>
-            <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3'>
+            <Link
+              href='/dashboard/profile/notifications'
+              className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3 transition-colors hover:bg-accent'
+            >
               <p className='text-sm font-medium'>Notificaciones</p>
               <p className='text-muted-foreground mt-1 text-xs'>
                 Controla tus avisos y recordatorios.
               </p>
-            </div>
+            </Link>
             <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <p className='text-sm font-medium'>Apariencia</p>
               <p className='text-muted-foreground mt-1 text-xs'>
