@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,6 +7,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
@@ -565,12 +565,11 @@ export function TaskListPage({
               >
                 Planificar
               </Button>
-              <Input
-                type='datetime-local'
+              <DateTimePicker
                 value={bulkDate}
-                onChange={(event) => setBulkDate(event.target.value)}
-                className='h-9 w-44 rounded-lg'
-                aria-label='Elegir fecha para tareas seleccionadas'
+                onChange={setBulkDate}
+                className='w-48'
+                aria-label='Elegir fecha y hora para tareas seleccionadas'
               />
               {bulkDate && (
                 <Button
@@ -635,12 +634,11 @@ export function TaskListPage({
             </div>
             {bulkPlanOpen && (
               <div className='flex flex-wrap items-center gap-2 border-t border-border/50 pt-3'>
-                <Input
-                  type='datetime-local'
+                <DateTimePicker
                   value={bulkPlanStart}
-                  onChange={(event) => setBulkPlanStart(event.target.value)}
+                  onChange={setBulkPlanStart}
+                  className='w-48'
                   aria-label='Inicio del plan de tareas'
-                  className='h-9 w-48 rounded-lg'
                 />
                 <NativeSelect
                   value={bulkPlanDuration}
