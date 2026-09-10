@@ -18,7 +18,10 @@ export default async function Page() {
       pageTitle='Equipo'
       pageDescription='Qué tiene por delante cada persona y dónde necesita atención.'
     >
-      <TeamWorkPage />
+      <TeamWorkPage
+        organizationId={context.organization.id}
+        seatLimit={context.organization.seatLimit}
+      />
     </PageContainer>
   );
 }

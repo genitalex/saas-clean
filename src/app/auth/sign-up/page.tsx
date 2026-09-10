@@ -23,6 +23,22 @@ export default function SignUpPage() {
       setError(result.error.message || 'Unable to create account');
       return;
     }
+    const invite = new URLSearchParams(window.location.search).get('invite');
+    if (invite) {
+      const acceptResponse = await fetch('/api/organization-invitations/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: invite })
+      });
+      if (!acceptResponse.ok) {
+        const data = await acceptResponse.json();
+        setError(data.error || 'No se ha podido aceptar la invitación.');
+        return;
+      }
+      router.push('/dashboard/today');
+      router.refresh();
+      return;
+    }
     router.push('/onboarding');
     router.refresh();
   }
@@ -75,7 +91,10 @@ export default function SignUpPage() {
         </form>
         <p className='text-muted-foreground mt-6 text-center text-sm'>
           Already have an account?{' '}
-          <Link className='underline' href='/auth/sign-in'>
+          <Link
+            className='underline'
+            href={`/auth/sign-in${typeof window !== 'undefined' && window.location.search ? window.location.search : ''}`}
+          >
             Sign in
           </Link>
         </p>

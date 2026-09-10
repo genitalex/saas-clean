@@ -2,16 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthContextError, getAuthContext } from '@/lib/db/organization-context';
 import { getOrganizationPermissions, normalizeRole } from '@/lib/auth/permissions';
 import { db } from '@/lib/db';
-import { organizationMembers } from '@/lib/db/schema';
-import { count, eq } from 'drizzle-orm';
+import { organizationInvitations, organizationMembers } from '@/lib/db/schema';
+import { and, count, eq, gt, isNull } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     const context = await getAuthContext(request.headers);
+    const now = new Date();
     const [{ memberCount }] = await db
       .select({ memberCount: count() })
       .from(organizationMembers)
       .where(eq(organizationMembers.organizationId, context.organization.id));
+    const [{ pendingInviteCount }] = await db
+      .select({ pendingInviteCount: count() })
+      .from(organizationInvitations)
+      .where(
+        and(
+          eq(organizationInvitations.organizationId, context.organization.id),
+          isNull(organizationInvitations.acceptedAt),
+          gt(organizationInvitations.expiresAt, now)
+        )
+      );
     const role = normalizeRole(context.membership.role);
     const permissions = getOrganizationPermissions(context);
 
@@ -24,7 +35,8 @@ export async function GET(request: NextRequest) {
         industry: context.organization.industry,
         teamSize: context.organization.teamSize,
         mainUseCase: context.organization.mainUseCase,
-        memberCount: Number(memberCount)
+        memberCount: Number(memberCount),
+        pendingInviteCount: Number(pendingInviteCount)
       },
       user: {
         id: context.user.id,

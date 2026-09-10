@@ -13,12 +13,16 @@ export default function SettingsClient({
   organizationName,
   plan,
   memberCount,
-  seatLimit
+  seatLimit,
+  openTaskCount,
+  upcomingEventCount
 }: {
   organizationName: string;
   plan: 'solo' | 'team';
   memberCount: number;
   seatLimit: number;
+  openTaskCount: number;
+  upcomingEventCount: number;
 }) {
   const [workspaceSettings, setWorkspaceSettings] = useState({
     dailyDigest: true,
@@ -92,11 +96,11 @@ export default function SettingsClient({
             </div>
             <div className='flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 p-3'>
               <span className='text-sm text-muted-foreground'>Tareas abiertas</span>
-              <strong className='text-sm'>24</strong>
+              <strong className='text-sm'>{openTaskCount}</strong>
             </div>
             <div className='flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 p-3'>
               <span className='text-sm text-muted-foreground'>Próximos eventos</span>
-              <strong className='text-sm'>6</strong>
+              <strong className='text-sm'>{upcomingEventCount}</strong>
             </div>
           </CardContent>
         </Card>

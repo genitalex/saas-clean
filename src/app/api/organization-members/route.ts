@@ -12,7 +12,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 });
     }
     const members = await db
-      .select({ id: users.id, name: users.name, role: organizationMembers.role })
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: organizationMembers.role
+      })
       .from(organizationMembers)
       .innerJoin(users, eq(users.id, organizationMembers.userId))
       .where(eq(organizationMembers.organizationId, context.organization.id));

@@ -134,6 +134,13 @@
       "when": 1789052544420,
       "tag": "0018_onboarding_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789053000000,
+      "tag": "0019_team_invitations",
+      "breakpoints": true
     }
   ]
 }

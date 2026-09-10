@@ -219,6 +219,37 @@ export const organizationMembers = pgTable(
   ]
 );
 
+export const organizationInvitations = pgTable(
+  'organization_invitations',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    organizationId: uuid('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    invitedByUserId: uuid('invited_by_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    email: text('email').notNull(),
+
+    tokenHash: text('token_hash').notNull(),
+
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+
+    acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [
+    uniqueIndex('organization_invitations_token_hash_idx').on(table.tokenHash),
+    index('organization_invitations_organization_id_idx').on(table.organizationId),
+    index('organization_invitations_email_idx').on(table.email),
+    index('organization_invitations_expires_at_idx').on(table.expiresAt)
+  ]
+);
+
 /* -------------------------------------------------------------------------- */
 /* Customers                                                                  */
 /* -------------------------------------------------------------------------- */

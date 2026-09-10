@@ -23,6 +23,19 @@ export default function SignInPage() {
       setError(result.error.message || 'Unable to sign in');
       return;
     }
+    const invite = new URLSearchParams(window.location.search).get('invite');
+    if (invite) {
+      const acceptResponse = await fetch('/api/organization-invitations/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: invite })
+      });
+      if (!acceptResponse.ok) {
+        const data = await acceptResponse.json();
+        setError(data.error || 'No se ha podido aceptar la invitación.');
+        return;
+      }
+    }
     router.push('/dashboard/today');
     router.refresh();
   }
@@ -34,7 +47,10 @@ export default function SignInPage() {
       footer={
         <>
           New here?{' '}
-          <Link className='underline' href='/auth/sign-up'>
+          <Link
+            className='underline'
+            href={`/auth/sign-up${typeof window !== 'undefined' && window.location.search ? window.location.search : ''}`}
+          >
             Create an account
           </Link>
         </>
