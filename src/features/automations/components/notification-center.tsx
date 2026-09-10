@@ -19,15 +19,13 @@ import { useState } from 'react';
 const MAX_VISIBLE = 5;
 
 type OrganizationContext = {
-  organization: { id: string };
-  user: { id: string };
+  organization?: { id: string };
+  user?: { id: string };
 };
 
 export function NotificationCenter() {
   const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
-
-  const { data: context } = useQuery<OrganizationContext>({
+  const { data: context, isPending } = useQuery<OrganizationContext>({
     queryKey: ['organization-context', 'notification-center'],
     queryFn: async () => {
       const response = await fetch('/api/organization-context', { cache: 'no-store' });
@@ -35,159 +33,194 @@ export function NotificationCenter() {
       return response.json();
     },
     enabled: Boolean(session?.user?.id),
-    staleTime: 30_000
+    staleTime: 30_000,
+    retry: 1
   });
 
-  const organizationId = context?.organization.id;
-  const userId = context?.user.id ?? session?.user?.id;
+  const organizationId = context?.organization?.id;
+  const userId = context?.user?.id ?? session?.user?.id;
 
-  const unreadQuery = useQuery({
-    ...getUnreadNotificationCountQueryOptions(organizationId ?? '', userId ?? ''),
-    enabled: Boolean(organizationId && userId),
-    refetchInterval: 10_000,
-    staleTime: 0
-  });
+  if (isPending || !userId || !organizationId) return null;
+
+  return <AuthenticatedNotificationCenter organizationId={organizationId} userId={userId} />;
+}
+
+function AuthenticatedNotificationCenter({
+  organizationId,
+  userId
+}: {
+  organizationId: string;
+  userId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [isOpen, setIsOpen] = useState(false);
 
   const notificationsQuery = useQuery({
-    ...getNotificationsQueryOptions(organizationId ?? '', userId ?? ''),
-    enabled: Boolean(organizationId && userId),
+    ...getNotificationsQueryOptions(organizationId, userId),
     refetchInterval: 10_000,
-    staleTime: 0
+    refetchOnWindowFocus: true
   });
-
-  const queryClient = useQueryClient();
-  const markAsReadMutation = useMutation({
-    mutationFn: (notificationId: string) =>
-      client.markNotificationAsRead(notificationId, organizationId!, userId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+  const unreadQuery = useQuery({
+    ...getUnreadNotificationCountQueryOptions(organizationId, userId),
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true
   });
-
-  const markAllAsReadMutation = useMutation({
-    mutationFn: () => client.markAllNotificationsAsRead(organizationId!, userId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all })
-  });
-
-  const deleteNotificationMutation = useMutation({
-    mutationFn: (notificationId: string) =>
-      client.deleteNotification(notificationId, organizationId!, userId!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all })
-  });
-
-  if (!session?.user?.id || !organizationId || !userId) {
-    return null;
-  }
 
   const notifications = notificationsQuery.data ?? [];
   const unreadCount = unreadQuery.data ?? 0;
   const visibleNotifications = notifications.slice(0, MAX_VISIBLE);
 
+  const invalidateNotifications = () => {
+    void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+  };
+
+  const markAsReadMutation = useMutation({
+    mutationFn: (notificationId: string) => client.markNotificationAsRead(notificationId),
+    onSuccess: invalidateNotifications
+  });
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => client.markAllNotificationsAsRead(organizationId, userId),
+    onSuccess: invalidateNotifications
+  });
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: (notificationId: string) => client.deleteNotification(notificationId),
+    onSuccess: invalidateNotifications
+  });
+
   const getNotificationPath = (notification: (typeof notifications)[number]) => {
-    if (notification.refEntityType === 'task' && notification.refEntityId) {
-      return `/dashboard/tasks/${notification.refEntityId}`;
+    if (notification.refEntityType === 'task') {
+      return notification.refEntityId
+        ? `/dashboard/tasks/${notification.refEntityId}`
+        : '/dashboard/my-work';
     }
-    if (notification.refEntityType === 'event' && notification.refEntityId) {
-      return `/dashboard/calendar?eventId=${notification.refEntityId}`;
+    if (notification.refEntityType === 'event') {
+      return notification.refEntityId
+        ? `/dashboard/calendar?eventId=${notification.refEntityId}`
+        : '/dashboard/calendar';
     }
-    if (notification.refEntityType === 'customer' && notification.refEntityId) {
-      return `/dashboard/customers/${notification.refEntityId}`;
+    if (notification.refEntityType === 'customer') {
+      return notification.refEntityId
+        ? `/dashboard/customers/${notification.refEntityId}`
+        : '/dashboard/customers';
     }
-    if (notification.refEntityType === 'opportunity' && notification.refEntityId) {
-      return `/dashboard/opportunities/${notification.refEntityId}`;
+    if (notification.refEntityType === 'opportunity') {
+      return notification.refEntityId
+        ? `/dashboard/opportunities/${notification.refEntityId}`
+        : '/dashboard/opportunities';
     }
-    if (notification.refEntityType === 'team') return '/dashboard/team';
     return '/dashboard/notifications';
   };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger
-        render={<Button variant='ghost' size='icon' className='relative h-8 w-8 shrink-0' />}
-      >
-        <Icons.notification className='h-4 w-4' />
-        {unreadCount > 0 && (
-          <span className='bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium'>
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-        <span className='sr-only'>Notificaciones</span>
+      <PopoverTrigger asChild>
+        <Button
+          variant='ghost'
+          size='icon'
+          className='relative h-9 w-9 shrink-0 rounded-[11px]'
+          aria-label={
+            unreadCount > 0 ? `Notificaciones: ${unreadCount} sin leer` : 'Notificaciones'
+          }
+        >
+          <Icons.notification className='h-4 w-4' />
+          {unreadCount > 0 && (
+            <span className='bg-destructive text-destructive-foreground absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold'>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+          <span className='sr-only'>Notificaciones</span>
+        </Button>
       </PopoverTrigger>
       <PopoverContent
         align='end'
-        className='w-[calc(100vw-1.5rem)] p-0 sm:w-[380px]'
         sideOffset={8}
+        className='w-[min(380px,calc(100vw-1.5rem))] overflow-hidden p-0'
       >
-        <div className='flex items-center justify-between gap-3 px-4 pt-3'>
-          <Link href='/dashboard/notifications' className='group flex items-center gap-1'>
-            <h4 className='text-sm font-semibold'>Notificaciones</h4>
-            <Icons.chevronRight className='text-muted-foreground h-3.5 w-3.5' />
+        <div className='flex items-center justify-between gap-3 px-4 py-3'>
+          <Link href='/dashboard/notifications' className='group flex min-w-0 items-center gap-1'>
+            <h4 className='truncate text-sm font-semibold'>Notificaciones</h4>
+            <Icons.chevronRight className='text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5' />
           </Link>
           {unreadCount > 0 && (
             <Button
               variant='ghost'
               size='sm'
-              className='text-muted-foreground h-auto px-2 py-1 text-xs'
+              className='h-auto shrink-0 px-2 py-1 text-xs'
               onClick={() => markAllAsReadMutation.mutate()}
               disabled={markAllAsReadMutation.isPending}
             >
-              Marcar como leídas
+              Marcar leídas
             </Button>
           )}
         </div>
-        <Separator className='mt-3' />
-        <ScrollArea className='h-[400px]'>
-          {notificationsQuery.isLoading ? (
-            <div className='flex flex-col gap-2 p-3'>
-              {[1, 2, 3].map((item) => (
-                <div key={item} className='h-20 animate-pulse rounded-2xl bg-muted/60' />
-              ))}
+        <Separator />
+        <ScrollArea className='h-[min(400px,60vh)]'>
+          {notificationsQuery.isError ? (
+            <div className='px-4 py-10 text-center'>
+              <p className='text-sm font-medium'>No se pudieron cargar las notificaciones.</p>
+              <p className='text-muted-foreground mt-1 text-xs'>
+                Inténtalo de nuevo en unos segundos.
+              </p>
             </div>
-          ) : visibleNotifications.length === 0 ? (
-            <div className='flex flex-col items-center justify-center py-12'>
+          ) : notifications.length === 0 ? (
+            <div className='flex flex-col items-center justify-center py-12 text-center'>
               <Icons.notification className='text-muted-foreground/40 mb-2 h-8 w-8' />
-              <p className='text-muted-foreground text-sm'>No tienes notificaciones.</p>
+              <p className='text-sm font-medium'>Todo al día</p>
+              <p className='text-muted-foreground mt-1 text-xs'>
+                Aquí aparecerán las cosas que merecen tu atención.
+              </p>
             </div>
           ) : (
             <div className='flex flex-col gap-1 p-2'>
-              {visibleNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`group relative rounded-2xl p-3.5 pr-12 text-sm transition-all hover:ring-1 hover:ring-border ${
-                    notification.read ? 'bg-muted/40' : 'bg-muted'
-                  }`}
-                >
-                  <Link
-                    href={getNotificationPath(notification)}
-                    onClick={() => {
-                      if (!notification.read) markAsReadMutation.mutate(notification.id);
-                      setIsOpen(false);
-                    }}
-                    className='block outline-none'
+              {visibleNotifications.map((notification) => {
+                const isUnread = !notification.read;
+                return (
+                  <div
+                    key={notification.id}
+                    className={`relative rounded-2xl p-3.5 pr-11 transition-colors ${
+                      isUnread ? 'bg-muted' : 'bg-muted/40'
+                    }`}
                   >
-                    <div className='flex items-center gap-2'>
-                      <div className='font-medium leading-tight'>{notification.title}</div>
-                      {!notification.read && <span className='size-1.5 rounded-full bg-primary' />}
-                    </div>
-                    <div className='text-muted-foreground mt-1 text-xs leading-relaxed'>
-                      {notification.message}
-                    </div>
-                    <div className='text-muted-foreground/60 mt-1.5 text-[11px]'>
-                      {new Date(notification.createdAt).toLocaleString('es-ES')}
-                    </div>
-                  </Link>
-                  <button
-                    type='button'
-                    aria-label='Cerrar notificación'
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      deleteNotificationMutation.mutate(notification.id);
-                    }}
-                    className='absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-[10px] border border-border/70 bg-background text-foreground shadow-sm transition hover:bg-accent'
-                  >
-                    <Icons.close size={15} strokeWidth={2.2} />
-                  </button>
-                </div>
-              ))}
+                    <Link
+                      href={getNotificationPath(notification)}
+                      onClick={() => markAsReadMutation.mutate(notification.id)}
+                      className='block outline-none'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <div className='min-w-0 font-medium leading-tight text-foreground'>
+                          {notification.title}
+                        </div>
+                        {isUnread && <span className='bg-primary size-1.5 shrink-0 rounded-full' />}
+                      </div>
+                      <div className='mt-1 text-xs leading-relaxed text-muted-foreground'>
+                        {notification.message}
+                      </div>
+                      <div className='mt-1.5 text-[11px] text-muted-foreground/60'>
+                        {new Date(notification.createdAt).toLocaleString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </Link>
+                    <button
+                      type='button'
+                      aria-label='Eliminar notificación'
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        deleteNotificationMutation.mutate(notification.id);
+                      }}
+                      className='absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-[10px] border border-border/70 bg-background text-foreground shadow-sm transition hover:bg-accent'
+                    >
+                      <Icons.close size={15} strokeWidth={2.2} />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </ScrollArea>

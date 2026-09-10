@@ -1,5 +1,11 @@
 import { db } from '@/lib/db';
-import { automations, notifications, attentionItems, customers } from '@/lib/db/schema';
+import {
+  automations,
+  notifications,
+  attentionItems,
+  customers,
+  organizationMembers
+} from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import type {
   Automation,
@@ -145,21 +151,8 @@ export async function createNotification(
   return result[0];
 }
 
-export async function markNotificationAsRead(
-  notificationId: string,
-  organizationId: string,
-  userId: string
-): Promise<void> {
-  await db
-    .update(notifications)
-    .set({ read: true })
-    .where(
-      and(
-        eq(notifications.id, notificationId),
-        eq(notifications.organizationId, organizationId),
-        eq(notifications.userId, userId)
-      )
-    );
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  await db.update(notifications).set({ read: true }).where(eq(notifications.id, notificationId));
 }
 
 export async function markAllNotificationsAsRead(
@@ -178,20 +171,8 @@ export async function markAllNotificationsAsRead(
     );
 }
 
-export async function deleteNotification(
-  notificationId: string,
-  organizationId: string,
-  userId: string
-): Promise<void> {
-  await db
-    .delete(notifications)
-    .where(
-      and(
-        eq(notifications.id, notificationId),
-        eq(notifications.organizationId, organizationId),
-        eq(notifications.userId, userId)
-      )
-    );
+export async function deleteNotification(notificationId: string): Promise<void> {
+  await db.delete(notifications).where(eq(notifications.id, notificationId));
 }
 
 /* ---------- Attention Items ---------- */
@@ -304,4 +285,82 @@ export async function getAttentionItemsForEntity(
       userId ? eq(attentionItems.userId, userId) : undefined
     )
   });
+}
+
+/* ---------- Team / application notifications ---------- */
+
+/**
+ * Canonical notification creator used by domain services. The preferences layer
+ * can be enforced here later without changing callers.
+ * Supports both the object payload and the older positional form.
+ */
+export async function createNotificationIfAllowed(...args: unknown[]): Promise<Notification> {
+  const [organizationId, userId, third, fourth, fifth, sixth, seventh] = args;
+  if (typeof organizationId !== 'string' || typeof userId !== 'string') {
+    throw new Error('Invalid notification recipient');
+  }
+
+  let payload: NotificationPayload;
+  if (third && typeof third === 'object') {
+    payload = third as NotificationPayload;
+  } else {
+    payload = {
+      type: (third as NotificationPayload['type']) ?? 'automation_executed',
+      title: typeof fourth === 'string' ? fourth : 'Nueva notificación',
+      message: typeof fifth === 'string' ? fifth : '',
+      refEntityType: typeof sixth === 'string' ? sixth : null,
+      refEntityId: typeof seventh === 'string' ? seventh : null
+    };
+  }
+
+  return createNotification(organizationId, userId, payload);
+}
+
+/**
+ * Creates a notification for the selected members of an organization.
+ * The actor can be excluded so actions do not notify the person who performed them.
+ */
+export async function notifyOrganizationMembers(...args: unknown[]): Promise<Notification[]> {
+  const organizationId = typeof args[0] === 'string' ? args[0] : '';
+  if (!organizationId) throw new Error('Invalid organization');
+
+  let payload: NotificationPayload;
+  let options: { excludeUserId?: string; recipientUserIds?: string[] } = {};
+
+  if (args[1] && typeof args[1] === 'object') {
+    payload = args[1] as NotificationPayload;
+    if (args[2] && typeof args[2] === 'object') {
+      options = args[2] as typeof options;
+    } else if (typeof args[2] === 'string') {
+      options.excludeUserId = args[2];
+    }
+  } else {
+    const actorOrPayload = args[1];
+    if (typeof actorOrPayload === 'string') options.excludeUserId = actorOrPayload;
+    payload = (
+      args[2] && typeof args[2] === 'object'
+        ? args[2]
+        : {
+            type: (args[2] as NotificationPayload['type']) ?? 'event_important',
+            title: typeof args[3] === 'string' ? args[3] : 'Actividad del equipo',
+            message: typeof args[4] === 'string' ? args[4] : '',
+            refEntityType: typeof args[5] === 'string' ? args[5] : null,
+            refEntityId: typeof args[6] === 'string' ? args[6] : null
+          }
+    ) as NotificationPayload;
+  }
+
+  const members = await db
+    .select({ userId: organizationMembers.userId })
+    .from(organizationMembers)
+    .where(eq(organizationMembers.organizationId, organizationId));
+
+  const recipientIds = new Set(options.recipientUserIds ?? members.map((member) => member.userId));
+  if (options.excludeUserId) recipientIds.delete(options.excludeUserId);
+
+  const created: Notification[] = [];
+  for (const userId of recipientIds) {
+    created.push(await createNotificationIfAllowed(organizationId, userId, payload));
+  }
+  return created;
 }
