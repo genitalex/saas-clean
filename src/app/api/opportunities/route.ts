@@ -31,62 +31,12 @@ export async function GET(request: NextRequest) {
     return authError(error);
   }
   try {
-    let rows = await db
+    const rows = await db
       .select()
       .from(opportunities)
       .where(eq(opportunities.organizationId, context.organization.id))
       .orderBy(asc(opportunities.createdAt));
-    if (rows.length === 0) {
-      const now = new Date();
-      rows = await db
-        .insert(opportunities)
-        .values([
-          {
-            id: crypto.randomUUID(),
-            organizationId: context.organization.id,
-            ownerId: context.user.id,
-            title: 'Rediseño web',
-            customer: 'María López',
-            value: 7500,
-            probability: 70,
-            stage: 'Propuesta',
-            close: '30 ago',
-            owner: context.user.name,
-            createdAt: now,
-            updatedAt: now
-          },
-          {
-            id: crypto.randomUUID(),
-            organizationId: context.organization.id,
-            ownerId: context.user.id,
-            title: 'Proyecto expansión',
-            customer: 'Juan García',
-            value: 4000,
-            probability: 35,
-            stage: 'Contactado',
-            close: '12 sep',
-            owner: context.user.name,
-            createdAt: now,
-            updatedAt: now
-          },
-          {
-            id: crypto.randomUUID(),
-            organizationId: context.organization.id,
-            ownerId: context.user.id,
-            title: 'Soporte anual',
-            customer: 'Estudio Norte',
-            value: 12000,
-            probability: 80,
-            stage: 'Negociación',
-            close: '4 sep',
-            owner: context.user.name,
-            createdAt: now,
-            updatedAt: now
-          }
-        ])
-        .returning();
-    }
-    return NextResponse.json(rows);
+    return NextResponse.json(rows, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('[opportunities:get]', error);
     return NextResponse.json({ error: 'OPPORTUNITIES_REQUEST_FAILED' }, { status: 500 });

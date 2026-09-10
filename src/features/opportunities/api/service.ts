@@ -1,8 +1,13 @@
 import type { Opportunity, OpportunityInput } from './types';
 
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, { ...init, headers: { 'Content-Type': 'application/json' } });
+  const response = await fetch(input, {
+    ...init,
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', ...init?.headers }
+  });
   if (!response.ok) throw new Error('Opportunity request failed');
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 

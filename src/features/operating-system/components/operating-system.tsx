@@ -1,19 +1,26 @@
 'use client';
 
-import { Children, useMemo, useState, type ReactNode } from 'react';
+import * as React from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  closestCenter,
+  closestCorners,
   useDroppable,
-  useDraggable,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent
 } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { addDays, format, isSameDay, startOfDay, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -43,7 +50,12 @@ import type { Opportunity } from '@/features/opportunities/api/types';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 
-const stages = ['Contactado', 'Propuesta', 'Negociación', 'Ganado'];
+const stages = ['Contactado', 'Propuesta', 'Negociación', 'Ganado'] as const;
+type OpportunityStage = (typeof stages)[number];
+type OpportunityColumns = Record<OpportunityStage, Opportunity[]>;
+const OPPORTUNITY_TRASH_ID = 'opportunity-trash';
+const EMPTY_OPPORTUNITIES: Opportunity[] = [];
+
 const money = (value: number) =>
   new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -51,31 +63,88 @@ const money = (value: number) =>
     maximumFractionDigits: 0
   }).format(value);
 
+function toDisplayStage(stage: string): OpportunityStage | null {
+  if (stages.includes(stage as OpportunityStage)) return stage as OpportunityStage;
+  if (stage === 'Prospecto' || stage === 'prospect') return 'Contactado';
+  return null;
+}
+
+function toColumns(opportunities: Opportunity[]): OpportunityColumns {
+  return stages.reduce((result, stage) => {
+    result[stage] = opportunities.filter((item) => toDisplayStage(item.stage) === stage);
+    return result;
+  }, {} as OpportunityColumns);
+}
+
+function findOpportunityColumn(columns: OpportunityColumns, opportunityId: string) {
+  return stages.find((stage) => columns[stage].some((item) => item.id === opportunityId)) ?? null;
+}
+
+function findOpportunity(columns: OpportunityColumns, opportunityId: string) {
+  for (const stage of stages) {
+    const opportunity = columns[stage].find((item) => item.id === opportunityId);
+    if (opportunity) return opportunity;
+  }
+  return null;
+}
+
+function OpportunityDragPreview({ opportunity }: { opportunity: Opportunity }) {
+  return (
+    <Card className='w-[250px] border-border/70 shadow-xl'>
+      <CardContent className='flex flex-col gap-3 p-4'>
+        <div>
+          <p className='font-medium'>{opportunity.title}</p>
+          <p className='text-sm text-muted-foreground'>{opportunity.customer}</p>
+        </div>
+        <div className='flex items-end justify-between'>
+          <span className='text-lg font-semibold'>{money(opportunity.value)}</span>
+          <span className='text-xs text-muted-foreground'>{opportunity.probability}%</span>
+        </div>
+        <Progress value={opportunity.probability} className='h-1.5' />
+        <div className='flex justify-between text-xs text-muted-foreground'>
+          <span>{opportunity.owner}</span>
+          <span>Cierra {opportunity.close}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function OpportunityCard({
   opportunity,
   onOpen,
-  onMove
+  onMove,
+  suppressClickRef,
+  presentationOnly = false
 }: {
   opportunity: Opportunity;
-  onOpen: () => void;
+  onOpen?: () => void;
   onMove: (id: string, stage: string) => void;
+  suppressClickRef?: React.MutableRefObject<boolean>;
+  presentationOnly?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  if (presentationOnly) return <OpportunityDragPreview opportunity={opportunity} />;
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: opportunity.id,
-    data: { opportunity }
+    data: { type: 'opportunity', opportunityId: opportunity.id, stage: opportunity.stage }
   });
-  const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
 
   return (
     <Card
       ref={setNodeRef}
-      style={style}
-      {...listeners}
       {...attributes}
-      className={`touch-none cursor-grab transition-[transform,opacity] active:cursor-grabbing ${
-        isDragging ? 'z-10 scale-[1.02] opacity-40 shadow-xl' : ''
+      {...listeners}
+      onClick={() => {
+        if (!suppressClickRef?.current) onOpen?.();
+      }}
+      className={`w-full cursor-grab touch-none border-border/70 text-left shadow-none transition-colors hover:bg-muted/30 active:cursor-grabbing ${
+        isDragging ? 'opacity-0' : ''
       }`}
-      onClick={onOpen}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition
+      }}
     >
       <CardContent className='flex flex-col gap-3 p-4'>
         <div>
@@ -93,7 +162,7 @@ function OpportunityCard({
         </div>
         <NativeSelect
           aria-label='Mover etapa'
-          value={opportunity.stage}
+          value={toDisplayStage(opportunity.stage) ?? 'Contactado'}
           onChange={(event) => {
             event.stopPropagation();
             onMove(opportunity.id, event.target.value);
@@ -111,8 +180,24 @@ function OpportunityCard({
   );
 }
 
-function OpportunityColumn({ stage, children }: { stage: string; children: ReactNode }) {
-  const { isOver, setNodeRef } = useDroppable({ id: stage });
+function OpportunityColumn({
+  stage,
+  opportunities,
+  onOpen,
+  onMove,
+  suppressClickRef
+}: {
+  stage: OpportunityStage;
+  opportunities: Opportunity[];
+  onOpen: (opportunityId: string) => void;
+  onMove: (id: string, stage: string) => void;
+  suppressClickRef: React.MutableRefObject<boolean>;
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: stage,
+    data: { type: 'column', stage }
+  });
+
   return (
     <section
       ref={setNodeRef}
@@ -122,15 +207,34 @@ function OpportunityColumn({ stage, children }: { stage: string; children: React
     >
       <div className='flex items-center justify-between'>
         <h2 className='text-sm font-semibold'>{stage}</h2>
-        <Badge variant='secondary'>{Children.count(children)}</Badge>
+        <Badge variant='secondary'>{opportunities.length}</Badge>
       </div>
-      <div className='flex min-h-24 flex-col gap-3'>{children}</div>
+      <SortableContext
+        items={opportunities.map((item) => item.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className='flex min-h-24 flex-col gap-3'>
+          {opportunities.map((opportunity) => (
+            <OpportunityCard
+              key={opportunity.id}
+              opportunity={opportunity}
+              onOpen={() => onOpen(opportunity.id)}
+              onMove={onMove}
+              suppressClickRef={suppressClickRef}
+            />
+          ))}
+        </div>
+      </SortableContext>
     </section>
   );
 }
 
 function OpportunityTrashDropZone({ active, over }: { active: boolean; over: boolean }) {
-  const { setNodeRef } = useDroppable({ id: 'opportunity-trash', data: { type: 'trash' } });
+  const { setNodeRef } = useDroppable({
+    id: OPPORTUNITY_TRASH_ID,
+    data: { type: 'trash' }
+  });
+
   return (
     <div
       ref={setNodeRef}
@@ -189,36 +293,67 @@ export function OpportunitiesPage({
   initialCreate?: boolean;
 }) {
   const queryClient = useQueryClient();
-  const { data: opportunityData = [] } = useQuery({
+  const {
+    data: opportunityData,
+    isLoading,
+    isError
+  } = useQuery({
     queryKey: ['opportunities'],
-    queryFn: getOpportunities
+    queryFn: getOpportunities,
+    staleTime: 0,
+    refetchOnWindowFocus: false
   });
+  const opportunities = opportunityData ?? EMPTY_OPPORTUNITIES;
+  const [columns, setColumns] = React.useState<OpportunityColumns>(() => toColumns(opportunities));
   const [createOpen, setCreateOpen] = useState(Boolean(initialCreate));
   const [newTitle, setNewTitle] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newValue, setNewValue] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const opportunities = opportunityData;
+  const [activeOpportunity, setActiveOpportunity] = React.useState<Opportunity | null>(null);
+  const [overId, setOverId] = React.useState<string | null>(null);
+  const columnsRef = React.useRef(columns);
+  const opportunitiesRef = React.useRef(opportunities);
+  const suppressClickRef = React.useRef(false);
+  const dragStartStageRef = React.useRef<OpportunityStage | null>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  React.useEffect(() => {
+    opportunitiesRef.current = opportunities;
+    const next = toColumns(opportunities);
+    columnsRef.current = next;
+    setColumns(next);
+  }, [opportunities]);
+
+  React.useEffect(() => {
+    columnsRef.current = columns;
+  }, [columns]);
+
   const selected = opportunities.find((item) => item.id === (detailId ?? selectedId)) ?? null;
-  const filtered = useMemo(
-    () =>
-      opportunities.filter((item) =>
-        `${item.title} ${item.customer}`.toLowerCase().includes(query.toLowerCase())
-      ),
-    [opportunities, query]
+  const visibleColumns = useMemo(() => {
+    if (!query.trim()) return columns;
+    const needle = query.toLowerCase();
+    return stages.reduce((result, stage) => {
+      result[stage] = columns[stage].filter((item) =>
+        `${item.title} ${item.customer}`.toLowerCase().includes(needle)
+      );
+      return result;
+    }, {} as OpportunityColumns);
+  }, [columns, query]);
+
+  const move = React.useCallback(
+    async (id: string, stage: string) => {
+      try {
+        await updateOpportunity(id, stage);
+        await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      } catch {
+        toast.error('No se pudo mover la oportunidad.');
+      }
+    },
+    [queryClient]
   );
-  const move = async (id: string, stage: string) => {
-    try {
-      await updateOpportunity(id, stage);
-      await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-    } catch {
-      toast.error('No se pudo mover la oportunidad.');
-    }
-  };
+
   const handleCreateOpportunity = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!newTitle.trim() || !newCustomer.trim()) return;
@@ -233,6 +368,7 @@ export function OpportunitiesPage({
         owner: 'Alex'
       });
       await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
       setNewTitle('');
       setNewCustomer('');
       setNewValue('');
@@ -242,10 +378,143 @@ export function OpportunitiesPage({
       toast.error('No se pudo crear la oportunidad.');
     }
   };
+
+  const handleDragStart = React.useCallback((event: DragStartEvent) => {
+    const opportunity = findOpportunity(columnsRef.current, String(event.active.id));
+    setActiveOpportunity(opportunity);
+    dragStartStageRef.current = opportunity
+      ? findOpportunityColumn(columnsRef.current, opportunity.id)
+      : null;
+    setOverId(String(event.active.id));
+    suppressClickRef.current = false;
+  }, []);
+
+  const handleDragOver = React.useCallback((event: DragOverEvent) => {
+    const activeId = String(event.active.id);
+    const over = event.over;
+    setOverId(over ? String(over.id) : null);
+    if (!over || String(over.id) === OPPORTUNITY_TRASH_ID) return;
+
+    const current = columnsRef.current;
+    const activeColumn = findOpportunityColumn(current, activeId);
+    if (!activeColumn) return;
+
+    const overIdValue = String(over.id);
+    const overColumn = stages.includes(overIdValue as OpportunityStage)
+      ? (overIdValue as OpportunityStage)
+      : findOpportunityColumn(current, overIdValue);
+    if (!overColumn) return;
+
+    if (activeColumn === overColumn) {
+      const activeIndex = current[activeColumn].findIndex((item) => item.id === activeId);
+      const overIndex = current[overColumn].findIndex((item) => item.id === overIdValue);
+      if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) return;
+      const next = {
+        ...current,
+        [activeColumn]: arrayMove(current[activeColumn], activeIndex, overIndex)
+      };
+      columnsRef.current = next;
+      setColumns(next);
+      suppressClickRef.current = true;
+      return;
+    }
+
+    const activeIndex = current[activeColumn].findIndex((item) => item.id === activeId);
+    if (activeIndex === -1) return;
+    const moving = current[activeColumn][activeIndex];
+    if (!moving) return;
+    const movedOpportunity = { ...moving, stage: overColumn };
+    const next = {
+      ...current,
+      [activeColumn]: current[activeColumn].filter((item) => item.id !== activeId),
+      [overColumn]: [...current[overColumn], movedOpportunity]
+    };
+    columnsRef.current = next;
+    setColumns(next);
+    setActiveOpportunity(movedOpportunity);
+    suppressClickRef.current = true;
+  }, []);
+
+  const handleDragCancel = React.useCallback(() => {
+    setActiveOpportunity(null);
+    setOverId(null);
+    dragStartStageRef.current = null;
+    const restored = toColumns(opportunitiesRef.current);
+    columnsRef.current = restored;
+    setColumns(restored);
+    window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+  }, []);
+
+  const handleDragEnd = React.useCallback(
+    async (event: DragEndEvent) => {
+      const activeId = String(event.active.id);
+      const over = event.over;
+      const finalColumns = columnsRef.current;
+      const dragged = findOpportunity(finalColumns, activeId);
+      const targetId = over ? String(over.id) : null;
+
+      setActiveOpportunity(null);
+      setOverId(null);
+      const initialStage = dragStartStageRef.current;
+      dragStartStageRef.current = null;
+      window.setTimeout(() => {
+        suppressClickRef.current = Boolean(over);
+      }, 0);
+
+      if (!dragged || !targetId) {
+        const restored = toColumns(opportunitiesRef.current);
+        columnsRef.current = restored;
+        setColumns(restored);
+        return;
+      }
+
+      if (targetId === OPPORTUNITY_TRASH_ID) {
+        try {
+          await deleteOpportunity(activeId);
+          const result = await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+          void result;
+          await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
+          toast.success('Oportunidad eliminada');
+        } catch {
+          const restored = toColumns(opportunitiesRef.current);
+          columnsRef.current = restored;
+          setColumns(restored);
+          toast.error('No se pudo eliminar la oportunidad.');
+        }
+        return;
+      }
+
+      let targetColumn: OpportunityStage | null = null;
+      if (stages.includes(targetId as OpportunityStage)) {
+        targetColumn = targetId as OpportunityStage;
+      } else {
+        targetColumn = findOpportunityColumn(finalColumns, targetId);
+      }
+      if (!targetColumn) return;
+
+      if (initialStage && targetColumn !== initialStage) {
+        try {
+          await updateOpportunity(activeId, targetColumn);
+          await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+          await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
+        } catch {
+          const restored = toColumns(opportunitiesRef.current);
+          columnsRef.current = restored;
+          setColumns(restored);
+          toast.error('No se pudo mover la oportunidad.');
+        }
+      }
+    },
+    [queryClient]
+  );
+
   if (detailId && selected)
     return (
       <OpportunityDetail opportunity={selected} onMove={(stage) => void move(selected.id, stage)} />
     );
+
   return (
     <main className='flex flex-1 flex-col gap-6 py-2'>
       <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
@@ -301,72 +570,48 @@ export function OpportunitiesPage({
         </DialogContent>
       </Dialog>
       <Pulse />
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={(event: DragStartEvent) => {
-          setActiveId(String(event.active.id));
-          setOverId(String(event.active.id));
-        }}
-        onDragOver={(event) => setOverId(event.over ? String(event.over.id) : null)}
-        onDragCancel={() => {
-          setActiveId(null);
-          setOverId(null);
-        }}
-        onDragEnd={async (event: DragEndEvent) => {
-          const activeOpportunityId = String(event.active.id);
-          const destination = event.over?.id;
-          setActiveId(null);
-          setOverId(null);
-          if (destination === 'opportunity-trash') {
-            try {
-              await deleteOpportunity(activeOpportunityId);
-              await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-              toast.success('Oportunidad eliminada');
-            } catch {
-              toast.error('No se pudo eliminar la oportunidad.');
-            }
-            return;
-          }
-          if (typeof destination === 'string' && stages.includes(destination)) {
-            await move(activeOpportunityId, destination);
-          }
-        }}
-      >
-        <div className='min-w-0 overflow-x-auto pb-2'>
-          <div className='flex min-w-max gap-4'>
-            {stages.map((stage) => (
-              <OpportunityColumn key={stage} stage={stage}>
-                {filtered
-                  .filter((item) => item.stage === stage)
-                  .map((item) => (
-                    <OpportunityCard
-                      key={item.id}
-                      opportunity={item}
-                      onOpen={() => setSelectedId(item.id)}
-                      onMove={move}
-                    />
-                  ))}
-              </OpportunityColumn>
-            ))}
-          </div>
+      {isLoading ? (
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
+          {stages.map((stage) => (
+            <div key={stage} className='h-48 rounded-xl border bg-muted/20' />
+          ))}
         </div>
-        <DragOverlay dropAnimation={null}>
-          {activeId ? (
-            <div className='w-[250px] rotate-[1deg] rounded-xl shadow-2xl'>
-              <OpportunityCard
-                opportunity={opportunities.find((item) => item.id === activeId) ?? opportunities[0]}
-                onOpen={() => undefined}
-                onMove={move}
-              />
+      ) : isError ? (
+        <div className='rounded-xl border border-destructive/20 bg-destructive/[0.04] p-6 text-sm'>
+          No se pudieron cargar las oportunidades.
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragCancel={handleDragCancel}
+          onDragEnd={handleDragEnd}
+        >
+          <div className='min-w-0 overflow-x-auto pb-2'>
+            <div className='flex min-w-max gap-4'>
+              {stages.map((stage) => (
+                <OpportunityColumn
+                  key={stage}
+                  stage={stage}
+                  opportunities={visibleColumns[stage]}
+                  onOpen={setSelectedId}
+                  onMove={move}
+                  suppressClickRef={suppressClickRef}
+                />
+              ))}
             </div>
-          ) : null}
-        </DragOverlay>
-        <OpportunityTrashDropZone
-          active={Boolean(activeId)}
-          over={overId === 'opportunity-trash'}
-        />
-      </DndContext>
+          </div>
+          <DragOverlay dropAnimation={null}>
+            {activeOpportunity ? <OpportunityDragPreview opportunity={activeOpportunity} /> : null}
+          </DragOverlay>
+          <OpportunityTrashDropZone
+            active={Boolean(activeOpportunity)}
+            over={overId === OPPORTUNITY_TRASH_ID}
+          />
+        </DndContext>
+      )}
     </main>
   );
 }
