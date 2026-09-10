@@ -66,6 +66,12 @@ const money = (value: number) =>
     maximumFractionDigits: 0
   }).format(value);
 
+function defaultProbabilityForStage(stage: string) {
+  if (stage === 'Negociación') return 75;
+  if (stage === 'Propuesta') return 50;
+  return 20;
+}
+
 function toDisplayStage(stage: string): OpportunityStage | null {
   if (stages.includes(stage as OpportunityStage)) return stage as OpportunityStage;
   if (stage === 'Prospecto' || stage === 'prospect') return 'Contactado';
@@ -391,7 +397,16 @@ export function OpportunitiesPage({
   const move = React.useCallback(
     async (id: string, stage: string) => {
       try {
-        await update(id, stage === 'Ganado' ? { stage, probability: 100 } : stage);
+        const current = opportunitiesRef.current.find((item) => item.id === id);
+        const wasWon = current?.stage === 'Ganado';
+        let input: string | OpportunityUpdateInput = stage;
+        if (stage === 'Ganado') {
+          input = { stage, probability: 100 };
+        } else if (wasWon) {
+          const resetProbability = defaultProbabilityForStage(stage);
+          input = { stage, probability: resetProbability };
+        }
+        await update(id, input);
       } catch {
         toast.error('No se pudo mover la oportunidad.');
       }
@@ -475,10 +490,16 @@ export function OpportunitiesPage({
     if (activeIndex === -1) return;
     const moving = current[activeColumn][activeIndex];
     if (!moving) return;
+    const resetProbability = defaultProbabilityForStage(overColumn);
     const movedOpportunity = {
       ...moving,
       stage: overColumn,
-      probability: overColumn === 'Ganado' ? 100 : moving.probability
+      probability:
+        overColumn === 'Ganado'
+          ? 100
+          : moving.stage === 'Ganado'
+            ? resetProbability
+            : moving.probability
     };
     const next = {
       ...current,
@@ -552,10 +573,15 @@ export function OpportunitiesPage({
 
       if (initialStage && targetColumn !== initialStage) {
         try {
-          await updateOpportunity(
-            activeId,
-            targetColumn === 'Ganado' ? { stage: targetColumn, probability: 100 } : targetColumn
-          );
+          const wasWon = initialStage === 'Ganado';
+          const resetProbability = defaultProbabilityForStage(targetColumn);
+          const input: string | OpportunityUpdateInput =
+            targetColumn === 'Ganado'
+              ? { stage: targetColumn, probability: 100 }
+              : wasWon
+                ? { stage: targetColumn, probability: resetProbability }
+                : targetColumn;
+          await updateOpportunity(activeId, input);
           await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
           await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
         } catch {
@@ -802,17 +828,38 @@ function OpportunityDetail({
                 style={{ width: `${effectiveProbability}%` }}
               />
             </div>
-            <input
-              aria-label='Probabilidad de cierre'
-              type='range'
-              min='0'
-              max='100'
-              step='5'
-              value={effectiveProbability}
-              onChange={(event) => setProbability(Number(event.target.value))}
-              className='mt-3 w-full accent-primary'
-              disabled={savingProbability}
-            />
+            <div className='mt-3 flex items-center gap-3'>
+              <input
+                aria-label='Probabilidad de cierre'
+                type='range'
+                min='0'
+                max='100'
+                step='5'
+                value={effectiveProbability}
+                onChange={(event) => setProbability(Number(event.target.value))}
+                className='w-full accent-primary'
+                disabled={savingProbability}
+              />
+              <div className='relative w-20 shrink-0'>
+                <input
+                  aria-label='Porcentaje de probabilidad de cierre'
+                  type='number'
+                  min='0'
+                  max='100'
+                  step='5'
+                  value={effectiveProbability}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    if (Number.isFinite(next)) setProbability(Math.min(100, Math.max(0, next)));
+                  }}
+                  className='h-9 w-full rounded-lg border bg-background px-2 pr-6 text-center text-sm font-semibold outline-none ring-offset-background focus:ring-2 focus:ring-primary/20'
+                  disabled={savingProbability}
+                />
+                <span className='pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground'>
+                  %
+                </span>
+              </div>
+            </div>
             <div className='mt-2 flex justify-end'>
               <Button
                 type='button'
