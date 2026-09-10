@@ -338,6 +338,12 @@ export function OpportunitiesPage({
   }, [opportunities]);
 
   React.useEffect(() => {
+    if (customerData.length > 0 && customerMode === 'new' && !newCustomer.trim()) {
+      setCustomerMode('existing');
+    }
+  }, [customerData.length, customerMode, newCustomer]);
+
+  React.useEffect(() => {
     columnsRef.current = columns;
   }, [columns]);
 
@@ -365,7 +371,7 @@ export function OpportunitiesPage({
   const move = React.useCallback(
     async (id: string, stage: string) => {
       try {
-        await update(id, stage);
+        await update(id, stage === 'Ganado' ? { stage, probability: 100 } : stage);
       } catch {
         toast.error('No se pudo mover la oportunidad.');
       }
@@ -449,7 +455,11 @@ export function OpportunitiesPage({
     if (activeIndex === -1) return;
     const moving = current[activeColumn][activeIndex];
     if (!moving) return;
-    const movedOpportunity = { ...moving, stage: overColumn };
+    const movedOpportunity = {
+      ...moving,
+      stage: overColumn,
+      probability: overColumn === 'Ganado' ? 100 : moving.probability
+    };
     const next = {
       ...current,
       [activeColumn]: current[activeColumn].filter((item) => item.id !== activeId),
@@ -522,7 +532,10 @@ export function OpportunitiesPage({
 
       if (initialStage && targetColumn !== initialStage) {
         try {
-          await updateOpportunity(activeId, targetColumn);
+          await updateOpportunity(
+            activeId,
+            targetColumn === 'Ganado' ? { stage: targetColumn, probability: 100 } : targetColumn
+          );
           await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
           await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
         } catch {
@@ -561,16 +574,7 @@ export function OpportunitiesPage({
             onChange={(event) => setQuery(event.target.value)}
             placeholder='Buscar oportunidad'
           />
-          <Button
-            onClick={() => {
-              setCustomerMode(customerData.length ? 'existing' : 'new');
-              setSelectedCustomerId('');
-              setNewCustomer('');
-              setCreateOpen(true);
-            }}
-          >
-            Nueva oportunidad
-          </Button>
+          <Button onClick={() => setCreateOpen(true)}>Nueva oportunidad</Button>
         </div>
       </div>
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -732,6 +736,13 @@ function OpportunityDetail({
   const [note, setNote] = useState('');
   const [probability, setProbability] = useState(opportunity.probability);
   const [savingProbability, setSavingProbability] = useState(false);
+
+  React.useEffect(() => {
+    setProbability(opportunity.stage === 'Ganado' ? 100 : opportunity.probability);
+  }, [opportunity.id, opportunity.probability, opportunity.stage]);
+
+  const effectiveProbability = opportunity.stage === 'Ganado' ? 100 : probability;
+
   return (
     <main className='flex flex-1 flex-col gap-6 py-2'>
       <Link
@@ -763,7 +774,7 @@ function OpportunityDetail({
                   Qué posibilidades crees que hay de cerrarla.
                 </p>
               </div>
-              <span className='text-lg font-semibold'>{probability}%</span>
+              <span className='text-lg font-semibold'>{effectiveProbability}%</span>
             </div>
             <input
               aria-label='Probabilidad de cierre'
@@ -771,17 +782,21 @@ function OpportunityDetail({
               min='0'
               max='100'
               step='5'
-              value={probability}
+              value={effectiveProbability}
               onChange={(event) => setProbability(Number(event.target.value))}
               className='mt-3 w-full accent-primary'
-              disabled={savingProbability}
+              disabled={savingProbability || opportunity.stage === 'Ganado'}
             />
             <div className='mt-2 flex justify-end'>
               <Button
                 type='button'
                 variant='secondary'
                 size='sm'
-                disabled={savingProbability || probability === opportunity.probability}
+                disabled={
+                  savingProbability ||
+                  opportunity.stage === 'Ganado' ||
+                  probability === opportunity.probability
+                }
                 onClick={async () => {
                   setSavingProbability(true);
                   try {
@@ -808,7 +823,9 @@ function OpportunityDetail({
         <Card className='sm:col-span-4'>
           <CardContent className='p-4'>
             <p className='text-xs text-muted-foreground'>Salud</p>
-            <p className='mt-1 font-semibold'>{probability > 60 ? 'Fuerte' : 'En riesgo'}</p>
+            <p className='mt-1 font-semibold'>
+              {effectiveProbability > 60 ? 'Fuerte' : 'En riesgo'}
+            </p>
           </CardContent>
         </Card>
       </div>
