@@ -121,7 +121,7 @@ export default function NotificationsPage() {
     }
 
     return (
-      <div className='overflow-hidden rounded-[14px] border border-border/60 bg-muted/30'>
+      <div className='mx-auto w-full max-w-4xl overflow-hidden rounded-[14px] border border-border/60 bg-muted/30'>
         {items.map((notification, index) => {
           const isUnread = !notification.read;
           return (
@@ -147,7 +147,7 @@ export default function NotificationsPage() {
               >
                 <div className='flex items-center gap-2'>
                   <h3
-                    className={`truncate text-[13px] leading-5 ${
+                    className={`truncate text-[14px] leading-5 ${
                       isUnread
                         ? 'font-semibold text-foreground'
                         : 'font-medium text-muted-foreground'
@@ -156,10 +156,10 @@ export default function NotificationsPage() {
                     {notification.title}
                   </h3>
                 </div>
-                <p className='mt-0.5 text-[12px] leading-5 text-muted-foreground'>
+                <p className='mt-0.5 text-[13px] leading-5 text-muted-foreground'>
                   {notification.message}
                 </p>
-                <p className='mt-1 text-[10px] text-muted-foreground/60'>
+                <p className='mt-1 text-[11px] text-muted-foreground/60'>
                   {formatRelativeTime(notification.createdAt)}
                 </p>
               </button>
@@ -209,7 +209,7 @@ export default function NotificationsPage() {
       }
     >
       <Tabs defaultValue='all'>
-        <TabsList className='bg-muted/60'>
+        <TabsList className='w-full max-w-full overflow-x-auto bg-muted/60 sm:w-auto'>
           <TabsTrigger value='all'>Todas ({notifications.length})</TabsTrigger>
           <TabsTrigger value='unread'>Sin leer ({unread.length})</TabsTrigger>
           <TabsTrigger value='read'>Leídas ({read.length})</TabsTrigger>

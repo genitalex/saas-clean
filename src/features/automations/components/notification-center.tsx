@@ -177,19 +177,19 @@ function AuthenticatedNotificationCenter({
         <div
           role='menu'
           aria-label='Lista de notificaciones'
-          className='absolute right-0 top-[calc(100%+8px)] z-[100] w-[min(92vw,360px)] rounded-[14px] border border-border/70 bg-muted/70 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-sm'
+          className='fixed left-1/2 top-[4.25rem] z-[100] w-[calc(100vw-1rem)] max-w-[360px] -translate-x-1/2 rounded-[14px] border border-border/70 bg-muted/85 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:absolute sm:left-auto sm:top-[calc(100%+8px)] sm:right-0 sm:w-[min(92vw,360px)] sm:max-w-none sm:translate-x-0'
         >
           <div className='mb-1 flex items-center justify-between gap-3 px-1.5 py-1'>
             <Link
               href='/dashboard/notifications'
               onClick={() => onOpenChange(false)}
-              className='text-[12px] font-semibold text-foreground transition-opacity hover:opacity-70'
+              className='text-[13px] font-semibold text-foreground transition-opacity hover:opacity-70'
             >
               Notificaciones
             </Link>
             <div className='flex items-center gap-2'>
               {unreadCount > 0 && (
-                <span className='rounded-full bg-background px-2 py-1 text-[9px] font-medium text-muted-foreground'>
+                <span className='rounded-full bg-background px-2 py-1 text-[10px] font-medium text-muted-foreground'>
                   {unreadCount} sin leer
                 </span>
               )}
@@ -198,7 +198,7 @@ function AuthenticatedNotificationCenter({
                   type='button'
                   onClick={() => markAllAsRead.mutate()}
                   disabled={markAllAsRead.isPending}
-                  className='text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50'
+                  className='text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50'
                 >
                   {markAllAsRead.isPending ? 'Marcando…' : 'Marcar todo'}
                 </button>
@@ -247,7 +247,7 @@ function AuthenticatedNotificationCenter({
                       className='min-w-0 flex-1 pr-7 outline-none'
                     >
                       <span
-                        className={`block truncate text-[11px] leading-4 ${
+                        className={`block truncate text-[12px] leading-4 ${
                           unread
                             ? 'font-medium text-foreground'
                             : 'font-normal text-muted-foreground'
@@ -255,10 +255,10 @@ function AuthenticatedNotificationCenter({
                       >
                         {notification.title}
                       </span>
-                      <span className='mt-0.5 block truncate text-[10px] leading-4 text-muted-foreground'>
+                      <span className='mt-0.5 block truncate text-[11px] leading-4 text-muted-foreground'>
                         {notification.message}
                       </span>
-                      <span className='mt-1 block text-[9px] text-muted-foreground/60'>
+                      <span className='mt-1 block text-[10px] text-muted-foreground/60'>
                         {formatRelativeTime(notification.createdAt)}
                       </span>
                     </Link>
@@ -281,7 +281,7 @@ function AuthenticatedNotificationCenter({
             <Link
               href='/dashboard/notifications'
               onClick={() => onOpenChange(false)}
-              className='flex items-center justify-center rounded-[9px] px-2 py-2 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+              className='flex items-center justify-center rounded-[9px] px-2 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
             >
               Ver todas las notificaciones
               <Icons.chevronRight className='ml-0.5 size-3.5' />
