@@ -565,12 +565,6 @@ export function TaskListPage({
               >
                 Planificar
               </Button>
-              <DateTimePicker
-                value={bulkDate}
-                onChange={setBulkDate}
-                className='w-48'
-                aria-label='Elegir fecha y hora para tareas seleccionadas'
-              />
               {bulkDate && (
                 <Button
                   variant='secondary'
@@ -634,12 +628,6 @@ export function TaskListPage({
             </div>
             {bulkPlanOpen && (
               <div className='flex flex-wrap items-center gap-2 border-t border-border/50 pt-3'>
-                <DateTimePicker
-                  value={bulkPlanStart}
-                  onChange={setBulkPlanStart}
-                  className='w-48'
-                  aria-label='Inicio del plan de tareas'
-                />
                 <NativeSelect
                   value={bulkPlanDuration}
                   onChange={(event) => setBulkPlanDuration(event.target.value)}
