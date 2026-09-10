@@ -10,6 +10,8 @@ import { useFilteredNavGroups } from '@/hooks/use-nav';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const opportunitiesItem = desktopNavItems[4];
+const notesItem = navGroups[1].items.find((item) => item.title === 'Notes')!;
+const quotesItem = navGroups[1].items.find((item) => item.title === 'Quotes')!;
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -29,8 +31,10 @@ export function BottomNavigation() {
           desktopNavItems[3],
           desktopNavItems[4]
         ];
-  const desktopLeftItems = resolvedDesktopItems.slice(0, 3);
-  const desktopRightItems = [resolvedDesktopItems[3], opportunitiesItem].filter(Boolean);
+  const mobileLeftItems = resolvedDesktopItems.slice(0, 3);
+  const mobileRightItems = [resolvedDesktopItems[3], opportunitiesItem].filter(Boolean);
+  const desktopLeftItems = resolvedDesktopItems.slice(0, 4);
+  const desktopRightItems = [opportunitiesItem, notesItem, quotesItem].filter(Boolean);
   const primaryUrls = new Set([...mobileNavItems.map((item) => item.url), opportunitiesItem.url]);
 
   React.useEffect(() => {
@@ -61,7 +65,9 @@ export function BottomNavigation() {
         aria-label={label}
         className={cn(
           'group relative flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-colors',
-          active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground',
+          active
+            ? 'bg-primary/10 text-primary md:bg-transparent'
+            : 'text-muted-foreground hover:text-foreground',
           'focus-visible:ring-2 focus-visible:ring-primary/30'
         )}
       >
@@ -92,9 +98,12 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mx-auto mb-0 w-full rounded-none border border-x-0 border-b-0 border-border/70 bg-background/68 px-3 py-2 shadow-[0_14px_42px_rgb(23_32_25_/_0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/58 sm:w-full md:mb-5 md:w-fit md:max-w-[calc(100vw-32px)] md:rounded-[20px] md:border md:p-3'>
-          <div className='flex min-h-[58px] w-full items-center justify-center gap-4 md:w-auto md:gap-4'>
-            <div className='flex flex-1 items-center justify-around gap-2 md:flex-none md:justify-start md:gap-4'>
+        <div className='relative mx-auto mb-0 w-full rounded-none border border-x-0 border-b-0 border-border/70 bg-background/68 px-3 py-2 shadow-[0_14px_42px_rgb(23_32_25_/_0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/58 sm:w-full md:mb-5 md:w-fit md:max-w-[calc(100vw-32px)] md:rounded-[20px] md:border md:px-4 md:py-1'>
+          <div className='flex min-h-[58px] w-full items-center justify-center gap-4 md:w-auto md:gap-5 md:min-h-[48px]'>
+            <div className='flex flex-1 items-center justify-around gap-2 md:hidden'>
+              {mobileLeftItems.map((item) => renderNavItem(item))}
+            </div>
+            <div className='hidden items-center justify-start gap-5 md:flex'>
               {desktopLeftItems.map((item) => renderNavItem(item))}
             </div>
 
@@ -107,7 +116,7 @@ export function BottomNavigation() {
                 setCreateOpen((value) => !value);
               }}
               className={cn(
-                'group relative z-10 flex size-12 shrink-0 items-center justify-center rounded-[15px] border border-primary/30 bg-primary text-primary-foreground shadow-[0_8px_22px_rgb(23_32_25_/_0.16)] transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_12px_28px_rgb(23_32_25_/_0.2)] active:scale-[0.96] md:size-[52px]',
+                'group relative z-10 flex size-12 shrink-0 items-center justify-center rounded-[15px] border border-primary/30 bg-primary text-primary-foreground shadow-[0_8px_22px_rgb(23_32_25_/_0.16)] transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_12px_28px_rgb(23_32_25_/_0.2)] active:scale-[0.96] md:size-[50px]',
                 createOpen && 'bg-primary/90'
               )}
             >
@@ -130,8 +139,8 @@ export function BottomNavigation() {
               <span className='sr-only'>Nuevo</span>
             </button>
 
-            <div className='flex flex-1 items-center justify-around gap-2 md:flex-none md:justify-start md:gap-4'>
-              {desktopRightItems.map((item) => renderNavItem(item))}
+            <div className='flex flex-1 items-center justify-around gap-2 md:hidden'>
+              {mobileRightItems.map((item) => renderNavItem(item))}
               <button
                 type='button'
                 aria-expanded={moreOpen}
@@ -144,6 +153,32 @@ export function BottomNavigation() {
                   'group relative flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
                   moreOpen
                     ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
+                  Más
+                </span>
+                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
+                  <Icons.moreHorizontal className='size-[24px] md:size-[25px]' />
+                </span>
+                <span className='sr-only'>Más</span>
+              </button>
+            </div>
+            <div className='hidden items-center justify-start gap-5 md:flex'>
+              {desktopRightItems.map((item) => renderNavItem(item))}
+              <button
+                type='button'
+                aria-expanded={moreOpen}
+                aria-label='Más'
+                onClick={() => {
+                  setCreateOpen(false);
+                  setMoreOpen(true);
+                }}
+                className={cn(
+                  'group relative flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
+                  moreOpen
+                    ? 'bg-primary/10 text-primary md:bg-transparent'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
