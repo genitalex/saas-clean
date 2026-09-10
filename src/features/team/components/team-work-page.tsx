@@ -30,7 +30,13 @@ function messageForInviteError(code: string) {
   return 'No se ha podido crear la invitación.';
 }
 
-export default function TeamWorkPage({ seatLimit }: { organizationId: string; seatLimit: number }) {
+export default function TeamWorkPage({
+  organizationId,
+  seatLimit
+}: {
+  organizationId: string;
+  seatLimit: number;
+}) {
   const queryClient = useQueryClient();
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [email, setEmail] = useState('');
@@ -40,38 +46,42 @@ export default function TeamWorkPage({ seatLimit }: { organizationId: string; se
   const [copied, setCopied] = useState(false);
 
   const { data: members = [] } = useQuery<TeamMember[]>({
-    queryKey: ['organization-members'],
+    queryKey: ['organization-members', organizationId],
     queryFn: async () => {
       const response = await fetch('/api/organization-members');
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'MEMBERS_REQUEST_FAILED');
-      return data;
+      return Array.isArray(data) ? data.filter(Boolean) : [];
     },
     staleTime: 30_000
   });
 
   const { data: invitations = [] } = useQuery<Invitation[]>({
-    queryKey: ['organization-invitations'],
+    queryKey: ['organization-invitations', organizationId],
     queryFn: async () => {
       const response = await fetch('/api/organization-invitations');
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'INVITATIONS_REQUEST_FAILED');
-      return data;
+      return Array.isArray(data) ? data.filter(Boolean) : [];
     },
     staleTime: 30_000
   });
 
   const { data: tasks = [] } = useQuery({
-    queryKey: taskKeys.list(),
+    queryKey: ['team-work', organizationId, ...taskKeys.list()],
     queryFn: () => getTasks(),
     staleTime: 30_000
   });
 
   const { data: events = [] } = useQuery({
-    queryKey: eventKeys.list({
-      startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-    }),
+    queryKey: [
+      'team-work',
+      organizationId,
+      ...eventKeys.list({
+        startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      })
+    ],
     queryFn: () =>
       getEvents({
         startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -85,14 +95,17 @@ export default function TeamWorkPage({ seatLimit }: { organizationId: string; se
       string,
       { member: TeamMember; tasks: typeof tasks; events: typeof events }
     >();
-    for (const member of members) map.set(member.id, { member, tasks: [], events: [] });
+    for (const member of members) {
+      if (!member?.id) continue;
+      map.set(member.id, { member, tasks: [], events: [] });
+    }
 
     for (const task of tasks) {
-      if (task.assignee?.id && map.has(task.assignee.id))
+      if (task?.assignee?.id && map.has(task.assignee.id))
         map.get(task.assignee.id)!.tasks.push(task);
     }
     for (const event of events) {
-      if (event.assignee?.id && map.has(event.assignee.id))
+      if (event?.assignee?.id && map.has(event.assignee.id))
         map.get(event.assignee.id)!.events.push(event);
     }
 
@@ -122,8 +135,8 @@ export default function TeamWorkPage({ seatLimit }: { organizationId: string; se
 
   const activeMember = useMemo(
     () =>
-      membersWithWork.find((item) => item.member.id === selectedMember) ??
-      membersWithWork[0] ??
+      membersWithWork.find((item) => item?.member?.id === selectedMember) ??
+      membersWithWork.find(Boolean) ??
       null,
     [membersWithWork, selectedMember]
   );
@@ -146,7 +159,9 @@ export default function TeamWorkPage({ seatLimit }: { organizationId: string; se
       }
       setEmail('');
       setInviteUrl(data.inviteUrl);
-      await queryClient.invalidateQueries({ queryKey: ['organization-invitations'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['organization-invitations', organizationId]
+      });
     } catch {
       setInviteError('No se ha podido crear la invitación.');
     } finally {
