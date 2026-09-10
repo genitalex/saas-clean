@@ -220,6 +220,10 @@ function OpportunityCard({
                 style={{ width: `${probability}%` }}
               />
             </div>
+            <div
+              className='pointer-events-none absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm ring-2 ring-background transition-[left] duration-100 ease-out'
+              style={{ left: `${probability}%` }}
+            />
             <input
               aria-label={`Probabilidad de cierre: ${probability}%`}
               type='range'
@@ -682,11 +686,7 @@ export function OpportunitiesPage({
     <main className='flex flex-1 flex-col gap-6 py-2'>
       <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
         <div>
-          <p className='text-sm font-medium text-primary'>PIPELINE</p>
           <h1 className='text-2xl font-semibold'>Oportunidades</h1>
-          <p className='text-sm text-muted-foreground'>
-            Sabe qué se mueve y cuál es el siguiente paso.
-          </p>
         </div>
         <div className='flex gap-2'>
           <Input
