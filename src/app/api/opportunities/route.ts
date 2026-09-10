@@ -36,7 +36,9 @@ export async function GET(request: NextRequest) {
       .from(opportunities)
       .where(eq(opportunities.organizationId, context.organization.id))
       .orderBy(asc(opportunities.createdAt));
-    return NextResponse.json(rows, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json(rows, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' }
+    });
   } catch (error) {
     console.error('[opportunities:get]', error);
     return NextResponse.json({ error: 'OPPORTUNITIES_REQUEST_FAILED' }, { status: 500 });

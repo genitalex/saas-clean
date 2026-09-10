@@ -1,10 +1,15 @@
 import type { Opportunity, OpportunityInput } from './types';
 
+export type OpportunityUpdateInput = {
+  stage?: string;
+  probability?: number;
+};
+
 async function request<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     ...init,
     cache: 'no-store',
-    headers: { 'Content-Type': 'application/json', ...init?.headers }
+    headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) }
   });
   if (!response.ok) throw new Error('Opportunity request failed');
   if (response.status === 204) return undefined as T;
@@ -22,10 +27,14 @@ export function createOpportunity(input: OpportunityInput): Promise<Opportunity>
   });
 }
 
-export function updateOpportunity(id: string, stage: string): Promise<Opportunity> {
+export function updateOpportunity(
+  id: string,
+  update: string | OpportunityUpdateInput
+): Promise<Opportunity> {
+  const body: OpportunityUpdateInput = typeof update === 'string' ? { stage: update } : update;
   return request<Opportunity>(`/api/opportunities/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ stage })
+    body: JSON.stringify(body)
   });
 }
 

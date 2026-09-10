@@ -5,7 +5,14 @@ import { and, eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const stageSchema = z.object({ stage: z.string().trim().min(1) });
+const updateSchema = z
+  .object({
+    stage: z.string().trim().min(1).optional(),
+    probability: z.number().int().min(0).max(100).optional()
+  })
+  .refine((value) => value.stage !== undefined || value.probability !== undefined, {
+    message: 'At least one opportunity field is required'
+  });
 
 function authError(error: unknown) {
   if (!(error instanceof AuthContextError)) throw error;
@@ -22,12 +29,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   } catch (error) {
     return authError(error);
   }
-  const parsed = stageSchema.safeParse(await request.json());
-  if (!parsed.success) return NextResponse.json({ error: 'INVALID_STAGE' }, { status: 400 });
+  const parsed = updateSchema.safeParse(await request.json());
+  if (!parsed.success)
+    return NextResponse.json({ error: 'INVALID_OPPORTUNITY_UPDATE' }, { status: 400 });
   const { id } = await params;
   const [updated] = await db
     .update(opportunities)
-    .set({ stage: parsed.data.stage, updatedAt: new Date() })
+    .set({ ...parsed.data, updatedAt: new Date() })
     .where(and(eq(opportunities.id, id), eq(opportunities.organizationId, context.organization.id)))
     .returning();
   if (!updated) return NextResponse.json({ error: 'OPPORTUNITY_NOT_FOUND' }, { status: 404 });

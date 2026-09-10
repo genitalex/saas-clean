@@ -47,6 +47,7 @@ import {
   updateOpportunity
 } from '@/features/opportunities/api/service';
 import type { Opportunity } from '@/features/opportunities/api/types';
+import type { OpportunityUpdateInput } from '@/features/opportunities/api/service';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 
@@ -98,11 +99,18 @@ function OpportunityDragPreview({ opportunity }: { opportunity: Opportunity }) {
           <p className='font-medium'>{opportunity.title}</p>
           <p className='text-sm text-muted-foreground'>{opportunity.customer}</p>
         </div>
-        <div className='flex items-end justify-between'>
+        <div>
           <span className='text-lg font-semibold'>{money(opportunity.value)}</span>
-          <span className='text-xs text-muted-foreground'>{opportunity.probability}%</span>
+          <div className='mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground'>
+            <span>Probabilidad de cierre</span>
+            <span className='font-medium text-foreground'>{opportunity.probability}%</span>
+          </div>
         </div>
-        <Progress value={opportunity.probability} className='h-1.5' />
+        <Progress
+          value={opportunity.probability}
+          className='h-1.5'
+          aria-label={`Probabilidad de cierre: ${opportunity.probability}%`}
+        />
         <div className='flex justify-between text-xs text-muted-foreground'>
           <span>{opportunity.owner}</span>
           <span>Cierra {opportunity.close}</span>
@@ -151,11 +159,18 @@ function OpportunityCard({
           <p className='font-medium'>{opportunity.title}</p>
           <p className='text-sm text-muted-foreground'>{opportunity.customer}</p>
         </div>
-        <div className='flex items-end justify-between'>
+        <div>
           <span className='text-lg font-semibold'>{money(opportunity.value)}</span>
-          <span className='text-xs text-muted-foreground'>{opportunity.probability}%</span>
+          <div className='mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground'>
+            <span>Probabilidad de cierre</span>
+            <span className='font-medium text-foreground'>{opportunity.probability}%</span>
+          </div>
         </div>
-        <Progress value={opportunity.probability} className='h-1.5' />
+        <Progress
+          value={opportunity.probability}
+          className='h-1.5'
+          aria-label={`Probabilidad de cierre: ${opportunity.probability}%`}
+        />
         <div className='flex justify-between text-xs text-muted-foreground'>
           <span>{opportunity.owner}</span>
           <span>Cierra {opportunity.close}</span>
@@ -304,6 +319,7 @@ export function OpportunitiesPage({
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newValue, setNewValue] = useState('');
+  const [newProbability, setNewProbability] = useState(20);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [activeOpportunity, setActiveOpportunity] = React.useState<Opportunity | null>(null);
@@ -343,16 +359,24 @@ export function OpportunitiesPage({
     }, {} as OpportunityColumns);
   }, [columns, query]);
 
+  const update = React.useCallback(
+    async (id: string, input: string | OpportunityUpdateInput) => {
+      await updateOpportunity(id, input);
+      await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
+    },
+    [queryClient]
+  );
+
   const move = React.useCallback(
     async (id: string, stage: string) => {
       try {
-        await updateOpportunity(id, stage);
-        await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+        await update(id, stage);
       } catch {
         toast.error('No se pudo mover la oportunidad.');
       }
     },
-    [queryClient]
+    [update]
   );
 
   const handleCreateOpportunity = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -367,7 +391,7 @@ export function OpportunitiesPage({
         title: newTitle.trim(),
         customer: customerName,
         value: Number(newValue) || 0,
-        probability: 20,
+        probability: newProbability,
         stage: 'Contactado',
         close: 'Por definir',
         owner: 'Alex'
@@ -379,6 +403,7 @@ export function OpportunitiesPage({
       setSelectedCustomerId('');
       setNewCustomer('');
       setNewValue('');
+      setNewProbability(20);
       setCreateOpen(false);
       toast.success('Oportunidad creada');
     } catch {
@@ -519,7 +544,11 @@ export function OpportunitiesPage({
 
   if (detailId && selected)
     return (
-      <OpportunityDetail opportunity={selected} onMove={(stage) => void move(selected.id, stage)} />
+      <OpportunityDetail
+        opportunity={selected}
+        onMove={(stage) => void move(selected.id, stage)}
+        onProbabilityChange={(probability) => update(selected.id, { probability })}
+      />
     );
 
   return (
@@ -576,12 +605,15 @@ export function OpportunitiesPage({
                       {customer.name}
                     </NativeSelectOption>
                   ))}
-                  <NativeSelectOption value={NEW_CUSTOMER_VALUE}>Otro cliente…</NativeSelectOption>
+                  <NativeSelectOption value={NEW_CUSTOMER_VALUE}>
+                    Escribir otro cliente…
+                  </NativeSelectOption>
                 </NativeSelect>
                 {customerMode === 'new' ? (
                   <Input
                     autoFocus
                     placeholder='Nombre del cliente'
+                    aria-label='Nombre del cliente'
                     value={newCustomer}
                     onChange={(event) => setNewCustomer(event.target.value)}
                   />
@@ -601,6 +633,27 @@ export function OpportunitiesPage({
               value={newValue}
               onChange={(event) => setNewValue(event.target.value)}
             />
+            <div className='space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3'>
+              <div className='flex items-center justify-between gap-3'>
+                <div>
+                  <p className='text-sm font-medium'>Probabilidad de cierre</p>
+                  <p className='text-xs text-muted-foreground'>
+                    ¿Qué posibilidades crees que hay de cerrar esta oportunidad?
+                  </p>
+                </div>
+                <span className='text-sm font-semibold'>{newProbability}%</span>
+              </div>
+              <input
+                aria-label='Probabilidad de cierre'
+                type='range'
+                min='0'
+                max='100'
+                step='5'
+                value={newProbability}
+                onChange={(event) => setNewProbability(Number(event.target.value))}
+                className='w-full accent-primary'
+              />
+            </div>
             <div className='flex justify-end gap-2'>
               <Button type='button' variant='outline' onClick={() => setCreateOpen(false)}>
                 Cancelar
@@ -666,12 +719,16 @@ export function OpportunitiesPage({
 
 function OpportunityDetail({
   opportunity,
-  onMove
+  onMove,
+  onProbabilityChange
 }: {
   opportunity: Opportunity;
   onMove: (stage: string) => void;
+  onProbabilityChange: (probability: number) => Promise<void>;
 }) {
   const [note, setNote] = useState('');
+  const [probability, setProbability] = useState(opportunity.probability);
+  const [savingProbability, setSavingProbability] = useState(false);
   return (
     <main className='flex flex-1 flex-col gap-6 py-2'>
       <Link
@@ -688,19 +745,69 @@ function OpportunityDetail({
         </p>
       </div>
       <div className='grid gap-4 sm:grid-cols-4'>
-        {[
-          ['Valor', money(opportunity.value)],
-          ['Probabilidad', `${opportunity.probability}%`],
-          ['Cierre esperado', opportunity.close],
-          ['Salud', opportunity.probability > 60 ? 'Fuerte' : 'En riesgo']
-        ].map(([label, value]) => (
-          <Card key={label}>
-            <CardContent className='p-4'>
-              <p className='text-xs text-muted-foreground'>{label}</p>
-              <p className='mt-1 font-semibold'>{value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <Card>
+          <CardContent className='p-4'>
+            <p className='text-xs text-muted-foreground'>Valor</p>
+            <p className='mt-1 font-semibold'>{money(opportunity.value)}</p>
+          </CardContent>
+        </Card>
+        <Card className='sm:col-span-2'>
+          <CardContent className='p-4'>
+            <div className='flex items-center justify-between gap-3'>
+              <div>
+                <p className='text-xs text-muted-foreground'>Probabilidad de cierre</p>
+                <p className='mt-1 text-xs text-muted-foreground'>
+                  Qué posibilidades crees que hay de cerrarla.
+                </p>
+              </div>
+              <span className='text-lg font-semibold'>{probability}%</span>
+            </div>
+            <input
+              aria-label='Probabilidad de cierre'
+              type='range'
+              min='0'
+              max='100'
+              step='5'
+              value={probability}
+              onChange={(event) => setProbability(Number(event.target.value))}
+              className='mt-3 w-full accent-primary'
+              disabled={savingProbability}
+            />
+            <div className='mt-2 flex justify-end'>
+              <Button
+                type='button'
+                variant='secondary'
+                size='sm'
+                disabled={savingProbability || probability === opportunity.probability}
+                onClick={async () => {
+                  setSavingProbability(true);
+                  try {
+                    await onProbabilityChange(probability);
+                  } catch {
+                    setProbability(opportunity.probability);
+                    toast.error('No se pudo actualizar la probabilidad.');
+                  } finally {
+                    setSavingProbability(false);
+                  }
+                }}
+              >
+                {savingProbability ? 'Guardando…' : 'Guardar probabilidad'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className='p-4'>
+            <p className='text-xs text-muted-foreground'>Cierre esperado</p>
+            <p className='mt-1 font-semibold'>{opportunity.close}</p>
+          </CardContent>
+        </Card>
+        <Card className='sm:col-span-4'>
+          <CardContent className='p-4'>
+            <p className='text-xs text-muted-foreground'>Salud</p>
+            <p className='mt-1 font-semibold'>{probability > 60 ? 'Fuerte' : 'En riesgo'}</p>
+          </CardContent>
+        </Card>
       </div>
       <Card>
         <CardHeader>
