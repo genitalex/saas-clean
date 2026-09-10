@@ -339,9 +339,7 @@ export function OpportunitiesPage({
   const [columns, setColumns] = React.useState<OpportunityColumns>(() => toColumns(opportunities));
   const [createOpen, setCreateOpen] = useState(Boolean(initialCreate));
   const [newTitle, setNewTitle] = useState('');
-  const [customerMode, setCustomerMode] = useState<'existing' | 'new'>(
-    customerData.length ? 'existing' : 'new'
-  );
+  const [customerMode, setCustomerMode] = useState<'existing' | 'new'>('existing');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newValue, setNewValue] = useState('');
@@ -362,12 +360,6 @@ export function OpportunitiesPage({
     columnsRef.current = next;
     setColumns(next);
   }, [opportunities]);
-
-  React.useEffect(() => {
-    if (customerData.length > 0 && customerMode === 'new' && !newCustomer.trim()) {
-      setCustomerMode('existing');
-    }
-  }, [customerData.length, customerMode, newCustomer]);
 
   React.useEffect(() => {
     columnsRef.current = columns;
