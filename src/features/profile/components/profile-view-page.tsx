@@ -16,6 +16,9 @@ function useOrganizationContext() {
       name: string;
       plan: 'solo' | 'team';
       seatLimit: number;
+      industry: string | null;
+      teamSize: number | null;
+      mainUseCase: string | null;
       memberCount: number;
     };
     user: { id: string; role: 'owner' | 'member' };

@@ -163,6 +163,12 @@ export const organizations = pgTable(
 
     seatLimit: integer('seat_limit').notNull().default(1),
 
+    industry: text('industry'),
+
+    teamSize: integer('team_size'),
+
+    mainUseCase: text('main_use_case'),
+
     createdAt: timestamp('created_at', {
       withTimezone: true
     })

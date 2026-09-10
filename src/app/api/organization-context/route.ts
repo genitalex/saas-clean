@@ -21,6 +21,9 @@ export async function GET(request: NextRequest) {
         name: context.organization.name,
         plan: context.organization.plan,
         seatLimit: context.organization.seatLimit,
+        industry: context.organization.industry,
+        teamSize: context.organization.teamSize,
+        mainUseCase: context.organization.mainUseCase,
         memberCount: Number(memberCount)
       },
       user: {
