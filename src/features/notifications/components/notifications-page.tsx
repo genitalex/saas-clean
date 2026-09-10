@@ -1,19 +1,34 @@
 'use client';
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { Icons } from '@/components/icons';
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSession } from '@/lib/auth-client';
-import { notificationKeys, getNotificationsQueryOptions } from '@/features/automations/api/queries';
+import { getNotificationsQueryOptions, notificationKeys } from '@/features/automations/api/queries';
 import * as client from '@/features/automations/api/client';
-import { useRouter } from 'next/navigation';
+import { useSession } from '@/lib/auth-client';
+
+function formatRelativeTime(date: string | Date) {
+  const diff = Date.now() - new Date(date).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days = Math.floor(diff / 86_400_000);
+
+  if (minutes < 1) return 'Ahora';
+  if (minutes < 60) return `Hace ${minutes} min`;
+  if (hours < 24) return `Hace ${hours} h`;
+  if (days < 7) return `Hace ${days} d`;
+
+  return new Date(date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
 
 export default function NotificationsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
+
   const { data: context } = useQuery<{ organization?: { id: string }; user?: { id: string } }>({
     queryKey: ['organization-context', 'notifications-page'],
     queryFn: async () => {
@@ -36,7 +51,6 @@ export default function NotificationsPage() {
   const notifications = notificationsQuery.data ?? [];
   const unread = notifications.filter((notification) => !notification.read);
   const read = notifications.filter((notification) => notification.read);
-
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
   };
@@ -57,22 +71,22 @@ export default function NotificationsPage() {
   const pathFor = (notification: (typeof notifications)[number]) => {
     if (notification.refEntityType === 'task') {
       return notification.refEntityId
-        ? `/dashboard/tasks/${notification.refEntityId}`
+        ? `/dashboard/tasks?task=${encodeURIComponent(notification.refEntityId)}`
         : '/dashboard/my-work';
     }
     if (notification.refEntityType === 'event') {
       return notification.refEntityId
-        ? `/dashboard/calendar?eventId=${notification.refEntityId}`
+        ? `/dashboard/calendar?eventId=${encodeURIComponent(notification.refEntityId)}`
         : '/dashboard/calendar';
     }
     if (notification.refEntityType === 'customer') {
       return notification.refEntityId
-        ? `/dashboard/customers/${notification.refEntityId}`
+        ? `/dashboard/customers/${encodeURIComponent(notification.refEntityId)}`
         : '/dashboard/customers';
     }
     if (notification.refEntityType === 'opportunity') {
       return notification.refEntityId
-        ? `/dashboard/opportunities/${notification.refEntityId}`
+        ? `/dashboard/opportunities/${encodeURIComponent(notification.refEntityId)}`
         : '/dashboard/opportunities';
     }
     return '/dashboard/notifications';
@@ -80,85 +94,94 @@ export default function NotificationsPage() {
 
   const renderList = (items: typeof notifications) => {
     if (notificationsQuery.isLoading) {
-      return (
-        <div className='text-muted-foreground py-16 text-center text-sm'>
-          Cargando notificaciones…
-        </div>
-      );
+      return <div className='py-16 text-center text-sm text-muted-foreground'>Cargando…</div>;
     }
+
     if (notificationsQuery.isError) {
       return (
-        <div className='text-destructive py-16 text-center text-sm'>
-          No se pudieron cargar las notificaciones.
-        </div>
-      );
-    }
-    if (items.length === 0) {
-      return (
-        <div className='flex flex-col items-center justify-center py-16 text-center'>
-          <Icons.notification className='text-muted-foreground/35 mb-3 h-10 w-10' />
-          <p className='text-sm font-medium'>No tienes notificaciones.</p>
-          <p className='text-muted-foreground mt-1 text-xs'>
-            Aquí aparecerán las cosas que merecen tu atención.
+        <div className='rounded-xl border border-border/60 bg-muted/20 px-4 py-12 text-center'>
+          <p className='text-sm font-medium'>No se pudieron cargar las notificaciones.</p>
+          <p className='mt-1 text-xs text-muted-foreground'>
+            Vuelve a intentarlo en unos segundos.
           </p>
         </div>
       );
     }
 
+    if (items.length === 0) {
+      return (
+        <div className='flex flex-col items-center justify-center py-20 text-center'>
+          <span className='mb-3 flex size-10 items-center justify-center rounded-xl bg-muted'>
+            <Icons.notification className='size-5 text-muted-foreground/50' strokeWidth={1.6} />
+          </span>
+          <p className='text-sm font-medium'>Todo al día</p>
+          <p className='mt-1 text-xs text-muted-foreground'>No hay nada nuevo que revisar.</p>
+        </div>
+      );
+    }
+
     return (
-      <div className='flex flex-col gap-2'>
-        {items.map((notification) => {
+      <div className='overflow-hidden rounded-[14px] border border-border/60 bg-muted/30'>
+        {items.map((notification, index) => {
           const isUnread = !notification.read;
           return (
             <article
               key={notification.id}
-              className={`relative rounded-2xl p-4 pr-24 transition-colors ${
-                isUnread ? 'bg-muted' : 'bg-muted/40'
-              }`}
+              className={`group relative flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                index > 0 ? 'border-t border-border/50' : ''
+              } ${isUnread ? 'bg-background' : 'bg-transparent hover:bg-background/60'}`}
             >
+              <span
+                className={`mt-1.5 size-1.5 shrink-0 rounded-full ${
+                  isUnread ? 'bg-primary' : 'bg-muted-foreground/20'
+                }`}
+              />
+
               <button
                 type='button'
-                className='block w-full text-left outline-none'
+                className='min-w-0 flex-1 text-left outline-none'
                 onClick={() => {
                   if (isUnread) markAsRead.mutate(notification.id);
                   router.push(pathFor(notification));
                 }}
               >
                 <div className='flex items-center gap-2'>
-                  <h3 className='text-[15px] font-semibold leading-tight'>{notification.title}</h3>
-                  {isUnread && <span className='bg-primary size-1.5 shrink-0 rounded-full' />}
+                  <h3
+                    className={`truncate text-[13px] leading-5 ${
+                      isUnread
+                        ? 'font-semibold text-foreground'
+                        : 'font-medium text-muted-foreground'
+                    }`}
+                  >
+                    {notification.title}
+                  </h3>
                 </div>
-                <p className='text-muted-foreground mt-1 text-[13px] leading-5'>
+                <p className='mt-0.5 text-[12px] leading-5 text-muted-foreground'>
                   {notification.message}
                 </p>
-                <p className='text-muted-foreground/60 mt-2 text-[11px]'>
-                  {new Date(notification.createdAt).toLocaleString('es-ES', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                <p className='mt-1 text-[10px] text-muted-foreground/60'>
+                  {formatRelativeTime(notification.createdAt)}
                 </p>
               </button>
-              <div className='absolute right-2.5 top-2.5 flex items-center gap-1'>
+
+              <div className='flex shrink-0 items-center gap-1'>
                 {isUnread && (
                   <button
                     type='button'
                     aria-label='Marcar como leída'
                     onClick={() => markAsRead.mutate(notification.id)}
-                    className='flex size-8 items-center justify-center rounded-[10px] border border-border/70 bg-background shadow-sm transition hover:bg-accent'
+                    className='flex size-7 items-center justify-center rounded-lg text-muted-foreground/60 opacity-0 transition hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100'
                   >
-                    <Icons.check size={15} />
+                    <Icons.check className='size-3.5' />
                   </button>
                 )}
                 <button
                   type='button'
                   aria-label='Eliminar notificación'
                   onClick={() => deleteNotification.mutate(notification.id)}
-                  className='flex size-8 items-center justify-center rounded-[10px] border border-border/70 bg-background shadow-sm transition hover:bg-accent'
+                  className='flex size-7 items-center justify-center rounded-lg text-muted-foreground/50 opacity-0 transition hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100'
                 >
-                  <Icons.close size={15} strokeWidth={2.2} />
+                  <Icons.close className='size-3.5' strokeWidth={2} />
                 </button>
               </div>
             </article>
@@ -186,7 +209,7 @@ export default function NotificationsPage() {
       }
     >
       <Tabs defaultValue='all'>
-        <TabsList>
+        <TabsList className='bg-muted/60'>
           <TabsTrigger value='all'>Todas ({notifications.length})</TabsTrigger>
           <TabsTrigger value='unread'>Sin leer ({unread.length})</TabsTrigger>
           <TabsTrigger value='read'>Leídas ({read.length})</TabsTrigger>
