@@ -70,8 +70,8 @@ export function BottomNavigation() {
         <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
           {label}
         </span>
-        <span className='flex size-9 origin-bottom items-center justify-center rounded-[10px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-1.5 group-hover:scale-125 group-focus-visible:-translate-y-1.5 group-focus-visible:scale-125'>
-          <Icon className='size-[19px]' />
+        <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
+          <Icon className='size-[25px] md:size-[26px]' />
         </span>
         {active && (
           <span
@@ -94,9 +94,9 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mx-auto mb-0 w-[calc(100%-20px)] max-w-[650px] rounded-[20px] border border-border/70 bg-background/72 p-1.5 shadow-[0_14px_42px_rgb(23_32_25_/_0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/62 md:mb-5 md:p-2'>
-          <div className='flex min-h-[56px] items-center justify-center gap-1 md:gap-1.5'>
-            <div className='flex min-w-0 flex-1 items-center justify-evenly gap-1 md:gap-1.5'>
+        <div className='relative mx-auto mb-0 w-fit max-w-[calc(100vw-20px)] rounded-[20px] border border-border/70 bg-background/68 p-2 shadow-[0_14px_42px_rgb(23_32_25_/_0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/58 md:mb-5 md:p-2.5'>
+          <div className='flex min-h-[58px] items-center justify-center gap-1.5 md:gap-2'>
+            <div className='flex items-center gap-1.5 md:gap-2'>
               {desktopLeftItems.map((item) => renderNavItem(item))}
             </div>
 
@@ -118,21 +118,21 @@ export function BottomNavigation() {
                   className={cn(
                     'absolute inset-0 m-auto transition-all duration-200 ease-out',
                     createOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100',
-                    'size-[22px]'
+                    'size-[25px] md:size-[26px]'
                   )}
                 />
                 <Icons.close
                   className={cn(
                     'absolute inset-0 m-auto transition-all duration-200 ease-out',
                     createOpen ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0',
-                    'size-[22px]'
+                    'size-[25px] md:size-[26px]'
                   )}
                 />
               </span>
               <span className='sr-only'>Nuevo</span>
             </button>
 
-            <div className='flex min-w-0 flex-1 items-center justify-evenly gap-1 md:gap-1.5'>
+            <div className='flex items-center gap-1.5 md:gap-2'>
               {desktopRightItems.map((item) => renderNavItem(item))}
               <button
                 type='button'
@@ -152,8 +152,8 @@ export function BottomNavigation() {
                 <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
                   Más
                 </span>
-                <span className='flex size-9 origin-bottom items-center justify-center rounded-[10px] transition-transform duration-300 ease-out group-hover:-translate-y-1.5 group-hover:scale-125 group-focus-visible:-translate-y-1.5 group-focus-visible:scale-125'>
-                  <Icons.moreHorizontal className='size-[20px]' />
+                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
+                  <Icons.moreHorizontal className='size-[24px] md:size-[25px]' />
                 </span>
                 <span className='sr-only'>Más</span>
               </button>
