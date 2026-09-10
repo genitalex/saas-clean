@@ -68,9 +68,12 @@ export default function OnboardingForm() {
       return;
     }
 
-    if (step === 3 && plan === 'team' && !teamSize) {
-      setError('Indica cuántas personas necesitáis.');
-      return;
+    if (step === 3 && plan === 'team') {
+      const size = Number(teamSize);
+      if (!Number.isInteger(size) || size < 2 || size > 500) {
+        setError('Indica un número de personas entre 2 y 500.');
+        return;
+      }
     }
 
     if (step === 4 && !mainUseCase) {
@@ -237,22 +240,12 @@ export default function OnboardingForm() {
                 />
 
                 {plan === 'team' && (
-                  <ChoiceGrid
-                    label='¿Cuántas personas sois?'
-                    options={[
-                      { value: '2', label: '2' },
-                      { value: '3', label: '3' },
-                      { value: '4', label: '4' },
-                      { value: '5', label: '5' },
-                      { value: '10', label: '10' },
-                      { value: '25', label: '25' }
-                    ]}
+                  <TeamSizeField
                     value={teamSize}
                     onChange={(value) => {
                       clearError();
                       setTeamSize(value);
                     }}
-                    suffix='personas'
                   />
                 )}
               </div>
@@ -334,6 +327,72 @@ function StepShell({
       </p>
       <div className='mt-8'>{children}</div>
     </>
+  );
+}
+
+function TeamSizeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const parsedValue = Number(value);
+  const currentValue = Number.isInteger(parsedValue) && parsedValue >= 2 ? parsedValue : 2;
+
+  function update(nextValue: number) {
+    const next = Math.min(500, Math.max(2, nextValue));
+    onChange(String(next));
+  }
+
+  return (
+    <div className='space-y-3'>
+      <div>
+        <p className='text-sm font-medium'>¿Cuántas personas necesitarán acceso?</p>
+        <p className='text-muted-foreground mt-1 text-xs leading-5'>
+          Indica el número exacto de personas que utilizarán este espacio.
+        </p>
+      </div>
+
+      <div className='flex w-full items-center rounded-[16px] border border-border/80 bg-background p-2'>
+        <button
+          type='button'
+          onClick={() => update(currentValue - 1)}
+          disabled={currentValue <= 2}
+          className='flex size-11 shrink-0 items-center justify-center rounded-[12px] text-lg transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35'
+          aria-label='Reducir número de personas'
+        >
+          −
+        </button>
+
+        <div className='flex min-w-0 flex-1 items-center justify-center gap-2'>
+          <input
+            type='number'
+            inputMode='numeric'
+            min={2}
+            max={500}
+            step={1}
+            value={value || '2'}
+            onChange={(event) => {
+              const raw = event.target.value.replace(/[^0-9]/g, '');
+              if (!raw) {
+                onChange('');
+                return;
+              }
+              const next = Math.min(500, Math.max(2, Number(raw)));
+              onChange(String(next));
+            }}
+            className='w-20 border-0 bg-transparent text-center text-2xl font-semibold tabular-nums outline-none ring-0 focus-visible:ring-0'
+            aria-label='Número de personas'
+          />
+          <span className='text-muted-foreground text-sm'>personas</span>
+        </div>
+
+        <button
+          type='button'
+          onClick={() => update(currentValue + 1)}
+          disabled={currentValue >= 500}
+          className='flex size-11 shrink-0 items-center justify-center rounded-[12px] text-lg transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-35'
+          aria-label='Aumentar número de personas'
+        >
+          +
+        </button>
+      </div>
+    </div>
   );
 }
 
