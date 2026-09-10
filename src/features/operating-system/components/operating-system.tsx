@@ -631,7 +631,7 @@ export function OpportunitiesPage({
               <div className='space-y-2'>
                 <NativeSelect
                   aria-label='Cliente'
-                  value={customerMode === 'new' ? NEW_CUSTOMER_VALUE : selectedCustomerId}
+                  value={customerMode === 'new' ? '' : selectedCustomerId}
                   onChange={(event) => {
                     const value = event.target.value;
                     if (value === NEW_CUSTOMER_VALUE) {
