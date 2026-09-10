@@ -8,6 +8,7 @@ import { TaskListPage } from '@/features/tasks/components/task-list-page';
 import NewTaskDialog from '@/features/kanban/components/new-task-dialog';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { OperatingSystemPage } from './operating-system';
+import { SegmentedToggle } from '@/components/ui/segmented-toggle';
 
 const views = ['all', 'inbox', 'waiting', 'follow-ups', 'completed'] as const;
 type WorkView = (typeof views)[number];
@@ -52,23 +53,18 @@ export function WorkPage() {
       </header>
 
       <div className='flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between'>
-        <div
-          className='inline-flex w-fit rounded-[var(--radius-md)] border border-border/70 bg-muted p-1'
-          aria-label='Modo de Work'
-        >
-          <Link
-            href='/dashboard/my-work?mode=board'
-            className={`rounded-[var(--radius-sm)] px-4 py-2 text-sm font-medium transition-colors ${showBoard ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:bg-background'}`}
-          >
-            Kanban
-          </Link>
-          <Link
-            href={`/dashboard/my-work?mode=list${activeView === 'all' ? '' : `&view=${activeView}`}`}
-            className={`rounded-[var(--radius-sm)] px-4 py-2 text-sm font-medium transition-colors ${activeMode === 'list' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:bg-background'}`}
-          >
-            Lista
-          </Link>
-        </div>
+        <SegmentedToggle
+          options={['Kanban', 'Lista']}
+          value={showBoard ? 'Kanban' : 'Lista'}
+          onValueChange={(next) => {
+            if (next === 'Kanban') router.push('/dashboard/my-work?mode=board');
+            else
+              router.push(
+                `/dashboard/my-work?mode=list${activeView === 'all' ? '' : `&view=${activeView}`}`
+              );
+          }}
+          aria-label='Modo de trabajo'
+        />
         <NativeSelect
           aria-label='Vista de trabajo'
           value={activeView}

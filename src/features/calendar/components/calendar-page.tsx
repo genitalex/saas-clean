@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { SegmentedToggle } from '@/components/ui/segmented-toggle';
 import { createEvent, getEvents, eventKeys, updateEvent } from '../queries';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
@@ -497,33 +498,31 @@ export function CalendarPage({
               <Icons.chevronRight className='size-4' />
             </Button>
           </div>
-          <div
-            className='border-border/50 hidden h-10 rounded-[10px] border border-border/60 bg-background/80 p-1 md:flex'
-            role='group'
+          <SegmentedToggle
+            className='hidden md:inline-grid'
+            options={['Mes', 'Semana', 'Día', 'Agenda']}
+            value={
+              view === 'month'
+                ? 'Mes'
+                : view === 'week'
+                  ? 'Semana'
+                  : view === 'day'
+                    ? 'Día'
+                    : 'Agenda'
+            }
+            onValueChange={(next) => {
+              const nextView: CalendarView =
+                next === 'Mes'
+                  ? 'month'
+                  : next === 'Semana'
+                    ? 'week'
+                    : next === 'Día'
+                      ? 'day'
+                      : 'agenda';
+              setView(nextView);
+            }}
             aria-label='Vista del calendario'
-          >
-            {(['month', 'week', 'day', 'agenda'] as CalendarView[]).map((option) => (
-              <button
-                key={option}
-                onClick={() => setView(option)}
-                aria-pressed={view === option}
-                className={cn(
-                  'h-8 rounded-[8px] border border-transparent px-3.5 text-sm font-medium transition-[background-color,border-color,color]',
-                  view === option
-                    ? 'border-border/35 bg-card text-foreground shadow-none'
-                    : 'text-muted-foreground hover:bg-muted/45 hover:text-foreground'
-                )}
-              >
-                {option === 'month'
-                  ? 'Mes'
-                  : option === 'week'
-                    ? 'Semana'
-                    : option === 'day'
-                      ? 'Día'
-                      : 'Agenda'}
-              </button>
-            ))}
-          </div>
+          />
           <Button
             variant='ghost'
             size='icon'

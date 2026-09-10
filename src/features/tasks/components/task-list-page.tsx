@@ -666,7 +666,7 @@ export function TaskListPage({
       ) : isError ? (
         <p className='text-destructive text-sm'>No se pudieron cargar las tareas.</p>
       ) : (
-        <div className='overflow-hidden border-y border-border/60 bg-card/30'>
+        <div className='overflow-hidden rounded-2xl border border-border/60 bg-card/55 shadow-[0_8px_24px_rgba(23,32,25,0.035)] backdrop-blur-sm'>
           <div className='flex items-center justify-between border-b border-border/50 px-4 py-3 sm:px-5'>
             <div className='flex items-center gap-3'>
               <Checkbox
@@ -686,55 +686,111 @@ export function TaskListPage({
               {filteredTasks.length} tareas
             </span>
           </div>
-          <div>
-            {filteredTasks.map((task) => {
-              const isSelected = selectedIds.includes(task.id);
 
-              return (
-                <div
-                  key={task.id}
-                  className={`flex w-full items-center gap-3 border-b px-3 py-2.5 text-left last:border-0 ${isSelected ? 'bg-primary/[0.03]' : 'hover:bg-muted/30'}`}
-                >
-                  <Checkbox
-                    aria-label={`Seleccionar ${task.title}`}
-                    checked={isSelected}
-                    onClick={(event) => event.stopPropagation()}
-                    onCheckedChange={() => toggleTaskSelection(task.id)}
-                  />
-                  <button
-                    type='button'
-                    aria-label={`Abrir tarea ${task.title}`}
-                    className='flex min-w-0 flex-1 items-center gap-3 text-left'
-                    onClick={() => openTask(task)}
-                  >
-                    <span
-                      className={`mt-0.5 size-2.5 shrink-0 rounded-full ${task.status === 'done' ? 'bg-primary' : task.status === 'in_progress' ? 'bg-accent-foreground' : task.status === 'waiting' ? 'bg-muted-foreground' : 'bg-muted-foreground/40'}`}
-                    />
-                    <span className='min-w-0 flex-1'>
-                      <span className='block truncate text-sm font-medium'>{task.title}</span>
-                      <span className='text-muted-foreground mt-1 block text-xs'>
-                        {task.customer?.name ?? 'Sin cliente'}
-                        {task.dueAt ? ` · ${new Date(task.dueAt).toLocaleDateString('es-ES')}` : ''}
-                      </span>
-                    </span>
-                    <div className='flex items-center gap-2'>
-                      <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
-                        {priorityLabels[task.priority]}
-                      </Badge>
-                      <span className='text-muted-foreground hidden text-[11px] uppercase tracking-[0.12em] sm:block'>
-                        {statusLabels[task.status]}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
-            {filteredTasks.length === 0 && (
-              <div className='text-muted-foreground p-14 text-center text-sm'>
-                No hay tareas con estos filtros.
-              </div>
-            )}
+          <div className='overflow-x-auto'>
+            <table className='w-full min-w-[760px] border-collapse text-left'>
+              <thead>
+                <tr className='border-b border-border/50 text-[11px] uppercase tracking-[0.12em] text-muted-foreground'>
+                  <th className='w-10 px-4 py-3 sm:px-5' />
+                  <th className='px-2 py-3 font-medium'>Tarea</th>
+                  <th className='px-3 py-3 font-medium'>Responsable</th>
+                  <th className='px-3 py-3 font-medium'>Fecha</th>
+                  <th className='px-3 py-3 font-medium'>Prioridad</th>
+                  <th className='px-4 py-3 font-medium sm:px-5'>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTasks.map((task) => {
+                  const isSelected = selectedIds.includes(task.id);
+                  const assigneeName = task.assignee?.name ?? 'Sin asignar';
+                  const initials = assigneeName
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0]?.toUpperCase())
+                    .join('');
+
+                  return (
+                    <tr
+                      key={task.id}
+                      className={cn(
+                        'border-b border-border/45 last:border-0 transition-colors',
+                        isSelected ? 'bg-primary/[0.035]' : 'hover:bg-muted/20'
+                      )}
+                    >
+                      <td className='px-4 py-3 sm:px-5'>
+                        <Checkbox
+                          aria-label={`Seleccionar ${task.title}`}
+                          checked={isSelected}
+                          onCheckedChange={() => toggleTaskSelection(task.id)}
+                        />
+                      </td>
+                      <td className='px-2 py-3'>
+                        <button
+                          type='button'
+                          aria-label={`Abrir tarea ${task.title}`}
+                          className='group flex min-w-0 items-center gap-2.5 text-left'
+                          onClick={() => openTask(task)}
+                        >
+                          <span
+                            className={cn(
+                              'size-2 shrink-0 rounded-full',
+                              task.status === 'done'
+                                ? 'bg-primary'
+                                : task.status === 'in_progress'
+                                  ? 'bg-accent-foreground'
+                                  : task.status === 'waiting'
+                                    ? 'bg-muted-foreground'
+                                    : 'bg-muted-foreground/35'
+                            )}
+                          />
+                          <span className='min-w-0'>
+                            <span className='block truncate text-sm font-medium group-hover:text-primary'>
+                              {task.title}
+                            </span>
+                            <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
+                              {task.customer?.name ?? 'Sin cliente'}
+                            </span>
+                          </span>
+                        </button>
+                      </td>
+                      <td className='px-3 py-3'>
+                        <div className='flex items-center gap-2.5'>
+                          <span className='bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold'>
+                            {initials || '?'}
+                          </span>
+                          <span className='max-w-40 truncate text-sm text-muted-foreground'>
+                            {assigneeName}
+                          </span>
+                        </div>
+                      </td>
+                      <td className='px-3 py-3 text-sm text-muted-foreground'>
+                        {task.dueAt
+                          ? new Date(task.dueAt).toLocaleDateString('es-ES')
+                          : 'Sin fecha'}
+                      </td>
+                      <td className='px-3 py-3'>
+                        <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
+                          {priorityLabels[task.priority]}
+                        </Badge>
+                      </td>
+                      <td className='px-4 py-3 sm:px-5'>
+                        <span className='inline-flex rounded-full bg-muted/70 px-2.5 py-1 text-xs font-medium text-muted-foreground'>
+                          {statusLabels[task.status]}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+
+          {filteredTasks.length === 0 && (
+            <div className='text-muted-foreground p-14 text-center text-sm'>
+              No hay tareas con estos filtros.
+            </div>
+          )}
         </div>
       )}
       <TaskInspector
