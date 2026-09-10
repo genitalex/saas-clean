@@ -40,7 +40,6 @@ export const navGroups: NavGroup[] = [
       { title: 'Templates', url: '/dashboard/templates', icon: 'send', items: [] },
       { title: 'Goals', url: '/dashboard/goals', icon: 'goals', items: [] },
       { title: 'Documents', url: '/dashboard/documents', icon: 'documents', items: [] },
-      { title: 'Proposals', url: '/dashboard/proposals', icon: 'proposals', items: [] },
       { title: 'Team', url: '/dashboard/team', icon: 'teams', items: [] }
     ]
   },

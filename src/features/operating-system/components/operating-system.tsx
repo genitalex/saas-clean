@@ -724,7 +724,6 @@ export function OpportunitiesPage({
           </form>
         </DialogContent>
       </Dialog>
-      <Pulse />
       {isLoading ? (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
           {stages.map((stage) => (
