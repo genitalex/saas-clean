@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { createTask, taskKeys } from '@/features/tasks/queries';
 import { activityKeys } from '@/features/activities/queries';
 import { taskPayloadSchema } from '@/features/tasks/schemas/task';
@@ -46,9 +47,11 @@ export default function NewTaskDialog({
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerId ?? '');
   const [assigneeId, setAssigneeId] = useState('');
   const [pending, setPending] = useState(false);
+
   useEffect(() => {
     if (initialOpen) setOpen(true);
   }, [initialOpen]);
+
   const { data: customers = [] } = useQuery({
     queryKey: ['customers', 'task-options'],
     queryFn: async () => {
@@ -89,11 +92,14 @@ export default function NewTaskDialog({
       eventId: eventId || null,
       assigneeId: assigneeId || null
     });
+
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? 'Revisa los datos de la tarea.');
       return;
     }
+
     setPending(true);
+
     try {
       await createTask(parsed.data);
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
@@ -118,11 +124,13 @@ export default function NewTaskDialog({
         {triggerIcon}
         Nueva tarea
       </DialogTrigger>
+
       <DialogContent className='sm:max-w-205'>
         <DialogHeader>
           <DialogTitle>Nueva tarea</DialogTitle>
           <DialogDescription>Añade una tarea para el equipo.</DialogDescription>
         </DialogHeader>
+
         <form id='task-form' className='flex flex-col gap-4 py-2' onSubmit={handleSubmit}>
           <Input
             placeholder='Título de la tarea'
@@ -131,12 +139,14 @@ export default function NewTaskDialog({
             required
             maxLength={200}
           />
+
           <Textarea
             placeholder='Descripción (opcional)'
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             maxLength={5000}
           />
+
           <div className='grid gap-4 sm:grid-cols-2'>
             <label htmlFor='task-priority' className='flex flex-col gap-1.5 text-sm'>
               <span className='text-muted-foreground'>Prioridad</span>
@@ -150,16 +160,13 @@ export default function NewTaskDialog({
                 <NativeSelectOption value='high'>Alta</NativeSelectOption>
               </NativeSelect>
             </label>
-            <label htmlFor='task-due-at' className='flex flex-col gap-1.5 text-sm'>
+
+            <label className='flex flex-col gap-1.5 text-sm'>
               <span className='text-muted-foreground'>Fecha límite</span>
-              <Input
-                id='task-due-at'
-                type='datetime-local'
-                value={dueAt}
-                onChange={(event) => setDueAt(event.target.value)}
-              />
+              <DateTimePicker value={dueAt} onChange={setDueAt} aria-label='Fecha límite' />
             </label>
           </div>
+
           <label className='flex flex-col gap-1.5 text-sm'>
             <span className='text-muted-foreground'>Cliente (opcional)</span>
             <NativeSelect
@@ -174,6 +181,7 @@ export default function NewTaskDialog({
               ))}
             </NativeSelect>
           </label>
+
           <label className='flex flex-col gap-1.5 text-sm'>
             <span className='text-muted-foreground'>Responsable (opcional)</span>
             <NativeSelect
@@ -189,6 +197,7 @@ export default function NewTaskDialog({
             </NativeSelect>
           </label>
         </form>
+
         <DialogFooter>
           <Button type='submit' size='sm' form='task-form' disabled={pending}>
             {pending ? 'Creando...' : 'Crear tarea'}
