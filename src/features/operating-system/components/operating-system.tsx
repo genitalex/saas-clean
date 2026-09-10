@@ -280,24 +280,35 @@ function OpportunityColumn({
         isOver ? 'bg-primary/10 ring-2 ring-primary/30' : 'bg-muted/35'
       }`}
     >
-      <div className='flex items-center justify-between'>
-        <h2 className='text-sm font-semibold'>{stage}</h2>
-        <Badge variant='secondary'>{opportunities.length}</Badge>
+      <div className='mb-3 flex items-center justify-between gap-2'>
+        <div className='flex items-center gap-2'>
+          <h2 className='text-sm font-semibold'>{stage}</h2>
+          <Badge variant='secondary' className='rounded-sm'>
+            {opportunities.length}
+          </Badge>
+        </div>
+        <span className='text-muted-foreground text-[11px]'>Arrastra aquí</span>
       </div>
       <SortableContext
         items={opportunities.map((item) => item.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className='flex min-h-24 flex-col gap-3'>
-          {opportunities.map((opportunity) => (
-            <OpportunityCard
-              key={opportunity.id}
-              opportunity={opportunity}
-              onOpen={() => onOpen(opportunity.id)}
-              onProbabilityChange={onProbabilityChange}
-              suppressClickRef={suppressClickRef}
-            />
-          ))}
+        <div className='min-h-24 space-y-2'>
+          {opportunities.length > 0 ? (
+            opportunities.map((opportunity) => (
+              <OpportunityCard
+                key={opportunity.id}
+                opportunity={opportunity}
+                onOpen={() => onOpen(opportunity.id)}
+                onProbabilityChange={onProbabilityChange}
+                suppressClickRef={suppressClickRef}
+              />
+            ))
+          ) : (
+            <div className='text-muted-foreground flex min-h-20 items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs'>
+              Sin oportunidades
+            </div>
+          )}
         </div>
       </SortableContext>
     </section>
