@@ -61,9 +61,7 @@ export function BottomNavigation() {
         aria-label={label}
         className={cn(
           'group relative flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-colors',
-          active
-            ? 'bg-primary/10 text-primary'
-            : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+          active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground',
           'focus-visible:ring-2 focus-visible:ring-primary/30'
         )}
       >
@@ -94,9 +92,9 @@ export function BottomNavigation() {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className='relative mx-auto mb-0 w-fit max-w-[calc(100vw-20px)] rounded-[20px] border border-border/70 bg-background/68 p-2 shadow-[0_14px_42px_rgb(23_32_25_/_0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/58 md:mb-5 md:p-2.5'>
-          <div className='flex min-h-[58px] items-center justify-center gap-1.5 md:gap-2'>
-            <div className='flex items-center gap-1.5 md:gap-2'>
+        <div className='relative mx-auto mb-0 w-full rounded-none border border-x-0 border-b-0 border-border/70 bg-background/68 px-3 py-2 shadow-[0_14px_42px_rgb(23_32_25_/_0.12)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/58 sm:w-full md:mb-5 md:w-fit md:max-w-[calc(100vw-32px)] md:rounded-[20px] md:border md:p-3'>
+          <div className='flex min-h-[58px] w-full items-center justify-center gap-4 md:w-auto md:gap-4'>
+            <div className='flex flex-1 items-center justify-around gap-2 md:flex-none md:justify-start md:gap-4'>
               {desktopLeftItems.map((item) => renderNavItem(item))}
             </div>
 
@@ -132,7 +130,7 @@ export function BottomNavigation() {
               <span className='sr-only'>Nuevo</span>
             </button>
 
-            <div className='flex items-center gap-1.5 md:gap-2'>
+            <div className='flex flex-1 items-center justify-around gap-2 md:flex-none md:justify-start md:gap-4'>
               {desktopRightItems.map((item) => renderNavItem(item))}
               <button
                 type='button'
@@ -146,7 +144,7 @@ export function BottomNavigation() {
                   'group relative flex size-11 shrink-0 items-center justify-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/30',
                   moreOpen
                     ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
