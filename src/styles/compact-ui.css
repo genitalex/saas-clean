@@ -1,0 +1,29 @@
+/*
+ * Compact UI pass
+ * Keeps the existing visual system, but brings the common controls back to
+ * the compact scale used by "Nueva tarea".
+ */
+
+:root {
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+}
+
+/* Primary/green action buttons: compact, like the existing "Nueva tarea"
+   control. Icon-only primary buttons keep their square size. */
+[data-slot='button'].bg-primary:not(.size-6):not(.size-7):not(.size-9):not(.size-11) {
+  height: 1.75rem !important;
+  min-height: 1.75rem;
+  gap: 0.25rem;
+  padding-inline: 0.75rem !important;
+  border-radius: 0.625rem;
+  font-size: 0.8rem !important;
+  line-height: 1.1;
+}
+
+[data-slot='button'].bg-primary:not(.size-6):not(.size-7):not(.size-9):not(.size-11) svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}

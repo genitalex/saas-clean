@@ -14,17 +14,17 @@ export type SegmentedToggleProps = Readonly<
 
 const offsetClasses = [
   'translate-x-0',
-  'translate-x-[calc(100%+0.25rem)]',
-  'translate-x-[calc(200%+0.5rem)]',
-  'translate-x-[calc(300%+0.75rem)]',
-  'translate-x-[calc(400%+1rem)]'
+  'translate-x-[calc(100%+0.125rem)]',
+  'translate-x-[calc(200%+0.25rem)]',
+  'translate-x-[calc(300%+0.375rem)]',
+  'translate-x-[calc(400%+0.5rem)]'
 ];
 
 function widthClass(count: number) {
-  if (count <= 2) return 'w-[calc((100%-0.75rem)/2)]';
-  if (count === 3) return 'w-[calc((100%-1rem)/3)]';
-  if (count === 4) return 'w-[calc((100%-1.25rem)/4)]';
-  return 'w-[calc((100%-1.5rem)/5)]';
+  if (count <= 2) return 'w-[calc((100%-0.375rem)/2)]';
+  if (count === 3) return 'w-[calc((100%-0.5rem)/3)]';
+  if (count === 4) return 'w-[calc((100%-0.625rem)/4)]';
+  return 'w-[calc((100%-0.75rem)/5)]';
 }
 
 export function SegmentedToggle({
@@ -50,8 +50,8 @@ export function SegmentedToggle({
       role='tablist'
       aria-label='Selector'
       className={cn(
-        'relative inline-grid w-fit gap-1 rounded-xl bg-muted/80 p-1 text-sm font-medium select-none',
-        'shadow-[inset_0_1px_2px_rgba(0,0,0,0.07),inset_0_0_0_1px_rgba(255,255,255,0.5)]',
+        'relative inline-grid w-fit gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none',
+        'shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)]',
         count === 2
           ? 'grid-cols-2'
           : count === 3
@@ -66,15 +66,15 @@ export function SegmentedToggle({
       <span
         aria-hidden
         className={cn(
-          'pointer-events-none absolute top-1 bottom-1 left-1 rounded-lg bg-card',
-          'shadow-[0_2px_5px_rgba(0,0,0,0.10),0_1px_1px_rgba(0,0,0,0.05)]',
-          'transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+          'pointer-events-none absolute top-0.5 bottom-0.5 left-0.5 rounded-[8px] bg-card',
+          'shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)]',
+          'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
           widthClass(count),
           offsetClasses[Math.min(activeIndex, count - 1)]
         )}
       />
 
-      {options.slice(0, 5).map((option, index) => (
+      {options.slice(0, 5).map((option) => (
         <button
           key={option}
           type='button'
@@ -83,8 +83,8 @@ export function SegmentedToggle({
           tabIndex={activeValue === option ? 0 : -1}
           onClick={() => select(option)}
           className={cn(
-            'relative z-10 min-w-20 cursor-pointer rounded-lg px-3.5 py-2 text-center whitespace-nowrap',
-            'transition-colors duration-300 motion-reduce:transition-none outline-none',
+            'relative z-10 min-w-16 cursor-pointer rounded-[8px] px-2.5 py-1.5 text-center text-xs whitespace-nowrap',
+            'transition-colors duration-200 motion-reduce:transition-none outline-none',
             activeValue === option
               ? 'text-foreground'
               : 'text-muted-foreground hover:text-foreground'
