@@ -220,10 +220,6 @@ function OpportunityCard({
                 style={{ width: `${probability}%` }}
               />
             </div>
-            <div
-              className='pointer-events-none absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm ring-2 ring-background transition-[left] duration-100 ease-out'
-              style={{ left: `${probability}%` }}
-            />
             <input
               aria-label={`Probabilidad de cierre: ${probability}%`}
               type='range'
