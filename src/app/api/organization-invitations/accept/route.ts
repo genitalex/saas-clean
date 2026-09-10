@@ -8,10 +8,9 @@ import {
   organizationInvitations,
   organizationMembers,
   organizations,
-  sessions,
-  users
+  sessions
 } from '@/lib/db/schema';
-import { notifyOrganizationMembers } from '@/features/automations/api/service';
+import { createNotification } from '@/features/automations/api/service';
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
@@ -104,15 +103,26 @@ export async function POST(request: NextRequest) {
   if (result.error) return NextResponse.json({ error: result.error }, { status: 409 });
 
   try {
-    await notifyOrganizationMembers(result.organizationId, session.user.id, {
-      type: 'team_member_joined',
-      title: 'Nuevo miembro en el equipo',
-      message: `${session.user.name} se ha unido al espacio.`,
-      refEntityType: null,
-      refEntityId: null
-    });
+    const [owner] = await db
+      .select({ userId: organizationMembers.userId })
+      .from(organizationMembers)
+      .where(
+        and(
+          eq(organizationMembers.organizationId, result.organizationId),
+          eq(organizationMembers.role, 'owner')
+        )
+      )
+      .limit(1);
+    if (owner && owner.userId !== session.user.id) {
+      await createNotification(result.organizationId, owner.userId, {
+        type: 'event_important',
+        title: 'Nuevo miembro en el equipo',
+        message: `${session.user.name || session.user.email} se ha unido al espacio.`,
+        refEntityType: 'team'
+      });
+    }
   } catch (error) {
-    console.error('[organization-invitations:notify-joined]', error);
+    console.error('[notifications:team-member-joined]', error);
   }
 
   return NextResponse.json({ organizationId: result.organizationId });

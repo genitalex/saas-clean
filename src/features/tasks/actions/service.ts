@@ -23,7 +23,7 @@ import type {
 } from '../types';
 import { recordSystemActivity } from '@/features/activities/actions/service';
 import { executeAutomationsForTaskCompletion } from '@/features/automations/services/execution';
-import { notifyOrganizationMembers } from '@/features/automations/api/service';
+import { createNotification } from '@/features/automations/api/service';
 
 export class TaskServiceError extends Error {
   constructor(
@@ -236,17 +236,21 @@ export async function createTask(input: TaskPayload) {
       { taskId: created.id },
       parsed.data.eventId
     );
-  await recordTaskHistory(created.id, 'created', 'Tarea creada');
   if (parsed.data.assigneeId && parsed.data.assigneeId !== user.id) {
-    await notifyOrganizationMembers(organization.id, user.id, {
-      type: 'task_assigned',
-      title: `${user.name} te ha asignado una tarea`,
-      message: `“${parsed.data.title}”`,
-      refEntityType: 'task',
-      refEntityId: created.id,
-      userIds: [parsed.data.assigneeId]
-    });
+    try {
+      await createNotification(organization.id, parsed.data.assigneeId, {
+        type: 'task_assigned',
+        title: `${user.name} te ha asignado una tarea`,
+        message: `“${parsed.data.title}” está ahora a tu cargo.`,
+        refEntityType: 'task',
+        refEntityId: created.id
+      });
+    } catch (error) {
+      console.error('[notifications:task-created-assigned]', error);
+    }
   }
+
+  await recordTaskHistory(created.id, 'created', 'Tarea creada');
   if (parsed.data.parentTaskId)
     await recordTaskHistory(
       parsed.data.parentTaskId,
@@ -325,6 +329,25 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
     .where(and(eq(tasks.id, id), eq(tasks.organizationId, organization.id)))
     .returning({ id: tasks.id });
   if (!updated) throw new TaskServiceError('Task not found', 'NOT_FOUND');
+  if (
+    parsed.data.assigneeId !== undefined &&
+    parsed.data.assigneeId !== previous.assigneeId &&
+    parsed.data.assigneeId &&
+    parsed.data.assigneeId !== user.id
+  ) {
+    try {
+      await createNotification(organization.id, parsed.data.assigneeId, {
+        type: 'task_assigned',
+        title: `${user.name} te ha asignado una tarea`,
+        message: `“${previous.title}” está ahora a tu cargo.`,
+        refEntityType: 'task',
+        refEntityId: id
+      });
+    } catch (error) {
+      console.error('[notifications:task-assigned]', error);
+    }
+  }
+
   if (linkedEvent && nextDueAt) {
     const durationMs = linkedEvent.endAt.getTime() - linkedEvent.startAt.getTime();
     await db
@@ -362,9 +385,8 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
     const labels = { todo: 'Todo', in_progress: 'En curso', waiting: 'Esperando', done: 'Hecha' };
     await recordTaskHistory(id, 'status_changed', `Pasó a “${labels[parsed.data.status]}”`);
 
-    const recipients = new Set<string>();
-    const [owners] = await Promise.all([
-      db
+    try {
+      const ownerRows = await db
         .select({ userId: organizationMembers.userId })
         .from(organizationMembers)
         .where(
@@ -372,39 +394,25 @@ export async function updateTask(id: string, input: TaskUpdatePayload) {
             eq(organizationMembers.organizationId, organization.id),
             eq(organizationMembers.role, 'owner')
           )
+        );
+      const recipients = new Set<string>();
+      if (previous.assigneeId) recipients.add(previous.assigneeId);
+      for (const owner of ownerRows) recipients.add(owner.userId);
+      recipients.delete(user.id);
+      await Promise.all(
+        Array.from(recipients).map((recipientId) =>
+          createNotification(organization.id, recipientId, {
+            type: 'automation_executed',
+            title: `${user.name} ha movido una tarea`,
+            message: `“${previous.title}” ha pasado a ${labels[parsed.data.status].toLowerCase()}.`,
+            refEntityType: 'task',
+            refEntityId: id
+          })
         )
-    ]);
-    for (const owner of owners) recipients.add(owner.userId);
-    if (previous.assigneeId) recipients.add(previous.assigneeId);
-    if (parsed.data.assigneeId) recipients.add(parsed.data.assigneeId);
-
-    await notifyOrganizationMembers(organization.id, user.id, {
-      type: 'task_status_changed',
-      title:
-        parsed.data.status === 'done'
-          ? `${user.name} ha completado una tarea`
-          : `${user.name} ha movido una tarea`,
-      message: `“${previous.title}” → ${labels[parsed.data.status]}`,
-      refEntityType: 'task',
-      refEntityId: id,
-      userIds: Array.from(recipients)
-    });
-  }
-
-  if (
-    parsed.data.assigneeId !== undefined &&
-    parsed.data.assigneeId !== previous.assigneeId &&
-    parsed.data.assigneeId &&
-    parsed.data.assigneeId !== user.id
-  ) {
-    await notifyOrganizationMembers(organization.id, user.id, {
-      type: 'task_assigned',
-      title: `${user.name} te ha asignado una tarea`,
-      message: `“${previous.title}”`,
-      refEntityType: 'task',
-      refEntityId: id,
-      userIds: [parsed.data.assigneeId]
-    });
+      );
+    } catch (error) {
+      console.error('[notifications:task-status]', error);
+    }
   }
   if (parsed.data.waitingOn !== undefined && parsed.data.waitingOn !== previous.waitingOn) {
     await recordTaskHistory(

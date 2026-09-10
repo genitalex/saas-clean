@@ -3,11 +3,15 @@
  * These functions call the API routes to perform mutations
  */
 
-export async function markNotificationAsRead(notificationId: string): Promise<void> {
+export async function markNotificationAsRead(
+  notificationId: string,
+  organizationId: string,
+  userId: string
+): Promise<void> {
   const response = await fetch('/api/automations/notifications', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'mark-as-read', notificationId })
+    body: JSON.stringify({ action: 'mark-as-read', notificationId, organizationId, userId })
   });
 
   if (!response.ok) {
@@ -25,11 +29,15 @@ export async function createAutomation(payload: import('../types').AutomationPay
   return response.json();
 }
 
-export async function deleteNotification(notificationId: string): Promise<void> {
+export async function deleteNotification(
+  notificationId: string,
+  organizationId: string,
+  userId: string
+): Promise<void> {
   const response = await fetch('/api/automations/notifications', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'delete', notificationId })
+    body: JSON.stringify({ action: 'delete', notificationId, organizationId, userId })
   });
 
   if (!response.ok) {
