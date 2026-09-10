@@ -55,6 +55,8 @@ type OpportunityStage = (typeof stages)[number];
 type OpportunityColumns = Record<OpportunityStage, Opportunity[]>;
 const OPPORTUNITY_TRASH_ID = 'opportunity-trash';
 const EMPTY_OPPORTUNITIES: Opportunity[] = [];
+type OpportunityCustomer = { id: string; name: string };
+const NEW_CUSTOMER_VALUE = '__new_customer__';
 
 const money = (value: number) =>
   new Intl.NumberFormat('es-ES', {
@@ -113,13 +115,11 @@ function OpportunityDragPreview({ opportunity }: { opportunity: Opportunity }) {
 function OpportunityCard({
   opportunity,
   onOpen,
-  onMove,
   suppressClickRef,
   presentationOnly = false
 }: {
   opportunity: Opportunity;
   onOpen?: () => void;
-  onMove: (id: string, stage: string) => void;
   suppressClickRef?: React.MutableRefObject<boolean>;
   presentationOnly?: boolean;
 }) {
@@ -160,21 +160,6 @@ function OpportunityCard({
           <span>{opportunity.owner}</span>
           <span>Cierra {opportunity.close}</span>
         </div>
-        <NativeSelect
-          aria-label='Mover etapa'
-          value={toDisplayStage(opportunity.stage) ?? 'Contactado'}
-          onChange={(event) => {
-            event.stopPropagation();
-            onMove(opportunity.id, event.target.value);
-          }}
-          onClick={(event) => event.stopPropagation()}
-        >
-          {stages.map((option) => (
-            <NativeSelectOption key={option} value={option}>
-              {option}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
       </CardContent>
     </Card>
   );
@@ -184,13 +169,11 @@ function OpportunityColumn({
   stage,
   opportunities,
   onOpen,
-  onMove,
   suppressClickRef
 }: {
   stage: OpportunityStage;
   opportunities: Opportunity[];
   onOpen: (opportunityId: string) => void;
-  onMove: (id: string, stage: string) => void;
   suppressClickRef: React.MutableRefObject<boolean>;
 }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -219,7 +202,6 @@ function OpportunityColumn({
               key={opportunity.id}
               opportunity={opportunity}
               onOpen={() => onOpen(opportunity.id)}
-              onMove={onMove}
               suppressClickRef={suppressClickRef}
             />
           ))}
@@ -304,9 +286,22 @@ export function OpportunitiesPage({
     refetchOnWindowFocus: false
   });
   const opportunities = opportunityData ?? EMPTY_OPPORTUNITIES;
+  const { data: customerData = [] } = useQuery<OpportunityCustomer[]>({
+    queryKey: ['opportunities-customers'],
+    queryFn: async () => {
+      const response = await fetch('/api/customers', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Customers request failed');
+      return response.json() as Promise<OpportunityCustomer[]>;
+    },
+    staleTime: 30_000
+  });
   const [columns, setColumns] = React.useState<OpportunityColumns>(() => toColumns(opportunities));
   const [createOpen, setCreateOpen] = useState(Boolean(initialCreate));
   const [newTitle, setNewTitle] = useState('');
+  const [customerMode, setCustomerMode] = useState<'existing' | 'new'>(
+    customerData.length ? 'existing' : 'new'
+  );
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [newCustomer, setNewCustomer] = useState('');
   const [newValue, setNewValue] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -325,6 +320,12 @@ export function OpportunitiesPage({
     columnsRef.current = next;
     setColumns(next);
   }, [opportunities]);
+
+  React.useEffect(() => {
+    if (customerData.length > 0 && customerMode === 'new' && !newCustomer.trim()) {
+      setCustomerMode('existing');
+    }
+  }, [customerData.length, customerMode, newCustomer]);
 
   React.useEffect(() => {
     columnsRef.current = columns;
@@ -356,11 +357,15 @@ export function OpportunitiesPage({
 
   const handleCreateOpportunity = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newTitle.trim() || !newCustomer.trim()) return;
+    const customerName =
+      customerMode === 'existing'
+        ? (customerData.find((customer) => customer.id === selectedCustomerId)?.name ?? '')
+        : newCustomer.trim();
+    if (!newTitle.trim() || !customerName) return;
     try {
       await createOpportunity({
         title: newTitle.trim(),
-        customer: newCustomer.trim(),
+        customer: customerName,
         value: Number(newValue) || 0,
         probability: 20,
         stage: 'Contactado',
@@ -370,6 +375,8 @@ export function OpportunitiesPage({
       await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
       await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
       setNewTitle('');
+      setCustomerMode(customerData.length ? 'existing' : 'new');
+      setSelectedCustomerId('');
       setNewCustomer('');
       setNewValue('');
       setCreateOpen(false);
@@ -546,11 +553,47 @@ export function OpportunitiesPage({
               value={newTitle}
               onChange={(event) => setNewTitle(event.target.value)}
             />
-            <Input
-              placeholder='Cliente'
-              value={newCustomer}
-              onChange={(event) => setNewCustomer(event.target.value)}
-            />
+            {customerData.length > 0 ? (
+              <div className='space-y-2'>
+                <NativeSelect
+                  aria-label='Cliente'
+                  value={customerMode === 'new' ? NEW_CUSTOMER_VALUE : selectedCustomerId}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    if (value === NEW_CUSTOMER_VALUE) {
+                      setCustomerMode('new');
+                      setSelectedCustomerId('');
+                      return;
+                    }
+                    setCustomerMode('existing');
+                    setSelectedCustomerId(value);
+                    setNewCustomer('');
+                  }}
+                >
+                  <NativeSelectOption value=''>Seleccionar cliente existente</NativeSelectOption>
+                  {customerData.map((customer) => (
+                    <NativeSelectOption key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </NativeSelectOption>
+                  ))}
+                  <NativeSelectOption value={NEW_CUSTOMER_VALUE}>Otro cliente…</NativeSelectOption>
+                </NativeSelect>
+                {customerMode === 'new' ? (
+                  <Input
+                    autoFocus
+                    placeholder='Nombre del cliente'
+                    value={newCustomer}
+                    onChange={(event) => setNewCustomer(event.target.value)}
+                  />
+                ) : null}
+              </div>
+            ) : (
+              <Input
+                placeholder='Nombre del cliente'
+                value={newCustomer}
+                onChange={(event) => setNewCustomer(event.target.value)}
+              />
+            )}
             <Input
               type='number'
               min='0'
@@ -562,7 +605,13 @@ export function OpportunitiesPage({
               <Button type='button' variant='outline' onClick={() => setCreateOpen(false)}>
                 Cancelar
               </Button>
-              <Button type='submit' disabled={!newTitle.trim() || !newCustomer.trim()}>
+              <Button
+                type='submit'
+                disabled={
+                  !newTitle.trim() ||
+                  (customerMode === 'existing' ? !selectedCustomerId : !newCustomer.trim())
+                }
+              >
                 Crear oportunidad
               </Button>
             </div>
@@ -597,7 +646,6 @@ export function OpportunitiesPage({
                   stage={stage}
                   opportunities={visibleColumns[stage]}
                   onOpen={setSelectedId}
-                  onMove={move}
                   suppressClickRef={suppressClickRef}
                 />
               ))}
