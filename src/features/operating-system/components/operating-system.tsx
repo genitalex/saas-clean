@@ -103,14 +103,24 @@ function OpportunityDragPreview({ opportunity }: { opportunity: Opportunity }) {
           <span className='text-lg font-semibold'>{money(opportunity.value)}</span>
           <div className='mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground'>
             <span>Probabilidad de cierre</span>
-            <span className='font-medium text-foreground'>{opportunity.probability}%</span>
+            <span className='rounded-full bg-primary/[0.08] px-2 py-0.5 text-[11px] font-semibold text-primary'>
+              {opportunity.probability}%
+            </span>
           </div>
         </div>
-        <Progress
-          value={opportunity.probability}
-          className='h-1.5'
+        <div
+          className='mt-3 h-2 overflow-hidden rounded-full bg-primary/[0.08] ring-1 ring-inset ring-primary/10'
+          role='progressbar'
           aria-label={`Probabilidad de cierre: ${opportunity.probability}%`}
-        />
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={opportunity.probability}
+        >
+          <div
+            className='h-full rounded-full bg-primary transition-[width] duration-300 ease-out'
+            style={{ width: `${opportunity.probability}%` }}
+          />
+        </div>
         <div className='flex justify-between text-xs text-muted-foreground'>
           <span>{opportunity.owner}</span>
           <span>Cierra {opportunity.close}</span>
@@ -163,14 +173,24 @@ function OpportunityCard({
           <span className='text-lg font-semibold'>{money(opportunity.value)}</span>
           <div className='mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground'>
             <span>Probabilidad de cierre</span>
-            <span className='font-medium text-foreground'>{opportunity.probability}%</span>
+            <span className='rounded-full bg-primary/[0.08] px-2 py-0.5 text-[11px] font-semibold text-primary'>
+              {opportunity.probability}%
+            </span>
           </div>
         </div>
-        <Progress
-          value={opportunity.probability}
-          className='h-1.5'
+        <div
+          className='mt-3 h-2 overflow-hidden rounded-full bg-primary/[0.08] ring-1 ring-inset ring-primary/10'
+          role='progressbar'
           aria-label={`Probabilidad de cierre: ${opportunity.probability}%`}
-        />
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={opportunity.probability}
+        >
+          <div
+            className='h-full rounded-full bg-primary transition-[width] duration-300 ease-out'
+            style={{ width: `${opportunity.probability}%` }}
+          />
+        </div>
         <div className='flex justify-between text-xs text-muted-foreground'>
           <span>{opportunity.owner}</span>
           <span>Cierra {opportunity.close}</span>
@@ -738,10 +758,10 @@ function OpportunityDetail({
   const [savingProbability, setSavingProbability] = useState(false);
 
   React.useEffect(() => {
-    setProbability(opportunity.stage === 'Ganado' ? 100 : opportunity.probability);
+    setProbability(opportunity.probability);
   }, [opportunity.id, opportunity.probability, opportunity.stage]);
 
-  const effectiveProbability = opportunity.stage === 'Ganado' ? 100 : probability;
+  const effectiveProbability = probability;
 
   return (
     <main className='flex flex-1 flex-col gap-6 py-2'>
@@ -765,7 +785,7 @@ function OpportunityDetail({
             <p className='mt-1 font-semibold'>{money(opportunity.value)}</p>
           </CardContent>
         </Card>
-        <Card className='sm:col-span-2'>
+        <Card className='sm:col-span-2 border-primary/15 bg-primary/[0.02]'>
           <CardContent className='p-4'>
             <div className='flex items-center justify-between gap-3'>
               <div>
@@ -776,6 +796,12 @@ function OpportunityDetail({
               </div>
               <span className='text-lg font-semibold'>{effectiveProbability}%</span>
             </div>
+            <div className='mt-4 h-2 overflow-hidden rounded-full bg-primary/[0.08] ring-1 ring-inset ring-primary/10'>
+              <div
+                className='h-full rounded-full bg-primary transition-[width] duration-200 ease-out'
+                style={{ width: `${effectiveProbability}%` }}
+              />
+            </div>
             <input
               aria-label='Probabilidad de cierre'
               type='range'
@@ -785,18 +811,14 @@ function OpportunityDetail({
               value={effectiveProbability}
               onChange={(event) => setProbability(Number(event.target.value))}
               className='mt-3 w-full accent-primary'
-              disabled={savingProbability || opportunity.stage === 'Ganado'}
+              disabled={savingProbability}
             />
             <div className='mt-2 flex justify-end'>
               <Button
                 type='button'
                 variant='secondary'
                 size='sm'
-                disabled={
-                  savingProbability ||
-                  opportunity.stage === 'Ganado' ||
-                  probability === opportunity.probability
-                }
+                disabled={savingProbability || probability === opportunity.probability}
                 onClick={async () => {
                   setSavingProbability(true);
                   try {
