@@ -1,13 +1,13 @@
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import PageContainer from '@/components/layout/page-container';
 import { authClient } from '@/lib/auth-client';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 function useOrganizationContext() {
@@ -17,9 +17,6 @@ function useOrganizationContext() {
       name: string;
       plan: 'solo' | 'team';
       seatLimit: number;
-      industry: string | null;
-      teamSize: number | null;
-      mainUseCase: string | null;
       memberCount: number;
     };
     user: { id: string; role: 'owner' | 'member' };
@@ -40,56 +37,51 @@ export default function ProfileViewPage() {
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
 
-  if (isPending) return <div className='bg-muted m-4 h-64 animate-pulse rounded-xl' />;
-  if (!session) return <p className='text-destructive p-6'>No se pudo cargar tu perfil.</p>;
+  if (isPending)
+    return (
+      <div className='bg-muted mx-auto my-6 h-64 w-full max-w-[var(--page-max-width)] animate-pulse rounded-xl' />
+    );
+  if (!session) return <p className='text-destructive px-4 py-6'>No se pudo cargar tu perfil.</p>;
 
   async function saveProfile() {
     setSaving(true);
-    const result = await authClient.updateUser({ name: name.trim() || session.user.name });
-    setSaving(false);
-
-    if (result.error) {
-      toast.error(result.error.message || 'No se pudo actualizar el perfil');
-      return;
+    try {
+      const result = await authClient.updateUser({
+        name: name.trim() || session.user.name
+      });
+      if (result.error) toast.error(result.error.message || 'No se pudo actualizar el perfil');
+      else toast.success('Perfil actualizado');
+    } finally {
+      setSaving(false);
     }
-
-    toast.success('Perfil actualizado');
   }
 
   const roleLabel = context?.user.role === 'owner' ? 'Propietario' : 'Empleado';
   const planLabel = context?.organization.plan === 'team' ? 'Equipo' : 'Autónomo';
   const isOwner = context?.user.role === 'owner';
-  const isTeam = context?.organization.plan === 'team';
+  const organization = context?.organization;
 
   return (
-    <main className='flex min-w-0 flex-1 flex-col gap-5 py-2 pb-20 md:pb-4'>
-      <div className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
-        <div className='min-w-0'>
-          <h1 className='text-2xl font-semibold tracking-tight'>Perfil</h1>
-          <p className='text-muted-foreground mt-1 text-sm'>
-            Tu cuenta y tus preferencias personales.
-          </p>
-        </div>
-        <Button
-          className='w-full sm:w-auto'
-          variant='outline'
-          size='sm'
-          onClick={saveProfile}
-          disabled={saving}
-        >
+    <PageContainer
+      pageTitle='Perfil'
+      pageDescription='Tu cuenta y tus preferencias personales.'
+      pageHeaderAction={
+        <Button variant='outline' size='sm' onClick={saveProfile} disabled={saving}>
           {saving ? 'Guardando…' : 'Guardar cambios'}
         </Button>
-      </div>
-
-      <div className='grid min-w-0 gap-4 xl:grid-cols-[1.1fr_0.9fr]'>
+      }
+    >
+      <div className='grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]'>
         <Card className='min-w-0'>
           <CardHeader>
-            <div className='flex flex-wrap items-start justify-between gap-3'>
+            <div className='flex min-w-0 items-start justify-between gap-3'>
               <div className='min-w-0'>
                 <CardDescription>Cuenta</CardDescription>
                 <CardTitle>Tu identidad</CardTitle>
               </div>
-              <Badge variant='secondary'>Activa</Badge>
+              <Badge variant='secondary' className='shrink-0'>
+                Activa
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className='space-y-4'>
@@ -128,45 +120,45 @@ export default function ProfileViewPage() {
         <Card className='min-w-0'>
           <CardHeader>
             <CardDescription>Espacio de trabajo</CardDescription>
-            <CardTitle className='truncate'>{context?.organization.name ?? 'Mi espacio'}</CardTitle>
+            <CardTitle className='truncate'>{organization?.name ?? 'Mi espacio'}</CardTitle>
           </CardHeader>
           <CardContent className='space-y-3'>
-            <div className='flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 p-3'>
+            <div className='flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <span className='text-muted-foreground text-sm'>Rol</span>
-              <strong className='text-right text-sm'>{roleLabel}</strong>
+              <strong className='shrink-0 text-sm'>{roleLabel}</strong>
             </div>
-            <div className='flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 p-3'>
+            <div className='flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <span className='text-muted-foreground text-sm'>Plan</span>
-              <strong className='text-right text-sm'>{planLabel}</strong>
+              <strong className='shrink-0 text-sm'>{planLabel}</strong>
             </div>
-            <div className='flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 p-3'>
+            <div className='flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <span className='text-muted-foreground text-sm'>Miembros</span>
-              <strong className='text-right text-sm'>
-                {context?.organization.memberCount ?? 1}/{context?.organization.seatLimit ?? 1}
+              <strong className='shrink-0 text-sm'>
+                {organization?.memberCount ?? 1}/{organization?.seatLimit ?? 1}
               </strong>
             </div>
           </CardContent>
         </Card>
 
-        <Card className='min-w-0 xl:col-span-2'>
+        <Card className='min-w-0 lg:col-span-2'>
           <CardHeader>
             <CardDescription>Preferencias personales</CardDescription>
             <CardTitle>Cómo quieres trabajar</CardTitle>
           </CardHeader>
-          <CardContent className='grid gap-3 md:grid-cols-3'>
-            <div className='rounded-2xl border border-border/60 bg-background/60 p-3'>
+          <CardContent className='grid min-w-0 gap-3 md:grid-cols-3'>
+            <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <p className='text-sm font-medium'>Notificaciones</p>
               <p className='text-muted-foreground mt-1 text-xs'>
                 Controla tus avisos y recordatorios.
               </p>
             </div>
-            <div className='rounded-2xl border border-border/60 bg-background/60 p-3'>
+            <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <p className='text-sm font-medium'>Apariencia</p>
               <p className='text-muted-foreground mt-1 text-xs'>
                 Tema, densidad y preferencias visuales.
               </p>
             </div>
-            <div className='rounded-2xl border border-border/60 bg-background/60 p-3'>
+            <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-3'>
               <p className='text-sm font-medium'>Acceso</p>
               <p className='text-muted-foreground mt-1 text-xs'>
                 Contraseña y sesiones de tu cuenta.
@@ -175,35 +167,34 @@ export default function ProfileViewPage() {
           </CardContent>
         </Card>
 
-        {isOwner && isTeam && (
-          <Card className='min-w-0 xl:col-span-2'>
+        {isOwner && organization?.plan === 'team' && (
+          <Card className='min-w-0 lg:col-span-2'>
             <CardHeader>
               <CardDescription>Organización</CardDescription>
               <CardTitle>Equipo</CardTitle>
             </CardHeader>
-            <CardContent className='grid gap-3 md:grid-cols-2'>
-              <div className='rounded-2xl border border-border/60 bg-background/60 p-4'>
+            <CardContent className='grid min-w-0 gap-3 md:grid-cols-2'>
+              <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-4'>
                 <p className='text-sm font-medium'>Equipo y usuarios</p>
                 <p className='text-muted-foreground mt-1 text-xs'>
-                  Gestiona quién forma parte del espacio y consulta su trabajo.
+                  Gestiona quién forma parte del espacio y su trabajo.
                 </p>
-                <Button asChild className='mt-3 w-full sm:w-auto' variant='outline' size='sm'>
-                  <Link href='/dashboard/team'>Gestionar equipo</Link>
+                <Button className='mt-3' variant='outline' size='sm' asChild>
+                  <a href='/dashboard/team'>Gestionar equipo</a>
                 </Button>
               </div>
-              <div className='rounded-2xl border border-border/60 bg-background/60 p-4'>
+              <div className='min-w-0 rounded-2xl border border-border/60 bg-background/60 p-4'>
                 <p className='text-sm font-medium'>Capacidad</p>
                 <p className='text-muted-foreground mt-1 text-xs'>
-                  Tienes {context?.organization.memberCount ?? 0} de{' '}
-                  {context?.organization.seatLimit ?? 0} plazas ocupadas.
+                  Tienes {organization.memberCount} de {organization.seatLimit} plazas ocupadas.
                 </p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {isOwner && !isTeam && (
-          <Card className='min-w-0 xl:col-span-2'>
+        {isOwner && organization?.plan === 'solo' && (
+          <Card className='min-w-0 lg:col-span-2'>
             <CardHeader>
               <CardDescription>Organización</CardDescription>
               <CardTitle>Plan Autónomo</CardTitle>
@@ -211,12 +202,13 @@ export default function ProfileViewPage() {
             <CardContent>
               <p className='text-muted-foreground text-sm'>
                 Este espacio está configurado para una sola persona. Cuando quieras trabajar con
-                empleados, podrás pasar a un plan de Equipo sin cambiar tu forma de trabajar.
+                empleados, el espacio podrá pasar a un plan de Equipo sin cambiar tu forma de
+                trabajar.
               </p>
             </CardContent>
           </Card>
         )}
       </div>
-    </main>
+    </PageContainer>
   );
 }

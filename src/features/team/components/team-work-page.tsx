@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import { getEvents, eventKeys } from '@/features/calendar/queries';
@@ -38,7 +38,7 @@ export default function TeamWorkPage({
   seatLimit: number;
 }) {
   const queryClient = useQueryClient();
-  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [inviteUrl, setInviteUrl] = useState('');
   const [inviteError, setInviteError] = useState('');
@@ -48,10 +48,18 @@ export default function TeamWorkPage({
   const { data: members = [] } = useQuery<TeamMember[]>({
     queryKey: ['organization-members', organizationId],
     queryFn: async () => {
-      const response = await fetch('/api/organization-members');
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'MEMBERS_REQUEST_FAILED');
-      return Array.isArray(data) ? data.filter(Boolean) : [];
+      const response = await fetch('/api/organization-members', { cache: 'no-store' });
+      const data: unknown = await response.json();
+      if (!response.ok) throw new Error('MEMBERS_REQUEST_FAILED');
+      return Array.isArray(data)
+        ? data.filter(
+            (item): item is TeamMember =>
+              !!item &&
+              typeof item === 'object' &&
+              typeof (item as TeamMember).id === 'string' &&
+              typeof (item as TeamMember).name === 'string'
+          )
+        : [];
     },
     staleTime: 30_000
   });
@@ -59,23 +67,31 @@ export default function TeamWorkPage({
   const { data: invitations = [] } = useQuery<Invitation[]>({
     queryKey: ['organization-invitations', organizationId],
     queryFn: async () => {
-      const response = await fetch('/api/organization-invitations');
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'INVITATIONS_REQUEST_FAILED');
-      return Array.isArray(data) ? data.filter(Boolean) : [];
+      const response = await fetch('/api/organization-invitations', { cache: 'no-store' });
+      const data: unknown = await response.json();
+      if (!response.ok) throw new Error('INVITATIONS_REQUEST_FAILED');
+      return Array.isArray(data)
+        ? data.filter(
+            (item): item is Invitation =>
+              !!item &&
+              typeof item === 'object' &&
+              typeof (item as Invitation).id === 'string' &&
+              typeof (item as Invitation).email === 'string'
+          )
+        : [];
     },
     staleTime: 30_000
   });
 
   const { data: tasks = [] } = useQuery({
-    queryKey: ['team-work', organizationId, ...taskKeys.list()],
+    queryKey: ['team-work-tasks', organizationId, ...taskKeys.list()],
     queryFn: () => getTasks(),
     staleTime: 30_000
   });
 
   const { data: events = [] } = useQuery({
     queryKey: [
-      'team-work',
+      'team-work-events',
       organizationId,
       ...eventKeys.list({
         startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -93,53 +109,56 @@ export default function TeamWorkPage({
   const membersWithWork = useMemo(() => {
     const map = new Map<
       string,
-      { member: TeamMember; tasks: typeof tasks; events: typeof events }
+      {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        tasks: typeof tasks;
+        events: typeof events;
+      }
     >();
+
     for (const member of members) {
-      if (!member?.id) continue;
-      map.set(member.id, { member, tasks: [], events: [] });
+      map.set(member.id, { ...member, tasks: [], events: [] });
     }
 
     for (const task of tasks) {
-      if (task?.assignee?.id && map.has(task.assignee.id))
-        map.get(task.assignee.id)!.tasks.push(task);
+      const assigneeId = task?.assignee?.id;
+      if (typeof assigneeId === 'string') map.get(assigneeId)?.tasks.push(task);
     }
+
     for (const event of events) {
-      if (event?.assignee?.id && map.has(event.assignee.id))
-        map.get(event.assignee.id)!.events.push(event);
+      const assigneeId = event?.assignee?.id;
+      if (typeof assigneeId === 'string') map.get(assigneeId)?.events.push(event);
     }
 
     return Array.from(map.values())
-      .map(({ member, tasks, events }) => {
-        const activeTasks = tasks.filter((task) => task.status !== 'done');
+      .map((member) => {
+        const activeTasks = member.tasks.filter((task) => task.status !== 'done');
         const overdue = activeTasks.filter(
-          (task) => task.dueAt && new Date(task.dueAt) < new Date()
+          (task) => !!task.dueAt && new Date(task.dueAt) < new Date()
         ).length;
-        const today = activeTasks.filter((task) =>
-          task.dueAt ? new Date(task.dueAt).toDateString() === new Date().toDateString() : false
+        const todayKey = new Date().toDateString();
+        const today = activeTasks.filter(
+          (task) => !!task.dueAt && new Date(task.dueAt).toDateString() === todayKey
         ).length;
         const blocked = activeTasks.filter((task) => task.status === 'waiting').length;
         return {
           ...member,
-          tasks,
-          events,
           taskCount: activeTasks.length,
           overdue,
           today,
-          blocked,
-          urgentCount: activeTasks.filter((task) => task.priority === 'high').length
+          blocked
         };
       })
-      .sort((a, b) => b.taskCount - a.taskCount || a.member.name.localeCompare(b.member.name));
+      .sort((a, b) => b.taskCount - a.taskCount || a.name.localeCompare(b.name));
   }, [members, tasks, events]);
 
-  const activeMember = useMemo(
-    () =>
-      membersWithWork.find((item) => item?.member?.id === selectedMember) ??
-      membersWithWork.find(Boolean) ??
-      null,
-    [membersWithWork, selectedMember]
-  );
+  const activeMember = useMemo(() => {
+    if (!membersWithWork.length) return null;
+    return membersWithWork.find((member) => member.id === selectedMemberId) ?? membersWithWork[0];
+  }, [membersWithWork, selectedMemberId]);
 
   async function invite() {
     setInvitePending(true);
@@ -158,7 +177,7 @@ export default function TeamWorkPage({
         return;
       }
       setEmail('');
-      setInviteUrl(data.inviteUrl);
+      setInviteUrl(data.inviteUrl ?? '');
       await queryClient.invalidateQueries({
         queryKey: ['organization-invitations', organizationId]
       });
@@ -180,9 +199,9 @@ export default function TeamWorkPage({
 
   return (
     <div className='space-y-5'>
-      <div className='rounded-[22px] border border-border/60 bg-card/60 p-5'>
+      <div className='rounded-[22px] border border-border/60 bg-card/60 p-4 sm:p-5'>
         <div className='flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between'>
-          <div>
+          <div className='min-w-0'>
             <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
               Equipo
             </p>
@@ -191,7 +210,7 @@ export default function TeamWorkPage({
               Comparte un enlace de acceso. La invitación reserva una plaza durante 7 días.
             </p>
           </div>
-          <div className='text-sm text-muted-foreground'>
+          <div className='shrink-0 text-sm text-muted-foreground'>
             {usedSeats}/{seatLimit} plazas ocupadas o reservadas
           </div>
         </div>
@@ -204,7 +223,7 @@ export default function TeamWorkPage({
             }}
             placeholder='nombre@empresa.com'
             type='email'
-            className='h-11 rounded-xl'
+            className='h-11 min-w-0 rounded-xl'
           />
           <Button
             onClick={() => void invite()}
@@ -217,7 +236,7 @@ export default function TeamWorkPage({
         {inviteError && <p className='text-destructive mt-2 text-sm'>{inviteError}</p>}
         {inviteUrl && (
           <div className='mt-3 flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 sm:flex-row sm:items-center'>
-            <Input readOnly value={inviteUrl} className='h-10 bg-background' />
+            <Input readOnly value={inviteUrl} className='h-10 min-w-0 bg-background' />
             <Button variant='outline' onClick={() => void copyInvite()} className='shrink-0'>
               {copied ? 'Copiado' : 'Copiar enlace'}
             </Button>
@@ -225,15 +244,15 @@ export default function TeamWorkPage({
         )}
       </div>
 
-      <div className='rounded-[22px] border border-border/60 bg-card/60 p-3'>
-        <div className='mb-3 flex items-center justify-between px-1'>
+      <div className='rounded-[22px] border border-border/60 bg-card/60 p-3 sm:p-4'>
+        <div className='mb-3 flex items-center justify-between gap-3 px-1'>
           <div>
             <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
               Personas
             </p>
             <h2 className='mt-1 text-base font-semibold'>Carga de trabajo</h2>
           </div>
-          <span className='text-xs text-muted-foreground'>{members.length} miembros</span>
+          <span className='shrink-0 text-xs text-muted-foreground'>{members.length} miembros</span>
         </div>
 
         {membersWithWork.length === 0 ? (
@@ -241,36 +260,34 @@ export default function TeamWorkPage({
             Todavía no hay más personas en este espacio.
           </p>
         ) : (
-          <div className='grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]'>
-            <div className='space-y-1.5'>
-              {membersWithWork.map((item) => {
-                const selected = item.member.id === activeMember?.member.id;
+          <div className='grid min-w-0 gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]'>
+            <div className='min-w-0 space-y-1.5'>
+              {membersWithWork.map((member) => {
+                const selected = member.id === activeMember?.id;
                 return (
                   <button
-                    key={item.member.id}
+                    key={member.id}
                     type='button'
-                    onClick={() => setSelectedMember(item.member.id)}
+                    onClick={() => setSelectedMemberId(member.id)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-4 rounded-xl border px-3 py-3 text-left transition-all',
+                      'flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left transition-all',
                       selected
                         ? 'border-primary/30 bg-primary/5'
                         : 'border-border/60 bg-background/40 hover:bg-muted/30'
                     )}
                   >
                     <div className='min-w-0'>
-                      <div className='flex items-center gap-2'>
-                        <span className='font-medium'>{item.member.name}</span>
-                        {item.member.role === 'owner' && (
-                          <Badge variant='secondary' className='h-5 px-1.5 text-[10px]'>
+                      <div className='flex min-w-0 items-center gap-2'>
+                        <span className='truncate font-medium'>{member.name}</span>
+                        {member.role === 'owner' && (
+                          <Badge variant='secondary' className='h-5 shrink-0 px-1.5 text-[10px]'>
                             Propietario
                           </Badge>
                         )}
                       </div>
-                      <p className='text-muted-foreground mt-1 truncate text-xs'>
-                        {item.member.email}
-                      </p>
+                      <p className='text-muted-foreground mt-1 truncate text-xs'>{member.email}</p>
                       <p className='text-muted-foreground mt-1 text-xs'>
-                        {item.taskCount} tareas · {item.events.length} eventos
+                        {member.taskCount} tareas · {member.events.length} eventos
                       </p>
                     </div>
                     <Icons.chevronRight className='size-4 shrink-0 text-muted-foreground' />
@@ -279,19 +296,19 @@ export default function TeamWorkPage({
               })}
             </div>
 
-            <div className='rounded-[18px] border border-border/60 bg-background/40 p-4'>
+            <div className='min-w-0 rounded-[18px] border border-border/60 bg-background/40 p-3 sm:p-4'>
               {activeMember ? (
                 <>
-                  <div className='mb-3 flex items-center justify-between gap-3'>
-                    <div>
+                  <div className='mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+                    <div className='min-w-0'>
                       <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
                         Contexto
                       </p>
-                      <h3 className='mt-1 font-semibold'>{activeMember.member.name}</h3>
+                      <h3 className='mt-1 truncate font-semibold'>{activeMember.name}</h3>
                     </div>
                     <Link
-                      href={`/dashboard/tasks?assigneeId=${activeMember.member.id}`}
-                      className='text-sm text-primary'
+                      href={`/dashboard/tasks?assigneeId=${activeMember.id}`}
+                      className='shrink-0 text-sm text-primary'
                     >
                       Ver trabajo
                     </Link>
@@ -320,11 +337,11 @@ export default function TeamWorkPage({
                       {activeTasks.slice(0, 8).map((task) => (
                         <div
                           key={task.id}
-                          className='flex items-center gap-3 rounded-2xl border border-border/60 bg-background p-3'
+                          className='flex min-w-0 items-center gap-3 rounded-2xl border border-border/60 bg-background p-3'
                         >
                           <span
                             className={cn(
-                              'size-2.5 rounded-full',
+                              'size-2.5 shrink-0 rounded-full',
                               normalizeStatus(task.status) === 'done' && 'bg-primary',
                               normalizeStatus(task.status) === 'in_progress' &&
                                 'bg-accent-foreground',
@@ -334,14 +351,17 @@ export default function TeamWorkPage({
                           />
                           <div className='min-w-0 flex-1'>
                             <div className='truncate text-sm font-medium'>{task.title}</div>
-                            <div className='text-muted-foreground mt-0.5 text-xs'>
+                            <div className='text-muted-foreground mt-0.5 truncate text-xs'>
                               {task.customer?.name ?? 'Trabajo interno'}
                               {task.dueAt
                                 ? ` · ${new Date(task.dueAt).toLocaleDateString('es-ES')}`
                                 : ''}
                             </div>
                           </div>
-                          <Badge variant={task.priority === 'high' ? 'destructive' : 'outline'}>
+                          <Badge
+                            variant={task.priority === 'high' ? 'destructive' : 'outline'}
+                            className='shrink-0'
+                          >
                             {priorityLabels[task.priority]}
                           </Badge>
                         </div>
@@ -360,8 +380,8 @@ export default function TeamWorkPage({
       </div>
 
       {invitations.length > 0 && (
-        <div className='rounded-[22px] border border-border/60 bg-card/60 p-5'>
-          <div className='flex items-center justify-between'>
+        <div className='rounded-[22px] border border-border/60 bg-card/60 p-4 sm:p-5'>
+          <div className='flex items-center justify-between gap-3'>
             <div>
               <p className='text-[11px] font-semibold uppercase tracking-[0.16em] text-primary'>
                 Pendientes
@@ -374,16 +394,18 @@ export default function TeamWorkPage({
             {invitations.map((invitation) => (
               <div
                 key={invitation.id}
-                className='flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/60 p-3 sm:flex-row sm:items-center sm:justify-between'
+                className='flex min-w-0 flex-col gap-2 rounded-2xl border border-border/60 bg-background/60 p-3 sm:flex-row sm:items-center sm:justify-between'
               >
-                <div>
-                  <p className='text-sm font-medium'>{invitation.email}</p>
+                <div className='min-w-0'>
+                  <p className='truncate text-sm font-medium'>{invitation.email}</p>
                   <p className='text-muted-foreground mt-0.5 text-xs'>
                     Invitación pendiente · vence el{' '}
                     {new Date(invitation.expiresAt).toLocaleDateString('es-ES')}
                   </p>
                 </div>
-                <Badge variant='outline'>Pendiente</Badge>
+                <Badge variant='outline' className='w-fit shrink-0'>
+                  Pendiente
+                </Badge>
               </div>
             ))}
           </div>
