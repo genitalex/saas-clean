@@ -51,7 +51,7 @@ import type { OpportunityUpdateInput } from '@/features/opportunities/api/servic
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 
-const stages = ['Contactado', 'Propuesta', 'Negociación', 'Ganado'] as const;
+const stages = ['Contactado', 'Propuesta', 'Negociación', 'Cerrado'] as const;
 type OpportunityStage = (typeof stages)[number];
 type OpportunityColumns = Record<OpportunityStage, Opportunity[]>;
 const OPPORTUNITY_TRASH_ID = 'opportunity-trash';
@@ -66,15 +66,10 @@ const money = (value: number) =>
     maximumFractionDigits: 0
   }).format(value);
 
-function defaultProbabilityForStage(stage: string) {
-  if (stage === 'Negociación') return 75;
-  if (stage === 'Propuesta') return 50;
-  return 20;
-}
-
 function toDisplayStage(stage: string): OpportunityStage | null {
   if (stages.includes(stage as OpportunityStage)) return stage as OpportunityStage;
   if (stage === 'Prospecto' || stage === 'prospect') return 'Contactado';
+  if (stage === 'Ganado' || stage === 'ganado') return 'Cerrado';
   return null;
 }
 
@@ -140,18 +135,46 @@ function OpportunityCard({
   opportunity,
   onOpen,
   suppressClickRef,
+  onProbabilityChange,
   presentationOnly = false
 }: {
   opportunity: Opportunity;
   onOpen?: () => void;
   suppressClickRef?: React.MutableRefObject<boolean>;
+  onProbabilityChange?: (id: string, probability: number) => Promise<void>;
   presentationOnly?: boolean;
 }) {
+  const [probability, setProbability] = React.useState(opportunity.probability);
+  const savingProbabilityRef = React.useRef(false);
+
+  React.useEffect(() => {
+    setProbability(opportunity.probability);
+  }, [opportunity.id, opportunity.probability]);
+
   if (presentationOnly) return <OpportunityDragPreview opportunity={opportunity} />;
+
+  const commitProbability = async () => {
+    if (
+      !onProbabilityChange ||
+      savingProbabilityRef.current ||
+      probability === opportunity.probability
+    )
+      return;
+    savingProbabilityRef.current = true;
+    try {
+      await onProbabilityChange(opportunity.id, probability);
+    } finally {
+      savingProbabilityRef.current = false;
+    }
+  };
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: opportunity.id,
-    data: { type: 'opportunity', opportunityId: opportunity.id, stage: opportunity.stage }
+    data: {
+      type: 'opportunity',
+      opportunityId: opportunity.id,
+      stage: toDisplayStage(opportunity.stage) ?? opportunity.stage
+    }
   });
 
   return (
@@ -177,25 +200,51 @@ function OpportunityCard({
         </div>
         <div>
           <span className='text-lg font-semibold'>{money(opportunity.value)}</span>
-          <div className='mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground'>
+        </div>
+        <div className='mt-3'>
+          <div className='mb-1.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground'>
             <span>Probabilidad de cierre</span>
-            <span className='rounded-full bg-primary/[0.08] px-2 py-0.5 text-[11px] font-semibold text-primary'>
-              {opportunity.probability}%
+            <span className='rounded-full bg-primary/[0.08] px-2 py-0.5 font-semibold text-primary'>
+              {probability}%
             </span>
           </div>
-        </div>
-        <div
-          className='mt-3 h-2 overflow-hidden rounded-full bg-primary/[0.08] ring-1 ring-inset ring-primary/10'
-          role='progressbar'
-          aria-label={`Probabilidad de cierre: ${opportunity.probability}%`}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={opportunity.probability}
-        >
           <div
-            className='h-full rounded-full bg-primary transition-[width] duration-300 ease-out'
-            style={{ width: `${opportunity.probability}%` }}
-          />
+            className='relative h-2 touch-pan-x'
+            onPointerDown={(event) => event.stopPropagation()}
+            onPointerUp={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className='pointer-events-none absolute inset-0 overflow-hidden rounded-full bg-primary/[0.08] ring-1 ring-inset ring-primary/10'>
+              <div
+                className='h-full rounded-full bg-primary transition-[width] duration-100 ease-out'
+                style={{ width: `${probability}%` }}
+              />
+            </div>
+            <div
+              className='pointer-events-none absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow-sm ring-2 ring-background transition-[left] duration-100 ease-out'
+              style={{ left: `${probability}%` }}
+            />
+            <input
+              aria-label={`Probabilidad de cierre: ${probability}%`}
+              type='range'
+              min='0'
+              max='100'
+              step='5'
+              value={probability}
+              onChange={(event) => setProbability(Number(event.target.value))}
+              onPointerDown={(event) => event.stopPropagation()}
+              onPointerUp={(event) => {
+                event.stopPropagation();
+                void commitProbability();
+              }}
+              onKeyUp={(event) => {
+                if (event.key.startsWith('Arrow')) void commitProbability();
+              }}
+              onBlur={() => void commitProbability()}
+              disabled={!onProbabilityChange || savingProbabilityRef.current}
+              className='absolute inset-0 z-10 h-2 w-full cursor-pointer appearance-none bg-transparent accent-primary'
+            />
+          </div>
         </div>
         <div className='flex justify-between text-xs text-muted-foreground'>
           <span>{opportunity.owner}</span>
@@ -210,11 +259,13 @@ function OpportunityColumn({
   stage,
   opportunities,
   onOpen,
+  onProbabilityChange,
   suppressClickRef
 }: {
   stage: OpportunityStage;
   opportunities: Opportunity[];
   onOpen: (opportunityId: string) => void;
+  onProbabilityChange: (id: string, probability: number) => Promise<void>;
   suppressClickRef: React.MutableRefObject<boolean>;
 }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -243,6 +294,7 @@ function OpportunityColumn({
               key={opportunity.id}
               opportunity={opportunity}
               onOpen={() => onOpen(opportunity.id)}
+              onProbabilityChange={onProbabilityChange}
               suppressClickRef={suppressClickRef}
             />
           ))}
@@ -352,6 +404,7 @@ export function OpportunitiesPage({
   const opportunitiesRef = React.useRef(opportunities);
   const suppressClickRef = React.useRef(false);
   const dragStartStageRef = React.useRef<OpportunityStage | null>(null);
+  const dragStartProbabilityRef = React.useRef<number>(0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   React.useEffect(() => {
@@ -386,18 +439,42 @@ export function OpportunitiesPage({
     [queryClient]
   );
 
+  const changeProbability = React.useCallback(
+    async (id: string, probability: number) => {
+      const snapshot = columnsRef.current;
+      const next: OpportunityColumns = {
+        Contactado: snapshot.Contactado.map((item) =>
+          item.id === id ? { ...item, probability } : item
+        ),
+        Propuesta: snapshot.Propuesta.map((item) =>
+          item.id === id ? { ...item, probability } : item
+        ),
+        Negociación: snapshot.Negociación.map((item) =>
+          item.id === id ? { ...item, probability } : item
+        ),
+        Cerrado: snapshot.Cerrado.map((item) => (item.id === id ? { ...item, probability } : item))
+      };
+      columnsRef.current = next;
+      setColumns(next);
+      try {
+        await updateOpportunity(id, { probability });
+        await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+        await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
+      } catch (error) {
+        const restored = toColumns(opportunitiesRef.current);
+        columnsRef.current = restored;
+        setColumns(restored);
+        throw error;
+      }
+    },
+    [queryClient]
+  );
+
   const move = React.useCallback(
     async (id: string, stage: string) => {
       try {
-        const current = opportunitiesRef.current.find((item) => item.id === id);
-        const wasWon = current?.stage === 'Ganado';
-        let input: string | OpportunityUpdateInput = stage;
-        if (stage === 'Ganado') {
-          input = { stage, probability: 100 };
-        } else if (wasWon) {
-          const resetProbability = defaultProbabilityForStage(stage);
-          input = { stage, probability: resetProbability };
-        }
+        const input: string | OpportunityUpdateInput =
+          stage === 'Cerrado' ? { stage, probability: 100 } : { stage };
         await update(id, input);
       } catch {
         toast.error('No se pudo mover la oportunidad.');
@@ -444,6 +521,7 @@ export function OpportunitiesPage({
     dragStartStageRef.current = opportunity
       ? findOpportunityColumn(columnsRef.current, opportunity.id)
       : null;
+    dragStartProbabilityRef.current = opportunity?.probability ?? 0;
     setOverId(String(event.active.id));
     suppressClickRef.current = false;
   }, []);
@@ -482,16 +560,15 @@ export function OpportunitiesPage({
     if (activeIndex === -1) return;
     const moving = current[activeColumn][activeIndex];
     if (!moving) return;
-    const resetProbability = defaultProbabilityForStage(overColumn);
     const movedOpportunity = {
       ...moving,
       stage: overColumn,
       probability:
-        overColumn === 'Ganado'
+        overColumn === 'Cerrado'
           ? 100
-          : moving.stage === 'Ganado'
-            ? resetProbability
-            : moving.probability
+          : dragStartStageRef.current === 'Cerrado'
+            ? moving.probability
+            : dragStartProbabilityRef.current
     };
     const next = {
       ...current,
@@ -508,6 +585,7 @@ export function OpportunitiesPage({
     setActiveOpportunity(null);
     setOverId(null);
     dragStartStageRef.current = null;
+    dragStartProbabilityRef.current = 0;
     const restored = toColumns(opportunitiesRef.current);
     columnsRef.current = restored;
     setColumns(restored);
@@ -528,6 +606,7 @@ export function OpportunitiesPage({
       setOverId(null);
       const initialStage = dragStartStageRef.current;
       dragStartStageRef.current = null;
+      dragStartProbabilityRef.current = 0;
       window.setTimeout(() => {
         suppressClickRef.current = Boolean(over);
       }, 0);
@@ -565,14 +644,10 @@ export function OpportunitiesPage({
 
       if (initialStage && targetColumn !== initialStage) {
         try {
-          const wasWon = initialStage === 'Ganado';
-          const resetProbability = defaultProbabilityForStage(targetColumn);
           const input: string | OpportunityUpdateInput =
-            targetColumn === 'Ganado'
+            targetColumn === 'Cerrado'
               ? { stage: targetColumn, probability: 100 }
-              : wasWon
-                ? { stage: targetColumn, probability: resetProbability }
-                : targetColumn;
+              : { stage: targetColumn };
           await updateOpportunity(activeId, input);
           await queryClient.invalidateQueries({ queryKey: ['opportunities'] });
           await queryClient.refetchQueries({ queryKey: ['opportunities'], type: 'active' });
@@ -743,6 +818,7 @@ export function OpportunitiesPage({
                   stage={stage}
                   opportunities={visibleColumns[stage]}
                   onOpen={setSelectedId}
+                  onProbabilityChange={changeProbability}
                   suppressClickRef={suppressClickRef}
                 />
               ))}
@@ -779,6 +855,7 @@ function OpportunityDetail({
   }, [opportunity.id, opportunity.probability, opportunity.stage]);
 
   const effectiveProbability = probability;
+  const displayStage = toDisplayStage(opportunity.stage) ?? stages[0];
 
   return (
     <main className='flex flex-1 flex-col gap-6 py-2'>
@@ -789,7 +866,7 @@ function OpportunityDetail({
         Volver al pipeline
       </Link>
       <div>
-        <Badge variant='outline'>{opportunity.stage}</Badge>
+        <Badge variant='outline'>{displayStage}</Badge>
         <h1 className='mt-2 text-3xl font-semibold'>{opportunity.title}</h1>
         <p className='text-muted-foreground'>
           {opportunity.customer} · Responsable {opportunity.owner}
@@ -912,7 +989,7 @@ function OpportunityDetail({
           </div>
           <NativeSelect
             aria-label='Cambiar etapa'
-            value={opportunity.stage}
+            value={displayStage}
             onChange={(event) => onMove(event.target.value)}
           >
             {stages.map((stage) => (
