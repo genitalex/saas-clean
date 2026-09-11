@@ -503,7 +503,7 @@ export function CalendarPage({
               </kbd>
             </div>
 
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center justify-center gap-2'>
               <Popover>
                 <PopoverTrigger
                   render={
@@ -521,7 +521,7 @@ export function CalendarPage({
                   side='bottom'
                   className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
                 >
-                  <div className='max-h-[320px] overflow-y-auto'>
+                  <div className='space-y-1.5 p-1'>
                     {categories.map((category) => {
                       const active = filters.includes(category.id);
                       return (
@@ -536,7 +536,7 @@ export function CalendarPage({
                             )
                           }
                           className={cn(
-                            'flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2 text-left text-sm transition-colors hover:bg-muted/70',
+                            'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
                             active && 'bg-muted/60'
                           )}
                         >
@@ -563,9 +563,9 @@ export function CalendarPage({
                     <button
                       type='button'
                       onClick={() => setSettingsOpen(true)}
-                      className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2 py-2 text-left text-sm font-medium text-foreground hover:bg-muted/70'
+                      className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
                     >
-                      <span className='text-base leading-none'>+</span>
+                      <span className='text-base leading-none text-muted-foreground'>+</span>
                       <span>Nueva etiqueta</span>
                     </button>
                   </div>
@@ -582,7 +582,7 @@ export function CalendarPage({
                 <Icons.adjustments className='size-4' />
               </Button>
               <Button
-                variant='secondary'
+                variant='ghost'
                 size='icon-sm'
                 onClick={() => openCreate(selectedDate)}
                 aria-label='Nuevo evento'
@@ -736,6 +736,8 @@ export function CalendarPage({
             }
             calendarSearch={calendarSearch}
             onCalendarSearchChange={setCalendarSearch}
+            view={view}
+            onViewChange={setView}
           />
         </div>
       </div>
@@ -872,7 +874,9 @@ function MobileCalendar({
   onOpenSettings,
   onToggleCategory,
   calendarSearch,
-  onCalendarSearchChange
+  onCalendarSearchChange,
+  view,
+  onViewChange
 }: {
   mode: 'year' | 'month' | 'week' | 'day';
   onModeChange: (mode: 'year' | 'month' | 'week' | 'day') => void;
@@ -891,6 +895,8 @@ function MobileCalendar({
   onToggleCategory: (categoryId: string) => void;
   calendarSearch: string;
   onCalendarSearchChange: (value: string) => void;
+  view: CalendarView;
+  onViewChange: (nextView: CalendarView) => void;
 }) {
   const openDay = (day: Date) => {
     onSelectDate(day);
@@ -962,6 +968,8 @@ function MobileCalendar({
             onToggleCategory={onToggleCategory}
             calendarSearch={calendarSearch}
             onCalendarSearchChange={onCalendarSearchChange}
+            view={view}
+            onViewChange={onViewChange}
           />
         </div>
         <div className='h-full w-1/4 shrink-0' inert={mode !== 'week'}>
@@ -1139,7 +1147,9 @@ function MobileMonthView({
   onOpenSettings,
   onToggleCategory,
   calendarSearch,
-  onCalendarSearchChange
+  onCalendarSearchChange,
+  view,
+  onViewChange
 }: {
   cursor: Date;
   selectedDate: Date;
@@ -1157,6 +1167,8 @@ function MobileMonthView({
   onToggleCategory?: (categoryId: string) => void;
   calendarSearch: string;
   onCalendarSearchChange: (value: string) => void;
+  view: CalendarView;
+  onViewChange: (nextView: CalendarView) => void;
 }) {
   const today = new Date();
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -1207,7 +1219,7 @@ function MobileMonthView({
         />
       </div>
 
-      <div className='mx-auto flex w-full max-w-[420px] items-center gap-2'>
+      <div className='mx-auto flex w-full max-w-[min(100%,760px)] items-center justify-center gap-2'>
         <Popover>
           <PopoverTrigger
             render={
@@ -1225,7 +1237,7 @@ function MobileMonthView({
             side='bottom'
             className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
           >
-            <div className='max-h-[320px] overflow-y-auto'>
+            <div className='space-y-1.5 p-1'>
               {categories.map((category) => {
                 const active = activeCategoryIds.includes(category.id);
                 return (
@@ -1234,7 +1246,7 @@ function MobileMonthView({
                     type='button'
                     onClick={() => onToggleCategory?.(category.id)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2 text-left text-sm transition-colors hover:bg-muted/70',
+                      'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
                       active && 'bg-muted/60'
                     )}
                   >
@@ -1259,9 +1271,9 @@ function MobileMonthView({
               <button
                 type='button'
                 onClick={onOpenSettings}
-                className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2 py-2 text-left text-sm font-medium text-foreground hover:bg-muted/70'
+                className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
               >
-                <span className='text-base leading-none'>+</span>
+                <span className='text-base leading-none text-muted-foreground'>+</span>
                 <span>Nueva etiqueta</span>
               </button>
             </div>
@@ -1278,7 +1290,7 @@ function MobileMonthView({
           <Icons.adjustments className='size-4' />
         </Button>
         <Button
-          variant='secondary'
+          variant='ghost'
           size='icon-sm'
           onClick={() => onCreate(selectedDate)}
           aria-label='Nuevo evento'
@@ -1288,30 +1300,38 @@ function MobileMonthView({
         </Button>
       </div>
 
-      <div className='mx-auto w-full max-w-[420px]'>
-        <div
-          className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
-          role='tablist'
+      <div className='mx-auto w-full max-w-[min(100%,760px)]'>
+        <SegmentedToggle
+          options={['Mes', 'Semana', 'Día', 'Agenda']}
+          value={
+            view === 'month'
+              ? 'Mes'
+              : view === 'week'
+                ? 'Semana'
+                : view === 'day'
+                  ? 'Día'
+                  : 'Agenda'
+          }
+          onValueChange={(next) => {
+            if (next === 'Mes') {
+              onViewChange('month');
+              return;
+            }
+            if (next === 'Semana') {
+              onOpenWeek();
+              onViewChange('week');
+              return;
+            }
+            if (next === 'Día') {
+              onSelectDay(selectedDate);
+              onViewChange('day');
+              return;
+            }
+            onViewChange('agenda');
+          }}
+          className='w-full'
           aria-label='Vista del calendario'
-        >
-          <button
-            type='button'
-            role='tab'
-            aria-selected='true'
-            className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
-          >
-            Mes
-          </button>
-          <button
-            type='button'
-            role='tab'
-            aria-selected='false'
-            onClick={onOpenWeek}
-            className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
-          >
-            Semana
-          </button>
-        </div>
+        />
       </div>
 
       <div className='mx-auto flex w-full max-w-[420px] items-center justify-center gap-2'>
