@@ -694,7 +694,14 @@ export function OpportunitiesPage({
             onChange={(event) => setQuery(event.target.value)}
             placeholder='Buscar oportunidad'
           />
-          <Button onClick={() => setCreateOpen(true)}>Nueva oportunidad</Button>
+          <Button
+            variant='secondary'
+            size='sm'
+            className='shadow-none'
+            onClick={() => setCreateOpen(true)}
+          >
+            Nueva oportunidad
+          </Button>
         </div>
       </div>
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
