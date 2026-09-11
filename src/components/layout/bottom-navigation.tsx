@@ -54,9 +54,29 @@ export function BottomNavigation() {
       Customers: Icons.user2,
       Opportunities: Icons.trendingUp
     } as const;
+    const iconColorByTitle: Record<string, string> = {
+      Today: 'text-sky-500',
+      Work: 'text-violet-500',
+      Calendar: 'text-cyan-500',
+      Customers: 'text-orange-500',
+      Opportunities: 'text-pink-500',
+      Notifications: 'text-red-500',
+      Notes: 'text-violet-500',
+      Quotes: 'text-indigo-500',
+      Templates: 'text-amber-500',
+      Goals: 'text-emerald-500',
+      Documents: 'text-teal-500',
+      Team: 'text-blue-500',
+      Automations: 'text-orange-500',
+      Integrations: 'text-cyan-500',
+      Users: 'text-blue-500',
+      Workspaces: 'text-purple-500',
+      Settings: 'text-slate-500'
+    };
     const Icon =
       iconByTitle[item.title as keyof typeof iconByTitle] ??
       (item.icon ? Icons[item.icon] : Icons.logo);
+    const iconColor = iconColorByTitle[item.title] ?? 'text-muted-foreground';
     const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
     const label =
       item.title === 'Today'
@@ -86,7 +106,7 @@ export function BottomNavigation() {
           {label}
         </span>
         <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.2] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.2]'>
-          <Icon className='size-[24px]' strokeWidth={2.15} />
+          <Icon className={cn('size-[24px]', iconColor)} strokeWidth={2.15} />
         </span>
         {active && (
           <span
@@ -362,6 +382,21 @@ function MoreSheet({
                 <div className='grid gap-1 sm:grid-cols-2'>
                   {items.map((item) => {
                     const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                    const iconColorByTitle: Record<string, string> = {
+                      Notifications: 'text-red-500',
+                      Notes: 'text-violet-500',
+                      Quotes: 'text-indigo-500',
+                      Templates: 'text-amber-500',
+                      Goals: 'text-emerald-500',
+                      Documents: 'text-teal-500',
+                      Team: 'text-blue-500',
+                      Automations: 'text-orange-500',
+                      Integrations: 'text-cyan-500',
+                      Users: 'text-blue-500',
+                      Workspaces: 'text-purple-500',
+                      Settings: 'text-slate-500'
+                    };
+                    const iconColor = iconColorByTitle[item.title] ?? 'text-muted-foreground';
                     const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
                     return (
                       <Link
@@ -374,7 +409,7 @@ function MoreSheet({
                         )}
                       >
                         <span className='bg-muted/70 flex size-9 items-center justify-center rounded-[10px]'>
-                          <Icon className='size-4.5' />
+                          <Icon className={cn('size-4.5', iconColor)} />
                         </span>
                         {item.title}
                       </Link>
