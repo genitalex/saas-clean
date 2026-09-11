@@ -119,7 +119,7 @@ const themedSvg = (props: IconProps, color: string, children: React.ReactNode) =
       strokeWidth={strokeWidth}
       strokeLinecap='round'
       strokeLinejoin='round'
-      style={{ color, ...style }}
+      style={{ ...style, color }}
     >
       {children}
     </svg>
