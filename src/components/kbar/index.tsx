@@ -36,7 +36,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
         keywords: 'crear nueva tarea task',
         section: 'Crear',
         subtitle: 'Abrir una captura de tarea',
-        icon: <Icons.circleCheck className='size-4' />,
+        icon: <Icons.check className='size-4' />,
         perform: () => navigateTo('/dashboard/tasks?create=1')
       },
       {

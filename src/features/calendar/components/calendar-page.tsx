@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { SegmentedToggle } from '@/components/ui/segmented-toggle';
 import { createEvent, getEvents, eventKeys, updateEvent } from '../queries';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
@@ -470,7 +469,7 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='border-border/50 hidden h-10 items-center gap-0.5 rounded-[10px] border border-border/60 bg-background/80 p-1 md:flex'>
+          <div className='border-border/50 hidden h-10 items-center gap-0.5 rounded-[10px] border border-border/60 bg-muted/35 p-1 md:flex'>
             <Button
               variant='ghost'
               size='icon-sm'
@@ -484,7 +483,7 @@ export function CalendarPage({
               variant='ghost'
               size='sm'
               onClick={() => setCursor(new Date())}
-              className='h-8 rounded-[8px] px-3 text-sm font-medium'
+              className='h-8 rounded-[8px] bg-card px-3 text-sm font-medium text-foreground shadow-none ring-1 ring-border/35'
             >
               Hoy
             </Button>
@@ -498,31 +497,33 @@ export function CalendarPage({
               <Icons.chevronRight className='size-4' />
             </Button>
           </div>
-          <SegmentedToggle
-            className='hidden md:inline-grid'
-            options={['Mes', 'Semana', 'Día', 'Agenda']}
-            value={
-              view === 'month'
-                ? 'Mes'
-                : view === 'week'
-                  ? 'Semana'
-                  : view === 'day'
-                    ? 'Día'
-                    : 'Agenda'
-            }
-            onValueChange={(next) => {
-              const nextView: CalendarView =
-                next === 'Mes'
-                  ? 'month'
-                  : next === 'Semana'
-                    ? 'week'
-                    : next === 'Día'
-                      ? 'day'
-                      : 'agenda';
-              setView(nextView);
-            }}
+          <div
+            className='border-border/50 hidden h-10 rounded-[10px] border border-border/60 bg-background/80 p-1 md:flex'
+            role='group'
             aria-label='Vista del calendario'
-          />
+          >
+            {(['month', 'week', 'day', 'agenda'] as CalendarView[]).map((option) => (
+              <button
+                key={option}
+                onClick={() => setView(option)}
+                aria-pressed={view === option}
+                className={cn(
+                  'h-8 rounded-[8px] border border-transparent px-3.5 text-sm font-medium transition-[background-color,border-color,color]',
+                  view === option
+                    ? 'border-border/35 bg-card text-foreground shadow-none'
+                    : 'text-muted-foreground hover:bg-muted/45 hover:text-foreground'
+                )}
+              >
+                {option === 'month'
+                  ? 'Mes'
+                  : option === 'week'
+                    ? 'Semana'
+                    : option === 'day'
+                      ? 'Día'
+                      : 'Agenda'}
+              </button>
+            ))}
+          </div>
           <Button
             variant='ghost'
             size='icon'
@@ -532,7 +533,11 @@ export function CalendarPage({
           >
             <Icons.settings className='size-[18px]' />
           </Button>
-          <Button onClick={() => openCreate(selectedDate)} className='h-10 gap-1.5 rounded-[10px]'>
+          <Button
+            variant='secondary'
+            onClick={() => openCreate(selectedDate)}
+            className='h-10 gap-1.5 rounded-[10px] shadow-none'
+          >
             <Icons.add className='size-4' />
             <span className='hidden sm:inline'>Nuevo evento</span>
           </Button>
@@ -1084,12 +1089,12 @@ function MobileMonthView({
         </Button>
       </div>
       <div className='flex items-center justify-between gap-2'>
-        <div className='flex items-center gap-1.5'>
+        <div className='flex items-center gap-0.5 rounded-[10px] border border-border/60 bg-muted/35 p-1'>
           <Button
             variant='ghost'
             size='sm'
             onClick={onGoToday}
-            className='rounded-lg px-3 text-xs font-medium'
+            className='h-8 rounded-[8px] bg-background px-3 text-xs font-medium text-foreground shadow-none ring-1 ring-border/35'
           >
             Hoy
           </Button>

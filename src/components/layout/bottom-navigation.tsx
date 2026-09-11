@@ -123,7 +123,7 @@ export function BottomNavigation() {
               )}
             >
               <span className='relative block size-6'>
-                <Icons.plusCircle
+                <Icons.plusAction
                   className={cn(
                     'absolute inset-0 m-auto transition-all duration-200 ease-out',
                     createOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100',
@@ -230,7 +230,7 @@ function QuickCreate({ onClose, isMobile }: { onClose: () => void; isMobile: boo
       label: 'Nuevo cliente',
       description: 'Añade una relación al equipo',
       href: '/dashboard/customers?create=1',
-      icon: Icons.teams
+      icon: Icons.user
     },
     {
       label: 'Nueva oportunidad',

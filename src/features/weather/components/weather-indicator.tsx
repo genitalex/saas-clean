@@ -27,8 +27,9 @@ import type {
 const weatherStorageKey = (userId: string) => `weather-preference:${userId}`;
 
 function getWeatherIcon(weatherCode: number, isDay: boolean) {
-  if (weatherCode === 0) return isDay ? Icons.sun : Icons.moon;
-  if ([1, 2, 3, 45, 48].includes(weatherCode)) return Icons.cloud;
+  if (weatherCode === 0 || weatherCode === 1) return isDay ? Icons.sun : Icons.moon;
+  if (weatherCode === 2) return Icons.cloudSun;
+  if ([3, 45, 48].includes(weatherCode)) return Icons.cloud;
   if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(weatherCode)) {
     return Icons.cloudRain;
   }

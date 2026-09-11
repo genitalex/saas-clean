@@ -179,6 +179,20 @@ const ThemeOpportunityIcon: Icon = (props) =>
     </>
   );
 
+const ThemeCloudSunIcon: Icon = (props) =>
+  themedSvg(
+    props,
+    '#f59e0b',
+    <>
+      <path d='M8 18.5h9a4.5 4.5 0 0 0 .2-9 5.9 5.9 0 0 0-11.2 2.1A3.5 3.5 0 0 0 8 18.5Z' />
+      <path d='M8 7.5V5.5M5.2 8.7 3.8 7.3M11 8.7l1.4-1.4' />
+      <path d='M7.4 13.3a3.3 3.3 0 0 1 6.2 1.5' />
+    </>
+  );
+
+const ThemeActivityIcon: Icon = (props) =>
+  themedSvg(props, '#14b8a6', <path d='M3.5 13h3l2-6 3.1 10 2.2-6h6.7' />);
+
 const ThemeNotificationIcon: Icon = (props) =>
   themedSvg(
     props,
@@ -194,9 +208,15 @@ const ThemeNoteIcon: Icon = (props) =>
     props,
     '#eab308',
     <>
-      <path d='M6 3.5h8l4 4V20H6z' />
-      <path d='M14 3.5V8h4' />
-      <path d='M9 12h6M9 15.5h4' />
+      <path
+        d='M6 3.5h9l3 3V20a.5.5 0 0 1-.5.5H6z'
+        fill='currentColor'
+        opacity='.14'
+        stroke='none'
+      />
+      <path d='M6 3.5h9l3 3V20a.5.5 0 0 1-.5.5H6z' />
+      <path d='M15 3.5V7h3' />
+      <path d='M9 11.5h6M9 15h4.5' />
     </>
   );
 
@@ -296,12 +316,43 @@ const ThemeSettingsIcon: Icon = (props) =>
     </>
   );
 
+const ThemeActionPlusIcon: Icon = (props) => {
+  const { size = 24, strokeWidth = 2.35, style, ...svgProps } = props;
+  return (
+    <svg
+      {...svgProps}
+      width={size}
+      height={size}
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth={strokeWidth}
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      style={style}
+    >
+      <path d='M12 7v10M7 12h10' />
+    </svg>
+  );
+};
+
+const ThemePlusIcon: Icon = (props) =>
+  themedSvg(
+    props,
+    '#10b981',
+    <>
+      <circle cx='12' cy='12' r='8.5' fill='currentColor' opacity='.12' stroke='none' />
+      <circle cx='12' cy='12' r='8.5' />
+      <path d='M12 8v8M8 12h8' strokeWidth='2.2' />
+    </>
+  );
+
 export const Icons = {
   // General
   alertCircle: IconAlertCircle,
   warning: IconAlertTriangle,
   arrowRight: IconArrowRight,
-  check: IconCheck,
+  check: ThemeWorkIcon,
   checks: IconChecks,
   circleCheck: ThemeWorkIcon,
   close: IconX,
@@ -334,8 +385,8 @@ export const Icons = {
   panelLeft: IconLayoutSidebar,
 
   // User
-  user: IconUser,
-  user2: IconUserCircle,
+  user: ThemeCustomersIcon,
+  user2: ThemeCustomersIcon,
   account: IconUserCircle,
   profile: IconUser,
   employee: IconUserX,
@@ -357,7 +408,7 @@ export const Icons = {
 
   // Files
   page: IconFile,
-  post: IconFileText,
+  post: ThemeQuoteIcon,
   note: ThemeNoteIcon,
   quote: ThemeQuoteIcon,
   template: ThemeTemplateIcon,
@@ -369,7 +420,7 @@ export const Icons = {
   music: IconMusic,
 
   // Actions
-  add: IconPlus,
+  add: ThemePlusIcon,
   edit: IconEdit,
   pin: IconPin,
   upload: IconUpload,
@@ -382,6 +433,7 @@ export const Icons = {
   circle: IconCircle,
   circleX: IconCircleX,
   plusCircle: IconCirclePlus,
+  plusAction: ThemeActionPlusIcon,
   xCircle: IconCircleX,
   minus: IconMinus,
 
@@ -428,6 +480,7 @@ export const Icons = {
   slash: IconSlash,
   calendar: ThemeCalendarIcon,
   cloud: IconCloud,
+  cloudSun: ThemeCloudSunIcon,
   cloudRain: IconCloudRain,
   cloudSnow: IconCloudSnow,
   cloudStorm: IconCloudStorm,
@@ -442,5 +495,5 @@ export const Icons = {
   documents: ThemeDocumentsIcon,
   proposals: IconFileDescription,
   integrations: ThemeIntegrationIcon,
-  pulse: IconActivity
+  pulse: ThemeActivityIcon
 };

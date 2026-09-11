@@ -25,10 +25,12 @@
   height: 0.875rem;
 }
 
+/* Notes: the editor uses the same UI font as the rendered note. */
 textarea.font-serif {
   font-family: inherit !important;
 }
 
+/* Notes page: same dashboard page inset as the rest of the workspace. */
 main[class~='max-w-[1100px]'] {
   padding-inline: var(--page-padding);
   padding-top: 1.25rem;
@@ -40,6 +42,8 @@ main[class~='max-w-[1100px]'] {
   }
 }
 
+/* Notes: "Nueva nota" matches the compact primary CTAs such as
+   "Nuevo cliente" / "Nueva oportunidad". */
 main[class~='max-w-[1100px]'] header button.bg-primary {
   height: 1.75rem;
   padding-inline: 0.75rem;
@@ -52,65 +56,29 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
   height: 0.875rem;
 }
 
-@page {
-  size: A4;
-  margin: 0;
-}
-
-@media print {
-  html,
-  body {
-    width: 210mm;
-    min-height: 297mm;
-    background: #fff !important;
+/* Calendar period navigation uses the same segmented-control treatment as the view selector. */
+@media (min-width: 768px) {
+  main header div:has(> button[aria-label='Ir al periodo anterior']) {
+    background: hsl(var(--muted) / 0.35) !important;
+    border-color: hsl(var(--border) / 0.6) !important;
   }
 
-  body * {
-    visibility: hidden !important;
+  main header div:has(> button[aria-label='Ir al periodo anterior']) > button:nth-child(2) {
+    background: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+    box-shadow: 0 1px 2px rgb(23 32 25 / 0.06) !important;
+    border-color: hsl(var(--border) / 0.35) !important;
   }
 
-  body .quote-print-target,
-  body .quote-print-target * {
-    visibility: visible !important;
-  }
-
-  body .quote-print-target {
-    position: absolute !important;
-    inset: 0 auto auto 0 !important;
-    width: 210mm !important;
-    min-height: 297mm !important;
-    margin: 0 !important;
-    padding: 16mm !important;
-    overflow: visible !important;
-    border: 0 !important;
-    border-radius: 0 !important;
+  /* Header create actions use the restrained secondary treatment used by Nueva tarea. */
+  main > header > div:last-child > button:last-child:not([aria-label]) {
+    background: hsl(var(--secondary)) !important;
+    color: hsl(var(--secondary-foreground)) !important;
+    border: 1px solid hsl(var(--border) / 0.7) !important;
     box-shadow: none !important;
-    background: #fff !important;
   }
 
-  /* Keep the light grey table heading visible in the PDF. */
-  .quote-print-target .bg-muted\/35 {
-    background-color: #f5f5f5 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .quote-print-target .print\:bg-\[\#f5f5f5\] {
-    background-color: #f5f5f5 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .quote-print-target img {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .quote-print-target .print\:hidden {
-    display: none !important;
-  }
-
-  .quote-print-target .hidden.print\:block {
-    display: block !important;
+  main > header > div:last-child > button:last-child:not([aria-label]):hover {
+    background: hsl(var(--secondary) / 0.8) !important;
   }
 }
