@@ -144,8 +144,15 @@ function MoreSheet({
 
         <div className='p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]'>
           {navGroups.map((group) => {
-            const items = group.items.filter((item) => !primaryUrls.has(item.url));
+            const items = group.items.filter(
+              (item) =>
+                !primaryUrls.has(item.url) &&
+                item.title !== 'Notes' &&
+                item.title !== 'Quotes' &&
+                item.title !== 'Notifications'
+            );
             if (items.length === 0) return null;
+
             return (
               <div key={group.label} className='mb-2'>
                 <div className='text-muted-foreground px-3 py-2 text-[11px] font-semibold tracking-wide uppercase'>
@@ -184,14 +191,6 @@ function MoreSheet({
             >
               <Icons.account className='text-muted-foreground size-5 shrink-0' />
               Profile
-            </Link>
-            <Link
-              href='/dashboard/notifications'
-              onClick={() => onOpenChange(false)}
-              className='hover:bg-accent/60 flex items-center gap-3.5 rounded-xl px-3 py-3 text-[0.95rem] font-medium transition-colors'
-            >
-              <Icons.notification className='text-muted-foreground size-5 shrink-0' />
-              Notifications
             </Link>
           </div>
         </div>

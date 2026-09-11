@@ -12,7 +12,7 @@ export default function SearchInput() {
       variant='ghost'
       onClick={query.toggle}
       aria-label='Abrir búsqueda'
-      className='group relative h-10 w-[220px] justify-start rounded-2xl border border-border/60 bg-card/75 px-3 shadow-[0_8px_24px_rgba(23,32,25,0.05)] backdrop-blur-md transition-all hover:border-border hover:bg-card md:w-56 lg:w-64'
+      className='group relative h-9 w-[220px] justify-start rounded-[10px] border border-input/80 bg-background/80 px-3 shadow-none transition-[background-color,border-color,color] duration-150 hover:border-foreground/25 hover:bg-accent/20 md:w-56 lg:w-64'
     >
       <span className='flex min-w-0 items-center gap-2.5'>
         <Icons.search className='size-4 shrink-0 text-muted-foreground' />
