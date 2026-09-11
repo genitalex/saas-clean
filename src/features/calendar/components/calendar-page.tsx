@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { SegmentedToggle } from '@/components/ui/segmented-toggle';
 import { createEvent, getEvents, eventKeys, updateEvent } from '../queries';
 import { getTasks, taskKeys, updateTask } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
@@ -121,6 +122,7 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsSpinRef = useRef<HTMLSpanElement>(null);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
@@ -469,80 +471,65 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='border-border/50 hidden h-10 items-center gap-0.5 rounded-[10px] border border-border/60 bg-muted/35 p-1 md:flex'>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => shift(-1)}
-              aria-label='Ir al periodo anterior'
-              className='h-8 rounded-[8px]'
-            >
-              <Icons.chevronLeft className='size-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setCursor(new Date())}
-              className='h-8 rounded-[8px] bg-card px-3 text-sm font-medium text-foreground shadow-none ring-1 ring-border/35'
-            >
-              Hoy
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => shift(1)}
-              aria-label='Ir al periodo siguiente'
-              className='h-8 rounded-[8px]'
-            >
-              <Icons.chevronRight className='size-4' />
-            </Button>
-          </div>
-          <div
-            className='border-border/50 hidden h-10 rounded-[10px] border border-border/60 bg-background/80 p-1 md:flex'
-            role='group'
+          <SegmentedToggle
+            className='hidden md:inline-grid'
+            options={['‹', 'Hoy', '›']}
+            value='Hoy'
+            onValueChange={(next) => {
+              if (next === '‹') shift(-1);
+              if (next === 'Hoy') setCursor(new Date());
+              if (next === '›') shift(1);
+            }}
+            aria-label='Navegación del calendario'
+          />
+          <SegmentedToggle
+            className='hidden md:inline-grid'
+            options={['Mes', 'Semana', 'Día', 'Agenda']}
+            value={
+              view === 'month'
+                ? 'Mes'
+                : view === 'week'
+                  ? 'Semana'
+                  : view === 'day'
+                    ? 'Día'
+                    : 'Agenda'
+            }
+            onValueChange={(next) => {
+              const nextView: CalendarView =
+                next === 'Mes'
+                  ? 'month'
+                  : next === 'Semana'
+                    ? 'week'
+                    : next === 'Día'
+                      ? 'day'
+                      : 'agenda';
+              setView(nextView);
+            }}
             aria-label='Vista del calendario'
-          >
-            {(['month', 'week', 'day', 'agenda'] as CalendarView[]).map((option) => (
-              <button
-                key={option}
-                onClick={() => setView(option)}
-                aria-pressed={view === option}
-                className={cn(
-                  'h-8 rounded-[8px] border border-transparent px-3.5 text-sm font-medium transition-[background-color,border-color,color]',
-                  view === option
-                    ? 'border-border/35 bg-card text-foreground shadow-none'
-                    : 'text-muted-foreground hover:bg-muted/45 hover:text-foreground'
-                )}
-              >
-                {option === 'month'
-                  ? 'Mes'
-                  : option === 'week'
-                    ? 'Semana'
-                    : option === 'day'
-                      ? 'Día'
-                      : 'Agenda'}
-              </button>
-            ))}
-          </div>
+          />
           <Button
             variant='ghost'
             size='icon'
-            onClick={(event) => {
-              const icon = event.currentTarget.querySelector('[data-calendar-settings-icon]');
-              icon?.animate(
-                [
-                  { transform: 'rotate(0deg)' },
-                  { transform: 'rotate(180deg)' },
-                  { transform: 'rotate(360deg)' }
-                ],
-                { duration: 520, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' }
-              );
+            onClick={() => {
               setSettingsOpen(true);
+              settingsSpinRef.current?.animate(
+                [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+                {
+                  duration: 520,
+                  easing: 'cubic-bezier(0.22,1,0.36,1)'
+                }
+              );
             }}
             aria-label='Configuración del calendario'
-            className='size-9 rounded-[10px] text-muted-foreground transition-colors hover:bg-muted/55 hover:text-foreground'
+            className='text-muted-foreground'
           >
-            <Icons.settings data-calendar-settings-icon className='size-[20px]' />
+            <span
+              ref={settingsSpinRef}
+              className='inline-flex items-center justify-center'
+              aria-hidden='true'
+            >
+              <Icons.settings className='size-[22px]' />
+            </span>
           </Button>
           <Button
             variant='secondary'
