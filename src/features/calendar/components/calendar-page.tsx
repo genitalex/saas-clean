@@ -49,10 +49,21 @@ import { EventInspector } from './event-inspector';
 
 type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 type Category = { id: string; name: string; color: string };
+const CALENDAR_CATEGORY_COLORS = [
+  '#5f8065',
+  '#eab308',
+  '#f97316',
+  '#ef4444',
+  '#ec4899',
+  '#8b5cf6',
+  '#0ea5e9',
+  '#14b8a6'
+] as const;
+
 const defaultCategories: Category[] = [
-  { id: 'work', name: 'Trabajo', color: '#5f8065' },
-  { id: 'important', name: 'Importante', color: '#49674f' },
-  { id: 'personal', name: 'Personal', color: '#6f776f' }
+  { id: 'work', name: 'Trabajo', color: CALENDAR_CATEGORY_COLORS[0] },
+  { id: 'important', name: 'Importante', color: CALENDAR_CATEGORY_COLORS[1] },
+  { id: 'personal', name: 'Personal', color: CALENDAR_CATEGORY_COLORS[7] }
 ];
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -122,7 +133,6 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsSpinRef = useRef<HTMLSpanElement>(null);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
@@ -229,7 +239,7 @@ export function CalendarPage({
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('calendar-categories');
-      if (saved) setCategories(JSON.parse(saved));
+      if (saved) setCategories((JSON.parse(saved) as Category[]).slice(0, 8));
     } catch {
       /* preferences are optional */
     }
@@ -471,17 +481,34 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <SegmentedToggle
-            className='hidden md:inline-grid'
-            options={['‹', 'Hoy', '›']}
-            value='Hoy'
-            onValueChange={(next) => {
-              if (next === '‹') shift(-1);
-              if (next === 'Hoy') setCursor(new Date());
-              if (next === '›') shift(1);
-            }}
-            aria-label='Navegación del calendario'
-          />
+          <div className='relative hidden h-10 items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => shift(-1)}
+              aria-label='Ir al periodo anterior'
+              className='relative z-10 h-8 min-w-8 rounded-[8px] px-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground'
+            >
+              <Icons.chevronLeft className='size-4' />
+            </Button>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => setCursor(new Date())}
+              className='relative z-10 h-8 min-w-16 rounded-[8px] bg-card px-3 text-xs font-medium text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)] ring-0'
+            >
+              Hoy
+            </Button>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => shift(1)}
+              aria-label='Ir al periodo siguiente'
+              className='relative z-10 h-8 min-w-8 rounded-[8px] px-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground'
+            >
+              <Icons.chevronRight className='size-4' />
+            </Button>
+          </div>
           <SegmentedToggle
             className='hidden md:inline-grid'
             options={['Mes', 'Semana', 'Día', 'Agenda']}
@@ -507,30 +534,26 @@ export function CalendarPage({
             }}
             aria-label='Vista del calendario'
           />
-          <Button
-            variant='ghost'
-            size='icon'
-            onClick={() => {
-              setSettingsOpen(true);
-              settingsSpinRef.current?.animate(
-                [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
-                {
-                  duration: 520,
-                  easing: 'cubic-bezier(0.22,1,0.36,1)'
-                }
-              );
-            }}
-            aria-label='Configuración del calendario'
-            className='text-muted-foreground'
-          >
-            <span
-              ref={settingsSpinRef}
-              className='inline-flex items-center justify-center'
-              aria-hidden='true'
+          <div className='flex h-10 items-center justify-center'>
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={() => {
+                setSettingsSpinning(true);
+                setSettingsOpen(true);
+              }}
+              aria-label='Configuración del calendario'
+              className='size-9 rounded-[10px] text-muted-foreground transition-colors duration-200 hover:bg-muted/70 hover:text-foreground'
             >
-              <Icons.settings className='size-[22px]' />
-            </span>
-          </Button>
+              <Icons.settings
+                className={cn(
+                  'size-[22px]',
+                  settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
+                )}
+                onAnimationEnd={() => setSettingsSpinning(false)}
+              />
+            </Button>
+          </div>
           <Button
             variant='secondary'
             size='sm'
@@ -576,6 +599,24 @@ export function CalendarPage({
             </button>
           );
         })}
+        <Button
+          variant='ghost'
+          size='icon'
+          onClick={() => {
+            setSettingsSpinning(true);
+            setSettingsOpen(true);
+          }}
+          aria-label='Configuración del calendario'
+          className='size-9 rounded-[10px] text-muted-foreground transition-colors duration-200 hover:bg-muted/70 hover:text-foreground'
+        >
+          <Icons.settings
+            className={cn(
+              'size-[22px]',
+              settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
+            )}
+            onAnimationEnd={() => setSettingsSpinning(false)}
+          />
+        </Button>
         <span className='text-muted-foreground ml-auto text-xs'>
           {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este periodo
         </span>
@@ -3177,7 +3218,7 @@ function CategoryDialog({
   const [editing, setEditing] = useState<string | null>(null);
   const save = () => {
     if (!name.trim()) return;
-    if (!editing && categories.length >= 15) return;
+    if (!editing && categories.length >= 8) return;
     onChange(
       editing
         ? categories.map((category) =>
@@ -3186,7 +3227,7 @@ function CategoryDialog({
         : [...categories, { id: crypto.randomUUID(), name: name.trim(), color }]
     );
     setName('');
-    setColor('#5f8065');
+    setColor(CALENDAR_CATEGORY_COLORS[0]);
     setEditing(null);
   };
   return (
@@ -3195,7 +3236,7 @@ function CategoryDialog({
         <DialogHeader>
           <DialogTitle>Configuración del calendario</DialogTitle>
           <DialogDescription>
-            Personaliza tus categorías de eventos. Máximo 15 colores.
+            Personaliza tus categorías de eventos. Máximo 8 categorías y 8 colores.
           </DialogDescription>
         </DialogHeader>
         <div className='flex flex-col gap-3'>
@@ -3230,17 +3271,24 @@ function CategoryDialog({
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
-            <label className='flex items-center gap-2 rounded-md border px-2 text-xs'>
-              Color{' '}
-              <input
-                aria-label='Elegir color'
-                type='color'
-                value={color}
-                onChange={(event) => setColor(event.target.value)}
-              />
-            </label>
-            <Button onClick={save} disabled={!editing && categories.length >= 15}>
-              {editing ? 'Guardar' : categories.length >= 15 ? 'Límite alcanzado' : 'Añadir'}
+            <div
+              className='flex items-center gap-1.5 rounded-md border px-2 py-1.5'
+              aria-label='Elegir color'
+            >
+              {CALENDAR_CATEGORY_COLORS.map((option) => (
+                <button
+                  key={option}
+                  type='button'
+                  onClick={() => setColor(option)}
+                  aria-label={`Color ${option}`}
+                  aria-pressed={color.toLowerCase() === option.toLowerCase()}
+                  className='size-5 rounded-full border-2 border-transparent transition-transform duration-150 hover:scale-110 aria-[pressed=true]:border-foreground/70'
+                  style={{ backgroundColor: option }}
+                />
+              ))}
+            </div>
+            <Button onClick={save} disabled={!editing && categories.length >= 8}>
+              {editing ? 'Guardar' : categories.length >= 8 ? 'Límite alcanzado' : 'Añadir'}
             </Button>
           </div>
         </div>
