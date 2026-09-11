@@ -721,11 +721,21 @@ export function CalendarPage({
             onSelectDate={setSelectedDate}
             events={visibleMobileEvents}
             categories={categories}
+            activeCategoryIds={filters}
             isLoading={isMobileLoading}
             onOpenEvent={openEvent}
             onCreate={openCreate}
             onMoveEvent={moveEvent}
             onOpenSettings={() => setSettingsOpen(true)}
+            onToggleCategory={(categoryId) =>
+              setFilters((current) =>
+                current.includes(categoryId)
+                  ? current.filter((id) => id !== categoryId)
+                  : [...current, categoryId]
+              )
+            }
+            calendarSearch={calendarSearch}
+            onCalendarSearchChange={setCalendarSearch}
           />
         </div>
       </div>
@@ -854,11 +864,15 @@ function MobileCalendar({
   onSelectDate,
   events,
   categories,
+  activeCategoryIds,
   isLoading,
   onOpenEvent,
   onCreate,
   onMoveEvent,
-  onOpenSettings
+  onOpenSettings,
+  onToggleCategory,
+  calendarSearch,
+  onCalendarSearchChange
 }: {
   mode: 'year' | 'month' | 'week' | 'day';
   onModeChange: (mode: 'year' | 'month' | 'week' | 'day') => void;
@@ -868,11 +882,15 @@ function MobileCalendar({
   onSelectDate: (date: Date) => void;
   events: Event[];
   categories: Category[];
+  activeCategoryIds: string[];
   isLoading: boolean;
   onOpenEvent: (event: Event) => void;
   onCreate: (date: Date) => void;
   onMoveEvent: (event: Event, nextStart: Date) => Promise<void>;
   onOpenSettings: () => void;
+  onToggleCategory: (categoryId: string) => void;
+  calendarSearch: string;
+  onCalendarSearchChange: (value: string) => void;
 }) {
   const openDay = (day: Date) => {
     onSelectDate(day);
@@ -932,7 +950,7 @@ function MobileCalendar({
             selectedDate={selectedDate}
             events={events}
             categories={categories}
-            activeCategoryIds={filters}
+            activeCategoryIds={activeCategoryIds}
             isLoading={isLoading}
             onCursorChange={onCursorChange}
             onSelectDay={openDay}
@@ -941,6 +959,9 @@ function MobileCalendar({
             onGoToday={goToday}
             onCreate={onCreate}
             onOpenSettings={onOpenSettings}
+            onToggleCategory={onToggleCategory}
+            calendarSearch={calendarSearch}
+            onCalendarSearchChange={onCalendarSearchChange}
           />
         </div>
         <div className='h-full w-1/4 shrink-0' inert={mode !== 'week'}>
