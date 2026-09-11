@@ -493,7 +493,7 @@ export function CalendarPage({
                 size='icon-sm'
                 onClick={() => shift(-1)}
                 aria-label='Ir al periodo anterior'
-                className='relative z-10 h-7 w-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
+                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.98]'
               >
                 <Icons.chevronLeft className='size-4' />
               </Button>
@@ -504,7 +504,7 @@ export function CalendarPage({
                 size='icon-sm'
                 onClick={() => shift(1)}
                 aria-label='Ir al periodo siguiente'
-                className='relative z-10 h-7 w-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
+                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.98]'
               >
                 <Icons.chevronRight className='size-4' />
               </Button>
