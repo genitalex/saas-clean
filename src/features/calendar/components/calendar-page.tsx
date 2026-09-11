@@ -133,7 +133,6 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSpinning, setSettingsSpinning] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
@@ -482,32 +481,32 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='relative hidden h-8 items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
+          <div className='relative hidden items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
             <Button
               variant='ghost'
-              size='icon-xs'
+              size='icon-sm'
               onClick={() => shift(-1)}
               aria-label='Ir al periodo anterior'
-              className='relative z-10 size-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/70 hover:text-foreground'
+              className='relative z-10 h-8 w-8 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground'
             >
-              <Icons.chevronLeft className='size-3.5' />
+              <Icons.chevronLeft className='size-4' />
             </Button>
             <Button
               variant='ghost'
               size='sm'
               onClick={() => setCursor(new Date())}
-              className='relative z-10 h-7 min-w-16 rounded-[8px] bg-card px-2.5 text-xs font-medium text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)] ring-0'
+              className='relative z-10 h-8 min-w-16 rounded-[8px] bg-card px-2.5 text-xs font-medium text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)] ring-0'
             >
               Hoy
             </Button>
             <Button
               variant='ghost'
-              size='icon-xs'
+              size='icon-sm'
               onClick={() => shift(1)}
               aria-label='Ir al periodo siguiente'
-              className='relative z-10 size-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/70 hover:text-foreground'
+              className='relative z-10 h-8 w-8 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground'
             >
-              <Icons.chevronRight className='size-3.5' />
+              <Icons.chevronRight className='size-4' />
             </Button>
           </div>
           <SegmentedToggle
