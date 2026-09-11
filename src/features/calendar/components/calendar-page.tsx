@@ -31,6 +31,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { SegmentedToggle } from '@/components/ui/segmented-toggle';
 import { createEvent, getEvents, eventKeys, updateEvent } from '../queries';
@@ -61,9 +62,8 @@ const CALENDAR_CATEGORY_COLORS = [
 ] as const;
 
 const defaultCategories: Category[] = [
-  { id: 'work', name: 'Trabajo', color: CALENDAR_CATEGORY_COLORS[0] },
   { id: 'important', name: 'Importante', color: CALENDAR_CATEGORY_COLORS[1] },
-  { id: 'personal', name: 'Personal', color: CALENDAR_CATEGORY_COLORS[7] }
+  { id: 'meetings', name: 'Reuniones', color: CALENDAR_CATEGORY_COLORS[0] }
 ];
 const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -133,7 +133,6 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSpinning, setSettingsSpinning] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
@@ -449,158 +448,213 @@ export function CalendarPage({
     <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
-      <header className='hidden flex-col gap-4 md:flex lg:flex-row lg:items-center lg:justify-between'>
-        <div className='hidden md:block'>
-          <p className='text-muted-foreground text-sm'>Planificación del equipo</p>
-          {view === 'month' ? (
-            <button
-              type='button'
-              onClick={() => setYearPickerOpen(true)}
-              className='group mt-0.5 inline-flex items-center gap-1.5 rounded-xl px-1.5 py-0.5 text-left text-[1.6rem] leading-tight font-semibold tracking-[-0.03em] capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              aria-label={`Cambiar mes y año, actualmente ${title}`}
-            >
-              {title}
-              <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
-            </button>
-          ) : (
-            <h1 className='mt-0.5 text-[1.6rem] leading-tight font-semibold tracking-[-0.03em] capitalize'>
-              {title}
-            </h1>
-          )}
-        </div>
-        <div className='flex flex-wrap items-center gap-2'>
-          <div className='relative hidden min-w-[220px] md:block lg:min-w-[280px]'>
-            <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
-            <Input
-              id='calendar-search'
-              value={calendarSearch}
-              onChange={(event) => setCalendarSearch(event.target.value)}
-              placeholder='Buscar en el calendario…'
-              className='h-7 rounded-[10px] border-border/60 bg-muted/25 pl-9 shadow-none'
-            />
-            <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-[6px] border border-border/60 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
-              /
-            </kbd>
+      <header className='hidden flex-col gap-3 md:flex'>
+        <div className='mx-auto flex w-full max-w-[820px] items-center justify-center gap-2'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => shift(-1)}
+            aria-label='Ir al periodo anterior'
+            className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+          >
+            <Icons.chevronLeft className='size-4' />
+          </Button>
+          <div className='min-w-0 flex-1 text-center'>
+            {view === 'month' ? (
+              <button
+                type='button'
+                onClick={() => setYearPickerOpen(true)}
+                className='group inline-flex items-center justify-center gap-1.5 rounded-xl px-1.5 py-0.5 text-center text-[1.55rem] leading-tight font-semibold tracking-[-0.03em] capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                aria-label={`Cambiar mes y año, actualmente ${title}`}
+              >
+                <span>{title}</span>
+                <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
+              </button>
+            ) : (
+              <h1 className='text-[1.55rem] leading-tight font-semibold tracking-[-0.03em] capitalize'>
+                {title}
+              </h1>
+            )}
           </div>
-          <SegmentedToggle
-            className='hidden md:inline-grid'
-            options={['Hoy']}
-            value='Hoy'
-            onValueChange={() => setCursor(new Date())}
-            leadingAction={
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => shift(1)}
+            aria-label='Ir al periodo siguiente'
+            className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+          >
+            <Icons.chevronRight className='size-4' />
+          </Button>
+        </div>
+
+        <div className='mx-auto w-full max-w-[800px]'>
+          <div className='flex flex-col gap-3'>
+            <div className='relative'>
+              <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
+              <Input
+                id='calendar-search'
+                value={calendarSearch}
+                onChange={(event) => setCalendarSearch(event.target.value)}
+                placeholder='Buscar en el calendario...'
+                className='h-9 w-full rounded-[10px] border-border/60 bg-muted/25 pl-9 shadow-none md:h-9 lg:h-9'
+              />
+              <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-[6px] border border-border/60 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
+                /
+              </kbd>
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <Popover>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant='secondary'
+                      className='h-8 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+                    >
+                      <span>Etiquetas</span>
+                      <Icons.chevronDown className='size-3.5' />
+                    </Button>
+                  }
+                />
+                <PopoverContent
+                  align='start'
+                  side='bottom'
+                  className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
+                >
+                  <div className='max-h-[320px] overflow-y-auto'>
+                    {categories.map((category) => {
+                      const active = filters.includes(category.id);
+                      return (
+                        <button
+                          key={category.id}
+                          type='button'
+                          onClick={() =>
+                            setFilters((current) =>
+                              current.includes(category.id)
+                                ? current.filter((id) => id !== category.id)
+                                : [...current, category.id]
+                            )
+                          }
+                          className={cn(
+                            'flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2 text-left text-sm transition-colors hover:bg-muted/70',
+                            active && 'bg-muted/60'
+                          )}
+                        >
+                          <span className='flex min-w-0 items-center gap-2'>
+                            <span
+                              className='size-2.5 shrink-0 rounded-full'
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span className='truncate text-foreground'>{category.name}</span>
+                          </span>
+                          <span
+                            className={cn(
+                              'text-xs font-semibold transition-opacity',
+                              active
+                                ? 'text-foreground opacity-100'
+                                : 'text-muted-foreground opacity-0'
+                            )}
+                          >
+                            ✓
+                          </span>
+                        </button>
+                      );
+                    })}
+                    <button
+                      type='button'
+                      onClick={() => setSettingsOpen(true)}
+                      className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2 py-2 text-left text-sm font-medium text-foreground hover:bg-muted/70'
+                    >
+                      <span className='text-base leading-none'>+</span>
+                      <span>Nueva etiqueta</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               <Button
                 variant='ghost'
                 size='icon-sm'
-                onClick={() => shift(-1)}
-                aria-label='Ir al periodo anterior'
-                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-card/70 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.96]'
+                onClick={() => setSettingsOpen(true)}
+                aria-label='Configuración del calendario'
+                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
               >
-                <Icons.chevronLeft className='size-4' />
+                <Icons.adjustments className='size-4' />
               </Button>
-            }
-            trailingAction={
               <Button
-                variant='ghost'
+                variant='secondary'
                 size='icon-sm'
-                onClick={() => shift(1)}
-                aria-label='Ir al periodo siguiente'
-                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-card/70 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.96]'
+                onClick={() => openCreate(selectedDate)}
+                aria-label='Nuevo evento'
+                title='Nuevo evento'
+                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-foreground shadow-none hover:bg-muted'
               >
-                <Icons.chevronRight className='size-4' />
+                <Icons.add className='size-4' />
               </Button>
-            }
-            aria-label='Navegación del calendario'
-          />
-          <SegmentedToggle
-            className='hidden md:inline-grid'
-            options={['Mes', 'Semana', 'Día', 'Agenda']}
-            value={
-              view === 'month'
-                ? 'Mes'
-                : view === 'week'
-                  ? 'Semana'
-                  : view === 'day'
-                    ? 'Día'
-                    : 'Agenda'
-            }
-            onValueChange={(next) => {
-              const nextView: CalendarView =
-                next === 'Mes'
-                  ? 'month'
-                  : next === 'Semana'
-                    ? 'week'
-                    : next === 'Día'
-                      ? 'day'
-                      : 'agenda';
-              setView(nextView);
-            }}
-            aria-label='Vista del calendario'
-          />
+            </div>
+
+            <div className='flex justify-center'>
+              <SegmentedToggle
+                className='hidden md:inline-grid'
+                options={['Mes', 'Semana', 'Día', 'Agenda']}
+                value={
+                  view === 'month'
+                    ? 'Mes'
+                    : view === 'week'
+                      ? 'Semana'
+                      : view === 'day'
+                        ? 'Día'
+                        : 'Agenda'
+                }
+                onValueChange={(next) => {
+                  const nextView: CalendarView =
+                    next === 'Mes'
+                      ? 'month'
+                      : next === 'Semana'
+                        ? 'week'
+                        : next === 'Día'
+                          ? 'day'
+                          : 'agenda';
+                  setView(nextView);
+                }}
+                aria-label='Vista del calendario'
+              />
+            </div>
+
+            <div className='flex justify-center'>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  onClick={() => shift(-1)}
+                  aria-label='Ir al periodo anterior'
+                  className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+                >
+                  <Icons.chevronLeft className='size-4' />
+                </Button>
+                <Button
+                  variant='secondary'
+                  onClick={() => setCursor(new Date())}
+                  className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+                >
+                  Hoy
+                </Button>
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  onClick={() => shift(1)}
+                  aria-label='Ir al periodo siguiente'
+                  className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+                >
+                  <Icons.chevronRight className='size-4' />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Category filter chips — desktop only. On mobile, filtering lives in
-          the calendar's own settings entry point so the full-screen surface
-          isn't preceded by a row of dashboard-style controls. */}
       <div className='hidden flex-wrap items-center gap-2 md:flex'>
-        {categories.map((category) => {
-          const active = filters.includes(category.id);
-          return (
-            <button
-              key={category.id}
-              type='button'
-              aria-pressed={active}
-              onClick={() =>
-                setFilters((current) =>
-                  current.includes(category.id)
-                    ? current.filter((id) => id !== category.id)
-                    : [...current, category.id]
-                )
-              }
-              className={cn(
-                'group flex h-7 items-center gap-1.5 rounded-[8px] border px-3 text-xs font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]',
-                active
-                  ? 'border-transparent text-foreground shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)]'
-                  : 'text-muted-foreground/75 border-transparent bg-muted/45 hover:bg-muted/75 hover:text-foreground'
-              )}
-              style={active ? { backgroundColor: `${category.color}1c` } : undefined}
-            >
-              <i
-                className='size-1.5 shrink-0 rounded-full transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110'
-                style={{ backgroundColor: category.color, opacity: active ? 1 : 0.45 }}
-              />
-              {category.name}
-            </button>
-          );
-        })}
-        <Button
-          variant='secondary'
-          size='icon-sm'
-          onClick={() => openCreate(selectedDate)}
-          aria-label='Nuevo evento'
-          title='Nuevo evento'
-          className='size-8 rounded-[8px] bg-secondary text-secondary-foreground shadow-none transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-secondary/80 active:scale-[0.96]'
-        >
-          <Icons.add className='size-4' />
-        </Button>
-        <Button
-          variant='ghost'
-          size='icon'
-          onClick={() => {
-            setSettingsSpinning(true);
-            setSettingsOpen(true);
-          }}
-          aria-label='Configuración del calendario'
-          className='size-7 rounded-[8px] border border-border/60 bg-muted/45 text-muted-foreground shadow-none transition-[transform,background-color,color,border-color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border hover:bg-muted hover:text-foreground active:scale-[0.96]'
-        >
-          <Icons.adjustments
-            className={cn(
-              'size-4',
-              settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
-            )}
-            onAnimationEnd={() => setSettingsSpinning(false)}
-          />
-        </Button>
         <span className='text-muted-foreground ml-auto text-xs'>
           {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este periodo
         </span>
@@ -878,6 +932,7 @@ function MobileCalendar({
             selectedDate={selectedDate}
             events={events}
             categories={categories}
+            activeCategoryIds={filters}
             isLoading={isLoading}
             onCursorChange={onCursorChange}
             onSelectDay={openDay}
@@ -1052,6 +1107,7 @@ function MobileMonthView({
   selectedDate,
   events,
   categories,
+  activeCategoryIds,
   isLoading,
   onCursorChange,
   onSelectDay,
@@ -1059,12 +1115,16 @@ function MobileMonthView({
   onOpenWeek,
   onGoToday,
   onCreate,
-  onOpenSettings
+  onOpenSettings,
+  onToggleCategory,
+  calendarSearch,
+  onCalendarSearchChange
 }: {
   cursor: Date;
   selectedDate: Date;
   events: Event[];
   categories: Category[];
+  activeCategoryIds: string[];
   isLoading: boolean;
   onCursorChange: (date: Date) => void;
   onSelectDay: (date: Date) => void;
@@ -1073,6 +1133,9 @@ function MobileMonthView({
   onGoToday: () => void;
   onCreate: (date: Date) => void;
   onOpenSettings: () => void;
+  onToggleCategory?: (categoryId: string) => void;
+  calendarSearch: string;
+  onCalendarSearchChange: (value: string) => void;
 }) {
   const today = new Date();
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -1082,14 +1145,14 @@ function MobileMonthView({
   const weekRows = days.length / 7;
 
   return (
-    <div className='flex h-full min-h-0 flex-col gap-4 px-3 pt-3 pb-2 sm:px-4'>
-      <div className='flex items-center justify-between gap-2'>
+    <div className='flex h-full min-h-0 flex-col gap-3 px-3 pt-3 pb-2 sm:px-4'>
+      <div className='mx-auto flex w-full max-w-[420px] items-center justify-center gap-2'>
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={() => onCursorChange(subMonths(cursor, 1))}
           aria-label='Mes anterior'
-          className='h-9 w-9 rounded-[10px]'
+          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
         >
           <Icons.chevronLeft className='size-4' />
         </Button>
@@ -1097,7 +1160,7 @@ function MobileMonthView({
           type='button'
           onClick={onOpenYear}
           aria-label='Elegir otro mes del año'
-          className='min-w-0 rounded-xl px-3 py-2 text-[1.15rem] font-semibold tracking-tight capitalize transition-colors hover:bg-accent/30 active:scale-[0.98]'
+          className='min-w-0 flex-1 rounded-xl px-2 py-1.5 text-center text-[1.05rem] font-semibold tracking-tight capitalize transition-colors hover:bg-accent/30 active:scale-[0.98]'
         >
           {format(cursor, 'LLLL yyyy', { locale: es })}
         </button>
@@ -1106,63 +1169,156 @@ function MobileMonthView({
           size='icon-sm'
           onClick={() => onCursorChange(addMonths(cursor, 1))}
           aria-label='Mes siguiente'
-          className='h-9 w-9 rounded-[10px]'
+          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
         >
           <Icons.chevronRight className='size-4' />
         </Button>
       </div>
-      <div className='flex items-center justify-between gap-2'>
-        <div className='flex items-center gap-0.5 rounded-[10px] border border-border/60 bg-muted/35 p-1'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={onGoToday}
-            className='h-8 rounded-[8px] bg-background px-3 text-xs font-medium text-foreground shadow-none ring-1 ring-border/35'
+
+      <div className='relative mx-auto w-full max-w-[420px]'>
+        <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
+        <input
+          id='calendar-search'
+          value={calendarSearch}
+          onChange={(event) => onCalendarSearchChange(event.target.value)}
+          placeholder='Buscar en el calendario...'
+          className='h-9 w-full rounded-[10px] border border-border/60 bg-muted/25 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/70 shadow-none outline-none ring-0 focus:border-border'
+        />
+      </div>
+
+      <div className='mx-auto flex w-full max-w-[420px] items-center gap-2'>
+        <Popover>
+          <PopoverTrigger
+            render={
+              <Button
+                variant='secondary'
+                className='h-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+              >
+                <span>Etiquetas</span>
+                <Icons.chevronDown className='size-3.5' />
+              </Button>
+            }
+          />
+          <PopoverContent
+            align='start'
+            side='bottom'
+            className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
           >
-            Hoy
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onCreate(startOfDay(new Date()))}
-            aria-label='Nuevo evento hoy'
-            className='h-8 w-8 rounded-[8px]'
-          >
-            <Icons.add className='size-4' />
-          </Button>
-        </div>
+            <div className='max-h-[320px] overflow-y-auto'>
+              {categories.map((category) => {
+                const active = activeCategoryIds.includes(category.id);
+                return (
+                  <button
+                    key={category.id}
+                    type='button'
+                    onClick={() => onToggleCategory?.(category.id)}
+                    className={cn(
+                      'flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2 text-left text-sm transition-colors hover:bg-muted/70',
+                      active && 'bg-muted/60'
+                    )}
+                  >
+                    <span className='flex min-w-0 items-center gap-2'>
+                      <span
+                        className='size-2.5 shrink-0 rounded-full'
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className='truncate text-foreground'>{category.name}</span>
+                    </span>
+                    <span
+                      className={cn(
+                        'text-xs font-semibold transition-opacity',
+                        active ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-0'
+                      )}
+                    >
+                      ✓
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type='button'
+                onClick={onOpenSettings}
+                className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2 py-2 text-left text-sm font-medium text-foreground hover:bg-muted/70'
+              >
+                <span className='text-base leading-none'>+</span>
+                <span>Nueva etiqueta</span>
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
         <Button
           variant='ghost'
           size='icon-sm'
           onClick={onOpenSettings}
           aria-label='Configuración del calendario'
-          className='text-muted-foreground h-8 w-8 shrink-0 rounded-[9px]'
+          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
         >
           <Icons.adjustments className='size-4' />
         </Button>
+        <Button
+          variant='secondary'
+          size='icon-sm'
+          onClick={() => onCreate(selectedDate)}
+          aria-label='Nuevo evento'
+          className='ml-auto h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-foreground shadow-none hover:bg-muted'
+        >
+          <Icons.add className='size-4' />
+        </Button>
       </div>
-      <div
-        className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
-        role='tablist'
-        aria-label='Vista del calendario'
-      >
-        <button
-          type='button'
-          role='tab'
-          aria-selected='true'
-          className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
+
+      <div className='mx-auto w-full max-w-[420px]'>
+        <div
+          className='grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
+          role='tablist'
+          aria-label='Vista del calendario'
         >
-          Mes
-        </button>
-        <button
-          type='button'
-          role='tab'
-          aria-selected='false'
-          onClick={onOpenWeek}
-          className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+          <button
+            type='button'
+            role='tab'
+            aria-selected='true'
+            className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
+          >
+            Mes
+          </button>
+          <button
+            type='button'
+            role='tab'
+            aria-selected='false'
+            onClick={onOpenWeek}
+            className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+          >
+            Semana
+          </button>
+        </div>
+      </div>
+
+      <div className='mx-auto flex w-full max-w-[420px] items-center justify-center gap-2'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCursorChange(subMonths(cursor, 1))}
+          aria-label='Mes anterior'
+          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
         >
-          Semana
-        </button>
+          <Icons.chevronLeft className='size-4' />
+        </Button>
+        <Button
+          variant='secondary'
+          onClick={onGoToday}
+          className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+        >
+          Hoy
+        </Button>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCursorChange(addMonths(cursor, 1))}
+          aria-label='Mes siguiente'
+          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+        >
+          <Icons.chevronRight className='size-4' />
+        </Button>
       </div>
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
