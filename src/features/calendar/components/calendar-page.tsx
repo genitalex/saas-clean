@@ -448,185 +448,146 @@ export function CalendarPage({
     <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
-      <header className='hidden flex-col gap-3 md:flex'>
-        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-center'>
-          <div className='min-w-0 text-center'>
-            {view === 'month' ? (
-              <button
-                type='button'
-                onClick={() => setYearPickerOpen(true)}
-                className='group inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-center text-[2rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                aria-label={`Cambiar mes y año, actualmente ${title}`}
-              >
-                <span>{title}</span>
-                <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
-              </button>
-            ) : (
-              <h1 className='text-[2rem] leading-none font-semibold tracking-[-0.04em] capitalize'>
-                {title}
-              </h1>
-            )}
+      <header className='hidden md:flex'>
+        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-between gap-2 rounded-[12px] border border-border/60 bg-muted/20 px-2 py-2'>
+          <div className='flex min-w-0 flex-1 items-center gap-2'>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => shift(-1)}
+              aria-label='Ir al periodo anterior'
+              className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+            >
+              <Icons.chevronLeft className='size-4' />
+            </Button>
+
+            <Button
+              variant='secondary'
+              onClick={() => setSelectedDate(new Date())}
+              className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-3 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
+            >
+              Hoy
+            </Button>
+
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => shift(1)}
+              aria-label='Ir al periodo siguiente'
+              className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+            >
+              <Icons.chevronRight className='size-4' />
+            </Button>
+
+            <div className='min-w-0 flex-1 text-left'>
+              {view === 'month' ? (
+                <button
+                  type='button'
+                  onClick={() => setYearPickerOpen(true)}
+                  className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  aria-label={`Cambiar mes y año, actualmente ${title}`}
+                >
+                  <span>{title}</span>
+                  <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
+                </button>
+              ) : (
+                <h1 className='px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize'>
+                  {title}
+                </h1>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-center gap-2.5'>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => shift(-1)}
-            aria-label='Ir al periodo anterior'
-            className='h-10 w-10 shrink-0 rounded-[12px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-          >
-            <Icons.chevronLeft className='size-4' />
-          </Button>
-          <Button
-            variant='secondary'
-            onClick={() => setSelectedDate(new Date())}
-            className='h-10 rounded-[10px] border border-border/60 bg-muted/45 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-          >
-            Hoy
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => shift(1)}
-            aria-label='Ir al periodo siguiente'
-            className='h-10 w-10 shrink-0 rounded-[12px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-          >
-            <Icons.chevronRight className='size-4' />
-          </Button>
-        </div>
-
-        <div className='mx-auto w-full max-w-[1040px]'>
-          <div className='flex flex-col gap-2.5'>
-            <div className='relative'>
-              <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
+          <div className='flex min-w-0 items-center justify-end gap-2'>
+            <div className='relative w-[180px] shrink-0'>
+              <Icons.search className='text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2' />
               <Input
                 id='calendar-search'
                 value={calendarSearch}
                 onChange={(event) => setCalendarSearch(event.target.value)}
-                placeholder='Buscar en el calendario...'
-                className='h-11 w-full rounded-[12px] border-border/60 bg-muted/25 pl-9 shadow-none md:h-11 lg:h-11'
+                placeholder='Buscar...'
+                className='h-8 w-full rounded-[10px] border-border/60 bg-background/60 pl-8 pr-2 text-xs shadow-none'
               />
-              <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-[6px] border border-border/60 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
-                /
-              </kbd>
             </div>
 
-            <div className='flex items-center justify-center gap-2.5'>
-              <Popover>
-                <PopoverTrigger
-                  render={
-                    <Button
-                      variant='secondary'
-                      className='h-10 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-                    >
-                      <span>Etiquetas</span>
-                      <Icons.chevronDown className='size-3.5' />
-                    </Button>
-                  }
-                />
-                <PopoverContent
-                  align='start'
-                  side='bottom'
-                  className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
-                >
-                  <div className='space-y-1.5 p-1'>
-                    {categories.map((category) => {
-                      const active = filters.includes(category.id);
-                      return (
-                        <button
-                          key={category.id}
-                          type='button'
-                          onClick={() =>
-                            setFilters((current) =>
-                              current.includes(category.id)
-                                ? current.filter((id) => id !== category.id)
-                                : [...current, category.id]
-                            )
-                          }
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant='secondary'
+                    className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-2.5 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
+                  >
+                    <span>Etiquetas</span>
+                    <Icons.chevronDown className='size-3.5' />
+                  </Button>
+                }
+              />
+              <PopoverContent
+                align='end'
+                side='bottom'
+                className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
+              >
+                <div className='space-y-1.5 p-1'>
+                  {categories.map((category) => {
+                    const active = filters.includes(category.id);
+                    return (
+                      <button
+                        key={category.id}
+                        type='button'
+                        onClick={() =>
+                          setFilters((current) =>
+                            current.includes(category.id)
+                              ? current.filter((id) => id !== category.id)
+                              : [...current, category.id]
+                          )
+                        }
+                        className={cn(
+                          'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
+                          active && 'bg-muted/60'
+                        )}
+                      >
+                        <span className='flex min-w-0 items-center gap-2'>
+                          <span
+                            className='size-2.5 shrink-0 rounded-full'
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className='truncate text-foreground'>{category.name}</span>
+                        </span>
+                        <span
                           className={cn(
-                            'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
-                            active && 'bg-muted/60'
+                            'text-xs font-semibold transition-opacity',
+                            active
+                              ? 'text-foreground opacity-100'
+                              : 'text-muted-foreground opacity-0'
                           )}
                         >
-                          <span className='flex min-w-0 items-center gap-2'>
-                            <span
-                              className='size-2.5 shrink-0 rounded-full'
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span className='truncate text-foreground'>{category.name}</span>
-                          </span>
-                          <span
-                            className={cn(
-                              'text-xs font-semibold transition-opacity',
-                              active
-                                ? 'text-foreground opacity-100'
-                                : 'text-muted-foreground opacity-0'
-                            )}
-                          >
-                            ✓
-                          </span>
-                        </button>
-                      );
-                    })}
-                    <button
-                      type='button'
-                      onClick={() => setSettingsOpen(true)}
-                      className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
-                    >
-                      <span className='text-base leading-none text-muted-foreground'>+</span>
-                      <span>Nueva etiqueta</span>
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                          ✓
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type='button'
+                    onClick={() => setSettingsOpen(true)}
+                    className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
+                  >
+                    <span className='text-base leading-none text-muted-foreground'>+</span>
+                    <span>Nueva etiqueta</span>
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
 
-              <Button
-                variant='ghost'
-                size='icon-sm'
-                onClick={() => openCreate(selectedDate)}
-                aria-label='Nuevo evento'
-                title='Nuevo evento'
-                className='h-10 w-10 rounded-[10px] border border-border/60 bg-muted/45 text-foreground shadow-none hover:bg-muted'
-              >
-                <Icons.add className='size-4' />
-              </Button>
-            </div>
-
-            <div className='flex items-center gap-3'>
-              <SegmentedToggle
-                className='hidden w-full max-w-[1040px] md:inline-grid'
-                options={['Mes', 'Semana', 'Día', 'Agenda']}
-                value={
-                  view === 'month'
-                    ? 'Mes'
-                    : view === 'week'
-                      ? 'Semana'
-                      : view === 'day'
-                        ? 'Día'
-                        : 'Agenda'
-                }
-                onValueChange={(next) => {
-                  const nextView: CalendarView =
-                    next === 'Mes'
-                      ? 'month'
-                      : next === 'Semana'
-                        ? 'week'
-                        : next === 'Día'
-                          ? 'day'
-                          : 'agenda';
-                  setView(nextView);
-                }}
-                aria-label='Vista del calendario'
-              />
-              <div className='ml-auto hidden items-center gap-2 md:flex'>
-                <span className='text-muted-foreground text-xs'>
-                  {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este
-                  periodo
-                </span>
-              </div>
-            </div>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => openCreate(selectedDate)}
+              aria-label='Nuevo evento'
+              title='Nuevo evento'
+              className='h-8 w-8 rounded-[10px] border border-border/60 bg-background/60 text-foreground shadow-none hover:bg-muted'
+            >
+              <Icons.add className='size-4' />
+            </Button>
           </div>
         </div>
       </header>
