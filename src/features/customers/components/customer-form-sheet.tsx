@@ -76,7 +76,11 @@ export default function CustomerFormSheet({ initialOpen = false }: { initialOpen
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!initialOpen && <Button onClick={() => setOpen(true)}>Nuevo cliente</Button>}
+      {!initialOpen && (
+        <Button variant='secondary' size='sm' className='shadow-none' onClick={() => setOpen(true)}>
+          Nuevo cliente
+        </Button>
+      )}
       <DialogContent className='max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border-border/70 bg-popover sm:max-w-xl sm:p-6'>
         <DialogHeader>
           <DialogTitle className='text-xl font-semibold tracking-tight'>Nuevo cliente</DialogTitle>

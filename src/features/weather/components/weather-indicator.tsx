@@ -233,7 +233,11 @@ function WeatherValue({ weather, city }: { weather: WeatherData; city?: string }
   const WeatherIcon = getWeatherIcon(weather.weatherCode, weather.isDay);
   return (
     <span className={cn('inline-flex items-center gap-2')}>
-      <WeatherIcon className='size-8 stroke-[1.7] drop-shadow-sm' aria-hidden='true' />
+      <WeatherIcon
+        className='size-8 stroke-[1.7] drop-shadow-sm'
+        style={{ color: 'white' }}
+        aria-hidden='true'
+      />
       <span className='font-semibold'>{weather.temperature} °C</span>
       {city && (
         <>

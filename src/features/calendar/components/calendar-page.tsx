@@ -121,6 +121,7 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSpinning, setSettingsSpinning] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
@@ -469,13 +470,13 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='border-border/50 hidden h-10 items-center gap-0.5 rounded-[10px] border border-border/60 bg-muted/35 p-1 md:flex'>
+          <div className='relative hidden h-10 items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
             <Button
               variant='ghost'
               size='icon-sm'
               onClick={() => shift(-1)}
               aria-label='Ir al periodo anterior'
-              className='h-8 rounded-[8px]'
+              className='relative z-10 h-9 min-w-9 rounded-[8px] px-2.5 text-xs text-muted-foreground transition-colors duration-200 hover:bg-transparent hover:text-foreground'
             >
               <Icons.chevronLeft className='size-4' />
             </Button>
@@ -483,7 +484,7 @@ export function CalendarPage({
               variant='ghost'
               size='sm'
               onClick={() => setCursor(new Date())}
-              className='h-8 rounded-[8px] bg-card px-3 text-sm font-medium text-foreground shadow-none ring-1 ring-border/35'
+              className='relative z-10 h-9 min-w-16 rounded-[8px] bg-card px-2.5 text-xs font-medium text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)] ring-0'
             >
               Hoy
             </Button>
@@ -492,7 +493,7 @@ export function CalendarPage({
               size='icon-sm'
               onClick={() => shift(1)}
               aria-label='Ir al periodo siguiente'
-              className='h-8 rounded-[8px]'
+              className='relative z-10 h-9 min-w-9 rounded-[8px] px-2.5 text-xs text-muted-foreground transition-colors duration-200 hover:bg-transparent hover:text-foreground'
             >
               <Icons.chevronRight className='size-4' />
             </Button>
@@ -527,19 +528,25 @@ export function CalendarPage({
           <Button
             variant='ghost'
             size='icon'
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => {
+              setSettingsSpinning(true);
+              setSettingsOpen(true);
+            }}
             aria-label='Configuración del calendario'
             className='text-muted-foreground'
           >
-            <Icons.settings className='size-[18px]' />
+            <Icons.settings
+              className={cn('size-[19px]', settingsSpinning && 'animate-spin')}
+              onAnimationEnd={() => setSettingsSpinning(false)}
+            />
           </Button>
           <Button
             variant='secondary'
+            size='sm'
             onClick={() => openCreate(selectedDate)}
-            className='h-10 gap-1.5 rounded-[10px] shadow-none'
+            className='shadow-none'
           >
-            <Icons.add className='size-4' />
-            <span className='hidden sm:inline'>Nuevo evento</span>
+            Nuevo evento
           </Button>
         </div>
       </header>

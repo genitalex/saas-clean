@@ -358,7 +358,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
         <div className='flex flex-col items-start gap-3 self-start text-white sm:self-end sm:pb-1 lg:mt-8 lg:items-end lg:self-start'>
           <div className='flex items-center gap-3 text-sm text-white/90 sm:text-base'>
             <span className='inline-flex items-center gap-2'>
-              <Icons.calendar className='size-4 text-white/80' />
+              <Icons.calendar className='size-4' style={{ color: 'white' }} />
               <span className='capitalize'>{format(now, 'EEEE d MMMM', { locale: es })}</span>
             </span>
             <span className='text-white/45'>·</span>
