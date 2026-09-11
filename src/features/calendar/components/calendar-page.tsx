@@ -1270,31 +1270,33 @@ function MobileMonthView({
       </div>
 
       <div className='mx-auto flex w-full max-w-[420px] items-center justify-center gap-2'>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCursorChange(subMonths(cursor, 1))}
-          aria-label='Mes anterior'
-          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-        >
-          <Icons.chevronLeft className='size-4' />
-        </Button>
-        <Button
-          variant='secondary'
-          onClick={onGoToday}
-          className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-        >
-          Hoy
-        </Button>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCursorChange(addMonths(cursor, 1))}
-          aria-label='Mes siguiente'
-          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-        >
-          <Icons.chevronRight className='size-4' />
-        </Button>
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onCursorChange(subMonths(cursor, 1))}
+            aria-label='Mes anterior'
+            className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+          >
+            <Icons.chevronLeft className='size-4' />
+          </Button>
+          <Button
+            variant='secondary'
+            onClick={onGoToday}
+            className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+          >
+            Hoy
+          </Button>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => onCursorChange(addMonths(cursor, 1))}
+            aria-label='Mes siguiente'
+            className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+          >
+            <Icons.chevronRight className='size-4' />
+          </Button>
+        </div>
       </div>
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
@@ -1457,7 +1459,7 @@ function MobileWeekView({
       </div>
 
       <div className='flex items-center justify-between gap-2'>
-        <div className='flex items-center gap-1'>
+        <div className='flex flex-1 items-center justify-center gap-2'>
           <Button
             variant='ghost'
             size='icon-sm'
