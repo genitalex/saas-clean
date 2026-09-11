@@ -449,145 +449,175 @@ export function CalendarPage({
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden md:flex'>
-        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-between gap-2 rounded-[12px] border border-border/60 bg-muted/20 px-2 py-2'>
-          <div className='flex min-w-0 flex-1 items-center gap-2'>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => shift(-1)}
-              aria-label='Ir al periodo anterior'
-              className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-            >
-              <Icons.chevronLeft className='size-4' />
-            </Button>
+        <div className='mx-auto flex w-full max-w-[1040px] flex-col gap-2'>
+          <div className='flex items-center justify-between gap-2 rounded-[12px] border border-border/60 bg-muted/20 px-2 py-2'>
+            <div className='flex min-w-0 flex-1 items-center gap-2'>
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => shift(-1)}
+                aria-label='Ir al periodo anterior'
+                className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+              >
+                <Icons.chevronLeft className='size-4' />
+              </Button>
 
-            <Button
-              variant='secondary'
-              onClick={() => setSelectedDate(new Date())}
-              className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-3 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
-            >
-              Hoy
-            </Button>
+              <Button
+                variant='secondary'
+                onClick={() => setSelectedDate(new Date())}
+                className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-3 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
+              >
+                Hoy
+              </Button>
 
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => shift(1)}
-              aria-label='Ir al periodo siguiente'
-              className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-            >
-              <Icons.chevronRight className='size-4' />
-            </Button>
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => shift(1)}
+                aria-label='Ir al periodo siguiente'
+                className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+              >
+                <Icons.chevronRight className='size-4' />
+              </Button>
 
-            <div className='min-w-0 flex-1 text-left'>
-              {view === 'month' ? (
-                <button
-                  type='button'
-                  onClick={() => setYearPickerOpen(true)}
-                  className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                  aria-label={`Cambiar mes y año, actualmente ${title}`}
+              <div className='min-w-0 flex-1 text-left'>
+                {view === 'month' ? (
+                  <button
+                    type='button'
+                    onClick={() => setYearPickerOpen(true)}
+                    className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    aria-label={`Cambiar mes y año, actualmente ${title}`}
+                  >
+                    <span>{title}</span>
+                    <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
+                  </button>
+                ) : (
+                  <h1 className='px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize'>
+                    {title}
+                  </h1>
+                )}
+              </div>
+            </div>
+
+            <div className='flex min-w-0 items-center justify-end gap-2'>
+              <div className='relative w-[180px] shrink-0'>
+                <Icons.search className='text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2' />
+                <Input
+                  id='calendar-search'
+                  value={calendarSearch}
+                  onChange={(event) => setCalendarSearch(event.target.value)}
+                  placeholder='Buscar...'
+                  className='h-8 w-full rounded-[10px] border-border/60 bg-background/60 pl-8 pr-2 text-xs shadow-none'
+                />
+              </div>
+
+              <Popover>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant='secondary'
+                      className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-2.5 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
+                    >
+                      <span>Etiquetas</span>
+                      <Icons.chevronDown className='size-3.5' />
+                    </Button>
+                  }
+                />
+                <PopoverContent
+                  align='end'
+                  side='bottom'
+                  className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
                 >
-                  <span>{title}</span>
-                  <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
-                </button>
-              ) : (
-                <h1 className='px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize'>
-                  {title}
-                </h1>
-              )}
+                  <div className='space-y-1.5 p-1'>
+                    {categories.map((category) => {
+                      const active = filters.includes(category.id);
+                      return (
+                        <button
+                          key={category.id}
+                          type='button'
+                          onClick={() =>
+                            setFilters((current) =>
+                              current.includes(category.id)
+                                ? current.filter((id) => id !== category.id)
+                                : [...current, category.id]
+                            )
+                          }
+                          className={cn(
+                            'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
+                            active && 'bg-muted/60'
+                          )}
+                        >
+                          <span className='flex min-w-0 items-center gap-2'>
+                            <span
+                              className='size-2.5 shrink-0 rounded-full'
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span className='truncate text-foreground'>{category.name}</span>
+                          </span>
+                          <span
+                            className={cn(
+                              'text-xs font-semibold transition-opacity',
+                              active
+                                ? 'text-foreground opacity-100'
+                                : 'text-muted-foreground opacity-0'
+                            )}
+                          >
+                            ✓
+                          </span>
+                        </button>
+                      );
+                    })}
+                    <button
+                      type='button'
+                      onClick={() => setSettingsOpen(true)}
+                      className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
+                    >
+                      <span className='text-base leading-none text-muted-foreground'>+</span>
+                      <span>Nueva etiqueta</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => openCreate(selectedDate)}
+                aria-label='Nuevo evento'
+                title='Nuevo evento'
+                className='h-8 w-8 rounded-[10px] border border-border/60 bg-background/60 text-foreground shadow-none hover:bg-muted'
+              >
+                <Icons.add className='size-4' />
+              </Button>
             </div>
           </div>
 
-          <div className='flex min-w-0 items-center justify-end gap-2'>
-            <div className='relative w-[180px] shrink-0'>
-              <Icons.search className='text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2' />
-              <Input
-                id='calendar-search'
-                value={calendarSearch}
-                onChange={(event) => setCalendarSearch(event.target.value)}
-                placeholder='Buscar...'
-                className='h-8 w-full rounded-[10px] border-border/60 bg-background/60 pl-8 pr-2 text-xs shadow-none'
-              />
-            </div>
-
-            <Popover>
-              <PopoverTrigger
-                render={
-                  <Button
-                    variant='secondary'
-                    className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-2.5 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
-                  >
-                    <span>Etiquetas</span>
-                    <Icons.chevronDown className='size-3.5' />
-                  </Button>
-                }
-              />
-              <PopoverContent
-                align='end'
-                side='bottom'
-                className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
-              >
-                <div className='space-y-1.5 p-1'>
-                  {categories.map((category) => {
-                    const active = filters.includes(category.id);
-                    return (
-                      <button
-                        key={category.id}
-                        type='button'
-                        onClick={() =>
-                          setFilters((current) =>
-                            current.includes(category.id)
-                              ? current.filter((id) => id !== category.id)
-                              : [...current, category.id]
-                          )
-                        }
-                        className={cn(
-                          'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
-                          active && 'bg-muted/60'
-                        )}
-                      >
-                        <span className='flex min-w-0 items-center gap-2'>
-                          <span
-                            className='size-2.5 shrink-0 rounded-full'
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span className='truncate text-foreground'>{category.name}</span>
-                        </span>
-                        <span
-                          className={cn(
-                            'text-xs font-semibold transition-opacity',
-                            active
-                              ? 'text-foreground opacity-100'
-                              : 'text-muted-foreground opacity-0'
-                          )}
-                        >
-                          ✓
-                        </span>
-                      </button>
-                    );
-                  })}
-                  <button
-                    type='button'
-                    onClick={() => setSettingsOpen(true)}
-                    className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
-                  >
-                    <span className='text-base leading-none text-muted-foreground'>+</span>
-                    <span>Nueva etiqueta</span>
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => openCreate(selectedDate)}
-              aria-label='Nuevo evento'
-              title='Nuevo evento'
-              className='h-8 w-8 rounded-[10px] border border-border/60 bg-background/60 text-foreground shadow-none hover:bg-muted'
-            >
-              <Icons.add className='size-4' />
-            </Button>
+          <div className='mx-auto w-full max-w-[600px]'>
+            <SegmentedToggle
+              className='w-full md:inline-grid'
+              options={['Mes', 'Semana', 'Día', 'Agenda']}
+              value={
+                view === 'month'
+                  ? 'Mes'
+                  : view === 'week'
+                    ? 'Semana'
+                    : view === 'day'
+                      ? 'Día'
+                      : 'Agenda'
+              }
+              onValueChange={(next) => {
+                const nextView: CalendarView =
+                  next === 'Mes'
+                    ? 'month'
+                    : next === 'Semana'
+                      ? 'week'
+                      : next === 'Día'
+                        ? 'day'
+                        : 'agenda';
+                setView(nextView);
+              }}
+              aria-label='Vista del calendario'
+            />
           </div>
         </div>
       </header>
@@ -872,6 +902,55 @@ function MobileCalendar({
     if (active instanceof HTMLElement) active.blur();
   }, [mode]);
 
+  if (view === 'agenda') {
+    return (
+      <div className='relative h-full overflow-hidden'>
+        <div className='flex h-full flex-col gap-3 px-3 pt-3 pb-2 sm:px-4'>
+          <div className='flex items-center justify-between gap-2'>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => {
+                onModeChange('month');
+                onViewChange('month');
+              }}
+              aria-label='Volver al mes'
+              className='h-8 w-8 rounded-[10px]'
+            >
+              <Icons.chevronLeft className='size-4' />
+            </Button>
+            <div className='min-w-0 flex-1 text-center'>
+              <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.12em]'>
+                Agenda
+              </p>
+              <p className='truncate text-base font-semibold tracking-tight'>
+                {format(cursor, 'MMMM yyyy', { locale: es })}
+              </p>
+            </div>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              onClick={() => onCreate(selectedDate)}
+              aria-label='Crear evento'
+              className='h-8 w-8 rounded-[10px]'
+            >
+              <Icons.add className='size-4' />
+            </Button>
+          </div>
+          <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+            <AgendaView
+              cursor={cursor}
+              events={events}
+              categories={categories}
+              onOpenEvent={onOpenEvent}
+              onCreate={onCreate}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='relative h-full overflow-hidden'>
       <div
@@ -905,6 +984,7 @@ function MobileCalendar({
             onCalendarSearchChange={onCalendarSearchChange}
             view={view}
             onViewChange={onViewChange}
+            onModeChange={onModeChange}
           />
         </div>
         <div className='h-full w-1/4 shrink-0' inert={mode !== 'week'}>
@@ -1084,7 +1164,8 @@ function MobileMonthView({
   calendarSearch,
   onCalendarSearchChange,
   view,
-  onViewChange
+  onViewChange,
+  onModeChange
 }: {
   cursor: Date;
   selectedDate: Date;
@@ -1104,6 +1185,7 @@ function MobileMonthView({
   onCalendarSearchChange: (value: string) => void;
   view: CalendarView;
   onViewChange: (nextView: CalendarView) => void;
+  onModeChange: (mode: 'year' | 'month' | 'week' | 'day') => void;
 }) {
   const today = new Date();
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -1249,6 +1331,7 @@ function MobileMonthView({
           }
           onValueChange={(next) => {
             if (next === 'Mes') {
+              onModeChange('month');
               onViewChange('month');
               return;
             }
@@ -1258,10 +1341,12 @@ function MobileMonthView({
               return;
             }
             if (next === 'Día') {
+              onModeChange('day');
               onSelectDay(selectedDate);
               onViewChange('day');
               return;
             }
+            onModeChange('day');
             onViewChange('agenda');
           }}
           className='w-full'
