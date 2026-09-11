@@ -449,13 +449,13 @@ export function CalendarPage({
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden flex-col gap-3 md:flex'>
-        <div className='mx-auto flex w-full max-w-[820px] items-center justify-center gap-2'>
+        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-center gap-3'>
           <Button
             variant='ghost'
             size='icon-sm'
             onClick={() => shift(-1)}
             aria-label='Ir al periodo anterior'
-            className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+            className='h-10 w-10 shrink-0 rounded-[12px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
           >
             <Icons.chevronLeft className='size-4' />
           </Button>
@@ -464,14 +464,14 @@ export function CalendarPage({
               <button
                 type='button'
                 onClick={() => setYearPickerOpen(true)}
-                className='group inline-flex items-center justify-center gap-1.5 rounded-xl px-1.5 py-0.5 text-center text-[1.55rem] leading-tight font-semibold tracking-[-0.03em] capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                className='group inline-flex items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-center text-[2rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                 aria-label={`Cambiar mes y año, actualmente ${title}`}
               >
                 <span>{title}</span>
                 <Icons.chevronDown className='text-muted-foreground/65 size-4 opacity-70 transition-transform group-hover:translate-y-0.5' />
               </button>
             ) : (
-              <h1 className='text-[1.55rem] leading-tight font-semibold tracking-[-0.03em] capitalize'>
+              <h1 className='text-[2rem] leading-none font-semibold tracking-[-0.04em] capitalize'>
                 {title}
               </h1>
             )}
@@ -481,14 +481,14 @@ export function CalendarPage({
             size='icon-sm'
             onClick={() => shift(1)}
             aria-label='Ir al periodo siguiente'
-            className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+            className='h-10 w-10 shrink-0 rounded-[12px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
           >
             <Icons.chevronRight className='size-4' />
           </Button>
         </div>
 
-        <div className='mx-auto w-full max-w-[800px]'>
-          <div className='flex flex-col gap-3'>
+        <div className='mx-auto w-full max-w-[1040px]'>
+          <div className='flex flex-col gap-2.5'>
             <div className='relative'>
               <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
               <Input
@@ -496,20 +496,20 @@ export function CalendarPage({
                 value={calendarSearch}
                 onChange={(event) => setCalendarSearch(event.target.value)}
                 placeholder='Buscar en el calendario...'
-                className='h-9 w-full rounded-[10px] border-border/60 bg-muted/25 pl-9 shadow-none md:h-9 lg:h-9'
+                className='h-11 w-full rounded-[12px] border-border/60 bg-muted/25 pl-9 shadow-none md:h-11 lg:h-11'
               />
               <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-[6px] border border-border/60 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
                 /
               </kbd>
             </div>
 
-            <div className='flex items-center justify-center gap-2'>
+            <div className='flex items-center justify-center gap-2.5'>
               <Popover>
                 <PopoverTrigger
                   render={
                     <Button
                       variant='secondary'
-                      className='h-8 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+                      className='h-10 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
                     >
                       <span>Etiquetas</span>
                       <Icons.chevronDown className='size-3.5' />
@@ -575,27 +575,18 @@ export function CalendarPage({
               <Button
                 variant='ghost'
                 size='icon-sm'
-                onClick={() => setSettingsOpen(true)}
-                aria-label='Configuración del calendario'
-                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-              >
-                <Icons.adjustments className='size-4' />
-              </Button>
-              <Button
-                variant='ghost'
-                size='icon-sm'
                 onClick={() => openCreate(selectedDate)}
                 aria-label='Nuevo evento'
                 title='Nuevo evento'
-                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-foreground shadow-none hover:bg-muted'
+                className='h-10 w-10 rounded-[10px] border border-border/60 bg-muted/45 text-foreground shadow-none hover:bg-muted'
               >
                 <Icons.add className='size-4' />
               </Button>
             </div>
 
-            <div className='flex justify-center'>
+            <div className='flex items-center gap-3'>
               <SegmentedToggle
-                className='hidden md:inline-grid'
+                className='hidden w-full max-w-[1040px] md:inline-grid'
                 options={['Mes', 'Semana', 'Día', 'Agenda']}
                 value={
                   view === 'month'
@@ -619,35 +610,11 @@ export function CalendarPage({
                 }}
                 aria-label='Vista del calendario'
               />
-            </div>
-
-            <div className='flex justify-center'>
-              <div className='flex items-center gap-2'>
-                <Button
-                  variant='ghost'
-                  size='icon-sm'
-                  onClick={() => shift(-1)}
-                  aria-label='Ir al periodo anterior'
-                  className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-                >
-                  <Icons.chevronLeft className='size-4' />
-                </Button>
-                <Button
-                  variant='secondary'
-                  onClick={() => setCursor(new Date())}
-                  className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-                >
-                  Hoy
-                </Button>
-                <Button
-                  variant='ghost'
-                  size='icon-sm'
-                  onClick={() => shift(1)}
-                  aria-label='Ir al periodo siguiente'
-                  className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-                >
-                  <Icons.chevronRight className='size-4' />
-                </Button>
+              <div className='ml-auto hidden items-center gap-2 md:flex'>
+                <span className='text-muted-foreground text-xs'>
+                  {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este
+                  periodo
+                </span>
               </div>
             </div>
           </div>
@@ -655,9 +622,6 @@ export function CalendarPage({
       </header>
 
       <div className='hidden flex-wrap items-center gap-2 md:flex'>
-        <span className='text-muted-foreground ml-auto text-xs'>
-          {visibleEvents.length} evento{visibleEvents.length === 1 ? '' : 's'} en este periodo
-        </span>
         {unplannedTasks.length > 0 && (
           <div className='border-border/60 bg-muted/20 flex items-center gap-2 rounded-lg border px-2 py-1'>
             <span className='text-muted-foreground text-xs'>
