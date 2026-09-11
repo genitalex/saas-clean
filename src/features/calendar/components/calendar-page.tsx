@@ -540,7 +540,7 @@ export function CalendarPage({
             variant='secondary'
             size='sm'
             onClick={() => openCreate(selectedDate)}
-            className='bg-secondary text-secondary-foreground shadow-none hover:bg-secondary/80'
+            className='shadow-none'
           >
             Nuevo evento
           </Button>
