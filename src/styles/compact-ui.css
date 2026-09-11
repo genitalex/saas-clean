@@ -25,12 +25,10 @@
   height: 0.875rem;
 }
 
-/* Notes: the editor uses the same UI font as the rendered note. */
 textarea.font-serif {
   font-family: inherit !important;
 }
 
-/* Notes page: same dashboard page inset as the rest of the workspace. */
 main[class~='max-w-[1100px]'] {
   padding-inline: var(--page-padding);
   padding-top: 1.25rem;
@@ -42,8 +40,6 @@ main[class~='max-w-[1100px]'] {
   }
 }
 
-/* Notes: "Nueva nota" matches the compact primary CTAs such as
-   "Nuevo cliente" / "Nueva oportunidad". */
 main[class~='max-w-[1100px]'] header button.bg-primary {
   height: 1.75rem;
   padding-inline: 0.75rem;
@@ -54,4 +50,49 @@ main[class~='max-w-[1100px]'] header button.bg-primary {
 main[class~='max-w-[1100px]'] header button.bg-primary svg {
   width: 0.875rem;
   height: 0.875rem;
+}
+
+/* Quotes: print only the actual A4 document, not the dashboard shell. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  body .quote-print-target,
+  body .quote-print-target * {
+    visibility: visible !important;
+  }
+
+  body .quote-print-target {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 !important;
+    padding: 16mm !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  body .quote-print-target > div {
+    max-width: none;
+  }
+
+  .quote-print-target .print\:hidden {
+    display: none !important;
+  }
 }

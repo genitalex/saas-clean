@@ -1,10 +1,47 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Icons } from '@/components/icons';
+
+const QUOTE_SETTINGS_KEY = 'saas-clean-quote-settings-v1';
+
+type Line = {
+  id: string;
+  description: string;
+  quantity: number;
+  price: number;
+};
+
+type QuoteSettings = {
+  issuer: {
+    businessName: string;
+    legalName: string;
+    taxId: string;
+    address: string;
+    postalCode: string;
+    city: string;
+    email: string;
+    phone: string;
+  };
+  logoDataUrl: string;
+};
+
+const DEFAULT_SETTINGS: QuoteSettings = {
+  issuer: {
+    businessName: '',
+    legalName: '',
+    taxId: '',
+    address: '',
+    postalCode: '',
+    city: '',
+    email: '',
+    phone: ''
+  },
+  logoDataUrl: ''
+};
 
 function money(value: number) {
   return new Intl.NumberFormat('es-ES', {
@@ -13,13 +50,6 @@ function money(value: number) {
     minimumFractionDigits: 2
   }).format(value);
 }
-
-type Line = {
-  id: string;
-  description: string;
-  quantity: number;
-  price: number;
-};
 
 function newLine(): Line {
   return { id: crypto.randomUUID(), description: '', quantity: 1, price: 0 };
@@ -31,8 +61,31 @@ function getDefaultValidUntil() {
   return date.toISOString().slice(0, 10);
 }
 
+function readQuoteSettings(): QuoteSettings {
+  try {
+    const saved = localStorage.getItem(QUOTE_SETTINGS_KEY);
+    if (!saved) return DEFAULT_SETTINGS;
+    return {
+      ...DEFAULT_SETTINGS,
+      ...JSON.parse(saved),
+      issuer: {
+        ...DEFAULT_SETTINGS.issuer,
+        ...(JSON.parse(saved) as QuoteSettings).issuer
+      }
+    };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
 export default function QuotePage() {
   const [client, setClient] = useState('');
+  const [clientLegalName, setClientLegalName] = useState('');
+  const [clientTaxId, setClientTaxId] = useState('');
+  const [clientAddress, setClientAddress] = useState('');
+  const [clientPostalCode, setClientPostalCode] = useState('');
+  const [clientCity, setClientCity] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
   const [quoteNumber, setQuoteNumber] = useState(
     `P-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`
   );
@@ -41,6 +94,29 @@ export default function QuotePage() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
   const [lineItems, setLineItems] = useState<Line[]>([newLine()]);
+  const [issuer, setIssuer] = useState<QuoteSettings['issuer']>(DEFAULT_SETTINGS.issuer);
+  const [logoDataUrl, setLogoDataUrl] = useState('');
+  const [logoError, setLogoError] = useState('');
+
+  useEffect(() => {
+    const saved = readQuoteSettings();
+    setIssuer(saved.issuer);
+    setLogoDataUrl(saved.logoDataUrl);
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        QUOTE_SETTINGS_KEY,
+        JSON.stringify({
+          issuer,
+          logoDataUrl
+        })
+      );
+    } catch {
+      /* Local preferences are optional. */
+    }
+  }, [issuer, logoDataUrl]);
 
   const subtotal = useMemo(
     () =>
@@ -80,13 +156,57 @@ export default function QuotePage() {
     });
   };
 
+  const handleLogo = (file: File | undefined) => {
+    if (!file) return;
+    setLogoError('');
+
+    if (!file.type.startsWith('image/')) {
+      setLogoError('Sube una imagen PNG, JPG, WEBP o SVG.');
+      return;
+    }
+
+    if (file.size > 1_500_000) {
+      setLogoError('El logo debe pesar menos de 1,5 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) return;
+
+      if (file.type === 'image/svg+xml') {
+        setLogoDataUrl(result);
+        return;
+      }
+
+      const image = new Image();
+      image.onload = () => {
+        const maxWidth = 480;
+        const maxHeight = 180;
+        const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d');
+        if (!context) return;
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        setLogoDataUrl(canvas.toDataURL('image/png', 0.92));
+      };
+      image.src = result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <PageContainer
       pageTitle='Presupuestos'
       pageDescription='Crea una propuesta clara, calcula el importe y compártela en segundos.'
     >
       <div className='grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(440px,0.9fr)]'>
-        <section className='overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+        <section className='overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card print:hidden'>
           <div className='border-b border-border/60 px-5 py-5 sm:px-6'>
             <div className='flex items-start justify-between gap-4'>
               <div>
@@ -105,15 +225,162 @@ export default function QuotePage() {
           </div>
 
           <div className='space-y-5 p-5 sm:p-6'>
-            <div className='grid gap-3 sm:grid-cols-[1.4fr_0.8fr_0.9fr]'>
-              <label className='space-y-1.5 text-sm'>
-                <span className='text-muted-foreground'>Cliente</span>
+            <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
+              <div className='flex items-center justify-between gap-3'>
+                <div>
+                  <p className='text-sm font-semibold'>Tus datos fiscales</p>
+                  <p className='text-muted-foreground mt-0.5 text-xs'>
+                    Se guardan en este dispositivo y aparecen en el presupuesto.
+                  </p>
+                </div>
+                {logoDataUrl ? (
+                  <button
+                    type='button'
+                    onClick={() => setLogoDataUrl('')}
+                    className='text-muted-foreground text-xs hover:text-destructive'
+                  >
+                    Quitar logo
+                  </button>
+                ) : null}
+              </div>
+
+              <div className='mt-3 grid gap-3 sm:grid-cols-2'>
                 <Input
-                  placeholder='Nombre del cliente'
+                  placeholder='Nombre comercial'
+                  value={issuer.businessName}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, businessName: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='Razón social'
+                  value={issuer.legalName}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, legalName: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='NIF / CIF'
+                  value={issuer.taxId}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, taxId: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='Dirección'
+                  value={issuer.address}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, address: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='Código postal'
+                  value={issuer.postalCode}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, postalCode: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='Ciudad'
+                  value={issuer.city}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, city: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='Email'
+                  type='email'
+                  value={issuer.email}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, email: event.target.value }))
+                  }
+                />
+                <Input
+                  placeholder='Teléfono'
+                  value={issuer.phone}
+                  onChange={(event) =>
+                    setIssuer((current) => ({ ...current, phone: event.target.value }))
+                  }
+                />
+              </div>
+
+              <div className='mt-3 flex flex-wrap items-center gap-3'>
+                <label className='inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-input/80 bg-background px-3 py-2 text-xs font-medium hover:bg-muted/40'>
+                  <Icons.upload className='size-3.5' />
+                  {logoDataUrl ? 'Cambiar logo' : 'Subir logo'}
+                  <input
+                    type='file'
+                    accept='image/png,image/jpeg,image/webp,image/svg+xml'
+                    className='sr-only'
+                    onChange={(event) => handleLogo(event.target.files?.[0])}
+                  />
+                </label>
+                {logoDataUrl ? (
+                  <div className='flex h-9 max-w-[150px] items-center rounded-[8px] border border-border/60 bg-white px-2'>
+                    <img
+                      src={logoDataUrl}
+                      alt='Logo'
+                      className='max-h-7 max-w-[130px] object-contain'
+                    />
+                  </div>
+                ) : null}
+                {logoError ? <span className='text-xs text-destructive'>{logoError}</span> : null}
+              </div>
+              <p className='text-muted-foreground mt-2 text-[10px]'>
+                Se redimensiona automáticamente para no ocupar demasiado espacio en el documento.
+              </p>
+            </div>
+
+            <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
+              <div>
+                <p className='text-sm font-semibold'>Datos del cliente</p>
+                <p className='text-muted-foreground mt-0.5 text-xs'>
+                  Los datos fiscales de la persona o empresa receptora.
+                </p>
+              </div>
+              <div className='mt-3 grid gap-3 sm:grid-cols-2'>
+                <Input
+                  placeholder='Nombre / empresa'
                   value={client}
                   onChange={(event) => setClient(event.target.value)}
                 />
-              </label>
+                <Input
+                  placeholder='Razón social (opcional)'
+                  value={clientLegalName}
+                  onChange={(event) => setClientLegalName(event.target.value)}
+                />
+                <Input
+                  placeholder='NIF / CIF'
+                  value={clientTaxId}
+                  onChange={(event) => setClientTaxId(event.target.value)}
+                />
+                <Input
+                  placeholder='Email'
+                  type='email'
+                  value={clientEmail}
+                  onChange={(event) => setClientEmail(event.target.value)}
+                />
+                <Input
+                  placeholder='Dirección'
+                  value={clientAddress}
+                  onChange={(event) => setClientAddress(event.target.value)}
+                />
+                <div className='grid grid-cols-2 gap-3'>
+                  <Input
+                    placeholder='C.P.'
+                    value={clientPostalCode}
+                    onChange={(event) => setClientPostalCode(event.target.value)}
+                  />
+                  <Input
+                    placeholder='Ciudad'
+                    value={clientCity}
+                    onChange={(event) => setClientCity(event.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className='grid gap-3 sm:grid-cols-[0.9fr_0.9fr]'>
               <label className='space-y-1.5 text-sm'>
                 <span className='text-muted-foreground'>Nº presupuesto</span>
                 <Input
@@ -231,21 +498,32 @@ export default function QuotePage() {
 
         <section
           id='quote-print'
-          className='overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-background shadow-[0_16px_38px_-30px_rgba(15,23,42,0.5)] print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none'
+          className='quote-print-target overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-background shadow-[0_16px_38px_-30px_rgba(15,23,42,0.5)] print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none'
         >
-          <div className='border-b border-border/60 bg-card/55 px-6 py-5 sm:px-7'>
+          <div className='border-b border-border/60 bg-card/55 px-6 py-5 sm:px-7 print:bg-white'>
             <div className='flex items-start justify-between gap-5'>
-              <div>
-                <div className='mb-2 flex items-center gap-2'>
-                  <span className='size-2 rounded-full bg-primary' />
-                  <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                    Propuesta
+              <div className='flex min-w-0 items-start gap-4'>
+                {logoDataUrl ? (
+                  <div className='flex h-[56px] w-[120px] shrink-0 items-center justify-start'>
+                    <img
+                      src={logoDataUrl}
+                      alt={issuer.businessName || 'Logo'}
+                      className='max-h-[56px] max-w-[120px] object-contain object-left'
+                    />
+                  </div>
+                ) : null}
+                <div className='min-w-0'>
+                  <div className='mb-2 flex items-center gap-2'>
+                    <span className='size-2 rounded-full bg-primary print:hidden' />
+                    <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
+                      Propuesta
+                    </p>
+                  </div>
+                  <h2 className='text-2xl font-semibold tracking-[-0.03em]'>Presupuesto</h2>
+                  <p className='text-muted-foreground mt-1 text-sm'>
+                    {client || 'Nombre del cliente'}
                   </p>
                 </div>
-                <h2 className='text-2xl font-semibold tracking-[-0.03em]'>Presupuesto</h2>
-                <p className='text-muted-foreground mt-1 text-sm'>
-                  {client || 'Nombre del cliente'}
-                </p>
               </div>
               <div className='text-right'>
                 <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.16em]'>
@@ -257,7 +535,57 @@ export default function QuotePage() {
           </div>
 
           <div className='p-6 sm:p-7'>
-            <div className='mb-6 flex flex-wrap gap-x-8 gap-y-2 text-xs'>
+            <div className='grid gap-6 border-b border-border/50 pb-5 sm:grid-cols-2'>
+              <div>
+                <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.16em]'>
+                  Emisor
+                </p>
+                <p className='mt-1 text-sm font-semibold'>
+                  {issuer.businessName || issuer.legalName || 'Tu empresa'}
+                </p>
+                {issuer.legalName && issuer.legalName !== issuer.businessName ? (
+                  <p className='mt-0.5 text-xs'>{issuer.legalName}</p>
+                ) : null}
+                <p className='text-muted-foreground mt-1 whitespace-pre-line text-xs'>
+                  {[
+                    issuer.taxId,
+                    issuer.address,
+                    [issuer.postalCode, issuer.city].filter(Boolean).join(' ')
+                  ]
+                    .filter(Boolean)
+                    .join('\n') || 'Añade tus datos fiscales'}
+                </p>
+                {issuer.email || issuer.phone ? (
+                  <p className='text-muted-foreground mt-1 text-xs'>
+                    {[issuer.email, issuer.phone].filter(Boolean).join(' · ')}
+                  </p>
+                ) : null}
+              </div>
+
+              <div>
+                <p className='text-muted-foreground text-[10px] font-semibold uppercase tracking-[0.16em]'>
+                  Cliente
+                </p>
+                <p className='mt-1 text-sm font-semibold'>{client || 'Nombre del cliente'}</p>
+                {clientLegalName && clientLegalName !== client ? (
+                  <p className='mt-0.5 text-xs'>{clientLegalName}</p>
+                ) : null}
+                <p className='text-muted-foreground mt-1 whitespace-pre-line text-xs'>
+                  {[
+                    clientTaxId,
+                    clientAddress,
+                    [clientPostalCode, clientCity].filter(Boolean).join(' ')
+                  ]
+                    .filter(Boolean)
+                    .join('\n') || 'Añade los datos fiscales del cliente'}
+                </p>
+                {clientEmail ? (
+                  <p className='text-muted-foreground mt-1 text-xs'>{clientEmail}</p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className='mb-6 mt-5 flex flex-wrap gap-x-8 gap-y-2 text-xs'>
               <div>
                 <p className='text-muted-foreground'>Fecha</p>
                 <p className='mt-0.5 font-medium'>{new Date().toLocaleDateString('es-ES')}</p>
@@ -273,7 +601,7 @@ export default function QuotePage() {
             </div>
 
             <div className='overflow-hidden rounded-[12px] border border-border/60'>
-              <div className='grid grid-cols-[minmax(0,1fr)_68px_100px] gap-3 bg-muted/35 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground'>
+              <div className='grid grid-cols-[minmax(0,1fr)_68px_100px] gap-3 bg-muted/35 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground print:bg-[#f5f5f5]'>
                 <span>Concepto</span>
                 <span className='text-right'>Ud.</span>
                 <span className='text-right'>Importe</span>
@@ -284,9 +612,7 @@ export default function QuotePage() {
                     key={item.id}
                     className='grid grid-cols-[minmax(0,1fr)_68px_100px] gap-3 px-3 py-3 text-sm'
                   >
-                    <span className='min-w-0 truncate'>
-                      {item.description || 'Concepto sin nombre'}
-                    </span>
+                    <span className='min-w-0'>{item.description || 'Concepto sin nombre'}</span>
                     <span className='text-right tabular-nums'>{item.quantity}</span>
                     <span className='text-right tabular-nums'>
                       {money(item.quantity * item.price)}
@@ -301,12 +627,12 @@ export default function QuotePage() {
                 <span>Subtotal</span>
                 <span className='tabular-nums'>{money(subtotal)}</span>
               </div>
-              {discountAmount > 0 && (
+              {discountAmount > 0 ? (
                 <div className='flex justify-between gap-4 text-muted-foreground'>
                   <span>Descuento</span>
                   <span className='tabular-nums'>−{money(discountAmount)}</span>
                 </div>
-              )}
+              ) : null}
               <div className='flex justify-between gap-4 text-muted-foreground'>
                 <span>IVA ({taxRate}%)</span>
                 <span className='tabular-nums'>{money(taxAmount)}</span>
