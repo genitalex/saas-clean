@@ -450,14 +450,14 @@ export function CalendarPage({
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden md:flex'>
         <div className='mx-auto flex w-full max-w-[1040px] flex-col gap-2'>
-          <div className='flex items-center justify-between gap-2 rounded-[12px] border border-border/60 bg-muted/20 px-2 py-2'>
+          <div className='flex items-center justify-between gap-2 rounded-[14px] border border-border/70 bg-card/80 px-2.5 py-2 shadow-[0_1px_0_rgba(15,23,42,0.02),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm'>
             <div className='flex min-w-0 flex-1 items-center gap-2'>
               <Button
                 variant='ghost'
                 size='icon-sm'
                 onClick={() => shift(-1)}
                 aria-label='Ir al periodo anterior'
-                className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+                className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
               >
                 <Icons.chevronLeft className='size-4' />
               </Button>
@@ -465,7 +465,7 @@ export function CalendarPage({
               <Button
                 variant='secondary'
                 onClick={() => setSelectedDate(new Date())}
-                className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-3 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
+                className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-3 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
               >
                 Hoy
               </Button>
@@ -475,7 +475,7 @@ export function CalendarPage({
                 size='icon-sm'
                 onClick={() => shift(1)}
                 aria-label='Ir al periodo siguiente'
-                className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-background/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+                className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
               >
                 <Icons.chevronRight className='size-4' />
               </Button>
@@ -485,7 +485,7 @@ export function CalendarPage({
                   <button
                     type='button'
                     onClick={() => setYearPickerOpen(true)}
-                    className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                     aria-label={`Cambiar mes y año, actualmente ${title}`}
                   >
                     <span>{title}</span>
@@ -507,7 +507,7 @@ export function CalendarPage({
                   value={calendarSearch}
                   onChange={(event) => setCalendarSearch(event.target.value)}
                   placeholder='Buscar...'
-                  className='h-8 w-full rounded-[10px] border-border/60 bg-background/60 pl-8 pr-2 text-xs shadow-none'
+                  className='h-8 w-full rounded-[10px] border-border/60 bg-muted/25 pl-8 pr-2 text-xs shadow-none'
                 />
               </div>
 
@@ -516,7 +516,7 @@ export function CalendarPage({
                   render={
                     <Button
                       variant='secondary'
-                      className='h-8 rounded-[10px] border border-border/60 bg-background/60 px-2.5 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
+                      className='h-8 rounded-[10px] border border-border/60 bg-muted/25 px-2.5 text-[11px] font-medium text-foreground shadow-none hover:bg-muted'
                     >
                       <span>Etiquetas</span>
                       <Icons.chevronDown className='size-3.5' />
@@ -585,14 +585,14 @@ export function CalendarPage({
                 onClick={() => openCreate(selectedDate)}
                 aria-label='Nuevo evento'
                 title='Nuevo evento'
-                className='h-8 w-8 rounded-[10px] border border-border/60 bg-background/60 text-foreground shadow-none hover:bg-muted'
+                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/25 text-foreground shadow-none hover:bg-muted'
               >
                 <Icons.add className='size-4' />
               </Button>
             </div>
           </div>
 
-          <div className='mx-auto w-full max-w-[600px]'>
+          <div className='mx-auto w-full max-w-[620px]'>
             <SegmentedToggle
               className='w-full md:inline-grid'
               options={['Mes', 'Semana', 'Día', 'Agenda']}
@@ -1307,6 +1307,13 @@ function MobileMonthView({
           <Icons.adjustments className='size-4' />
         </Button>
         <Button
+          variant='secondary'
+          onClick={onGoToday}
+          className='h-8 rounded-[10px] border border-border/60 bg-muted/45 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+        >
+          Hoy
+        </Button>
+        <Button
           variant='ghost'
           size='icon-sm'
           onClick={() => onCreate(selectedDate)}
@@ -1544,6 +1551,15 @@ function MobileWeekView({
       </div>
 
       <div className='flex items-center justify-between gap-2'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={onOpenSettings}
+          aria-label='Configuración del calendario'
+          className='h-8 w-8 rounded-[9px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+        >
+          <Icons.adjustments className='size-4' />
+        </Button>
         <div className='flex flex-1 items-center justify-center gap-2'>
           <Button
             variant='ghost'
@@ -1555,7 +1571,7 @@ function MobileWeekView({
             <Icons.chevronLeft className='size-4' />
           </Button>
           <Button
-            variant='ghost'
+            variant='secondary'
             size='sm'
             onClick={onGoToday}
             className='rounded-lg px-3 text-xs font-medium'
@@ -1572,9 +1588,14 @@ function MobileWeekView({
             <Icons.chevronRight className='size-4' />
           </Button>
         </div>
-        <Button onClick={() => onCreate(selectedDate)} className='h-8 rounded-[9px] px-3 text-xs'>
-          <Icons.add className='size-3.5' />
-          Nuevo
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCreate(selectedDate)}
+          aria-label='Nuevo evento'
+          className='h-8 w-8 rounded-[9px] border border-border/60 bg-muted/35 text-foreground shadow-none hover:bg-muted'
+        >
+          <Icons.add className='size-4' />
         </Button>
       </div>
 
