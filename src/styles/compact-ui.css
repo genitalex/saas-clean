@@ -1,7 +1,6 @@
 /*
  * Compact UI pass
- * Keeps the existing visual system, but brings the common controls back to
- * the compact scale used by "Nueva tarea".
+ * Keeps the existing visual system at the smaller scale.
  */
 
 :root {
@@ -11,8 +10,6 @@
   --text-base--line-height: 1.6;
 }
 
-/* Primary/green action buttons: compact, like the existing "Nueva tarea"
-   control. Icon-only primary buttons keep their square size. */
 [data-slot='button'].bg-primary:not(.size-6):not(.size-7):not(.size-9):not(.size-11) {
   height: 1.75rem !important;
   min-height: 1.75rem;
@@ -28,12 +25,12 @@
   height: 0.875rem;
 }
 
-/* Notes: the editor should use the same UI font as the rendered note. */
+/* Notes: the editor uses the same UI font as the rendered note. */
 textarea.font-serif {
   font-family: inherit !important;
 }
 
-/* Notes page: align its top/side spacing with the other dashboard screens. */
+/* Notes page: same dashboard page inset as the rest of the workspace. */
 main[class~='max-w-[1100px]'] {
   padding-inline: var(--page-padding);
   padding-top: 1.25rem;
@@ -43,4 +40,18 @@ main[class~='max-w-[1100px]'] {
   main[class~='max-w-[1100px]'] {
     padding-top: 1.75rem;
   }
+}
+
+/* Notes: "Nueva nota" matches the compact primary CTAs such as
+   "Nuevo cliente" / "Nueva oportunidad". */
+main[class~='max-w-[1100px]'] header button.bg-primary {
+  height: 1.75rem;
+  padding-inline: 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.8rem;
+}
+
+main[class~='max-w-[1100px]'] header button.bg-primary svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }

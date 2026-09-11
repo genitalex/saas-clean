@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { Icons } from '@/components/icons';
-import { Button } from '@/components/ui/button';
 import {
   getNotificationsQueryOptions,
   getUnreadNotificationCountQueryOptions,
@@ -177,7 +176,7 @@ function AuthenticatedNotificationCenter({
         <div
           role='menu'
           aria-label='Lista de notificaciones'
-          className='fixed left-1/2 top-[4.25rem] z-[100] w-[calc(100vw-1rem)] max-w-[360px] -translate-x-1/2 rounded-[14px] border border-border/70 bg-muted/85 p-2 shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-sm sm:absolute sm:left-auto sm:top-[calc(100%+8px)] sm:right-0 sm:w-[min(92vw,360px)] sm:max-w-none sm:translate-x-0'
+          className='fixed left-1/2 top-[4.25rem] z-[100] w-[calc(100vw-1rem)] max-w-[440px] -translate-x-1/2 rounded-[16px] border border-border/80 bg-popover p-2 shadow-[0_18px_44px_rgba(15,23,42,0.16)] sm:absolute sm:left-auto sm:top-[calc(100%+8px)] sm:right-0 sm:w-[440px] sm:max-w-[440px] sm:translate-x-0'
         >
           <div className='mb-1 flex items-center justify-between gap-3 px-1.5 py-1'>
             <Link
@@ -189,7 +188,7 @@ function AuthenticatedNotificationCenter({
             </Link>
             <div className='flex items-center gap-2'>
               {unreadCount > 0 && (
-                <span className='rounded-full bg-background px-2 py-1 text-[10px] font-medium text-muted-foreground'>
+                <span className='rounded-full bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground'>
                   {unreadCount} sin leer
                 </span>
               )}
@@ -208,7 +207,7 @@ function AuthenticatedNotificationCenter({
 
           <div className='flex max-h-[360px] flex-col gap-1 overflow-y-auto'>
             {visibleNotifications.length === 0 ? (
-              <div className='rounded-[10px] bg-background/70 px-4 py-8 text-center'>
+              <div className='rounded-[10px] bg-background px-4 py-8 text-center'>
                 <Icons.notification
                   className='mx-auto mb-2 size-7 text-muted-foreground/40'
                   strokeWidth={1.6}
@@ -228,7 +227,7 @@ function AuthenticatedNotificationCenter({
                     className={`group relative flex w-full items-start gap-2.5 rounded-[10px] border px-2.5 py-2.5 text-left transition-colors ${
                       unread
                         ? 'border-border/70 bg-background hover:border-border'
-                        : 'border-transparent bg-transparent hover:bg-background/70'
+                        : 'border-transparent bg-muted/25 hover:bg-background'
                     }`}
                   >
                     <span
@@ -281,7 +280,7 @@ function AuthenticatedNotificationCenter({
             <Link
               href='/dashboard/notifications'
               onClick={() => onOpenChange(false)}
-              className='flex items-center justify-center rounded-[9px] px-2 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
+              className='flex items-center justify-center rounded-[9px] px-2 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground'
             >
               Ver todas las notificaciones
               <Icons.chevronRight className='ml-0.5 size-3.5' />

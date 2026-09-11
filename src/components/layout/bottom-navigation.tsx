@@ -32,6 +32,7 @@ export function BottomNavigation() {
           desktopNavItems[3],
           desktopNavItems[4]
         ];
+
   const mobileLeftItems = resolvedDesktopItems.slice(0, 3);
   const mobileRightItems = [resolvedDesktopItems[3], opportunitiesItem].filter(Boolean);
   const desktopLeftItems = resolvedDesktopItems.slice(0, 4);
@@ -46,7 +47,16 @@ export function BottomNavigation() {
   type NavItem = (typeof navGroups)[number]['items'][number];
 
   const renderNavItem = (item: NavItem) => {
-    const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+    const iconByTitle = {
+      Today: Icons.clock,
+      Work: Icons.circleCheck,
+      Calendar: Icons.calendar,
+      Customers: Icons.user2,
+      Opportunities: Icons.trendingUp
+    } as const;
+    const Icon =
+      iconByTitle[item.title as keyof typeof iconByTitle] ??
+      (item.icon ? Icons[item.icon] : Icons.logo);
     const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
     const label =
       item.title === 'Today'
@@ -75,8 +85,8 @@ export function BottomNavigation() {
         <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
           {label}
         </span>
-        <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
-          <Icon className='size-[25px] md:size-[26px]' />
+        <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.2] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.2]'>
+          <Icon className='size-[24px]' strokeWidth={2.15} />
         </span>
         {active && (
           <span
@@ -160,8 +170,8 @@ export function BottomNavigation() {
                 <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
                   Más
                 </span>
-                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
-                  <Icons.moreHorizontal className='size-[24px] md:size-[25px]' />
+                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.2] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.2]'>
+                  <Icons.moreHorizontal className='size-[24px]' strokeWidth={2.15} />
                 </span>
                 <span className='sr-only'>Más</span>
               </button>
@@ -187,8 +197,8 @@ export function BottomNavigation() {
                 <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
                   Más
                 </span>
-                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
-                  <Icons.moreHorizontal className='size-[24px] md:size-[25px]' />
+                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.2] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.2]'>
+                  <Icons.moreHorizontal className='size-[24px]' strokeWidth={2.15} />
                 </span>
                 <span className='sr-only'>Más</span>
               </button>
