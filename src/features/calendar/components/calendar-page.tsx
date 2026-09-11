@@ -512,7 +512,7 @@ export function CalendarPage({
             aria-label='Navegación del calendario'
           />
           <SegmentedToggle
-            className='hidden border border-border/55 bg-background shadow-none md:inline-grid [&>span]:bg-muted/70 [&>span]:shadow-none'
+            className='hidden md:inline-grid'
             options={['Mes', 'Semana', 'Día', 'Agenda']}
             value={
               view === 'month'
@@ -574,12 +574,12 @@ export function CalendarPage({
           );
         })}
         <Button
-          variant='ghost'
+          variant='secondary'
           size='icon-sm'
           onClick={() => openCreate(selectedDate)}
           aria-label='Nuevo evento'
           title='Nuevo evento'
-          className='size-8 rounded-[8px] border border-border/60 bg-muted/55 text-muted-foreground shadow-none transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted hover:text-foreground active:scale-[0.96]'
+          className='size-8 rounded-[8px] bg-secondary text-secondary-foreground shadow-none transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-secondary/80 active:scale-[0.96]'
         >
           <Icons.add className='size-4' />
         </Button>
@@ -2566,7 +2566,7 @@ function CompressedDayTimeline({
       <div className='overflow-x-auto'>
         <div className='min-w-[680px]'>
           <div
-            className='bg-surface-subtle sticky top-0 z-10 grid border-b'
+            className='sticky top-0 z-10 grid border-b bg-background'
             style={{ gridTemplateColumns: '72px minmax(0, 1fr)' }}
           >
             <div className='border-border/60 border-r' />
@@ -2846,7 +2846,7 @@ function WeekTimeline({
       <div className='overflow-x-auto'>
         <div className={cn('min-w-0', view === 'week' ? 'min-w-[980px]' : 'min-w-[680px]')}>
           <div
-            className='bg-surface-subtle sticky top-0 z-10 grid border-b'
+            className='sticky top-0 z-10 grid border-b bg-background'
             style={{ gridTemplateColumns: `72px repeat(${days.length}, minmax(0, 1fr))` }}
           >
             <div className='border-border/60 border-r' />
