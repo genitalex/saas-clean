@@ -536,14 +536,6 @@ export function CalendarPage({
             }}
             aria-label='Vista del calendario'
           />
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={() => openCreate(selectedDate)}
-            className='h-8 rounded-[8px] shadow-none transition-[background-color,color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:shadow-[0_2px_8px_rgba(23,32,25,0.08)] active:scale-[0.98]'
-          >
-            Nuevo evento
-          </Button>
         </div>
       </header>
 
@@ -581,6 +573,16 @@ export function CalendarPage({
             </button>
           );
         })}
+        <Button
+          variant='default'
+          size='icon-sm'
+          onClick={() => openCreate(selectedDate)}
+          aria-label='Nuevo evento'
+          title='Nuevo evento'
+          className='size-7 rounded-[8px] shadow-[0_2px_8px_rgba(23,32,25,0.10)] transition-[background-color,color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:shadow-[0_4px_12px_rgba(23,32,25,0.14)] active:scale-[0.96]'
+        >
+          <Icons.add className='size-4' />
+        </Button>
         <Button
           variant='ghost'
           size='icon'
