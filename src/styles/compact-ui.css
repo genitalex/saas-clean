@@ -69,16 +69,4 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
     box-shadow: 0 1px 2px rgb(23 32 25 / 0.06) !important;
     border-color: hsl(var(--border) / 0.35) !important;
   }
-
-  /* Header create actions use the restrained secondary treatment used by Nueva tarea. */
-  main > header > div:last-child > button:last-child:not([aria-label]) {
-    background: hsl(var(--secondary)) !important;
-    color: hsl(var(--secondary-foreground)) !important;
-    border: 1px solid hsl(var(--border) / 0.7) !important;
-    box-shadow: none !important;
-  }
-
-  main > header > div:last-child > button:last-child:not([aria-label]):hover {
-    background: hsl(var(--secondary) / 0.8) !important;
-  }
 }
