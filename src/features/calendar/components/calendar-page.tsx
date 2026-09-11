@@ -512,7 +512,7 @@ export function CalendarPage({
             aria-label='Navegación del calendario'
           />
           <SegmentedToggle
-            className='hidden md:inline-grid'
+            className='hidden border border-border/55 bg-background shadow-none md:inline-grid [&>span]:bg-muted/70 [&>span]:shadow-none'
             options={['Mes', 'Semana', 'Día', 'Agenda']}
             value={
               view === 'month'
@@ -579,7 +579,7 @@ export function CalendarPage({
           onClick={() => openCreate(selectedDate)}
           aria-label='Nuevo evento'
           title='Nuevo evento'
-          className='size-7 rounded-[8px] bg-muted/45 text-foreground shadow-none transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted active:scale-[0.96]'
+          className='size-8 rounded-[8px] border border-border/60 bg-muted/55 text-muted-foreground shadow-none transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted hover:text-foreground active:scale-[0.96]'
         >
           <Icons.add className='size-4' />
         </Button>
@@ -1166,7 +1166,7 @@ function MobileMonthView({
       </div>
 
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
-        <div className='bg-surface-subtle/70 grid shrink-0 grid-cols-7 border-b'>
+        <div className='grid shrink-0 grid-cols-7 border-b bg-background'>
           {mobileWeekDaysNarrow.map((day, index) => (
             <div
               key={day + index}
@@ -2050,7 +2050,7 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1220px] overflow-hidden rounded-[24px] border-border/60 bg-background p-0 shadow-none'>
+      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1080px] !max-h-[calc(100dvh-2rem)] overflow-hidden rounded-[24px] border-border/60 bg-background p-0 shadow-none'>
         <DialogHeader className='border-b border-border/55 bg-background px-5 py-5 sm:px-7 sm:py-6 lg:px-8'>
           <div className='flex items-start justify-between gap-4'>
             <div className='min-w-0'>
@@ -2089,7 +2089,7 @@ function DesktopYearDialog({
             </div>
           </div>
         </DialogHeader>
-        <div className='max-h-[70vh] overflow-y-auto bg-muted/20 px-5 py-5 sm:px-7 sm:py-6 lg:px-8'>
+        <div className='max-h-[calc(100dvh-12rem)] overflow-y-auto bg-muted/20 px-5 py-5 sm:px-7 sm:py-6 lg:px-8'>
           <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'>
             {mobileMonthNames.map((name, index) => {
               const monthDate = new Date(displayYear, index, 1);
@@ -2310,7 +2310,7 @@ function MonthView({
   return (
     <div className='overflow-x-auto'>
       <div className='min-w-[760px]'>
-        <div className='bg-surface-subtle grid grid-cols-7 border-b'>
+        <div className='grid grid-cols-7 border-b bg-background'>
           {weekDays.map((day, index) => (
             <div
               key={day}
