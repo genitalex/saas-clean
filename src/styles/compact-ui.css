@@ -70,3 +70,6 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
     border-color: hsl(var(--border) / 0.35) !important;
   }
 }
+main > header > div:last-child > button:last-child:not([aria-label]):hover {
+  background: color-mix(in oklab, var(--secondary) 80%, transparent) !important;
+}
