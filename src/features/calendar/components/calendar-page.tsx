@@ -493,7 +493,7 @@ export function CalendarPage({
                 size='icon-sm'
                 onClick={() => shift(-1)}
                 aria-label='Ir al periodo anterior'
-                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.98]'
+                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-card/70 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.96]'
               >
                 <Icons.chevronLeft className='size-4' />
               </Button>
@@ -504,7 +504,7 @@ export function CalendarPage({
                 size='icon-sm'
                 onClick={() => shift(1)}
                 aria-label='Ir al periodo siguiente'
-                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.98]'
+                className='relative z-10 h-7 min-w-16 rounded-[8px] text-muted-foreground transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-card/70 hover:text-foreground focus-visible:border-transparent focus-visible:ring-0 active:scale-[0.96]'
               >
                 <Icons.chevronRight className='size-4' />
               </Button>
@@ -540,7 +540,7 @@ export function CalendarPage({
             variant='secondary'
             size='sm'
             onClick={() => openCreate(selectedDate)}
-            className='shadow-none'
+            className='h-8 rounded-[8px] shadow-none transition-[background-color,color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:shadow-[0_2px_8px_rgba(23,32,25,0.08)] active:scale-[0.98]'
           >
             Nuevo evento
           </Button>
@@ -566,15 +566,15 @@ export function CalendarPage({
                 )
               }
               className={cn(
-                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all',
+                'group flex h-7 items-center gap-1.5 rounded-[8px] border px-3 text-xs font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]',
                 active
-                  ? 'border-transparent text-foreground'
-                  : 'text-muted-foreground/70 border-border/70 bg-transparent'
+                  ? 'border-transparent text-foreground shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)]'
+                  : 'text-muted-foreground/75 border-transparent bg-muted/45 hover:bg-muted/75 hover:text-foreground'
               )}
               style={active ? { backgroundColor: `${category.color}1c` } : undefined}
             >
               <i
-                className='size-2 shrink-0 rounded-full transition-opacity'
+                className='size-1.5 shrink-0 rounded-full transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110'
                 style={{ backgroundColor: category.color, opacity: active ? 1 : 0.45 }}
               />
               {category.name}
@@ -589,11 +589,11 @@ export function CalendarPage({
             setSettingsOpen(true);
           }}
           aria-label='Configuración del calendario'
-          className='size-9 rounded-full border border-border/70 bg-background shadow-[0_2px_8px_rgba(23,32,25,0.08)] text-muted-foreground transition-[transform,background-color,color,box-shadow] duration-200 hover:scale-[1.04] hover:bg-muted hover:text-foreground hover:shadow-[0_4px_12px_rgba(23,32,25,0.10)] active:scale-[0.98]'
+          className='size-7 rounded-[8px] border border-border/60 bg-muted/45 text-muted-foreground shadow-none transition-[transform,background-color,color,border-color] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-border hover:bg-muted hover:text-foreground active:scale-[0.96]'
         >
           <Icons.adjustments
             className={cn(
-              'size-5',
+              'size-4',
               settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
             )}
             onAnimationEnd={() => setSettingsSpinning(false)}
