@@ -17,15 +17,6 @@ import { authClient } from '@/lib/auth-client';
 import { useScrollDirection } from '@/hooks/use-scroll-direction';
 import { useShellMetric } from '@/hooks/use-shell-metric';
 
-/**
- * A real mobile app-style bottom tab bar, not a shrunk-down desktop sidebar.
- * Four primary destinations plus a "More" sheet for everything else.
- *
- * Hides on scroll-down and reappears on scroll-up (always visible near the
- * top), the way native mobile app chrome behaves. Purely transform-based so
- * it never triggers layout/reflow, and disabled entirely when the user
- * prefers reduced motion.
- */
 export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = React.useState(false);
@@ -145,14 +136,9 @@ function MoreSheet({
         <div className='p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]'>
           {navGroups.map((group) => {
             const items = group.items.filter(
-              (item) =>
-                !primaryUrls.has(item.url) &&
-                item.title !== 'Notes' &&
-                item.title !== 'Quotes' &&
-                item.title !== 'Notifications'
+              (item) => !primaryUrls.has(item.url) && item.title !== 'Notifications'
             );
             if (items.length === 0) return null;
-
             return (
               <div key={group.label} className='mb-2'>
                 <div className='text-muted-foreground px-3 py-2 text-[11px] font-semibold tracking-wide uppercase'>

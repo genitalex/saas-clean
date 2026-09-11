@@ -1,4 +1,5 @@
 'use client';
+
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -159,12 +160,13 @@ export function BottomNavigation() {
                 <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
                   Más
                 </span>
-                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
+                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
                   <Icons.moreHorizontal className='size-[24px] md:size-[25px]' />
                 </span>
                 <span className='sr-only'>Más</span>
               </button>
             </div>
+
             <div className='hidden items-center justify-start gap-5 md:flex'>
               {desktopRightItems.map((item) => renderNavItem(item))}
               <button
@@ -185,7 +187,7 @@ export function BottomNavigation() {
                 <span className='pointer-events-none absolute -top-10 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md border border-border/50 bg-popover px-2.5 py-1 text-[10px] font-medium text-foreground opacity-0 shadow-lg transition-[opacity,transform] duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:opacity-100'>
                   Más
                 </span>
-                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
+                <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.24] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.24]'>
                   <Icons.moreHorizontal className='size-[24px] md:size-[25px]' />
                 </span>
                 <span className='sr-only'>Más</span>
@@ -311,6 +313,10 @@ function MoreSheet({
   primaryUrls: Set<string>;
   filteredGroups: typeof navGroups;
 }) {
+  const excludedTitles = isMobile
+    ? new Set(['Notifications'])
+    : new Set(['Notifications', 'Notes', 'Quotes']);
+
   return (
     <div
       className='fixed inset-0 z-50 flex items-end justify-center bg-foreground/20 p-3'
@@ -333,7 +339,9 @@ function MoreSheet({
 
         <div className='min-h-0 flex-1 overflow-y-auto px-4 py-4'>
           {filteredGroups.map((group) => {
-            const items = group.items.filter((item) => !primaryUrls.has(item.url));
+            const items = group.items.filter(
+              (item) => !primaryUrls.has(item.url) && !excludedTitles.has(item.title)
+            );
             if (!items.length) return null;
 
             return (

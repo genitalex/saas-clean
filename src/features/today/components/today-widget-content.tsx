@@ -79,7 +79,9 @@ export function WeeklyAgenda({
   const agendaRef = useRef<HTMLDivElement>(null);
   const [agendaCardWidth, setAgendaCardWidth] = useState(160);
   const dragState = useRef<{ x: number; scrollLeft: number } | null>(null);
+  const agendaDragged = useRef(false);
   const agendaDays = Array.from({ length: 61 }, (_, index) => addDays(today, index));
+
   useEffect(() => {
     const container = agendaRef.current;
     if (!container) return;
@@ -103,16 +105,25 @@ export function WeeklyAgenda({
 
   function handleAgendaPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse') {
+      agendaDragged.current = false;
       dragState.current = { x: event.clientX, scrollLeft: event.currentTarget.scrollLeft };
-      event.currentTarget.setPointerCapture(event.pointerId);
     }
   }
+
   function handleAgendaPointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (!dragState.current) return;
+    if (Math.abs(event.clientX - dragState.current.x) > 4) {
+      agendaDragged.current = true;
+    }
     event.preventDefault();
     event.currentTarget.scrollLeft =
       dragState.current.scrollLeft - (event.clientX - dragState.current.x);
   }
+
+  function handleAgendaPointerUp() {
+    dragState.current = null;
+  }
+
   function shiftAgenda(days: number) {
     const container = agendaRef.current;
     if (!container) return;
@@ -120,6 +131,7 @@ export function WeeklyAgenda({
     const step = (firstCard?.offsetWidth ?? 180) + 8;
     container.scrollBy({ left: step * days, behavior: 'smooth' });
   }
+
   const linkedEventIds = new Set(tasks.flatMap((task) => (task.eventId ? [task.eventId] : [])));
   const todayPlan = [
     ...tasks
@@ -148,16 +160,13 @@ export function WeeklyAgenda({
         >
           <Icons.chevronLeft className='size-4' />
         </button>
+
         <div
           ref={agendaRef}
           onPointerDown={handleAgendaPointerDown}
           onPointerMove={handleAgendaPointerMove}
-          onPointerUp={() => {
-            dragState.current = null;
-          }}
-          onPointerCancel={() => {
-            dragState.current = null;
-          }}
+          onPointerUp={handleAgendaPointerUp}
+          onPointerCancel={handleAgendaPointerUp}
           className='scrollbar-none w-full min-w-0 snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth px-0 py-3 touch-pan-x [&::-webkit-scrollbar]:hidden sm:flex-1'
           style={{ scrollPaddingInline: 8 }}
         >
@@ -168,12 +177,19 @@ export function WeeklyAgenda({
                 .filter((event) => isSameDay(new Date(event.startAt), day))
                 .slice(0, 4);
               const dayKey = format(day, 'yyyy-MM-dd');
+
               return (
                 <Link
                   key={dayKey}
                   data-day={dayKey}
                   href={`/dashboard/calendar?date=${dayKey}&view=day`}
                   aria-label={`Ver ${format(day, 'EEEE d MMMM', { locale: es })}`}
+                  onClick={(event) => {
+                    if (agendaDragged.current) {
+                      event.preventDefault();
+                      agendaDragged.current = false;
+                    }
+                  }}
                   style={{ width: `${agendaCardWidth}px` }}
                   className={cn(
                     'group flex min-h-28 min-w-0 shrink-0 snap-start flex-col rounded-xl p-2 text-center ring-1 transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/45 sm:min-h-33 sm:p-3',
@@ -210,6 +226,7 @@ export function WeeklyAgenda({
             })}
           </div>
         </div>
+
         <button
           type='button'
           aria-label='Días siguientes'
@@ -370,43 +387,43 @@ function TodayPlanRow({
   }
 
   return (
-    <div className='flex flex-wrap items-center gap-2 py-3'>
-      <Link
-        href={
-          isTask
-            ? `/dashboard/tasks?task=${item.task.id}`
-            : `/dashboard/calendar?event=${item.event.id}`
-        }
-        className='flex min-w-0 flex-1 items-center gap-3'
-      >
-        <span className='text-muted-foreground w-12 shrink-0 text-xs font-semibold tabular-nums'>
-          {format(item.at, 'HH:mm')}
-        </span>
-        <span
-          className={cn(
-            'flex size-7 shrink-0 items-center justify-center rounded-lg',
-            isTask ? 'bg-primary/10 text-primary' : 'bg-background/70 text-muted-foreground'
-          )}
+    <div className='flex min-w-0 items-center gap-3 py-2'>
+      <div className='min-w-0 flex-1'>
+        <p className='truncate text-sm font-medium'>{title}</p>
+        {customerName && (
+          <p className='text-muted-foreground mt-0.5 truncate text-xs'>{customerName}</p>
+        )}
+      </div>
+      <div className='flex shrink-0 items-center gap-1.5'>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          disabled={pending}
+          onClick={() => void complete()}
+          className='h-7 px-2 text-xs'
         >
-          {isTask ? <Icons.check className='size-3.5' /> : <Icons.calendar className='size-3.5' />}
-        </span>
-        <span className='min-w-0 flex-1'>
-          <span className='block truncate text-sm font-medium'>{title}</span>
-          <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
-            {isTask ? 'Tarea planificada' : 'Evento'}
-            {customerName ? ` · ${customerName}` : ''}
-          </span>
-        </span>
-      </Link>
-      <div className='flex shrink-0 items-center gap-1'>
-        <Button variant='ghost' size='sm' disabled={pending} onClick={() => void complete()}>
-          Hecho
+          {isTask ? 'Completar' : 'Hecho'}
         </Button>
-        <Button variant='ghost' size='sm' disabled={pending} onClick={() => void postpone()}>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          disabled={pending}
+          onClick={() => void postpone()}
+          className='h-7 px-2 text-xs'
+        >
           Mañana
         </Button>
         {isTask && !item.task.eventId && (
-          <Button variant='ghost' size='sm' disabled={pending} onClick={() => void plan()}>
+          <Button
+            type='button'
+            variant='ghost'
+            size='sm'
+            disabled={pending}
+            onClick={() => void plan()}
+            className='h-7 px-2 text-xs'
+          >
             Planificar
           </Button>
         )}
