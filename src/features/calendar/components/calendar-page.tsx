@@ -449,17 +449,8 @@ export function CalendarPage({
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden flex-col gap-3 md:flex'>
-        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-center gap-3'>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => shift(-1)}
-            aria-label='Ir al periodo anterior'
-            className='h-10 w-10 shrink-0 rounded-[12px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-          >
-            <Icons.chevronLeft className='size-4' />
-          </Button>
-          <div className='min-w-0 flex-1 text-center'>
+        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-center'>
+          <div className='min-w-0 text-center'>
             {view === 'month' ? (
               <button
                 type='button'
@@ -476,6 +467,25 @@ export function CalendarPage({
               </h1>
             )}
           </div>
+        </div>
+
+        <div className='mx-auto flex w-full max-w-[1040px] items-center justify-center gap-2.5'>
+          <Button
+            variant='ghost'
+            size='icon-sm'
+            onClick={() => shift(-1)}
+            aria-label='Ir al periodo anterior'
+            className='h-10 w-10 shrink-0 rounded-[12px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+          >
+            <Icons.chevronLeft className='size-4' />
+          </Button>
+          <Button
+            variant='secondary'
+            onClick={() => setSelectedDate(new Date())}
+            className='h-10 rounded-[10px] border border-border/60 bg-muted/45 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+          >
+            Hoy
+          </Button>
           <Button
             variant='ghost'
             size='icon-sm'
