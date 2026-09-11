@@ -52,7 +52,6 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
   height: 0.875rem;
 }
 
-/* Print only the quote document as an A4 sheet. */
 @page {
   size: A4;
   margin: 0;
@@ -89,12 +88,29 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
     background: #fff !important;
   }
 
-  body .quote-print-target canvas {
-    print-color-adjust: exact;
+  /* Keep the light grey table heading visible in the PDF. */
+  .quote-print-target .bg-muted\/35 {
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .quote-print-target .print\:bg-\[\#f5f5f5\] {
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .quote-print-target img {
     -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .quote-print-target .print\:hidden {
     display: none !important;
+  }
+
+  .quote-print-target .hidden.print\:block {
+    display: block !important;
   }
 }

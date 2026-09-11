@@ -75,7 +75,6 @@ function readQuoteSettings(): QuoteSettings {
 }
 
 export default function QuotePage() {
-  const [documentTitle, setDocumentTitle] = useState('Presupuesto');
   const [client, setClient] = useState('');
   const [clientLegalName, setClientLegalName] = useState('');
   const [clientTaxId, setClientTaxId] = useState('');
@@ -96,7 +95,6 @@ export default function QuotePage() {
   const [issuerSaved, setIssuerSaved] = useState(false);
   const [issuerOpen, setIssuerOpen] = useState(false);
   const [signatureIssuer, setSignatureIssuer] = useState('');
-  const [signatureClient, setSignatureClient] = useState('');
 
   useEffect(() => {
     const saved = readQuoteSettings();
@@ -179,8 +177,8 @@ export default function QuotePage() {
 
       const image = new Image();
       image.onload = () => {
-        const maxWidth = 420;
-        const maxHeight = 220;
+        const maxWidth = 520;
+        const maxHeight = 240;
         const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(image.width * scale));
@@ -221,24 +219,6 @@ export default function QuotePage() {
           </div>
 
           <div className='space-y-5 p-5 sm:p-6'>
-            <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
-              <div className='flex items-center justify-between gap-3'>
-                <div>
-                  <p className='text-sm font-semibold'>Identidad del documento</p>
-                  <p className='text-muted-foreground mt-0.5 text-xs'>
-                    Elige el título que aparecerá arriba del documento.
-                  </p>
-                </div>
-              </div>
-              <div className='mt-3'>
-                <Input
-                  placeholder='Título del documento'
-                  value={documentTitle}
-                  onChange={(event) => setDocumentTitle(event.target.value)}
-                />
-              </div>
-            </div>
-
             <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
               <button
                 type='button'
@@ -337,11 +317,11 @@ export default function QuotePage() {
                       />
                     </label>
                     {logoDataUrl ? (
-                      <div className='flex size-11 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-white shadow-sm'>
+                      <div className='flex h-10 max-w-[180px] items-center rounded-[8px] border border-border/60 bg-white px-2'>
                         <img
                           src={logoDataUrl}
                           alt='Logo'
-                          className='max-h-9 max-w-9 object-contain'
+                          className='max-h-8 max-w-[165px] object-contain'
                         />
                       </div>
                     ) : null}
@@ -350,8 +330,7 @@ export default function QuotePage() {
                     ) : null}
                   </div>
                   <p className='text-muted-foreground mt-2 text-[10px]'>
-                    El logo se redimensiona automáticamente y queda guardado para los siguientes
-                    documentos.
+                    El logo se redimensiona y queda guardado para los siguientes documentos.
                   </p>
                 </>
               )}
@@ -520,26 +499,21 @@ export default function QuotePage() {
         >
           <div className='border-b border-border/60 bg-card/55 px-6 py-5 sm:px-7 print:bg-white'>
             <div className='flex items-start justify-between gap-5'>
-              <div className='flex min-w-0 items-center gap-4'>
+              <div className='flex min-w-0 items-center gap-5'>
                 {logoDataUrl ? (
-                  <div className='flex size-[76px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-white shadow-sm print:border-border/40'>
+                  <div className='flex h-[92px] w-[150px] shrink-0 items-center justify-start'>
                     <img
                       src={logoDataUrl}
                       alt={issuer.businessName || 'Logo'}
-                      className='max-h-[64px] max-w-[64px] object-contain'
+                      className='max-h-[84px] max-w-[145px] object-contain object-left'
                     />
                   </div>
                 ) : null}
                 <div className='min-w-0'>
-                  <div className='mb-2 flex items-center gap-2'>
-                    <span className='size-2 rounded-full bg-primary print:hidden' />
-                    <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                      {issuer.businessName || issuer.legalName || 'Tu empresa'}
-                    </p>
-                  </div>
-                  <h2 className='text-2xl font-semibold tracking-[-0.03em]'>
-                    {documentTitle || 'Documento'}
-                  </h2>
+                  <p className='text-primary mb-2 text-[10px] font-semibold uppercase tracking-[0.2em]'>
+                    {issuer.businessName || issuer.legalName || 'Tu empresa'}
+                  </p>
+                  <h2 className='text-2xl font-semibold tracking-[-0.03em]'>Presupuesto</h2>
                   <p className='text-muted-foreground mt-1 text-sm'>
                     {client || 'Nombre del cliente'}
                   </p>
@@ -657,17 +631,28 @@ export default function QuotePage() {
               </p>
             </div>
 
-            <div className='mt-8 grid gap-5 border-t border-border/50 pt-6 sm:grid-cols-2'>
-              <SignaturePad
-                value={signatureIssuer}
-                onChange={setSignatureIssuer}
-                label='Firma del emisor'
-              />
-              <SignaturePad
-                value={signatureClient}
-                onChange={setSignatureClient}
-                label='Firma del cliente'
-              />
+            <div className='mt-8 border-t border-border/50 pt-6'>
+              <div className='print:hidden'>
+                <SignaturePad
+                  value={signatureIssuer}
+                  onChange={setSignatureIssuer}
+                  label='Firma del emisor'
+                />
+              </div>
+              {signatureIssuer ? (
+                <div className='hidden print:block'>
+                  <p className='text-muted-foreground mb-2 text-[10px] font-semibold uppercase tracking-[0.16em]'>
+                    Firma
+                  </p>
+                  <div className='h-[74px] w-[230px] border-b border-dashed border-border/70'>
+                    <img
+                      src={signatureIssuer}
+                      alt='Firma'
+                      className='h-full w-full object-contain object-bottom'
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className='mt-7 flex flex-wrap gap-2 print:hidden'>
@@ -682,7 +667,7 @@ export default function QuotePage() {
                   window.open(
                     'https://wa.me/?text=' +
                       encodeURIComponent(
-                        `Hola ${client || ''}, te adjunto el ${documentTitle.toLowerCase()} ${quoteNumber || ''} por un total de ${money(total)}.`
+                        `Hola ${client || ''}, te adjunto el presupuesto ${quoteNumber || ''} por un total de ${money(total)}.`
                       ),
                     '_blank'
                   )

@@ -37,7 +37,7 @@ export function SignaturePad({ value = '', onChange, label }: SignaturePadProps)
       context.clearRect(0, 0, rect.width, rect.height);
       context.lineCap = 'round';
       context.lineJoin = 'round';
-      context.lineWidth = 2;
+      context.lineWidth = 1.35;
       context.strokeStyle = '#172019';
 
       if (value) {
@@ -112,7 +112,7 @@ export function SignaturePad({ value = '', onChange, label }: SignaturePadProps)
             const point = pointFromEvent(event);
             context.lineCap = 'round';
             context.lineJoin = 'round';
-            context.lineWidth = 2;
+            context.lineWidth = 1.35;
             context.strokeStyle = '#172019';
             context.beginPath();
             context.moveTo(lastPointRef.current.x, lastPointRef.current.y);
