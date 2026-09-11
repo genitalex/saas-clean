@@ -36,7 +36,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
         keywords: 'crear nueva tarea task',
         section: 'Crear',
         subtitle: 'Abrir una captura de tarea',
-        icon: <Icons.check className='size-4' />,
+        icon: <Icons.circleCheck className='size-4' />,
         perform: () => navigateTo('/dashboard/tasks?create=1')
       },
       {
@@ -63,7 +63,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
         keywords: 'crear nota rápida notes',
         section: 'Crear',
         subtitle: 'Capturar una idea en Notas',
-        icon: <Icons.post className='size-4' />,
+        icon: <Icons.note className='size-4' />,
         perform: () => navigateTo('/dashboard/notes')
       }
     ];

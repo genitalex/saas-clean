@@ -722,7 +722,7 @@ export default function QuotePage() {
 
             <div className='mt-7 flex flex-wrap gap-2 print:hidden'>
               <Button size='sm' onClick={() => window.print()}>
-                <Icons.post className='size-3.5' />
+                <Icons.quote className='size-3.5' />
                 Imprimir / PDF
               </Button>
               <Button

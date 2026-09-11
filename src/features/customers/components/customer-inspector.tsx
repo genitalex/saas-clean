@@ -303,7 +303,7 @@ export function CustomerInspector({
                     <AddNoteDialog
                       customerId={customer.id}
                       triggerClassName='h-8 rounded-[10px] px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 active:scale-[0.98] sm:px-3'
-                      triggerIcon={<Icons.post className='size-3.5' />}
+                      triggerIcon={<Icons.note className='size-3.5' />}
                     />
                     <NewTaskDialog
                       customerId={customer.id}

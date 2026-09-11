@@ -47,6 +47,7 @@ export function BottomNavigation() {
   type NavItem = (typeof navGroups)[number]['items'][number];
 
   const renderNavItem = (item: NavItem) => {
+    const Icon = item.icon ? Icons[item.icon] : Icons.logo;
     const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
     const label =
       item.title === 'Today'
@@ -76,7 +77,7 @@ export function BottomNavigation() {
           {label}
         </span>
         <span className='flex size-11 origin-bottom items-center justify-center rounded-[12px] transition-transform duration-300 ease-out will-change-transform group-hover:-translate-y-2 group-hover:scale-[1.2] group-focus-visible:-translate-y-2 group-focus-visible:scale-[1.2]'>
-          <ColoredNavIcon title={item.title} />
+          <Icon className='size-[24px]' strokeWidth={2.15} />
         </span>
         {active && (
           <span
@@ -122,7 +123,7 @@ export function BottomNavigation() {
               )}
             >
               <span className='relative block size-6'>
-                <Icons.add
+                <Icons.plusCircle
                   className={cn(
                     'absolute inset-0 m-auto transition-all duration-200 ease-out',
                     createOpen ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100',
@@ -211,180 +212,13 @@ export function BottomNavigation() {
   );
 }
 
-function ColoredNavIcon({ title, compact = false }: { title: string; compact?: boolean }) {
-  const gradientId = React.useId().replace(/:/g, '');
-  const size = compact ? 20 : 25;
-
-  const palette: Record<string, [string, string]> = {
-    Today: ['#3b82f6', '#8b5cf6'],
-    Work: ['#6366f1', '#a855f7'],
-    Calendar: ['#06b6d4', '#3b82f6'],
-    Customers: ['#f97316', '#ec4899'],
-    Opportunities: ['#ec4899', '#f43f5e'],
-    Notifications: ['#ef4444', '#f97316'],
-    Notes: ['#8b5cf6', '#6366f1'],
-    Quotes: ['#6366f1', '#3b82f6'],
-    Templates: ['#f59e0b', '#ef4444'],
-    Goals: ['#10b981', '#06b6d4'],
-    Documents: ['#14b8a6', '#3b82f6'],
-    Team: ['#3b82f6', '#06b6d4'],
-    Automations: ['#f97316', '#ef4444'],
-    Integrations: ['#06b6d4', '#14b8a6'],
-    Users: ['#3b82f6', '#6366f1'],
-    Workspaces: ['#a855f7', '#ec4899'],
-    Settings: ['#64748b', '#94a3b8']
-  };
-  const [from, to] = palette[title] ?? ['#64748b', '#94a3b8'];
-  const stroke = `url(#nav-gradient-${gradientId})`;
-  const fill = `url(#nav-gradient-${gradientId})`;
-  const common = {
-    width: size,
-    height: size,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    xmlns: 'http://www.w3.org/2000/svg',
-    'aria-hidden': true
-  } as const;
-
-  const outline = {
-    stroke,
-    strokeWidth: compact ? 1.9 : 2,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const
-  };
-
-  const icon = (() => {
-    switch (title) {
-      case 'Today':
-        return (
-          <>
-            <path d='M12 3v8l5 3' {...outline} />
-            <circle cx='12' cy='12' r='8.5' {...outline} />
-          </>
-        );
-      case 'Work':
-        return (
-          <>
-            <path d='M6.5 12.5 10 16l7.5-8' {...outline} />
-            <circle cx='12' cy='12' r='9' {...outline} />
-          </>
-        );
-      case 'Calendar':
-        return (
-          <>
-            <rect x='3.5' y='5' width='17' height='15' rx='3' {...outline} />
-            <path d='M7 3.5v4M17 3.5v4M3.5 9h17' {...outline} />
-            <path d='M8 13h2M13 13h3M8 16h2M13 16h3' {...outline} />
-          </>
-        );
-      case 'Customers':
-      case 'Team':
-      case 'Users':
-        return (
-          <>
-            <circle cx='9' cy='8' r='3' {...outline} />
-            <path d='M3.5 19c.7-3.1 2.6-4.8 5.5-4.8s4.8 1.7 5.5 4.8' {...outline} />
-            <path d='M16 6.3a2.8 2.8 0 1 1 0 5.4M16 14c2.3.2 3.8 1.8 4.5 4' {...outline} />
-          </>
-        );
-      case 'Opportunities':
-      case 'Goals':
-        return (
-          <>
-            <path d='M4 17.5 9 12l3 3 7.5-8' {...outline} />
-            <path d='M15 7h4.5v4.5' {...outline} />
-            <path d='M4 20h16' {...outline} />
-          </>
-        );
-      case 'Notifications':
-        return (
-          <>
-            <path d='M6.5 10a5.5 5.5 0 1 1 11 0v3.5l1.5 2H5l1.5-2Z' {...outline} />
-            <path d='M10 19h4' {...outline} />
-          </>
-        );
-      case 'Notes':
-      case 'Quotes':
-      case 'Templates':
-        return (
-          <>
-            <path d='M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20Z' {...outline} />
-            <path d='M14 3.5V8h4M9 12h6M9 15.5h6' {...outline} />
-          </>
-        );
-      case 'Documents':
-        return (
-          <>
-            <path d='M5.5 3.5h9l4 4V20a.5.5 0 0 1-.5.5h-12a.5.5 0 0 1-.5-.5Z' {...outline} />
-            <path d='M14.5 3.5V8h4M8.5 12h6M8.5 15.5h4' {...outline} />
-          </>
-        );
-      case 'Automations':
-        return <path d='m13 2-8 12h6l-1 8 8-12h-6Z' fill={fill} />;
-      case 'Integrations':
-        return (
-          <>
-            <path d='M8 6v4a4 4 0 0 0 4 4h4' {...outline} />
-            <path d='M16 10V6M16 6h-4M16 6l3 3' {...outline} />
-            <circle cx='8' cy='6' r='2.2' fill={fill} />
-            <circle cx='16' cy='18' r='2.2' fill={fill} />
-          </>
-        );
-      case 'Workspaces':
-        return (
-          <>
-            <path d='M4 7.5 7 4h5l2.5 3.5' {...outline} />
-            <path d='M4 7.5h15.5L18 20H5Z' {...outline} />
-            <path d='M9 7.5v3.2a3 3 0 0 0 3 3h2.2' {...outline} />
-          </>
-        );
-      case 'Settings':
-        return (
-          <>
-            <path
-              d='M12 3.8 13.3 5.5l2.1-.2.7 2 1.9.9-.7 2 1.3 1.6-1.3 1.7.7 2-1.9.9-.7 2-2.1-.2L12 20.1l-1.3-1.6-2.1.2-.7-2-1.9-.9.7-2-1.3-1.7 1.3-1.6-.7-2 1.9-.9.7-2 2.1.2Z'
-              {...outline}
-            />
-            <circle cx='12' cy='12' r='2.7' {...outline} />
-          </>
-        );
-      default:
-        return (
-          <>
-            <circle cx='12' cy='12' r='8.5' {...outline} />
-            <path d='M12 8v8M8 12h8' {...outline} />
-          </>
-        );
-    }
-  })();
-
-  return (
-    <svg {...common}>
-      <defs>
-        <linearGradient
-          id={`nav-gradient-${gradientId}`}
-          x1='3'
-          y1='4'
-          x2='21'
-          y2='20'
-          gradientUnits='userSpaceOnUse'
-        >
-          <stop offset='0' stopColor={from} />
-          <stop offset='1' stopColor={to} />
-        </linearGradient>
-      </defs>
-      {icon}
-    </svg>
-  );
-}
-
 function QuickCreate({ onClose, isMobile }: { onClose: () => void; isMobile: boolean }) {
   const items = [
     {
       label: 'Nueva tarea',
       description: 'Organiza trabajo pendiente',
       href: '/dashboard/my-work?mode=list&create=1',
-      icon: Icons.check
+      icon: Icons.circleCheck
     },
     {
       label: 'Nuevo evento',
@@ -408,13 +242,13 @@ function QuickCreate({ onClose, isMobile }: { onClose: () => void; isMobile: boo
       label: 'Nota rápida',
       description: 'Captura algo antes de olvidarlo',
       href: '/dashboard/notes',
-      icon: Icons.page
+      icon: Icons.note
     },
     {
       label: 'Presupuesto',
       description: 'Prepara una nueva propuesta',
       href: '/dashboard/quotes',
-      icon: Icons.post
+      icon: Icons.quote
     }
   ];
 
@@ -518,6 +352,7 @@ function MoreSheet({
                 </p>
                 <div className='grid gap-1 sm:grid-cols-2'>
                   {items.map((item) => {
+                    const Icon = item.icon ? Icons[item.icon] : Icons.logo;
                     const active = pathname === item.url || pathname.startsWith(`${item.url}/`);
                     return (
                       <Link
@@ -530,7 +365,7 @@ function MoreSheet({
                         )}
                       >
                         <span className='bg-muted/70 flex size-9 items-center justify-center rounded-[10px]'>
-                          <ColoredNavIcon title={item.title} compact />
+                          <Icon className='size-5' strokeWidth={2.05} />
                         </span>
                         {item.title}
                       </Link>

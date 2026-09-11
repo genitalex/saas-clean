@@ -222,7 +222,7 @@ function LegacyTodayPage({
       >
         <QuickAction
           href='/dashboard/my-work?mode=list&create=1'
-          icon={Icons.check}
+          icon={Icons.circleCheck}
           label='Nueva tarea'
           hint='Organiza trabajo'
         />
@@ -246,13 +246,13 @@ function LegacyTodayPage({
         />
         <QuickAction
           href='/dashboard/quotes'
-          icon={Icons.post}
+          icon={Icons.quote}
           label='Nuevo presupuesto'
           hint='Prepara una propuesta'
         />
         <QuickAction
           href='/dashboard/notes'
-          icon={Icons.post}
+          icon={Icons.note}
           label='Nota rápida'
           hint='Guarda una idea'
         />

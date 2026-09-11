@@ -6,7 +6,13 @@ export const navGroups: NavGroup[] = [
     variant: 'primary',
     items: [
       { title: 'Today', url: '/dashboard/today', icon: 'clock', shortcut: ['g', 't'], items: [] },
-      { title: 'Work', url: '/dashboard/my-work', icon: 'check', shortcut: ['g', 'w'], items: [] },
+      {
+        title: 'Work',
+        url: '/dashboard/my-work',
+        icon: 'circleCheck',
+        shortcut: ['g', 'w'],
+        items: []
+      },
       {
         title: 'Calendar',
         url: '/dashboard/calendar',
@@ -34,10 +40,10 @@ export const navGroups: NavGroup[] = [
     variant: 'primary',
     items: [
       { title: 'Notifications', url: '/dashboard/notifications', icon: 'notification', items: [] },
-      { title: 'Notes', url: '/dashboard/notes', icon: 'page', items: [] },
+      { title: 'Notes', url: '/dashboard/notes', icon: 'note', items: [] },
       { title: 'Opportunities', url: '/dashboard/opportunities', icon: 'opportunities', items: [] },
-      { title: 'Quotes', url: '/dashboard/quotes', icon: 'post', items: [] },
-      { title: 'Templates', url: '/dashboard/templates', icon: 'send', items: [] },
+      { title: 'Quotes', url: '/dashboard/quotes', icon: 'quote', items: [] },
+      { title: 'Templates', url: '/dashboard/templates', icon: 'template', items: [] },
       { title: 'Goals', url: '/dashboard/goals', icon: 'goals', items: [] },
       { title: 'Documents', url: '/dashboard/documents', icon: 'documents', items: [] },
       {

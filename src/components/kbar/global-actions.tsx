@@ -72,7 +72,7 @@ async function fetchResults(search: string, signal: AbortSignal): Promise<Search
       subtitle: 'Nota',
       section: 'Notas',
       url: `/dashboard/notes?note=${note.id}`,
-      icon: <Icons.post className='size-4' />
+      icon: <Icons.note className='size-4' />
     })),
     ...activities
       .filter((activity: { title: string; customer: { name: string } }) =>
