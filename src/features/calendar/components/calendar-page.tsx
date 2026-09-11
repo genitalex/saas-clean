@@ -476,7 +476,7 @@ export function CalendarPage({
               value={calendarSearch}
               onChange={(event) => setCalendarSearch(event.target.value)}
               placeholder='Buscar en el calendario…'
-              className='h-10 rounded-[10px] border-border/60 bg-muted/25 pl-9 shadow-none'
+              className='h-7 rounded-[10px] border-border/60 bg-muted/25 pl-9 shadow-none'
             />
             <kbd className='text-muted-foreground pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded-[6px] border border-border/60 bg-background px-1.5 py-0.5 text-[10px] sm:block'>
               /

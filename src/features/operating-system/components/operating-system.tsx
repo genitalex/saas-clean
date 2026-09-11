@@ -693,6 +693,7 @@ export function OpportunitiesPage({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder='Buscar oportunidad'
+            className='h-7'
           />
           <Button
             variant='secondary'
