@@ -133,7 +133,6 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSpinning, setSettingsSpinning] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
@@ -482,32 +481,32 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='relative hidden h-10 items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
+          <div className='relative hidden h-8 items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
             <Button
               variant='ghost'
-              size='icon-sm'
+              size='icon-xs'
               onClick={() => shift(-1)}
               aria-label='Ir al periodo anterior'
-              className='relative z-10 h-8 min-w-8 rounded-[8px] px-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground'
+              className='relative z-10 size-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/70 hover:text-foreground'
             >
-              <Icons.chevronLeft className='size-4' />
+              <Icons.chevronLeft className='size-3.5' />
             </Button>
             <Button
               variant='ghost'
               size='sm'
               onClick={() => setCursor(new Date())}
-              className='relative z-10 h-8 min-w-16 rounded-[8px] bg-card px-3 text-xs font-medium text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)] ring-0'
+              className='relative z-10 h-7 min-w-16 rounded-[8px] bg-card px-2.5 text-xs font-medium text-foreground shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)] ring-0'
             >
               Hoy
             </Button>
             <Button
               variant='ghost'
-              size='icon-sm'
+              size='icon-xs'
               onClick={() => shift(1)}
               aria-label='Ir al periodo siguiente'
-              className='relative z-10 h-8 min-w-8 rounded-[8px] px-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground'
+              className='relative z-10 size-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/70 hover:text-foreground'
             >
-              <Icons.chevronRight className='size-4' />
+              <Icons.chevronRight className='size-3.5' />
             </Button>
           </div>
           <SegmentedToggle
@@ -535,26 +534,6 @@ export function CalendarPage({
             }}
             aria-label='Vista del calendario'
           />
-          <div className='flex h-10 items-center justify-center'>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={() => {
-                setSettingsSpinning(true);
-                setSettingsOpen(true);
-              }}
-              aria-label='Configuración del calendario'
-              className='size-9 rounded-[10px] text-muted-foreground transition-colors duration-200 hover:bg-muted/70 hover:text-foreground'
-            >
-              <Icons.settings
-                className={cn(
-                  'size-[22px]',
-                  settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
-                )}
-                onAnimationEnd={() => setSettingsSpinning(false)}
-              />
-            </Button>
-          </div>
           <Button
             variant='secondary'
             size='sm'
@@ -608,11 +587,11 @@ export function CalendarPage({
             setSettingsOpen(true);
           }}
           aria-label='Configuración del calendario'
-          className='size-9 rounded-[10px] text-muted-foreground transition-colors duration-200 hover:bg-muted/70 hover:text-foreground'
+          className='size-9 rounded-full border border-border/70 bg-background shadow-[0_2px_8px_rgba(23,32,25,0.08)] text-muted-foreground transition-[transform,background-color,color,box-shadow] duration-200 hover:scale-[1.04] hover:bg-muted hover:text-foreground hover:shadow-[0_4px_12px_rgba(23,32,25,0.10)] active:scale-[0.98]'
         >
           <Icons.settings
             className={cn(
-              'size-[22px]',
+              'size-5',
               settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
             )}
             onAnimationEnd={() => setSettingsSpinning(false)}
