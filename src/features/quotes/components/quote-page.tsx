@@ -5,6 +5,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Icons } from '@/components/icons';
+import { SignaturePad } from './signature-pad';
 
 const QUOTE_SETTINGS_KEY = 'saas-clean-quote-settings-v1';
 
@@ -55,22 +56,17 @@ function newLine(): Line {
   return { id: crypto.randomUUID(), description: '', quantity: 1, price: 0 };
 }
 
-function getDefaultValidUntil() {
-  const date = new Date();
-  date.setDate(date.getDate() + 15);
-  return date.toISOString().slice(0, 10);
-}
-
 function readQuoteSettings(): QuoteSettings {
   try {
     const saved = localStorage.getItem(QUOTE_SETTINGS_KEY);
     if (!saved) return DEFAULT_SETTINGS;
+    const parsed = JSON.parse(saved) as Partial<QuoteSettings>;
     return {
       ...DEFAULT_SETTINGS,
-      ...JSON.parse(saved),
+      ...parsed,
       issuer: {
         ...DEFAULT_SETTINGS.issuer,
-        ...(JSON.parse(saved) as QuoteSettings).issuer
+        ...(parsed.issuer ?? {})
       }
     };
   } catch {
@@ -79,6 +75,7 @@ function readQuoteSettings(): QuoteSettings {
 }
 
 export default function QuotePage() {
+  const [documentTitle, setDocumentTitle] = useState('Presupuesto');
   const [client, setClient] = useState('');
   const [clientLegalName, setClientLegalName] = useState('');
   const [clientTaxId, setClientTaxId] = useState('');
@@ -89,7 +86,6 @@ export default function QuotePage() {
   const [quoteNumber, setQuoteNumber] = useState(
     `P-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`
   );
-  const [validUntil, setValidUntil] = useState(getDefaultValidUntil);
   const [taxRate, setTaxRate] = useState(21);
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
@@ -97,6 +93,10 @@ export default function QuotePage() {
   const [issuer, setIssuer] = useState<QuoteSettings['issuer']>(DEFAULT_SETTINGS.issuer);
   const [logoDataUrl, setLogoDataUrl] = useState('');
   const [logoError, setLogoError] = useState('');
+  const [issuerSaved, setIssuerSaved] = useState(false);
+  const [issuerOpen, setIssuerOpen] = useState(false);
+  const [signatureIssuer, setSignatureIssuer] = useState('');
+  const [signatureClient, setSignatureClient] = useState('');
 
   useEffect(() => {
     const saved = readQuoteSettings();
@@ -106,15 +106,12 @@ export default function QuotePage() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(
-        QUOTE_SETTINGS_KEY,
-        JSON.stringify({
-          issuer,
-          logoDataUrl
-        })
-      );
+      localStorage.setItem(QUOTE_SETTINGS_KEY, JSON.stringify({ issuer, logoDataUrl }));
+      setIssuerSaved(true);
+      const timeout = window.setTimeout(() => setIssuerSaved(false), 1200);
+      return () => window.clearTimeout(timeout);
     } catch {
-      /* Local preferences are optional. */
+      return undefined;
     }
   }, [issuer, logoDataUrl]);
 
@@ -182,15 +179,14 @@ export default function QuotePage() {
 
       const image = new Image();
       image.onload = () => {
-        const maxWidth = 480;
-        const maxHeight = 180;
+        const maxWidth = 420;
+        const maxHeight = 220;
         const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(image.width * scale));
         canvas.height = Math.max(1, Math.round(image.height * scale));
         const context = canvas.getContext('2d');
         if (!context) return;
-
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
         setLogoDataUrl(canvas.toDataURL('image/png', 0.92));
@@ -213,9 +209,9 @@ export default function QuotePage() {
                 <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
                   Editor
                 </p>
-                <h2 className='mt-1 text-xl font-semibold tracking-tight'>Datos del presupuesto</h2>
+                <h2 className='mt-1 text-xl font-semibold tracking-tight'>Datos del documento</h2>
                 <p className='text-muted-foreground mt-1 text-sm'>
-                  Prepara la propuesta antes de enviarla.
+                  Personaliza el contenido que verá el cliente.
                 </p>
               </div>
               <span className='rounded-full border border-primary/20 bg-primary/8 px-2.5 py-1 text-[10px] font-semibold text-primary'>
@@ -228,114 +224,144 @@ export default function QuotePage() {
             <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
               <div className='flex items-center justify-between gap-3'>
                 <div>
-                  <p className='text-sm font-semibold'>Tus datos fiscales</p>
+                  <p className='text-sm font-semibold'>Identidad del documento</p>
                   <p className='text-muted-foreground mt-0.5 text-xs'>
-                    Se guardan en este dispositivo y aparecen en el presupuesto.
+                    Elige el título que aparecerá arriba del documento.
                   </p>
                 </div>
-                {logoDataUrl ? (
-                  <button
-                    type='button'
-                    onClick={() => setLogoDataUrl('')}
-                    className='text-muted-foreground text-xs hover:text-destructive'
-                  >
-                    Quitar logo
-                  </button>
-                ) : null}
               </div>
-
-              <div className='mt-3 grid gap-3 sm:grid-cols-2'>
+              <div className='mt-3'>
                 <Input
-                  placeholder='Nombre comercial'
-                  value={issuer.businessName}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, businessName: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='Razón social'
-                  value={issuer.legalName}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, legalName: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='NIF / CIF'
-                  value={issuer.taxId}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, taxId: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='Dirección'
-                  value={issuer.address}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, address: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='Código postal'
-                  value={issuer.postalCode}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, postalCode: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='Ciudad'
-                  value={issuer.city}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, city: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='Email'
-                  type='email'
-                  value={issuer.email}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, email: event.target.value }))
-                  }
-                />
-                <Input
-                  placeholder='Teléfono'
-                  value={issuer.phone}
-                  onChange={(event) =>
-                    setIssuer((current) => ({ ...current, phone: event.target.value }))
-                  }
+                  placeholder='Título del documento'
+                  value={documentTitle}
+                  onChange={(event) => setDocumentTitle(event.target.value)}
                 />
               </div>
+            </div>
 
-              <div className='mt-3 flex flex-wrap items-center gap-3'>
-                <label className='inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-input/80 bg-background px-3 py-2 text-xs font-medium hover:bg-muted/40'>
-                  <Icons.upload className='size-3.5' />
-                  {logoDataUrl ? 'Cambiar logo' : 'Subir logo'}
-                  <input
-                    type='file'
-                    accept='image/png,image/jpeg,image/webp,image/svg+xml'
-                    className='sr-only'
-                    onChange={(event) => handleLogo(event.target.files?.[0])}
+            <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
+              <button
+                type='button'
+                className='flex w-full items-center justify-between gap-3 text-left'
+                onClick={() => setIssuerOpen((value) => !value)}
+              >
+                <span>
+                  <span className='block text-sm font-semibold'>Tus datos fiscales</span>
+                  <span className='text-muted-foreground mt-0.5 block text-xs'>
+                    Se guardan automáticamente para futuros presupuestos.
+                  </span>
+                </span>
+                <span className='flex items-center gap-2'>
+                  {issuerSaved && (
+                    <span className='text-[10px] font-medium text-primary'>Guardado</span>
+                  )}
+                  <Icons.chevronDown
+                    className={`size-4 text-muted-foreground transition-transform ${
+                      issuerOpen ? 'rotate-180' : ''
+                    }`}
                   />
-                </label>
-                {logoDataUrl ? (
-                  <div className='flex h-9 max-w-[150px] items-center rounded-[8px] border border-border/60 bg-white px-2'>
-                    <img
-                      src={logoDataUrl}
-                      alt='Logo'
-                      className='max-h-7 max-w-[130px] object-contain'
+                </span>
+              </button>
+
+              {issuerOpen && (
+                <>
+                  <div className='mt-3 grid gap-3 sm:grid-cols-2'>
+                    <Input
+                      placeholder='Nombre comercial'
+                      value={issuer.businessName}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, businessName: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='Razón social'
+                      value={issuer.legalName}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, legalName: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='NIF / CIF'
+                      value={issuer.taxId}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, taxId: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='Dirección'
+                      value={issuer.address}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, address: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='Código postal'
+                      value={issuer.postalCode}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, postalCode: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='Ciudad'
+                      value={issuer.city}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, city: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='Email'
+                      type='email'
+                      value={issuer.email}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, email: event.target.value }))
+                      }
+                    />
+                    <Input
+                      placeholder='Teléfono'
+                      value={issuer.phone}
+                      onChange={(event) =>
+                        setIssuer((current) => ({ ...current, phone: event.target.value }))
+                      }
                     />
                   </div>
-                ) : null}
-                {logoError ? <span className='text-xs text-destructive'>{logoError}</span> : null}
-              </div>
-              <p className='text-muted-foreground mt-2 text-[10px]'>
-                Se redimensiona automáticamente para no ocupar demasiado espacio en el documento.
-              </p>
+
+                  <div className='mt-3 flex flex-wrap items-center gap-3'>
+                    <label className='inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-input/80 bg-background px-3 py-2 text-xs font-medium hover:bg-muted/40'>
+                      <Icons.upload className='size-3.5' />
+                      {logoDataUrl ? 'Cambiar logo' : 'Subir logo'}
+                      <input
+                        type='file'
+                        accept='image/png,image/jpeg,image/webp,image/svg+xml'
+                        className='sr-only'
+                        onChange={(event) => handleLogo(event.target.files?.[0])}
+                      />
+                    </label>
+                    {logoDataUrl ? (
+                      <div className='flex size-11 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-white shadow-sm'>
+                        <img
+                          src={logoDataUrl}
+                          alt='Logo'
+                          className='max-h-9 max-w-9 object-contain'
+                        />
+                      </div>
+                    ) : null}
+                    {logoError ? (
+                      <span className='text-xs text-destructive'>{logoError}</span>
+                    ) : null}
+                  </div>
+                  <p className='text-muted-foreground mt-2 text-[10px]'>
+                    El logo se redimensiona automáticamente y queda guardado para los siguientes
+                    documentos.
+                  </p>
+                </>
+              )}
             </div>
 
             <div className='rounded-[16px] border border-border/60 bg-background/45 p-4'>
               <div>
                 <p className='text-sm font-semibold'>Datos del cliente</p>
                 <p className='text-muted-foreground mt-0.5 text-xs'>
-                  Los datos fiscales de la persona o empresa receptora.
+                  Persona o empresa que recibe el documento.
                 </p>
               </div>
               <div className='mt-3 grid gap-3 sm:grid-cols-2'>
@@ -380,20 +406,22 @@ export default function QuotePage() {
               </div>
             </div>
 
-            <div className='grid gap-3 sm:grid-cols-[0.9fr_0.9fr]'>
+            <div className='grid gap-3 sm:grid-cols-2'>
               <label className='space-y-1.5 text-sm'>
-                <span className='text-muted-foreground'>Nº presupuesto</span>
+                <span className='text-muted-foreground'>Nº documento</span>
                 <Input
                   value={quoteNumber}
                   onChange={(event) => setQuoteNumber(event.target.value)}
                 />
               </label>
               <label className='space-y-1.5 text-sm'>
-                <span className='text-muted-foreground'>Válido hasta</span>
+                <span className='text-muted-foreground'>IVA</span>
                 <Input
-                  type='date'
-                  value={validUntil}
-                  onChange={(event) => setValidUntil(event.target.value)}
+                  type='number'
+                  min='0'
+                  step='1'
+                  value={taxRate}
+                  onChange={(event) => setTaxRate(Number(event.target.value))}
                 />
               </label>
             </div>
@@ -456,17 +484,7 @@ export default function QuotePage() {
               </div>
             </div>
 
-            <div className='grid gap-3 sm:grid-cols-3'>
-              <label className='space-y-1.5 text-sm'>
-                <span className='text-muted-foreground'>IVA</span>
-                <Input
-                  type='number'
-                  min='0'
-                  step='1'
-                  value={taxRate}
-                  onChange={(event) => setTaxRate(Number(event.target.value))}
-                />
-              </label>
+            <div className='grid gap-3 sm:grid-cols-2'>
               <label className='space-y-1.5 text-sm'>
                 <span className='text-muted-foreground'>Descuento (€)</span>
                 <Input
@@ -502,13 +520,13 @@ export default function QuotePage() {
         >
           <div className='border-b border-border/60 bg-card/55 px-6 py-5 sm:px-7 print:bg-white'>
             <div className='flex items-start justify-between gap-5'>
-              <div className='flex min-w-0 items-start gap-4'>
+              <div className='flex min-w-0 items-center gap-4'>
                 {logoDataUrl ? (
-                  <div className='flex h-[56px] w-[120px] shrink-0 items-center justify-start'>
+                  <div className='flex size-[76px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/70 bg-white shadow-sm print:border-border/40'>
                     <img
                       src={logoDataUrl}
                       alt={issuer.businessName || 'Logo'}
-                      className='max-h-[56px] max-w-[120px] object-contain object-left'
+                      className='max-h-[64px] max-w-[64px] object-contain'
                     />
                   </div>
                 ) : null}
@@ -516,10 +534,12 @@ export default function QuotePage() {
                   <div className='mb-2 flex items-center gap-2'>
                     <span className='size-2 rounded-full bg-primary print:hidden' />
                     <p className='text-primary text-[10px] font-semibold uppercase tracking-[0.2em]'>
-                      Propuesta
+                      {issuer.businessName || issuer.legalName || 'Tu empresa'}
                     </p>
                   </div>
-                  <h2 className='text-2xl font-semibold tracking-[-0.03em]'>Presupuesto</h2>
+                  <h2 className='text-2xl font-semibold tracking-[-0.03em]'>
+                    {documentTitle || 'Documento'}
+                  </h2>
                   <p className='text-muted-foreground mt-1 text-sm'>
                     {client || 'Nombre del cliente'}
                   </p>
@@ -585,22 +605,7 @@ export default function QuotePage() {
               </div>
             </div>
 
-            <div className='mb-6 mt-5 flex flex-wrap gap-x-8 gap-y-2 text-xs'>
-              <div>
-                <p className='text-muted-foreground'>Fecha</p>
-                <p className='mt-0.5 font-medium'>{new Date().toLocaleDateString('es-ES')}</p>
-              </div>
-              <div>
-                <p className='text-muted-foreground'>Válido hasta</p>
-                <p className='mt-0.5 font-medium'>
-                  {validUntil
-                    ? new Date(`${validUntil}T00:00:00`).toLocaleDateString('es-ES')
-                    : '—'}
-                </p>
-              </div>
-            </div>
-
-            <div className='overflow-hidden rounded-[12px] border border-border/60'>
+            <div className='mb-6 mt-5 overflow-hidden rounded-[12px] border border-border/60'>
               <div className='grid grid-cols-[minmax(0,1fr)_68px_100px] gap-3 bg-muted/35 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground print:bg-[#f5f5f5]'>
                 <span>Concepto</span>
                 <span className='text-right'>Ud.</span>
@@ -622,7 +627,7 @@ export default function QuotePage() {
               </div>
             </div>
 
-            <div className='ml-auto mt-5 w-full max-w-[290px] space-y-2 text-sm'>
+            <div className='ml-auto w-full max-w-[290px] space-y-2 text-sm'>
               <div className='flex justify-between gap-4 text-muted-foreground'>
                 <span>Subtotal</span>
                 <span className='tabular-nums'>{money(subtotal)}</span>
@@ -652,6 +657,19 @@ export default function QuotePage() {
               </p>
             </div>
 
+            <div className='mt-8 grid gap-5 border-t border-border/50 pt-6 sm:grid-cols-2'>
+              <SignaturePad
+                value={signatureIssuer}
+                onChange={setSignatureIssuer}
+                label='Firma del emisor'
+              />
+              <SignaturePad
+                value={signatureClient}
+                onChange={setSignatureClient}
+                label='Firma del cliente'
+              />
+            </div>
+
             <div className='mt-7 flex flex-wrap gap-2 print:hidden'>
               <Button size='sm' onClick={() => window.print()}>
                 <Icons.post className='size-3.5' />
@@ -664,7 +682,7 @@ export default function QuotePage() {
                   window.open(
                     'https://wa.me/?text=' +
                       encodeURIComponent(
-                        `Hola ${client || ''}, te adjunto el presupuesto ${quoteNumber || ''} por un total de ${money(total)}.`
+                        `Hola ${client || ''}, te adjunto el ${documentTitle.toLowerCase()} ${quoteNumber || ''} por un total de ${money(total)}.`
                       ),
                     '_blank'
                   )

@@ -52,7 +52,7 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
   height: 0.875rem;
 }
 
-/* Quotes: print only the actual A4 document, not the dashboard shell. */
+/* Print only the quote document as an A4 sheet. */
 @page {
   size: A4;
   margin: 0;
@@ -86,10 +86,12 @@ main[class~='max-w-[1100px]'] header button.bg-primary svg {
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    background: #fff !important;
   }
 
-  body .quote-print-target > div {
-    max-width: none;
+  body .quote-print-target canvas {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .quote-print-target .print\:hidden {
