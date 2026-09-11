@@ -4,10 +4,48 @@ import { useEffect, useMemo, useState } from 'react';
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Icons } from '@/components/icons';
 import { SignaturePad } from './signature-pad';
 
 const QUOTE_SETTINGS_KEY = 'saas-clean-quote-settings-v1';
+
+const CURRENCIES = [
+  ['EUR', 'Euro (€)'],
+  ['USD', 'Dólar estadounidense ($)'],
+  ['GBP', 'Libra esterlina (£)'],
+  ['CHF', 'Franco suizo (CHF)'],
+  ['CAD', 'Dólar canadiense (CA$)'],
+  ['AUD', 'Dólar australiano (A$)'],
+  ['NZD', 'Dólar neozelandés (NZ$)'],
+  ['JPY', 'Yen japonés (¥)'],
+  ['CNY', 'Yuan chino (CN¥)'],
+  ['HKD', 'Dólar de Hong Kong (HK$)'],
+  ['SGD', 'Dólar de Singapur (S$)'],
+  ['SEK', 'Corona sueca (SEK)'],
+  ['NOK', 'Corona noruega (NOK)'],
+  ['DKK', 'Corona danesa (DKK)'],
+  ['PLN', 'Zloty polaco (PLN)'],
+  ['CZK', 'Corona checa (CZK)'],
+  ['HUF', 'Forinto húngaro (HUF)'],
+  ['RON', 'Leu rumano (RON)'],
+  ['AED', 'Dírham de EAU (AED)'],
+  ['SAR', 'Riyal saudí (SAR)'],
+  ['BRL', 'Real brasileño (R$)'],
+  ['MXN', 'Peso mexicano (MX$)'],
+  ['ARS', 'Peso argentino (ARS)'],
+  ['CLP', 'Peso chileno (CLP)'],
+  ['COP', 'Peso colombiano (COP)'],
+  ['INR', 'Rupia india (INR)'],
+  ['ZAR', 'Rand sudafricano (ZAR)'],
+  ['TRY', 'Lira turca (TRY)'],
+  ['ILS', 'Nuevo séquel israelí (ILS)'],
+  ['THB', 'Baht tailandés (THB)'],
+  ['IDR', 'Rupia indonesia (IDR)'],
+  ['MYR', 'Ringgit malasio (MYR)'],
+  ['PHP', 'Peso filipino (PHP)'],
+  ['KRW', 'Won surcoreano (₩)']
+] as const;
 
 type Line = {
   id: string;
@@ -44,10 +82,10 @@ const DEFAULT_SETTINGS: QuoteSettings = {
   logoDataUrl: ''
 };
 
-function money(value: number) {
+function money(value: number, currency: string) {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: 'EUR',
+    currency,
     minimumFractionDigits: 2
   }).format(value);
 }
@@ -82,6 +120,7 @@ export default function QuotePage() {
   const [clientPostalCode, setClientPostalCode] = useState('');
   const [clientCity, setClientCity] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [currency, setCurrency] = useState('EUR');
   const [quoteNumber, setQuoteNumber] = useState(
     `P-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 900) + 100)}`
   );
@@ -100,6 +139,8 @@ export default function QuotePage() {
     const saved = readQuoteSettings();
     setIssuer(saved.issuer);
     setLogoDataUrl(saved.logoDataUrl);
+    const savedCurrency = localStorage.getItem('saas-clean-quote-currency-v1');
+    if (savedCurrency) setCurrency(savedCurrency);
   }, []);
 
   useEffect(() => {
@@ -112,6 +153,14 @@ export default function QuotePage() {
       return undefined;
     }
   }, [issuer, logoDataUrl]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('saas-clean-quote-currency-v1', currency);
+    } catch {
+      /* Local preferences are optional. */
+    }
+  }, [currency]);
 
   const subtotal = useMemo(
     () =>
@@ -160,8 +209,8 @@ export default function QuotePage() {
       return;
     }
 
-    if (file.size > 1_500_000) {
-      setLogoError('El logo debe pesar menos de 1,5 MB.');
+    if (file.size > 1_000_000) {
+      setLogoError('El logo debe pesar menos de 1 MB.');
       return;
     }
 
@@ -385,7 +434,7 @@ export default function QuotePage() {
               </div>
             </div>
 
-            <div className='grid gap-3 sm:grid-cols-2'>
+            <div className='grid gap-3 sm:grid-cols-3'>
               <label className='space-y-1.5 text-sm'>
                 <span className='text-muted-foreground'>Nº documento</span>
                 <Input
@@ -394,13 +443,29 @@ export default function QuotePage() {
                 />
               </label>
               <label className='space-y-1.5 text-sm'>
-                <span className='text-muted-foreground'>IVA</span>
+                <span className='text-muted-foreground'>Moneda</span>
+                <NativeSelect
+                  value={currency}
+                  onChange={(event) => setCurrency(event.target.value)}
+                >
+                  {CURRENCIES.map(([code, label]) => (
+                    <NativeSelectOption key={code} value={code}>
+                      {code} — {label}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </label>
+              <label className='space-y-1.5 text-sm'>
+                <span className='text-muted-foreground'>IVA / impuesto (%)</span>
                 <Input
                   type='number'
                   min='0'
-                  step='1'
+                  max='100'
+                  step='0.01'
                   value={taxRate}
-                  onChange={(event) => setTaxRate(Number(event.target.value))}
+                  onChange={(event) =>
+                    setTaxRate(Math.max(0, Math.min(100, Number(event.target.value))))
+                  }
                 />
               </label>
             </div>
@@ -476,7 +541,7 @@ export default function QuotePage() {
               </label>
               <div className='rounded-[12px] border border-primary/15 bg-primary/6 px-3 py-2.5'>
                 <p className='text-muted-foreground text-xs'>Total estimado</p>
-                <p className='mt-1 text-lg font-semibold tabular-nums'>{money(total)}</p>
+                <p className='mt-1 text-lg font-semibold tabular-nums'>{money(total, currency)}</p>
               </div>
             </div>
 
@@ -594,7 +659,7 @@ export default function QuotePage() {
                     <span className='min-w-0'>{item.description || 'Concepto sin nombre'}</span>
                     <span className='text-right tabular-nums'>{item.quantity}</span>
                     <span className='text-right tabular-nums'>
-                      {money(item.quantity * item.price)}
+                      {money(item.quantity * item.price, currency)}
                     </span>
                   </div>
                 ))}
@@ -604,21 +669,21 @@ export default function QuotePage() {
             <div className='ml-auto w-full max-w-[290px] space-y-2 text-sm'>
               <div className='flex justify-between gap-4 text-muted-foreground'>
                 <span>Subtotal</span>
-                <span className='tabular-nums'>{money(subtotal)}</span>
+                <span className='tabular-nums'>{money(subtotal, currency)}</span>
               </div>
               {discountAmount > 0 ? (
                 <div className='flex justify-between gap-4 text-muted-foreground'>
                   <span>Descuento</span>
-                  <span className='tabular-nums'>−{money(discountAmount)}</span>
+                  <span className='tabular-nums'>−{money(discountAmount, currency)}</span>
                 </div>
               ) : null}
               <div className='flex justify-between gap-4 text-muted-foreground'>
-                <span>IVA ({taxRate}%)</span>
-                <span className='tabular-nums'>{money(taxAmount)}</span>
+                <span>{taxRate > 0 ? `IVA (${taxRate}%)` : 'IVA (0%)'}</span>
+                <span className='tabular-nums'>{money(taxAmount, currency)}</span>
               </div>
               <div className='mt-3 flex justify-between gap-4 border-t border-border/60 pt-3 text-base font-semibold'>
                 <span>Total</span>
-                <span className='tabular-nums'>{money(total)}</span>
+                <span className='tabular-nums'>{money(total, currency)}</span>
               </div>
             </div>
 
@@ -667,7 +732,7 @@ export default function QuotePage() {
                   window.open(
                     'https://wa.me/?text=' +
                       encodeURIComponent(
-                        `Hola ${client || ''}, te adjunto el presupuesto ${quoteNumber || ''} por un total de ${money(total)}.`
+                        `Hola ${client || ''}, te adjunto el presupuesto ${quoteNumber || ''} por un total de ${money(total, currency)}.`
                       ),
                     '_blank'
                   )

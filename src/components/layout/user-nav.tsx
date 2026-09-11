@@ -8,6 +8,56 @@ import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
+const MAX_PROFILE_IMAGE_BYTES = 1_000_000;
+const MAX_PROFILE_IMAGE_WIDTH = 512;
+const MAX_PROFILE_IMAGE_HEIGHT = 512;
+
+function processProfileImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('No se pudo leer la imagen.'));
+        return;
+      }
+
+      const image = new Image();
+      image.onerror = () => reject(new Error('La imagen no es válida.'));
+      image.onload = () => {
+        const scale = Math.min(
+          1,
+          MAX_PROFILE_IMAGE_WIDTH / image.width,
+          MAX_PROFILE_IMAGE_HEIGHT / image.height
+        );
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('No se pudo procesar la imagen.'));
+          return;
+        }
+
+        context.drawImage(image, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/webp', 0.88);
+        const fallback = canvas.toDataURL('image/jpeg', 0.88);
+        resolve(dataUrl.length <= 1_350_000 ? dataUrl : fallback);
+      };
+
+      image.src = reader.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
 export function UserNav() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
@@ -56,23 +106,39 @@ export function UserNav() {
     };
   }, [open]);
 
-  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      if (typeof reader.result !== 'string') return;
-      setSavingPhoto(true);
-      const result = await authClient.updateUser({ image: reader.result });
-      setSavingPhoto(false);
+
+    event.target.value = '';
+
+    const allowedTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
+    if (!allowedTypes.has(file.type)) {
+      toast.error('La foto debe ser PNG, JPG/JPEG o WEBP.');
+      return;
+    }
+
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      toast.error('La foto de perfil debe pesar menos de 1 MB.');
+      return;
+    }
+
+    setSavingPhoto(true);
+
+    try {
+      const imageData = await processProfileImage(file);
+      const result = await authClient.updateUser({ image: imageData });
+
       if (result.error) {
         toast.error(result.error.message || 'No se pudo guardar la foto');
       } else {
         toast.success('Foto de perfil actualizada');
       }
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo procesar la foto');
+    } finally {
+      setSavingPhoto(false);
+    }
   }
 
   async function removePhoto() {
@@ -98,7 +164,7 @@ export function UserNav() {
       <input
         ref={inputRef}
         type='file'
-        accept='image/png,image/jpeg,image/webp,image/gif'
+        accept='image/png,image/jpeg,image/webp'
         className='sr-only'
         onChange={handlePhotoChange}
       />
