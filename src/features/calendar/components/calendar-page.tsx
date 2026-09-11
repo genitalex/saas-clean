@@ -482,38 +482,35 @@ export function CalendarPage({
               /
             </kbd>
           </div>
-          <div className='relative hidden items-center gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)] md:flex'>
-            <span
-              aria-hidden
-              className='pointer-events-none absolute top-0.5 bottom-0.5 left-8 w-16 rounded-[8px] bg-card shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)]'
-            />
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => shift(-1)}
-              aria-label='Ir al periodo anterior'
-              className='relative z-10 h-7 w-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
-            >
-              <Icons.chevronLeft className='size-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setCursor(new Date())}
-              className='relative z-10 h-7 min-w-16 rounded-[8px] px-2.5 text-xs font-medium text-foreground shadow-none ring-0'
-            >
-              Hoy
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => shift(1)}
-              aria-label='Ir al periodo siguiente'
-              className='relative z-10 h-7 w-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
-            >
-              <Icons.chevronRight className='size-4' />
-            </Button>
-          </div>
+          <SegmentedToggle
+            className='hidden md:inline-grid'
+            options={['Hoy']}
+            value='Hoy'
+            onValueChange={() => setCursor(new Date())}
+            leadingAction={
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => shift(-1)}
+                aria-label='Ir al periodo anterior'
+                className='relative z-10 h-7 w-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
+              >
+                <Icons.chevronLeft className='size-4' />
+              </Button>
+            }
+            trailingAction={
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                onClick={() => shift(1)}
+                aria-label='Ir al periodo siguiente'
+                className='relative z-10 h-7 w-7 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
+              >
+                <Icons.chevronRight className='size-4' />
+              </Button>
+            }
+            aria-label='Navegación del calendario'
+          />
           <SegmentedToggle
             className='hidden md:inline-grid'
             options={['Mes', 'Semana', 'Día', 'Agenda']}

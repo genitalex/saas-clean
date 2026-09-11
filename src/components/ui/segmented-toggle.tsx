@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ComponentPropsWithoutRef } from 'react';
+import { useState, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export type SegmentedToggleProps = Readonly<
@@ -9,6 +9,8 @@ export type SegmentedToggleProps = Readonly<
     value?: string;
     defaultValue?: string;
     onValueChange?: (value: string) => void;
+    leadingAction?: ReactNode;
+    trailingAction?: ReactNode;
   } & Omit<ComponentPropsWithoutRef<'div'>, 'children'>
 >;
 
@@ -32,6 +34,8 @@ export function SegmentedToggle({
   value,
   defaultValue,
   onValueChange,
+  leadingAction,
+  trailingAction,
   className,
   ...props
 }: SegmentedToggleProps) {
@@ -52,24 +56,28 @@ export function SegmentedToggle({
       className={cn(
         'relative inline-grid w-fit gap-0.5 rounded-[10px] bg-muted/80 p-0.5 text-xs font-medium select-none',
         'shadow-[inset_0_1px_2px_rgba(0,0,0,0.06),inset_0_0_0_1px_rgba(255,255,255,0.5)]',
-        count === 2
-          ? 'grid-cols-2'
-          : count === 3
-            ? 'grid-cols-3'
-            : count === 4
-              ? 'grid-cols-4'
-              : 'grid-cols-5',
+        leadingAction || trailingAction
+          ? 'grid-cols-[auto_minmax(0,1fr)_auto]'
+          : count === 2
+            ? 'grid-cols-2'
+            : count === 3
+              ? 'grid-cols-3'
+              : count === 4
+                ? 'grid-cols-4'
+                : 'grid-cols-5',
         className
       )}
       {...props}
     >
+      {leadingAction}
       <span
         aria-hidden
         className={cn(
-          'pointer-events-none absolute top-0.5 bottom-0.5 left-0.5 rounded-[8px] bg-card',
+          'pointer-events-none absolute top-0.5 bottom-0.5 rounded-[8px] bg-card',
           'shadow-[0_1px_4px_rgba(0,0,0,0.09),0_1px_1px_rgba(0,0,0,0.04)]',
           'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-          widthClass(count),
+          leadingAction || trailingAction ? 'right-8 left-8' : 'left-0.5',
+          !leadingAction && !trailingAction && widthClass(count),
           offsetClasses[Math.min(activeIndex, count - 1)]
         )}
       />
@@ -93,6 +101,7 @@ export function SegmentedToggle({
           {option}
         </button>
       ))}
+      {trailingAction}
     </div>
   );
 }
