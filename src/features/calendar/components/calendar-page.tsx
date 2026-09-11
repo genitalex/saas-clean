@@ -133,6 +133,7 @@ export function CalendarPage({
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSpinning, setSettingsSpinning] = useState(false);
   const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [initialDate, setInitialDate] = useState<Date>();
