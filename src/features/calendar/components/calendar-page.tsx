@@ -574,12 +574,12 @@ export function CalendarPage({
           );
         })}
         <Button
-          variant='default'
+          variant='ghost'
           size='icon-sm'
           onClick={() => openCreate(selectedDate)}
           aria-label='Nuevo evento'
           title='Nuevo evento'
-          className='size-7 rounded-[8px] shadow-[0_2px_8px_rgba(23,32,25,0.10)] transition-[background-color,color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:shadow-[0_4px_12px_rgba(23,32,25,0.14)] active:scale-[0.96]'
+          className='size-7 rounded-[8px] bg-muted/45 text-foreground shadow-none transition-[background-color,color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted active:scale-[0.96]'
         >
           <Icons.add className='size-4' />
         </Button>
@@ -2050,44 +2050,47 @@ function DesktopYearDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1200px] rounded-2xl p-5 sm:p-7 lg:p-8'>
-        <DialogHeader className='pb-3'>
-          <div className='flex items-center justify-between gap-4'>
-            <div>
-              <DialogTitle className='text-3xl tracking-tight'>
+      <DialogContent className='!w-[calc(100vw-2rem)] !max-w-[1220px] overflow-hidden rounded-[24px] border-border/60 bg-background p-0 shadow-none'>
+        <DialogHeader className='border-b border-border/55 bg-background px-5 py-5 sm:px-7 sm:py-6 lg:px-8'>
+          <div className='flex items-start justify-between gap-4'>
+            <div className='min-w-0'>
+              <p className='text-muted-foreground mb-1 text-[10px] font-semibold uppercase tracking-[0.18em]'>
+                Vista anual
+              </p>
+              <DialogTitle className='text-2xl tracking-[-0.03em] sm:text-3xl'>
                 Calendario {displayYear}
               </DialogTitle>
-              <DialogDescription className='mt-1 text-sm'>
+              <DialogDescription className='mt-1 max-w-[58ch] text-sm leading-5'>
                 Elige un mes para abrirlo. La vista mantiene el mismo calendario completo que en
                 móvil.
               </DialogDescription>
             </div>
-            <div className='flex items-center gap-1'>
+            <div className='flex shrink-0 items-center gap-0.5 rounded-[10px] border border-border/55 bg-muted/45 p-1'>
               <Button
                 type='button'
                 variant='ghost'
-                size='icon-sm'
+                size='icon-xs'
                 onClick={() => setDisplayYear((current) => current - 1)}
                 aria-label='Año anterior'
-                className='rounded-xl'
+                className='rounded-[7px] text-muted-foreground hover:bg-background hover:text-foreground'
               >
                 <Icons.chevronLeft className='size-4' />
               </Button>
               <Button
                 type='button'
                 variant='ghost'
-                size='icon-sm'
+                size='icon-xs'
                 onClick={() => setDisplayYear((current) => current + 1)}
                 aria-label='Año siguiente'
-                className='rounded-xl'
+                className='rounded-[7px] text-muted-foreground hover:bg-background hover:text-foreground'
               >
                 <Icons.chevronRight className='size-4' />
               </Button>
             </div>
           </div>
         </DialogHeader>
-        <div className='max-h-[70vh] overflow-y-auto pr-1'>
-          <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
+        <div className='max-h-[70vh] overflow-y-auto bg-muted/20 px-5 py-5 sm:px-7 sm:py-6 lg:px-8'>
+          <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'>
             {mobileMonthNames.map((name, index) => {
               const monthDate = new Date(displayYear, index, 1);
               const monthStart = startOfMonth(monthDate);
@@ -2104,17 +2107,15 @@ function DesktopYearDialog({
                   type='button'
                   onClick={() => onChange(monthDate)}
                   className={cn(
-                    'min-h-[210px] rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:bg-accent/35',
-                    active
-                      ? 'border-primary/45 bg-primary/[0.06]'
-                      : 'border-border/60 bg-surface-subtle/45',
-                    isCurrent && 'ring-1 ring-primary/30'
+                    'min-h-[190px] rounded-[14px] border bg-background p-4 text-left transition-[background-color,border-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-px hover:border-border hover:bg-card active:scale-[0.99]',
+                    active ? 'border-primary/45 bg-primary/[0.04]' : 'border-border/55',
+                    isCurrent && 'ring-1 ring-primary/25'
                   )}
                 >
-                  <div className='mb-3 flex items-center justify-between'>
+                  <div className='mb-4 flex items-center justify-between'>
                     <span
                       className={cn(
-                        'text-base font-semibold',
+                        'text-sm font-semibold tracking-tight',
                         (active || isCurrent) && 'text-primary'
                       )}
                     >
