@@ -488,7 +488,7 @@ export function CalendarPage({
               size='icon-sm'
               onClick={() => shift(-1)}
               aria-label='Ir al periodo anterior'
-              className='relative z-10 h-8 w-8 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground'
+              className='relative z-10 h-8 w-8 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
             >
               <Icons.chevronLeft className='size-4' />
             </Button>
@@ -505,7 +505,7 @@ export function CalendarPage({
               size='icon-sm'
               onClick={() => shift(1)}
               aria-label='Ir al periodo siguiente'
-              className='relative z-10 h-8 w-8 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground'
+              className='relative z-10 h-8 w-8 rounded-[8px] text-muted-foreground transition-colors duration-200 hover:bg-card/55 hover:text-foreground active:scale-[0.98]'
             >
               <Icons.chevronRight className='size-4' />
             </Button>
@@ -590,7 +590,7 @@ export function CalendarPage({
           aria-label='Configuración del calendario'
           className='size-9 rounded-full border border-border/70 bg-background shadow-[0_2px_8px_rgba(23,32,25,0.08)] text-muted-foreground transition-[transform,background-color,color,box-shadow] duration-200 hover:scale-[1.04] hover:bg-muted hover:text-foreground hover:shadow-[0_4px_12px_rgba(23,32,25,0.10)] active:scale-[0.98]'
         >
-          <Icons.settings
+          <Icons.adjustments
             className={cn(
               'size-5',
               settingsSpinning && 'animate-[spin_0.55s_cubic-bezier(.32,.72,0,1)]'
@@ -1135,7 +1135,7 @@ function MobileMonthView({
           aria-label='Configuración del calendario'
           className='text-muted-foreground h-8 w-8 shrink-0 rounded-[9px]'
         >
-          <Icons.settings className='size-4' />
+          <Icons.adjustments className='size-4' />
         </Button>
       </div>
       <div
@@ -1317,7 +1317,7 @@ function MobileWeekView({
           aria-label='Configuración del calendario'
           className='text-muted-foreground h-9 w-9 shrink-0 rounded-[10px]'
         >
-          <Icons.settings className='size-4' />
+          <Icons.adjustments className='size-4' />
         </Button>
       </div>
 
