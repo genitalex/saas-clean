@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, format, startOfDay, startOfWeek } from 'date-fns';
+import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
@@ -202,6 +202,38 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       content: <WeeklyAgenda today={today} events={events} tasks={tasks} now={now} />
     },
     {
+      id: 'completion-rate',
+      title: 'Cumplimiento',
+      icon: Icons.check,
+      defaultSize: 6,
+      mobileSize: 2,
+      allowedSizes: [4, 6, 8],
+      mobileAllowedSizes: [2],
+      defaultHeight: 3,
+      mobileDefaultHeight: 3,
+      minHeight: 3,
+      maxHeight: 3,
+      mobileMinHeight: 3,
+      mobileMaxHeight: 3,
+      content: <CompletionRateWidget today={today} tasks={tasks} />
+    },
+    {
+      id: 'activity-rhythm',
+      title: 'Ritmo de actividad',
+      icon: Icons.pulse,
+      defaultSize: 6,
+      mobileSize: 2,
+      allowedSizes: [4, 6, 8],
+      mobileAllowedSizes: [2],
+      defaultHeight: 3,
+      mobileDefaultHeight: 3,
+      minHeight: 3,
+      maxHeight: 3,
+      mobileMinHeight: 3,
+      mobileMaxHeight: 3,
+      content: <ActivityRhythmWidget today={today} tasks={tasks} />
+    },
+    {
       id: 'tasks',
       title: 'Tareas',
       icon: Icons.check,
@@ -371,6 +403,123 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       </header>
       <WidgetWorkspace widgets={widgets} storageKey={todayWorkspaceStorageKey(userId)} />
     </main>
+  );
+}
+
+function CompletionRateWidget({ today, tasks }: { today: Date; tasks: Task[] }) {
+  const todayTasks = tasks.filter((task) => task.dueAt && isSameDay(new Date(task.dueAt), today));
+  const completed = todayTasks.filter(
+    (task) =>
+      task.status === 'done' || (task.completedAt && isSameDay(new Date(task.completedAt), today))
+  ).length;
+  const planned = todayTasks.length;
+  const rate = planned > 0 ? Math.min(100, Math.round((completed / planned) * 100)) : 0;
+
+  const circumference = 2 * Math.PI * 31;
+  const dashOffset = circumference * (1 - rate / 100);
+
+  return (
+    <div className='flex h-full items-center gap-5'>
+      <div className='relative size-20 shrink-0' aria-label={`${rate}% de cumplimiento`}>
+        <svg viewBox='0 0 80 80' className='size-full -rotate-90' aria-hidden='true'>
+          <circle
+            cx='40'
+            cy='40'
+            r='31'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='6'
+            className='text-muted'
+          />
+          <circle
+            cx='40'
+            cy='40'
+            r='31'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='6'
+            strokeLinecap='round'
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            className='text-primary transition-[stroke-dashoffset] duration-500'
+          />
+        </svg>
+        <div className='bg-card absolute inset-[9px] flex items-center justify-center rounded-full ring-1 ring-border/35'>
+          <span className='text-xl font-semibold tabular-nums tracking-tight'>{rate}%</span>
+        </div>
+      </div>
+      <div className='min-w-0'>
+        <p className='text-lg font-semibold tabular-nums tracking-tight'>
+          {completed} / {planned}
+        </p>
+        <p className='text-muted-foreground mt-0.5 text-xs'>tareas previstas hoy</p>
+        <div className='mt-3 h-1.5 overflow-hidden rounded-full bg-muted'>
+          <div
+            className='bg-primary h-full rounded-full transition-[width] duration-500'
+            style={{ width: `${rate}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActivityRhythmWidget({ today, tasks }: { today: Date; tasks: Task[] }) {
+  const last7 = Array.from({ length: 7 }, (_, index) => {
+    const day = subDays(today, 6 - index);
+    return tasks.filter((task) => task.completedAt && isSameDay(new Date(task.completedAt), day))
+      .length;
+  });
+  const previous7 = Array.from({ length: 7 }, (_, index) => {
+    const day = subDays(today, 13 - index);
+    return tasks.filter((task) => task.completedAt && isSameDay(new Date(task.completedAt), day))
+      .length;
+  });
+  const currentTotal = last7.reduce((sum, value) => sum + value, 0);
+  const previousTotal = previous7.reduce((sum, value) => sum + value, 0);
+  const delta =
+    previousTotal === 0
+      ? currentTotal > 0
+        ? 100
+        : 0
+      : Math.round(((currentTotal - previousTotal) / previousTotal) * 100);
+  const max = Math.max(1, ...last7);
+  const baseline = max * 0.18;
+
+  return (
+    <div className='flex h-full flex-col justify-between'>
+      <div className='flex items-start justify-between gap-3'>
+        <div>
+          <p className='text-lg font-semibold tabular-nums tracking-tight'>
+            {delta >= 0 ? '+' : ''}
+            {delta}%
+          </p>
+          <p className='text-muted-foreground mt-0.5 text-xs'>vs. 7 días anteriores</p>
+        </div>
+        <span className='text-muted-foreground text-xs tabular-nums'>
+          {currentTotal} completadas
+        </span>
+      </div>
+      <div
+        className='mt-4 flex h-14 items-end gap-1.5'
+        aria-label='Actividad de los últimos 7 días'
+      >
+        {last7.map((value, index) => {
+          const height = Math.max(baseline, (value / max) * 100);
+          return (
+            <span
+              key={`${index}-${value}`}
+              className='bg-primary/75 min-w-0 flex-1 rounded-sm'
+              style={{ height: `${height}%` }}
+            />
+          );
+        })}
+      </div>
+      <div className='text-muted-foreground mt-2 flex justify-between text-[10px] font-medium uppercase tracking-wide'>
+        <span>−6 d</span>
+        <span>hoy</span>
+      </div>
+    </div>
   );
 }
 
