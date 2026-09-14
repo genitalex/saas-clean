@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { addDays, format, isSameDay, startOfDay, subDays } from 'date-fns';
+import { addDays, endOfDay, format, isSameDay, startOfDay, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { Icons } from '@/components/icons';
@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { getTasks, taskKeys } from '@/features/tasks/queries';
 import type { Task } from '@/features/tasks/types';
 import { eventKeys, getEvents } from '@/features/calendar/queries';
+import type { Event } from '@/features/calendar/types';
 import { activityKeys, getActivities } from '@/features/activities/queries';
 import type { GlobalActivity } from '@/features/activities/types';
 import { getAttentionItemsQueryOptions } from '@/features/automations/api/queries';
@@ -203,7 +204,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
     },
     {
       id: 'completion-rate',
-      title: 'Cumplimiento',
+      title: 'Carga de hoy',
       icon: Icons.check,
       defaultSize: 6,
       mobileSize: 2,
@@ -215,11 +216,11 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       maxHeight: 3,
       mobileMinHeight: 3,
       mobileMaxHeight: 3,
-      content: <CompletionRateWidget today={today} tasks={tasks} />
+      content: <TodayLoadWidget today={today} now={now} tasks={tasks} events={events} />
     },
     {
       id: 'activity-rhythm',
-      title: 'Ritmo de actividad',
+      title: 'Actividad reciente',
       icon: Icons.pulse,
       defaultSize: 6,
       mobileSize: 2,
@@ -231,7 +232,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       maxHeight: 3,
       mobileMinHeight: 3,
       mobileMaxHeight: 3,
-      content: <ActivityRhythmWidget today={today} tasks={tasks} />
+      content: <ActivityRhythmWidget today={today} tasks={tasks} events={events} />
     },
     {
       id: 'tasks',
@@ -406,75 +407,97 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
   );
 }
 
-function CompletionRateWidget({ today, tasks }: { today: Date; tasks: Task[] }) {
+function TodayLoadWidget({
+  today,
+  now,
+  tasks,
+  events
+}: {
+  today: Date;
+  now: Date;
+  tasks: Task[];
+  events: Event[];
+}) {
+  const tomorrow = addDays(today, 1);
   const todayTasks = tasks.filter((task) => task.dueAt && isSameDay(new Date(task.dueAt), today));
-  const completed = todayTasks.filter(
+  const todayEvents = events.filter((event) => {
+    const start = new Date(event.startAt);
+    const end = new Date(event.endAt);
+    return start < tomorrow && end > today;
+  });
+
+  const total = todayTasks.length + todayEvents.length;
+  const completedTasks = todayTasks.filter(
     (task) =>
       task.status === 'done' || (task.completedAt && isSameDay(new Date(task.completedAt), today))
   ).length;
-  const planned = todayTasks.length;
-  const rate = planned > 0 ? Math.min(100, Math.round((completed / planned) * 100)) : 0;
-
-  const circumference = 2 * Math.PI * 31;
-  const dashOffset = circumference * (1 - rate / 100);
+  const completedEvents = todayEvents.filter((event) => event.status === 'done').length;
+  const completed = completedTasks + completedEvents;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const taskShare = total > 0 ? Math.round((todayTasks.length / total) * 100) : 0;
+  const eventShare = total > 0 ? 100 - taskShare : 0;
+  const remaining = Math.max(0, total - completed);
 
   return (
-    <div className='flex h-full items-center gap-5'>
-      <div className='relative size-20 shrink-0' aria-label={`${rate}% de cumplimiento`}>
-        <svg viewBox='0 0 80 80' className='size-full -rotate-90' aria-hidden='true'>
-          <circle
-            cx='40'
-            cy='40'
-            r='31'
-            fill='none'
-            stroke='currentColor'
-            strokeWidth='6'
-            className='text-muted'
-          />
-          <circle
-            cx='40'
-            cy='40'
-            r='31'
-            fill='none'
-            stroke='currentColor'
-            strokeWidth='6'
-            strokeLinecap='round'
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            className='text-primary transition-[stroke-dashoffset] duration-500'
-          />
-        </svg>
-        <div className='bg-card absolute inset-[9px] flex items-center justify-center rounded-full ring-1 ring-border/35'>
-          <span className='text-xl font-semibold tabular-nums tracking-tight'>{rate}%</span>
+    <div className='flex h-full min-w-0 flex-col justify-between'>
+      <div className='flex items-start justify-between gap-4'>
+        <div className='min-w-0'>
+          <p className='text-2xl font-semibold tabular-nums tracking-tight'>{total}</p>
+          <p className='text-muted-foreground mt-0.5 text-xs'>elementos programados hoy</p>
+        </div>
+        <div className='text-right'>
+          <p className='text-xl font-semibold tabular-nums tracking-tight'>{completionRate}%</p>
+          <p className='text-muted-foreground mt-0.5 text-[11px]'>resuelto</p>
         </div>
       </div>
-      <div className='min-w-0'>
-        <p className='text-lg font-semibold tabular-nums tracking-tight'>
-          {completed} / {planned}
-        </p>
-        <p className='text-muted-foreground mt-0.5 text-xs'>tareas previstas hoy</p>
-        <div className='mt-3 h-1.5 overflow-hidden rounded-full bg-muted'>
-          <div
-            className='bg-primary h-full rounded-full transition-[width] duration-500'
-            style={{ width: `${rate}%` }}
-          />
+
+      <div className='mt-4'>
+        <div className='bg-muted/70 flex h-2 overflow-hidden rounded-full'>
+          <span className='bg-primary/85 h-full' style={{ width: `${taskShare}%` }} />
+          <span className='bg-primary/35 h-full' style={{ width: `${eventShare}%` }} />
+        </div>
+        <div className='text-muted-foreground mt-2.5 flex items-center justify-between gap-3 text-[11px]'>
+          <span className='inline-flex min-w-0 items-center gap-1.5'>
+            <span className='bg-primary/85 size-1.5 shrink-0 rounded-full' />
+            {todayTasks.length} tareas
+          </span>
+          <span className='inline-flex min-w-0 items-center gap-1.5'>
+            <span className='bg-primary/35 size-1.5 shrink-0 rounded-full' />
+            {todayEvents.length} eventos
+          </span>
+          <span className='shrink-0 tabular-nums'>{remaining} pendientes</span>
         </div>
       </div>
     </div>
   );
 }
 
-function ActivityRhythmWidget({ today, tasks }: { today: Date; tasks: Task[] }) {
-  const last7 = Array.from({ length: 7 }, (_, index) => {
-    const day = subDays(today, 6 - index);
-    return tasks.filter((task) => task.completedAt && isSameDay(new Date(task.completedAt), day))
-      .length;
-  });
-  const previous7 = Array.from({ length: 7 }, (_, index) => {
-    const day = subDays(today, 13 - index);
-    return tasks.filter((task) => task.completedAt && isSameDay(new Date(task.completedAt), day))
-      .length;
-  });
+function ActivityRhythmWidget({
+  today,
+  tasks,
+  events
+}: {
+  today: Date;
+  tasks: Task[];
+  events: Event[];
+}) {
+  const getCreatedCount = (day: Date) => {
+    const nextDay = addDays(day, 1);
+    const taskCount = tasks.filter((task) => {
+      const created = new Date(task.createdAt);
+      return created >= day && created < nextDay;
+    }).length;
+    const eventCount = events.filter((event) => {
+      const created = new Date(event.createdAt);
+      return created >= day && created < nextDay;
+    }).length;
+    return taskCount + eventCount;
+  };
+
+  const last7 = Array.from({ length: 7 }, (_, index) => getCreatedCount(subDays(today, 6 - index)));
+  const previous7 = Array.from({ length: 7 }, (_, index) =>
+    getCreatedCount(subDays(today, 13 - index))
+  );
   const currentTotal = last7.reduce((sum, value) => sum + value, 0);
   const previousTotal = previous7.reduce((sum, value) => sum + value, 0);
   const delta =
@@ -484,40 +507,67 @@ function ActivityRhythmWidget({ today, tasks }: { today: Date; tasks: Task[] }) 
         : 0
       : Math.round(((currentTotal - previousTotal) / previousTotal) * 100);
   const max = Math.max(1, ...last7);
-  const baseline = max * 0.18;
+  const todayCount = last7[last7.length - 1];
+  const currentAverage = currentTotal / 7;
+  const previousAverage = previousTotal / 7;
 
   return (
-    <div className='flex h-full flex-col justify-between'>
-      <div className='flex items-start justify-between gap-3'>
-        <div>
-          <p className='text-lg font-semibold tabular-nums tracking-tight'>
-            {delta >= 0 ? '+' : ''}
+    <div className='flex h-full min-w-0 flex-col justify-between'>
+      <div className='flex items-start justify-between gap-4'>
+        <div className='min-w-0'>
+          <p className='text-2xl font-semibold tabular-nums tracking-tight'>{currentTotal}</p>
+          <p className='text-muted-foreground mt-0.5 text-xs'>elementos creados · últimos 7 días</p>
+        </div>
+        <div className='text-right'>
+          <p
+            className={cn(
+              'text-xl font-semibold tabular-nums tracking-tight',
+              delta > 0 ? 'text-primary' : 'text-foreground'
+            )}
+          >
+            {delta > 0 ? '+' : ''}
             {delta}%
           </p>
-          <p className='text-muted-foreground mt-0.5 text-xs'>vs. 7 días anteriores</p>
+          <p className='text-muted-foreground mt-0.5 text-[11px]'>vs. 7 días anteriores</p>
         </div>
-        <span className='text-muted-foreground text-xs tabular-nums'>
-          {currentTotal} completadas
+      </div>
+
+      <div className='mt-3'>
+        <div
+          className='flex h-16 items-end gap-1.5'
+          aria-label='Elementos creados durante los últimos 7 días'
+        >
+          {last7.map((value, index) => {
+            const height = value === 0 ? 8 : Math.max(14, (value / max) * 100);
+            const isToday = index === last7.length - 1;
+            return (
+              <span
+                key={`${index}-${value}`}
+                className={cn(
+                  'min-w-0 flex-1 rounded-[5px] transition-[height] duration-300',
+                  isToday ? 'bg-primary' : 'bg-primary/25'
+                )}
+                style={{ height: `${height}%` }}
+                title={`${value} ${value === 1 ? 'elemento' : 'elementos'}`}
+              />
+            );
+          })}
+        </div>
+        <div className='text-muted-foreground mt-2.5 flex items-center justify-between text-[10px] tabular-nums'>
+          <span>Hace 6 días</span>
+          <span>Hoy · {todayCount}</span>
+        </div>
+      </div>
+
+      <div className='text-muted-foreground mt-2 grid grid-cols-2 gap-3 text-[11px]'>
+        <span>
+          Media actual{' '}
+          <strong className='text-foreground tabular-nums'>{currentAverage.toFixed(1)}</strong>/día
         </span>
-      </div>
-      <div
-        className='mt-4 flex h-14 items-end gap-1.5'
-        aria-label='Actividad de los últimos 7 días'
-      >
-        {last7.map((value, index) => {
-          const height = Math.max(baseline, (value / max) * 100);
-          return (
-            <span
-              key={`${index}-${value}`}
-              className='bg-primary/75 min-w-0 flex-1 rounded-sm'
-              style={{ height: `${height}%` }}
-            />
-          );
-        })}
-      </div>
-      <div className='text-muted-foreground mt-2 flex justify-between text-[10px] font-medium uppercase tracking-wide'>
-        <span>−6 d</span>
-        <span>hoy</span>
+        <span className='text-right'>
+          Anterior{' '}
+          <strong className='text-foreground tabular-nums'>{previousAverage.toFixed(1)}</strong>/día
+        </span>
       </div>
     </div>
   );
