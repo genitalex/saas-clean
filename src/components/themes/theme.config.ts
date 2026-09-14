@@ -8,5 +8,10 @@ export const THEMES = [
     name: 'Base',
     value: 'base',
     description: 'Claro, calmado y profesional'
+  },
+  {
+    name: 'Azul',
+    value: 'blue',
+    description: 'Neutro, preciso y elegante'
   }
 ];

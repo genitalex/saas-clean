@@ -1,0 +1,111 @@
+/* Blue theme: clean, neutral, premium system with a restrained #315b8c identity. */
+
+[data-theme='blue'] {
+  --background: #ffffff;
+  --foreground: #18212a;
+
+  --card: #ffffff;
+  --card-foreground: #18212a;
+
+  --popover: #ffffff;
+  --popover-foreground: #18212a;
+
+  --primary: #315b8c;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f5f7fa;
+  --secondary-foreground: #263440;
+
+  --muted: #f0f3f7;
+  --muted-foreground: #6d7782;
+
+  --accent: #e7eef7;
+  --accent-foreground: #274b73;
+
+  --destructive: #c75b52;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e7ec;
+  --input: #d9e0e8;
+  --ring: #315b8c;
+
+  --sidebar: #fafbfc;
+  --sidebar-foreground: #18212a;
+  --sidebar-primary: #315b8c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #edf2f7;
+  --sidebar-accent-foreground: #263440;
+  --sidebar-border: #e2e7ec;
+  --sidebar-ring: #315b8c;
+
+  --chart-1: #315b8c;
+  --chart-2: #5f7fa4;
+  --chart-3: #8ea8c5;
+  --chart-4: #bac8d6;
+  --chart-5: #274b73;
+
+  --font-sans: Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
+
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --page-max-width: 90rem;
+  --page-padding: 1.25rem;
+  --section-gap: 2rem;
+  --control-height: 2.5rem;
+
+  --shadow-2xs: 0 1px 2px rgb(24 33 42 / 0.03);
+  --shadow-xs: 0 2px 8px rgb(24 33 42 / 0.04);
+  --shadow-sm: 0 5px 16px rgb(24 33 42 / 0.06);
+  --shadow-md: 0 12px 28px rgb(24 33 42 / 0.08);
+}
+
+[data-theme='blue'].dark {
+  --background: #0d141c;
+  --foreground: #edf4fb;
+
+  --card: #121b25;
+  --card-foreground: #edf4fb;
+
+  --popover: #182330;
+  --popover-foreground: #edf4fb;
+
+  --primary: #6f97c0;
+  --primary-foreground: #0c1420;
+
+  --secondary: #1b2938;
+  --secondary-foreground: #edf4fb;
+
+  --muted: #182330;
+  --muted-foreground: #a7b5c5;
+
+  --accent: #21344a;
+  --accent-foreground: #dceaf8;
+
+  --destructive: #d6786f;
+  --destructive-foreground: #1d1717;
+
+  --border: #2c3743;
+  --input: #29333f;
+  --ring: #6f97c0;
+
+  --sidebar: #0f171f;
+  --sidebar-foreground: #edf4fb;
+  --sidebar-primary: #6f97c0;
+  --sidebar-primary-foreground: #0c1420;
+  --sidebar-accent: #1b2938;
+  --sidebar-accent-foreground: #edf4fb;
+  --sidebar-border: #2c3743;
+  --sidebar-ring: #6f97c0;
+
+  --chart-1: #6f97c0;
+  --chart-2: #5b7fa8;
+  --chart-3: #8ca8c7;
+  --chart-4: #b6c5d5;
+  --chart-5: #dceaf8;
+}
