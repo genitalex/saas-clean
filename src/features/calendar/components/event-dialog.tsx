@@ -105,7 +105,6 @@ function DateSegmentControl({
   const selectedDay = Number(dayText) || 1;
   const [activeSegment, setActiveSegment] = useState<'day' | 'month' | 'year' | null>(null);
   const controlRef = useRef<HTMLDivElement>(null);
-  const wheelAccumulatorRef = useRef(0);
   const wheelLockUntilRef = useRef(0);
   const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
   const years = Array.from({ length: 21 }, (_, index) => selectedYear - 10 + index);
@@ -186,30 +185,27 @@ function DateSegmentControl({
             event.preventDefault();
             const now = performance.now();
             const direction = event.deltaY > 0 ? 1 : -1;
+            if (!direction) return;
+
             const magnitude = Math.min(120, Math.max(1, Math.abs(event.deltaY)));
 
-            // Treat the wheel like a physical picker: every accepted movement
-            // advances exactly one option. Faster scrolling shortens the
-            // interval between those individual steps instead of jumping over
-            // several dates at once.
-            wheelAccumulatorRef.current += magnitude;
-            if (now < wheelLockUntilRef.current || wheelAccumulatorRef.current < 18) return;
-
-            wheelAccumulatorRef.current = 0;
-            wheelLockUntilRef.current = now + Math.max(35, 115 - magnitude * 0.65);
+            // One wheel movement always changes exactly one option. The wheel
+            // can still feel faster/slower: large, fast gestures allow the next
+            // individual step sooner, while gentle gestures are throttled a bit
+            // more. We never apply multiple steps from a single wheel event.
+            if (now < wheelLockUntilRef.current) return;
+            wheelLockUntilRef.current = now + Math.max(45, 125 - magnitude * 0.55);
 
             const segment = segments.find((item) => item.key === activeSegment);
             if (!segment) return;
 
-            const currentIndex = segment.options.findIndex(
-              (option) =>
-                option ===
-                (activeSegment === 'day'
-                  ? selectedDay
-                  : activeSegment === 'month'
-                    ? selectedMonth
-                    : selectedYear)
-            );
+            const currentValue =
+              activeSegment === 'day'
+                ? selectedDay
+                : activeSegment === 'month'
+                  ? selectedMonth
+                  : selectedYear;
+            const currentIndex = segment.options.findIndex((option) => option === currentValue);
             if (currentIndex < 0) return;
 
             const nextIndex = Math.max(
@@ -319,6 +315,7 @@ function WheelColumn({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const programmaticScrollRef = useRef(false);
+  const wheelLockUntilRef = useRef(0);
   const itemHeight = 34;
 
   useEffect(() => {
@@ -341,6 +338,28 @@ function WheelColumn({
       role='listbox'
       aria-label={ariaLabel}
       className='no-scrollbar h-[118px] w-[72px] snap-y snap-mandatory overflow-y-auto overscroll-contain py-[42px] text-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+      onWheel={(event) => {
+        event.preventDefault();
+        if (programmaticScrollRef.current) return;
+
+        const direction = event.deltaY > 0 ? 1 : -1;
+        if (!direction) return;
+
+        const now = performance.now();
+        const magnitude = Math.min(120, Math.max(1, Math.abs(event.deltaY)));
+        if (now < wheelLockUntilRef.current) return;
+
+        // Never let a single wheel event jump several hours/minutes. One
+        // accepted wheel movement = exactly one item. Faster gestures simply
+        // reduce the delay before the next individual step.
+        wheelLockUntilRef.current = now + Math.max(45, 125 - magnitude * 0.55);
+
+        const nextIndex = Math.max(0, Math.min(values.length - 1, selectedIndex + direction));
+        if (nextIndex === selectedIndex) return;
+
+        onSelect(nextIndex);
+        ref.current?.scrollTo({ top: nextIndex * itemHeight, behavior: 'auto' });
+      }}
       onScroll={(event) => {
         if (programmaticScrollRef.current) return;
 
