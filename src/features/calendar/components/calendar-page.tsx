@@ -445,7 +445,7 @@ export function CalendarPage({
   );
 
   return (
-    <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-[var(--section-gap)] px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
+    <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-4 px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden md:flex'>
@@ -463,9 +463,9 @@ export function CalendarPage({
               </Button>
 
               <Button
-                variant='ghost'
+                variant='secondary'
                 onClick={() => setSelectedDate(new Date())}
-                className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-3 text-[11px] font-medium text-muted-foreground shadow-none hover:bg-muted hover:text-foreground'
+                className='h-8 rounded-[10px] border border-border/60 bg-muted/25 px-3 text-[11px] font-medium text-muted-foreground shadow-none outline-none hover:border-border hover:bg-muted hover:text-foreground focus-visible:border-border focus-visible:ring-1 focus-visible:ring-border'
               >
                 Hoy
               </Button>
@@ -485,7 +485,7 @@ export function CalendarPage({
                   <button
                     type='button'
                     onClick={() => setYearPickerOpen(true)}
-                    className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    className='group inline-flex items-center justify-start gap-1.5 rounded-lg px-1.5 py-1 text-left text-[1.4rem] leading-none font-semibold tracking-[-0.04em] capitalize transition-colors hover:bg-accent/25 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border'
                     aria-label={`Cambiar mes y año, actualmente ${title}`}
                   >
                     <span>{title}</span>
@@ -528,7 +528,7 @@ export function CalendarPage({
                   side='bottom'
                   className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
                 >
-                  <div className='space-y-2 p-1'>
+                  <div className='space-y-1.5 p-1'>
                     {categories.map((category) => {
                       const active = filters.includes(category.id);
                       return (
@@ -585,16 +585,16 @@ export function CalendarPage({
                 onClick={() => openCreate(selectedDate)}
                 aria-label='Nuevo evento'
                 title='Nuevo evento'
-                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground shadow-none hover:border-border hover:bg-muted hover:text-foreground'
+                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/25 text-foreground shadow-none hover:bg-muted'
               >
-                <Icons.add className='size-4' />
+                <span className='text-foreground text-[18px] leading-none font-medium'>+</span>
               </Button>
             </div>
           </div>
 
-          <div className='mx-auto w-full max-w-[1040px]'>
+          <div className='mx-auto flex h-12 w-full max-w-[1040px]'>
             <SegmentedToggle
-              className='w-full md:inline-grid'
+              className='h-12 w-full [&>button]:h-11 [&>button]:py-0'
               options={['Mes', 'Semana', 'Día', 'Agenda']}
               value={
                 view === 'month'
@@ -863,89 +863,181 @@ function MobileCalendar({
   view: CalendarView;
   onViewChange: (nextView: CalendarView) => void;
 }) {
-  const openDay = (day: Date) => {
-    onSelectDate(day);
-    if (!isSameMonth(day, cursor)) onCursorChange(day);
-    onModeChange('day');
-  };
-  const selectWeekDay = (day: Date) => {
-    onSelectDate(day);
-    onCursorChange(day);
-    onModeChange('day');
-  };
-  const openMonthFromYear = (month: Date) => {
-    onCursorChange(month);
-    onModeChange('month');
-  };
   const goToday = () => {
     const now = startOfDay(new Date());
     onCursorChange(now);
     onSelectDate(now);
   };
-  const changePeriod = (direction: 1 | -1) => {
-    if (view === 'week') {
-      onCursorChange(addWeeks(cursor, direction));
-      onSelectDate(addWeeks(selectedDate, direction));
-      return;
-    }
-    if (view === 'day') {
-      const next = addDays(selectedDate, direction);
-      onSelectDate(next);
+
+  const shiftCurrentView = (direction: 1 | -1) => {
+    if (view === 'month') {
+      const next = direction === 1 ? addMonths(cursor, 1) : subMonths(cursor, 1);
       onCursorChange(next);
       return;
     }
-    if (view === 'agenda') {
-      onCursorChange(addDays(cursor, direction * 30));
+    if (view === 'week') {
+      const next = direction === 1 ? addWeeks(cursor, 1) : subWeeks(cursor, 1);
+      onCursorChange(next);
+      onSelectDate(next);
       return;
     }
-    onCursorChange(direction === 1 ? addMonths(cursor, 1) : subMonths(cursor, 1));
+    if (view === 'day') {
+      const next = direction === 1 ? addDays(selectedDate, 1) : addDays(selectedDate, -1);
+      onCursorChange(next);
+      onSelectDate(next);
+      return;
+    }
+    onCursorChange((current) => (direction === 1 ? addDays(current, 30) : addDays(current, -30)));
   };
-  const changeSelectedDay = (delta: number) => {
-    const next = addDays(selectedDate, delta);
-    onSelectDate(next);
-    onCursorChange(next);
+
+  const handleViewChange = (next: string) => {
+    const nextView: CalendarView =
+      next === 'Mes' ? 'month' : next === 'Semana' ? 'week' : next === 'Día' ? 'day' : 'agenda';
+    if (nextView === 'month') {
+      onModeChange('month');
+    } else if (nextView === 'week') {
+      onModeChange('week');
+    } else if (nextView === 'day') {
+      onSelectDate(selectedDate);
+      onModeChange('day');
+    } else {
+      onModeChange('month');
+    }
+    onViewChange(nextView);
   };
-  const changeWeek = (delta: number) => {
-    const nextCursor = addWeeks(cursor, delta);
-    const nextSelected = addWeeks(selectedDate, delta);
-    onCursorChange(nextCursor);
-    onSelectDate(nextSelected);
-  };
-  const index = mobileModeOrder.indexOf(mode);
+
+  const activeViewLabel =
+    view === 'month' ? 'Mes' : view === 'week' ? 'Semana' : view === 'day' ? 'Día' : 'Agenda';
 
   useEffect(() => {
     const active = document.activeElement;
     if (active instanceof HTMLElement) active.blur();
-  }, [mode]);
+  }, [view, mode]);
 
-  const viewValue =
-    view === 'month' ? 'Mes' : view === 'week' ? 'Semana' : view === 'day' ? 'Día' : 'Agenda';
+  const sharedHeader = (
+    <div className='shrink-0 space-y-2.5 px-3 pt-3 sm:px-4'>
+      <div className='mx-auto flex w-full items-center justify-center gap-2'>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => shiftCurrentView(-1)}
+          aria-label='Periodo anterior'
+          className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+        >
+          <Icons.chevronLeft className='size-4' />
+        </Button>
+        <button
+          type='button'
+          onClick={() => onModeChange('year')}
+          aria-label={`Elegir otro mes del año, ${format(cursor, 'LLLL yyyy', { locale: es })}`}
+          className='min-w-0 flex-1 rounded-xl px-2 py-1.5 text-center text-[1.05rem] font-semibold tracking-tight capitalize transition-colors hover:bg-accent/30 active:scale-[0.98]'
+        >
+          {format(cursor, 'LLLL yyyy', { locale: es })}
+        </button>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => shiftCurrentView(1)}
+          aria-label='Periodo siguiente'
+          className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
+        >
+          <Icons.chevronRight className='size-4' />
+        </Button>
+      </div>
 
-  return (
-    <div className='relative flex h-full min-h-0 flex-col overflow-hidden'>
-      <div className='flex shrink-0 flex-col gap-3 px-3 pt-3 pb-2 sm:px-4'>
-        <div className='mx-auto flex w-full items-center justify-center gap-2'>
+      <div className='relative mx-auto w-full'>
+        <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
+        <input
+          id='calendar-search'
+          value={calendarSearch}
+          onChange={(event) => onCalendarSearchChange(event.target.value)}
+          placeholder='Buscar en el calendario...'
+          className='h-9 w-full rounded-[10px] border border-border/60 bg-muted/25 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/70 shadow-none outline-none ring-0 focus:border-border'
+        />
+      </div>
+
+      <div className='flex w-full items-center gap-2'>
+        <Popover>
+          <PopoverTrigger
+            render={
+              <Button
+                variant='secondary'
+                className='h-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
+              >
+                <span>Etiquetas</span>
+                <Icons.chevronDown className='size-3.5' />
+              </Button>
+            }
+          />
+          <PopoverContent
+            align='start'
+            side='bottom'
+            className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
+          >
+            <div className='space-y-2 p-1'>
+              {categories.map((category) => {
+                const active = activeCategoryIds.includes(category.id);
+                return (
+                  <button
+                    key={category.id}
+                    type='button'
+                    onClick={() => onToggleCategory(category.id)}
+                    className={cn(
+                      'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
+                      active && 'bg-muted/60'
+                    )}
+                  >
+                    <span className='flex min-w-0 items-center gap-2'>
+                      <span
+                        className='size-2.5 shrink-0 rounded-full'
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className='truncate text-foreground'>{category.name}</span>
+                    </span>
+                    <span
+                      className={cn(
+                        'text-xs font-semibold transition-opacity',
+                        active ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-0'
+                      )}
+                    >
+                      ✓
+                    </span>
+                  </button>
+                );
+              })}
+              <button
+                type='button'
+                onClick={onOpenSettings}
+                className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
+              >
+                <span className='text-base leading-none text-muted-foreground'>+</span>
+                <span>Nueva etiqueta</span>
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <div className='flex min-w-0 flex-1 items-center justify-center gap-1.5'>
           <Button
             variant='ghost'
             size='icon-sm'
-            onClick={() => changePeriod(-1)}
+            onClick={() => shiftCurrentView(-1)}
             aria-label='Periodo anterior'
             className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
           >
             <Icons.chevronLeft className='size-4' />
           </Button>
-          <button
-            type='button'
-            onClick={() => onModeChange('year')}
-            aria-label='Elegir otro mes del año'
-            className='min-w-0 flex-1 rounded-xl px-2 py-1.5 text-center text-[1.05rem] font-semibold tracking-tight capitalize transition-colors hover:bg-accent/30 active:scale-[0.98]'
+          <Button
+            variant='ghost'
+            onClick={goToday}
+            className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-muted-foreground shadow-none outline-none hover:border-border hover:bg-muted hover:text-foreground focus-visible:border-border focus-visible:ring-1 focus-visible:ring-border'
           >
-            {format(cursor, 'LLLL yyyy', { locale: es })}
-          </button>
+            Hoy
+          </Button>
           <Button
             variant='ghost'
             size='icon-sm'
-            onClick={() => changePeriod(1)}
+            onClick={() => shiftCurrentView(1)}
             aria-label='Periodo siguiente'
             className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
           >
@@ -953,229 +1045,110 @@ function MobileCalendar({
           </Button>
         </div>
 
-        <div className='relative mx-auto w-full'>
-          <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
-          <input
-            id='calendar-search'
-            value={calendarSearch}
-            onChange={(event) => onCalendarSearchChange(event.target.value)}
-            placeholder='Buscar en el calendario...'
-            className='h-9 w-full rounded-[10px] border border-border/60 bg-muted/25 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/70 shadow-none outline-none ring-0 focus:border-border'
-          />
-        </div>
+        <Button
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => onCreate(selectedDate)}
+          aria-label='Nuevo evento'
+          title='Nuevo evento'
+          className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground shadow-none hover:border-border hover:bg-muted hover:text-foreground'
+        >
+          <span className='text-[18px] leading-none font-medium'>+</span>
+        </Button>
+      </div>
 
-        <div className='flex w-full items-center gap-2'>
-          <Popover>
-            <PopoverTrigger
-              render={
-                <Button
-                  variant='secondary'
-                  className='h-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-                >
-                  <span>Etiquetas</span>
-                  <Icons.chevronDown className='size-3.5' />
-                </Button>
-              }
-            />
-            <PopoverContent
-              align='start'
-              side='bottom'
-              className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
-            >
-              <div className='space-y-2 p-1'>
-                {categories.map((category) => {
-                  const active = activeCategoryIds.includes(category.id);
-                  return (
-                    <button
-                      key={category.id}
-                      type='button'
-                      onClick={() => onToggleCategory(category.id)}
-                      className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
-                        active && 'bg-muted/60'
-                      )}
-                    >
-                      <span className='flex min-w-0 items-center gap-2'>
-                        <span
-                          className='size-2.5 shrink-0 rounded-full'
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <span className='truncate text-foreground'>{category.name}</span>
-                      </span>
-                      <span
-                        className={cn(
-                          'text-xs font-semibold transition-opacity',
-                          active ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-0'
-                        )}
-                      >
-                        ✓
-                      </span>
-                    </button>
-                  );
-                })}
-                <button
-                  type='button'
-                  onClick={onOpenSettings}
-                  className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
-                >
-                  <span className='text-base leading-none text-muted-foreground'>+</span>
-                  <span>Nueva etiqueta</span>
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+      <SegmentedToggle
+        options={['Mes', 'Semana', 'Día', 'Agenda']}
+        value={activeViewLabel}
+        onValueChange={handleViewChange}
+        className='h-10 w-full [&>button]:h-9 [&>button]:min-w-0 [&>button]:px-1 [&>button]:py-0 sm:h-12 sm:[&>button]:h-11'
+        aria-label='Vista del calendario'
+      />
+    </div>
+  );
 
-          <div className='flex min-w-0 flex-1 items-center justify-center gap-1'>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => changePeriod(-1)}
-              aria-label='Periodo anterior'
-              className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-            >
-              <Icons.chevronLeft className='size-4' />
-            </Button>
-            <Button
-              variant='ghost'
-              onClick={goToday}
-              className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-3 text-xs font-medium text-muted-foreground shadow-none hover:bg-muted hover:text-foreground'
-            >
-              Hoy
-            </Button>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              onClick={() => changePeriod(1)}
-              aria-label='Periodo siguiente'
-              className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-            >
-              <Icons.chevronRight className='size-4' />
-            </Button>
-          </div>
-
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onCreate(selectedDate)}
-            aria-label='Nuevo evento'
-            title='Nuevo evento'
-            className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground shadow-none hover:border-border hover:bg-muted hover:text-foreground'
-          >
-            <Icons.add className='size-4' />
-          </Button>
-        </div>
-
-        <div className='w-full'>
-          <SegmentedToggle
-            options={['Mes', 'Semana', 'Día', 'Agenda']}
-            value={viewValue}
-            onValueChange={(next) => {
-              if (next === 'Mes') {
-                onModeChange('month');
-                onViewChange('month');
-                return;
-              }
-              if (next === 'Semana') {
-                onModeChange('week');
-                onViewChange('week');
-                return;
-              }
-              if (next === 'Día') {
-                onModeChange('day');
-                onSelectDate(selectedDate);
-                onViewChange('day');
-                return;
-              }
-              onModeChange('day');
-              onViewChange('agenda');
+  if (mode === 'year') {
+    return (
+      <div className='flex h-full min-h-0 flex-col overflow-hidden'>
+        {sharedHeader}
+        <div className='min-h-0 flex-1'>
+          <MobileYearView
+            year={cursor.getFullYear()}
+            onYearChange={(year) => onCursorChange(new Date(year, cursor.getMonth(), 1))}
+            onSelectMonth={(month) => {
+              onCursorChange(month);
+              onViewChange('month');
+              onModeChange('month');
             }}
-            className='w-full'
-            aria-label='Vista del calendario'
           />
         </div>
       </div>
+    );
+  }
 
-      {view === 'agenda' ? (
-        <div className='min-h-0 flex-1 overflow-y-auto px-3 pb-2 sm:px-4'>
-          <div className='min-h-full overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
-            <AgendaView
-              cursor={cursor}
-              events={events}
-              categories={categories}
-              onOpenEvent={onOpenEvent}
-              onCreate={onCreate}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className='relative min-h-0 flex-1 overflow-hidden'>
-          <div
-            className='flex h-full w-[400%] transition-transform duration-300 ease-out motion-reduce:transition-none'
-            style={{ transform: `translateX(-${index * 25}%)` }}
-          >
-            <div className='h-full w-1/4 shrink-0' inert={mode !== 'year'}>
-              <MobileYearView
-                year={cursor.getFullYear()}
-                onYearChange={(year) => onCursorChange(new Date(year, cursor.getMonth(), 1))}
-                onSelectMonth={openMonthFromYear}
-              />
-            </div>
-            <div className='h-full w-1/4 shrink-0' inert={mode !== 'month'}>
-              <MobileMonthView
+  return (
+    <div className='flex h-full min-h-0 flex-col overflow-hidden'>
+      {sharedHeader}
+      <div className='min-h-0 flex-1 px-0 pt-2'>
+        {view === 'agenda' ? (
+          <div className='h-full min-h-0 overflow-y-auto px-3 pb-2 sm:px-4'>
+            <div className='rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+              <AgendaView
                 cursor={cursor}
-                selectedDate={selectedDate}
                 events={events}
                 categories={categories}
-                activeCategoryIds={activeCategoryIds}
-                isLoading={isLoading}
-                onCursorChange={onCursorChange}
-                onSelectDay={openDay}
-                onOpenYear={() => onModeChange('year')}
-                onOpenWeek={() => onModeChange('week')}
-                onGoToday={goToday}
-                onCreate={onCreate}
-                onOpenSettings={onOpenSettings}
-                onToggleCategory={onToggleCategory}
-                calendarSearch={calendarSearch}
-                onCalendarSearchChange={onCalendarSearchChange}
-                view={view}
-                onViewChange={onViewChange}
-                onModeChange={onModeChange}
-              />
-            </div>
-            <div className='h-full w-1/4 shrink-0' inert={mode !== 'week'}>
-              <MobileWeekView
-                cursor={cursor}
-                selectedDate={selectedDate}
-                events={events}
-                categories={categories}
-                onCursorChange={onCursorChange}
-                onSelectDay={selectWeekDay}
-                onShiftWeek={changeWeek}
-                onGoToday={goToday}
                 onOpenEvent={onOpenEvent}
                 onCreate={onCreate}
-                onOpenSettings={onOpenSettings}
-                isLoading={isLoading}
-                onBack={() => onModeChange('month')}
-              />
-            </div>
-            <div className='h-full w-1/4 shrink-0' inert={mode !== 'day'}>
-              <MobileDayTimeline
-                date={selectedDate}
-                events={events}
-                categories={categories}
-                onBack={() => onModeChange('week')}
-                onPreviousDay={() => changeSelectedDay(-1)}
-                onNextDay={() => changeSelectedDay(1)}
-                onOpenEvent={onOpenEvent}
-                onCreate={onCreate}
-                onMoveEvent={onMoveEvent}
               />
             </div>
           </div>
-        </div>
-      )}
+        ) : view === 'week' ? (
+          <MobileWeekView
+            cursor={cursor}
+            selectedDate={selectedDate}
+            events={events}
+            categories={categories}
+            isLoading={isLoading}
+            onSelectDay={(day) => {
+              onSelectDate(day);
+              onCursorChange(day);
+              onModeChange('day');
+              onViewChange('day');
+            }}
+            onOpenEvent={onOpenEvent}
+          />
+        ) : view === 'day' ? (
+          <MobileDayTimeline
+            date={selectedDate}
+            events={events}
+            categories={categories}
+            onOpenEvent={onOpenEvent}
+            onCreate={onCreate}
+            onMoveEvent={onMoveEvent}
+            onBack={() => {
+              onModeChange('month');
+              onViewChange('month');
+            }}
+            onPreviousDay={() => shiftCurrentView(-1)}
+            onNextDay={() => shiftCurrentView(1)}
+          />
+        ) : (
+          <MobileMonthView
+            cursor={cursor}
+            selectedDate={selectedDate}
+            events={events}
+            categories={categories}
+            activeCategoryIds={activeCategoryIds}
+            isLoading={isLoading}
+            onSelectDay={(day) => {
+              onSelectDate(day);
+              onCursorChange(day);
+              onModeChange('day');
+              onViewChange('day');
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -1311,19 +1284,7 @@ function MobileMonthView({
   categories,
   activeCategoryIds,
   isLoading,
-  onCursorChange,
-  onSelectDay,
-  onOpenYear,
-  onOpenWeek,
-  onGoToday,
-  onCreate,
-  onOpenSettings,
-  onToggleCategory,
-  calendarSearch,
-  onCalendarSearchChange,
-  view,
-  onViewChange,
-  onModeChange
+  onSelectDay
 }: {
   cursor: Date;
   selectedDate: Date;
@@ -1331,19 +1292,7 @@ function MobileMonthView({
   categories: Category[];
   activeCategoryIds: string[];
   isLoading: boolean;
-  onCursorChange: (date: Date) => void;
   onSelectDay: (date: Date) => void;
-  onOpenYear: () => void;
-  onOpenWeek: () => void;
-  onGoToday: () => void;
-  onCreate: (date: Date) => void;
-  onOpenSettings: () => void;
-  onToggleCategory?: (categoryId: string) => void;
-  calendarSearch: string;
-  onCalendarSearchChange: (value: string) => void;
-  view: CalendarView;
-  onViewChange: (nextView: CalendarView) => void;
-  onModeChange: (mode: 'year' | 'month' | 'week' | 'day') => void;
 }) {
   const today = new Date();
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
@@ -1353,202 +1302,7 @@ function MobileMonthView({
   const weekRows = days.length / 7;
 
   return (
-    <div className='flex h-full min-h-0 flex-col px-3 pb-2 sm:px-4'>
-      <div className='hidden'>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCursorChange(subMonths(cursor, 1))}
-          aria-label='Mes anterior'
-          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-        >
-          <Icons.chevronLeft className='size-4' />
-        </Button>
-        <button
-          type='button'
-          onClick={onOpenYear}
-          aria-label='Elegir otro mes del año'
-          className='min-w-0 flex-1 rounded-xl px-2 py-1.5 text-center text-[1.05rem] font-semibold tracking-tight capitalize transition-colors hover:bg-accent/30 active:scale-[0.98]'
-        >
-          {format(cursor, 'LLLL yyyy', { locale: es })}
-        </button>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCursorChange(addMonths(cursor, 1))}
-          aria-label='Mes siguiente'
-          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-        >
-          <Icons.chevronRight className='size-4' />
-        </Button>
-      </div>
-
-      <div className='hidden'>
-        <Icons.search className='text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2' />
-        <input
-          id='calendar-search'
-          value={calendarSearch}
-          onChange={(event) => onCalendarSearchChange(event.target.value)}
-          placeholder='Buscar en el calendario...'
-          className='h-9 w-full rounded-[10px] border border-border/60 bg-muted/25 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground/70 shadow-none outline-none ring-0 focus:border-border'
-        />
-      </div>
-
-      <div className='hidden'>
-        <Popover>
-          <PopoverTrigger
-            render={
-              <Button
-                variant='secondary'
-                className='h-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 px-3 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-              >
-                <span>Etiquetas</span>
-                <Icons.chevronDown className='size-3.5' />
-              </Button>
-            }
-          />
-          <PopoverContent
-            align='start'
-            side='bottom'
-            className='w-[min(22rem,calc(100vw-1.5rem))] p-2'
-          >
-            <div className='space-y-2 p-1'>
-              {categories.map((category) => {
-                const active = activeCategoryIds.includes(category.id);
-                return (
-                  <button
-                    key={category.id}
-                    type='button'
-                    onClick={() => onToggleCategory?.(category.id)}
-                    className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
-                      active && 'bg-muted/60'
-                    )}
-                  >
-                    <span className='flex min-w-0 items-center gap-2'>
-                      <span
-                        className='size-2.5 shrink-0 rounded-full'
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className='truncate text-foreground'>{category.name}</span>
-                    </span>
-                    <span
-                      className={cn(
-                        'text-xs font-semibold transition-opacity',
-                        active ? 'text-foreground opacity-100' : 'text-muted-foreground opacity-0'
-                      )}
-                    >
-                      ✓
-                    </span>
-                  </button>
-                );
-              })}
-              <button
-                type='button'
-                onClick={onOpenSettings}
-                className='mt-1 flex w-full items-center gap-2 rounded-[10px] px-2.5 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted/80'
-              >
-                <span className='text-base leading-none text-muted-foreground'>+</span>
-                <span>Nueva etiqueta</span>
-              </button>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={onOpenSettings}
-          aria-label='Configuración del calendario'
-          className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-        >
-          <Icons.adjustments className='size-4' />
-        </Button>
-        <Button
-          variant='secondary'
-          onClick={onGoToday}
-          className='h-8 rounded-[10px] border border-border/60 bg-muted/45 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-        >
-          Hoy
-        </Button>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCreate(selectedDate)}
-          aria-label='Nuevo evento'
-          className='ml-auto h-8 w-8 rounded-[10px] border border-border/60 bg-muted/45 text-foreground shadow-none hover:bg-muted'
-        >
-          <Icons.add className='size-4' />
-        </Button>
-      </div>
-
-      <div className='mx-auto w-full max-w-[min(100%,760px)]'>
-        <SegmentedToggle
-          options={['Mes', 'Semana', 'Día', 'Agenda']}
-          value={
-            view === 'month'
-              ? 'Mes'
-              : view === 'week'
-                ? 'Semana'
-                : view === 'day'
-                  ? 'Día'
-                  : 'Agenda'
-          }
-          onValueChange={(next) => {
-            if (next === 'Mes') {
-              onModeChange('month');
-              onViewChange('month');
-              return;
-            }
-            if (next === 'Semana') {
-              onOpenWeek();
-              onViewChange('week');
-              return;
-            }
-            if (next === 'Día') {
-              onModeChange('day');
-              onSelectDay(selectedDate);
-              onViewChange('day');
-              return;
-            }
-            onModeChange('day');
-            onViewChange('agenda');
-          }}
-          className='w-full'
-          aria-label='Vista del calendario'
-        />
-      </div>
-
-      <div className='mx-auto flex w-full max-w-[420px] items-center justify-center gap-2'>
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onCursorChange(subMonths(cursor, 1))}
-            aria-label='Mes anterior'
-            className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-          >
-            <Icons.chevronLeft className='size-4' />
-          </Button>
-          <Button
-            variant='secondary'
-            onClick={onGoToday}
-            className='h-8 rounded-[10px] border border-border/60 bg-muted/35 px-4 text-xs font-medium text-foreground shadow-none hover:bg-muted'
-          >
-            Hoy
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onCursorChange(addMonths(cursor, 1))}
-            aria-label='Mes siguiente'
-            className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-          >
-            <Icons.chevronRight className='size-4' />
-          </Button>
-        </div>
-      </div>
-
+    <div className='flex h-full min-h-0 flex-col overflow-hidden px-3 pb-2 sm:px-4'>
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         <div className='grid shrink-0 grid-cols-7 border-b bg-background'>
           {mobileWeekDaysNarrow.map((day, index) => (
@@ -1585,7 +1339,6 @@ function MobileMonthView({
             {days.map((day) => {
               const out = !isSameMonth(day, cursor);
               const weekend = day.getDay() === 0 || day.getDay() === 6;
-              const past = day < startOfDay(today);
               const isToday = isSameDay(day, today);
               const isSelected = isSameDay(day, selectedDate);
               const dots = eventsForDay(events, day).slice(0, 3);
@@ -1645,245 +1398,94 @@ function MobileWeekView({
   selectedDate,
   events,
   categories,
-  onCursorChange,
-  onSelectDay,
-  onShiftWeek,
-  onGoToday,
-  onOpenEvent,
-  onCreate,
-  onOpenSettings,
   isLoading,
-  onBack
+  onSelectDay,
+  onOpenEvent
 }: {
   cursor: Date;
   selectedDate: Date;
   events: Event[];
   categories: Category[];
-  onCursorChange: (date: Date) => void;
-  onSelectDay: (date: Date) => void;
-  onShiftWeek: (delta: number) => void;
-  onGoToday: () => void;
-  onOpenEvent: (event: Event) => void;
-  onCreate: (date: Date) => void;
-  onOpenSettings: () => void;
   isLoading: boolean;
-  onBack: () => void;
+  onSelectDay: (date: Date) => void;
+  onOpenEvent: (event: Event) => void;
 }) {
   const weekStart = startOfWeek(cursor, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
   const today = new Date();
-  const selectedEvents = eventsForDay(events, selectedDate).sort(
-    (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
-  );
 
   return (
-    <div className='flex h-full min-h-0 flex-col px-3 pb-2 sm:px-4'>
-      <div className='hidden'>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={onBack}
-          aria-label='Volver al mes'
-          className='h-9 w-9 shrink-0 rounded-[10px]'
-        >
-          <Icons.chevronLeft className='size-4' />
-        </Button>
-        <div className='min-w-0 flex-1 text-center'>
-          <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.12em]'>
-            Semana
-          </p>
-          <p className='truncate text-base font-semibold tracking-tight'>
-            {format(weekStart, 'd MMM', { locale: es })} –{' '}
-            {format(addDays(weekStart, 6), 'd MMM', { locale: es })}
-          </p>
-        </div>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={onOpenSettings}
-          aria-label='Configuración del calendario'
-          className='text-muted-foreground h-9 w-9 shrink-0 rounded-[10px]'
-        >
-          <Icons.adjustments className='size-4' />
-        </Button>
-      </div>
-
-      <div className='hidden'>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={onOpenSettings}
-          aria-label='Configuración del calendario'
-          className='h-8 w-8 rounded-[9px] border border-border/60 bg-muted/35 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-        >
-          <Icons.adjustments className='size-4' />
-        </Button>
-        <div className='flex flex-1 items-center justify-center gap-2'>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onShiftWeek(-1)}
-            aria-label='Semana anterior'
-            className='h-8 w-8 rounded-[9px]'
-          >
-            <Icons.chevronLeft className='size-4' />
-          </Button>
-          <Button
-            variant='secondary'
-            size='sm'
-            onClick={onGoToday}
-            className='rounded-lg px-3 text-xs font-medium'
-          >
-            Hoy
-          </Button>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={() => onShiftWeek(1)}
-            aria-label='Semana siguiente'
-            className='h-8 w-8 rounded-[9px]'
-          >
-            <Icons.chevronRight className='size-4' />
-          </Button>
-        </div>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCreate(selectedDate)}
-          aria-label='Nuevo evento'
-          className='h-8 w-8 rounded-[9px] border border-border/60 bg-muted/35 text-foreground shadow-none hover:bg-muted'
-        >
-          <Icons.add className='size-4' />
-        </Button>
-      </div>
-
-      <div
-        className='hidden grid grid-cols-2 gap-1 rounded-xl border border-border/70 bg-muted/35 p-1'
-        role='tablist'
-        aria-label='Vista del calendario'
-      >
-        <button
-          type='button'
-          role='tab'
-          aria-selected='false'
-          onClick={() => onBack()}
-          className='h-8 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-background/70 hover:text-foreground'
-        >
-          Mes
-        </button>
-        <button
-          type='button'
-          role='tab'
-          aria-selected='true'
-          className='h-8 rounded-lg bg-background text-xs font-medium text-foreground shadow-sm'
-        >
-          Semana
-        </button>
-      </div>
-
-      <div className='grid grid-cols-7 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+    <div className='flex h-full min-h-0 flex-col overflow-hidden px-3 pb-2 sm:px-4'>
+      <div className='grid min-h-0 flex-1 grid-cols-7 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         {days.map((day) => {
           const isSelected = isSameDay(day, selectedDate);
           const isToday = isSameDay(day, today);
-          const count = eventsForDay(events, day).length;
+          const dayEvents = eventsForDay(events, day).sort(
+            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+          );
           return (
             <button
               key={day.toISOString()}
               type='button'
               onClick={() => onSelectDay(day)}
               className={cn(
-                'min-w-0 border-r border-border/60 px-0.5 py-2.5 text-center transition-colors last:border-r-0',
-                isSelected ? 'bg-accent' : 'hover:bg-muted/45'
+                'min-w-0 border-r border-border/60 p-1.5 text-left last:border-r-0',
+                isSelected ? 'bg-accent/45' : 'hover:bg-muted/35'
               )}
             >
-              <span className='block text-[9px] font-medium uppercase text-muted-foreground'>
-                {format(day, 'EEE', { locale: es }).slice(0, 1)}
-              </span>
-              <span
-                className={cn(
-                  'mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
-                  isSelected && isToday
-                    ? 'bg-primary text-primary-foreground'
-                    : isToday
-                      ? 'text-primary ring-1 ring-primary/40'
-                      : isSelected
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-foreground'
+              <div className='text-center'>
+                <div className='text-muted-foreground text-[9px] font-semibold uppercase'>
+                  {format(day, 'EEE', { locale: es }).slice(0, 1)}
+                </div>
+                <div
+                  className={cn(
+                    'mx-auto mt-1 flex size-7 items-center justify-center rounded-full text-xs font-semibold',
+                    isToday && 'bg-primary text-primary-foreground',
+                    !isToday && isSelected && 'bg-background shadow-sm'
+                  )}
+                >
+                  {format(day, 'd')}
+                </div>
+              </div>
+              <div className='mt-2 space-y-1'>
+                {isLoading ? (
+                  <div className='bg-muted/60 h-8 rounded-lg' />
+                ) : dayEvents.length ? (
+                  dayEvents.slice(0, 4).map((event) => {
+                    const category = categoryFor(event, categories);
+                    return (
+                      <span
+                        key={event.id}
+                        role='button'
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenEvent(event);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onOpenEvent(event);
+                          }
+                        }}
+                        className='block min-w-0 truncate rounded-md border px-1.5 py-1 text-[9px] font-medium'
+                        style={{
+                          backgroundColor: `${category.color}14`,
+                          borderColor: `${category.color}30`
+                        }}
+                      >
+                        {event.title}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span className='text-muted-foreground/45 block px-1 py-1 text-[9px]'>—</span>
                 )}
-              >
-                {format(day, 'd')}
-              </span>
-              <span className='mt-1 flex h-1 justify-center gap-0.5'>
-                {Array.from({ length: Math.min(count, 3) }, (_, index) => (
-                  <span key={index} className='size-1 rounded-full bg-primary/70' />
-                ))}
-              </span>
+              </div>
             </button>
           );
         })}
-      </div>
-
-      <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card'>
-        <div className='border-b border-border/60 px-4 py-3'>
-          <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.12em]'>
-            Día seleccionado
-          </p>
-          <h2 className='mt-0.5 text-base font-semibold capitalize'>
-            {format(selectedDate, 'EEEE d MMMM', { locale: es })}
-          </h2>
-        </div>
-        {isLoading ? (
-          <div className='space-y-2 p-4'>
-            <div className='bg-muted h-10 animate-pulse rounded-xl' />
-            <div className='bg-muted h-10 animate-pulse rounded-xl' />
-          </div>
-        ) : selectedEvents.length ? (
-          <div className='divide-y divide-border/60'>
-            {selectedEvents.map((event) => {
-              const category = categoryFor(event, categories);
-              return (
-                <button
-                  key={event.id}
-                  type='button'
-                  onClick={() => onOpenEvent(event)}
-                  className='flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/35 active:bg-accent/40'
-                >
-                  <span className='flex w-12 shrink-0 flex-col text-right'>
-                    <span className='text-xs font-semibold tabular-nums'>
-                      {event.allDay ? '—' : format(new Date(event.startAt), 'HH:mm')}
-                    </span>
-                    {!event.allDay && (
-                      <span className='text-muted-foreground text-[10px] tabular-nums'>
-                        {format(new Date(event.endAt), 'HH:mm')}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className='size-2 shrink-0 rounded-full'
-                    style={{ backgroundColor: category.color }}
-                  />
-                  <span className='min-w-0 flex-1'>
-                    <span className='block truncate text-sm font-medium'>{event.title}</span>
-                    <span className='text-muted-foreground mt-0.5 block truncate text-[11px]'>
-                      {event.allDay ? 'Todo el día' : 'Evento programado'}
-                      {event.customer ? ` · ${event.customer.name}` : ''}
-                    </span>
-                  </span>
-                  <Icons.chevronRight className='text-muted-foreground size-4 shrink-0' />
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <button
-            type='button'
-            onClick={() => onCreate(selectedDate)}
-            className='flex w-full flex-col items-center justify-center px-4 py-12 text-center transition-colors hover:bg-muted/25'
-          >
-            <span className='text-sm font-medium'>Nada programado</span>
-            <span className='text-muted-foreground mt-1 text-xs'>Pulsa para crear un evento</span>
-          </button>
-        )}
       </div>
     </div>
   );
@@ -2254,56 +1856,7 @@ function MobileDayTimeline({
   };
 
   return (
-    <div className='flex h-full min-h-0 flex-col px-3 pb-2 sm:px-4'>
-      <div className='hidden'>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={onBack}
-          aria-label='Volver a la semana'
-          className='h-9 w-9 shrink-0 rounded-[10px]'
-        >
-          <Icons.chevronLeft className='size-4' />
-        </Button>
-        <div className='flex min-w-0 flex-1 items-center justify-center gap-1'>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={onPreviousDay}
-            aria-label='Día anterior'
-            className='h-8 w-8 shrink-0 rounded-[9px]'
-          >
-            <Icons.chevronLeft className='size-4' />
-          </Button>
-          <div className='min-w-0 text-center'>
-            <p className='truncate text-base font-semibold tracking-tight capitalize'>
-              {format(date, 'EEEE d', { locale: es })}
-            </p>
-            <p className='text-muted-foreground truncate text-[11px] capitalize'>
-              {format(date, 'MMMM yyyy', { locale: es })}
-            </p>
-          </div>
-          <Button
-            variant='ghost'
-            size='icon-sm'
-            onClick={onNextDay}
-            aria-label='Día siguiente'
-            className='h-8 w-8 shrink-0 rounded-[9px]'
-          >
-            <Icons.chevronRight className='size-4' />
-          </Button>
-        </div>
-        <Button
-          variant='ghost'
-          size='icon-sm'
-          onClick={() => onCreate(date)}
-          aria-label='Añadir evento'
-          className='h-9 w-9 shrink-0 rounded-[10px]'
-        >
-          <Icons.add className='size-4' />
-        </Button>
-      </div>
-
+    <div className='flex h-full min-h-0 flex-col overflow-hidden'>
       <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         {allDayEvents.length > 0 && (
           <div className='border-border/60 bg-surface-subtle/45 flex min-h-[58px] flex-wrap items-center gap-2 border-b px-3 py-2'>
