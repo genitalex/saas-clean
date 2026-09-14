@@ -6,6 +6,7 @@ import {
   addDays,
   addMonths,
   addWeeks,
+  differenceInCalendarDays,
   endOfMonth,
   endOfWeek,
   format,
@@ -445,7 +446,7 @@ export function CalendarPage({
   );
 
   return (
-    <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-4 px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
+    <main className='mx-auto flex min-h-0 w-full max-w-[var(--page-max-width)] flex-1 flex-col gap-2 px-[var(--page-padding)] pt-5 pb-8 md:pt-7'>
       {/* Desktop-only page header — the mobile experience gets its own
           purpose-built header inside MobileCalendar instead of this one. */}
       <header className='hidden md:flex'>
@@ -463,9 +464,9 @@ export function CalendarPage({
               </Button>
 
               <Button
-                variant='secondary'
+                variant='ghost'
                 onClick={() => setSelectedDate(new Date())}
-                className='h-8 rounded-[10px] border border-border/60 bg-muted/25 px-3 text-[11px] font-medium text-muted-foreground shadow-none outline-none hover:border-border hover:bg-muted hover:text-foreground focus-visible:border-border focus-visible:ring-1 focus-visible:ring-border'
+                className='!border-border/60 !bg-muted/25 !text-muted-foreground h-8 rounded-[10px] px-3 text-[11px] font-medium shadow-none outline-none hover:!border-border hover:!bg-muted hover:!text-foreground focus-visible:!border-border focus-visible:ring-1 focus-visible:ring-border'
               >
                 Hoy
               </Button>
@@ -585,7 +586,7 @@ export function CalendarPage({
                 onClick={() => openCreate(selectedDate)}
                 aria-label='Nuevo evento'
                 title='Nuevo evento'
-                className='h-8 w-8 rounded-[10px] border border-border/60 bg-muted/25 text-foreground shadow-none hover:bg-muted'
+                className='!text-foreground h-8 w-8 rounded-[10px] border border-border/60 bg-muted/25 shadow-none hover:!border-border hover:!bg-muted hover:!text-foreground focus-visible:ring-1 focus-visible:ring-border'
               >
                 <span className='text-foreground text-[18px] leading-none font-medium'>+</span>
               </Button>
@@ -871,8 +872,7 @@ function MobileCalendar({
 
   const shiftCurrentView = (direction: 1 | -1) => {
     if (view === 'month') {
-      const next = direction === 1 ? addMonths(cursor, 1) : subMonths(cursor, 1);
-      onCursorChange(next);
+      onCursorChange(direction === 1 ? addMonths(cursor, 1) : subMonths(cursor, 1));
       return;
     }
     if (view === 'week') {
@@ -887,7 +887,7 @@ function MobileCalendar({
       onSelectDate(next);
       return;
     }
-    onCursorChange((current) => (direction === 1 ? addDays(current, 30) : addDays(current, -30)));
+    onCursorChange(direction === 1 ? addDays(cursor, 30) : addDays(cursor, -30));
   };
 
   const handleViewChange = (next: string) => {
@@ -899,6 +899,7 @@ function MobileCalendar({
       onModeChange('week');
     } else if (nextView === 'day') {
       onSelectDate(selectedDate);
+      onCursorChange(selectedDate);
       onModeChange('day');
     } else {
       onModeChange('month');
@@ -1051,19 +1052,21 @@ function MobileCalendar({
           onClick={() => onCreate(selectedDate)}
           aria-label='Nuevo evento'
           title='Nuevo evento'
-          className='h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/45 text-muted-foreground shadow-none hover:border-border hover:bg-muted hover:text-foreground'
+          className='!text-foreground h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 shadow-none hover:!border-border hover:!bg-muted hover:!text-foreground focus-visible:ring-1 focus-visible:ring-border'
         >
-          <span className='text-[18px] leading-none font-medium'>+</span>
+          <span className='text-foreground text-[18px] leading-none font-medium'>+</span>
         </Button>
       </div>
 
-      <SegmentedToggle
-        options={['Mes', 'Semana', 'Día', 'Agenda']}
-        value={activeViewLabel}
-        onValueChange={handleViewChange}
-        className='h-10 w-full [&>button]:h-9 [&>button]:min-w-0 [&>button]:px-1 [&>button]:py-0 sm:h-12 sm:[&>button]:h-11'
-        aria-label='Vista del calendario'
-      />
+      {mode !== 'year' && (
+        <SegmentedToggle
+          options={['Mes', 'Semana', 'Día', 'Agenda']}
+          value={activeViewLabel}
+          onValueChange={handleViewChange}
+          className='h-10 w-full [&>button]:h-9 [&>button]:min-w-0 [&>button]:px-1 [&>button]:py-0 sm:h-12 sm:[&>button]:h-11'
+          aria-label='Vista del calendario'
+        />
+      )}
     </div>
   );
 
@@ -1089,7 +1092,7 @@ function MobileCalendar({
   return (
     <div className='flex h-full min-h-0 flex-col overflow-hidden'>
       {sharedHeader}
-      <div className='min-h-0 flex-1 px-0 pt-2'>
+      <div className='min-h-0 flex-1 pt-2'>
         {view === 'agenda' ? (
           <div className='h-full min-h-0 overflow-y-auto px-3 pb-2 sm:px-4'>
             <div className='rounded-[var(--radius-xl)] border border-border/70 bg-card'>
@@ -1112,10 +1115,9 @@ function MobileCalendar({
             onSelectDay={(day) => {
               onSelectDate(day);
               onCursorChange(day);
-              onModeChange('day');
-              onViewChange('day');
             }}
             onOpenEvent={onOpenEvent}
+            onCreate={onCreate}
           />
         ) : view === 'day' ? (
           <MobileDayTimeline
@@ -1143,8 +1145,6 @@ function MobileCalendar({
             onSelectDay={(day) => {
               onSelectDate(day);
               onCursorChange(day);
-              onModeChange('day');
-              onViewChange('day');
             }}
           />
         )}
@@ -1400,7 +1400,8 @@ function MobileWeekView({
   categories,
   isLoading,
   onSelectDay,
-  onOpenEvent
+  onOpenEvent,
+  onCreate
 }: {
   cursor: Date;
   selectedDate: Date;
@@ -1409,83 +1410,120 @@ function MobileWeekView({
   isLoading: boolean;
   onSelectDay: (date: Date) => void;
   onOpenEvent: (event: Event) => void;
+  onCreate: (date: Date) => void;
 }) {
   const weekStart = startOfWeek(cursor, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
   const today = new Date();
+  const selectedEvents = eventsForDay(events, selectedDate).sort(
+    (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+  );
 
   return (
     <div className='flex h-full min-h-0 flex-col overflow-hidden px-3 pb-2 sm:px-4'>
-      <div className='grid min-h-0 flex-1 grid-cols-7 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
+      <div className='grid shrink-0 grid-cols-7 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card'>
         {days.map((day) => {
           const isSelected = isSameDay(day, selectedDate);
           const isToday = isSameDay(day, today);
-          const dayEvents = eventsForDay(events, day).sort(
-            (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
-          );
+          const count = eventsForDay(events, day).length;
           return (
             <button
               key={day.toISOString()}
               type='button'
               onClick={() => onSelectDay(day)}
               className={cn(
-                'min-w-0 border-r border-border/60 p-1.5 text-left last:border-r-0',
+                'min-w-0 border-r border-border/60 px-0.5 py-2.5 text-center transition-colors last:border-r-0',
                 isSelected ? 'bg-accent/45' : 'hover:bg-muted/35'
               )}
             >
-              <div className='text-center'>
-                <div className='text-muted-foreground text-[9px] font-semibold uppercase'>
-                  {format(day, 'EEE', { locale: es }).slice(0, 1)}
-                </div>
-                <div
-                  className={cn(
-                    'mx-auto mt-1 flex size-7 items-center justify-center rounded-full text-xs font-semibold',
-                    isToday && 'bg-primary text-primary-foreground',
-                    !isToday && isSelected && 'bg-background shadow-sm'
-                  )}
-                >
-                  {format(day, 'd')}
-                </div>
-              </div>
-              <div className='mt-2 space-y-1'>
-                {isLoading ? (
-                  <div className='bg-muted/60 h-8 rounded-lg' />
-                ) : dayEvents.length ? (
-                  dayEvents.slice(0, 4).map((event) => {
-                    const category = categoryFor(event, categories);
-                    return (
-                      <span
-                        key={event.id}
-                        role='button'
-                        tabIndex={0}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onOpenEvent(event);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onOpenEvent(event);
-                          }
-                        }}
-                        className='block min-w-0 truncate rounded-md border px-1.5 py-1 text-[9px] font-medium'
-                        style={{
-                          backgroundColor: `${category.color}14`,
-                          borderColor: `${category.color}30`
-                        }}
-                      >
-                        {event.title}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span className='text-muted-foreground/45 block px-1 py-1 text-[9px]'>—</span>
+              <span className='block text-[9px] font-medium uppercase text-muted-foreground'>
+                {format(day, 'EEE', { locale: es }).slice(0, 1)}
+              </span>
+              <span
+                className={cn(
+                  'mx-auto mt-1 flex size-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
+                  isSelected && isToday
+                    ? 'bg-primary text-primary-foreground'
+                    : isToday
+                      ? 'text-primary ring-1 ring-primary/40'
+                      : isSelected
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-foreground'
                 )}
-              </div>
+              >
+                {format(day, 'd')}
+              </span>
+              <span className='mt-1 flex h-1 justify-center gap-0.5'>
+                {Array.from({ length: Math.min(count, 3) }, (_, index) => (
+                  <span key={index} className='size-1 rounded-full bg-primary/70' />
+                ))}
+              </span>
             </button>
           );
         })}
+      </div>
+
+      <div className='min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card mt-2'>
+        <div className='border-b border-border/60 px-4 py-3'>
+          <p className='text-muted-foreground text-[10px] font-medium uppercase tracking-[0.12em]'>
+            Día seleccionado
+          </p>
+          <h2 className='mt-0.5 text-base font-semibold capitalize'>
+            {format(selectedDate, 'EEEE d MMMM', { locale: es })}
+          </h2>
+        </div>
+        {isLoading ? (
+          <div className='space-y-2 p-4'>
+            <div className='bg-muted h-10 animate-pulse rounded-xl' />
+            <div className='bg-muted h-10 animate-pulse rounded-xl' />
+          </div>
+        ) : selectedEvents.length ? (
+          <div className='divide-y divide-border/60'>
+            {selectedEvents.map((event) => {
+              const category = categoryFor(event, categories);
+              return (
+                <button
+                  key={event.id}
+                  type='button'
+                  onClick={() => onOpenEvent(event)}
+                  className='flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/35 active:bg-accent/40'
+                >
+                  <span className='flex w-12 shrink-0 flex-col text-right'>
+                    <span className='text-xs font-semibold tabular-nums'>
+                      {event.allDay ? '—' : format(new Date(event.startAt), 'HH:mm')}
+                    </span>
+                    {!event.allDay && (
+                      <span className='text-muted-foreground text-[10px] tabular-nums'>
+                        {format(new Date(event.endAt), 'HH:mm')}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className='size-2 shrink-0 rounded-full'
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <span className='min-w-0 flex-1'>
+                    <span className='block truncate text-sm font-medium'>{event.title}</span>
+                    <span className='text-muted-foreground mt-0.5 block truncate text-[11px]'>
+                      {event.allDay ? 'Todo el día' : 'Evento programado'}
+                      {event.customer ? ` · ${event.customer.name}` : ''}
+                    </span>
+                  </span>
+                  <Icons.chevronRight className='text-muted-foreground size-4 shrink-0' />
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <button
+            type='button'
+            onClick={() => onCreate(selectedDate)}
+            className='flex w-full flex-col items-center justify-center px-4 py-12 text-center transition-colors hover:bg-muted/25'
+          >
+            <span className='text-sm font-medium'>Nada programado</span>
+            <span className='text-muted-foreground mt-1 text-xs'>Pulsa para crear un evento</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -2258,6 +2296,9 @@ function MonthView({
   const days: Date[] = [];
   for (let d = start; d <= end; d = addDays(d, 1)) days.push(d);
   const today = new Date();
+  const weekRows: Date[][] = [];
+  for (let i = 0; i < days.length; i += 7) weekRows.push(days.slice(i, i + 7));
+
   return (
     <div className='overflow-x-auto'>
       <div className='min-w-[760px]'>
@@ -2274,90 +2315,139 @@ function MonthView({
             </div>
           ))}
         </div>
-        <div className='grid grid-cols-7'>
-          {days.map((day) => {
-            const out = !isSameMonth(day, cursor);
-            const weekend = day.getDay() === 0 || day.getDay() === 6;
-            const isToday = isSameDay(day, today);
-            const past = day < startOfDay(today);
-            const dayEvents = out ? [] : eventsForDay(events, day);
-            const overflow = dayEvents.length - MONTH_CELL_EVENT_LIMIT;
+
+        <div className='divide-y divide-border/70'>
+          {weekRows.map((week, weekIndex) => {
+            const weekStart = week[0];
+            const weekEndExclusive = addDays(weekStart, 7);
+            const segments = events
+              .filter(
+                (event) =>
+                  new Date(event.startAt) < weekEndExclusive && new Date(event.endAt) > weekStart
+              )
+              .map((event) => {
+                const eventStart = new Date(event.startAt);
+                const eventEnd = new Date(event.endAt);
+                const visibleStart = eventStart < weekStart ? weekStart : eventStart;
+                const visibleEnd = eventEnd > weekEndExclusive ? weekEndExclusive : eventEnd;
+                const startIndex = Math.max(
+                  0,
+                  Math.min(6, differenceInCalendarDays(startOfDay(visibleStart), weekStart))
+                );
+                const lastVisibleDay = startOfDay(addDays(visibleEnd, -1));
+                const endIndex = Math.max(
+                  startIndex + 1,
+                  Math.min(7, differenceInCalendarDays(lastVisibleDay, weekStart) + 1)
+                );
+                return {
+                  event,
+                  startIndex,
+                  endIndex,
+                  showTitle: eventStart < weekStart || isSameDay(eventStart, week[startIndex])
+                };
+              })
+              .sort((a, b) => a.startIndex - b.startIndex || a.endIndex - b.endIndex);
+
+            const lanes: number[] = [];
+            const positionedSegments = segments
+              .map((segment) => {
+                let lane = 0;
+                while (lanes[lane] !== undefined && lanes[lane] > segment.startIndex) lane += 1;
+                lanes[lane] = segment.endIndex;
+                return { ...segment, lane };
+              })
+              .filter((segment) => segment.lane < 3);
+
             return (
-              <div
-                key={day.toISOString()}
-                onClick={() => {
-                  if (!out) onOpenDay?.(day);
-                }}
-                className={cn(
-                  'group border-border/70 relative min-h-32 border-r border-b bg-background p-2.5 transition-colors last:border-r-0',
-                  !out && 'cursor-pointer',
-                  out && 'cursor-default',
-                  'hover:bg-accent/20',
-                  weekend && !out && 'bg-muted/40',
-                  out && 'bg-muted/35'
-                )}
-              >
-                <button
-                  type='button'
-                  aria-label={`Ver día ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onOpenDay?.(day);
-                  }}
-                  className={cn(
-                    'mb-2 flex size-7 items-center justify-center rounded-full text-[13px] font-medium transition-colors',
-                    isToday
-                      ? 'bg-primary text-primary-foreground font-semibold'
-                      : out
-                        ? 'text-transparent'
-                        : past && weekend
-                          ? 'text-muted-foreground/50'
-                          : past
-                            ? 'text-muted-foreground/65'
-                            : weekend
-                              ? 'text-muted-foreground/80'
-                              : 'text-foreground/90 group-hover:bg-accent/60'
-                  )}
-                >
-                  {out ? '' : format(day, 'd')}
-                </button>
-                <div className='flex flex-col gap-1'>
-                  {dayEvents.slice(0, MONTH_CELL_EVENT_LIMIT).map((event) => {
-                    const category = categoryFor(event, categories);
+              <div key={weekIndex} className='relative'>
+                <div className='grid grid-cols-7'>
+                  {week.map((day) => {
+                    const out = !isSameMonth(day, cursor);
+                    const weekend = day.getDay() === 0 || day.getDay() === 6;
+                    const isToday = isSameDay(day, today);
                     return (
-                      <button
-                        key={event.id}
-                        type='button'
-                        onClick={(clickEvent) => {
-                          clickEvent.stopPropagation();
-                          onOpenEvent(event);
+                      <div
+                        key={day.toISOString()}
+                        onClick={() => {
+                          if (!out) onOpenDay?.(day);
                         }}
-                        className='flex min-w-0 items-center gap-1.5 rounded-md border-l-2 py-1 pr-2 pl-2 text-left text-xs font-medium transition-colors hover:brightness-95 hover:shadow-[inset_0_0_0_1px_rgba(15,23,42,0.02)]'
-                        style={{
-                          backgroundColor: `${category.color}14`,
-                          borderColor: category.color,
-                          color: category.color
-                        }}
-                      >
-                        <span className='min-w-0 truncate'>{event.title}</span>
-                        {linkedEventIds.includes(event.id) && (
-                          <Icons.check className='size-3 shrink-0' aria-label='Tarea planificada' />
+                        className={cn(
+                          'group border-border/70 relative min-h-32 border-r bg-background p-2.5 transition-colors last:border-r-0',
+                          !out && 'cursor-pointer',
+                          out && 'cursor-default',
+                          'hover:bg-accent/20',
+                          weekend && !out && 'bg-muted/40',
+                          out && 'bg-muted/35'
                         )}
-                      </button>
+                      >
+                        <button
+                          type='button'
+                          aria-label={`Ver día ${format(day, 'EEEE d MMMM yyyy', { locale: es })}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onOpenDay?.(day);
+                          }}
+                          className={cn(
+                            'mb-2 flex size-7 items-center justify-center rounded-full text-[13px] font-medium transition-colors',
+                            isToday
+                              ? 'bg-primary text-primary-foreground font-semibold'
+                              : out
+                                ? 'text-transparent'
+                                : 'text-foreground/90 group-hover:bg-accent/60'
+                          )}
+                        >
+                          {out ? '' : format(day, 'd')}
+                        </button>
+                      </div>
                     );
                   })}
-                  {overflow > 0 && (
-                    <button
-                      onClick={(clickEvent) => {
-                        clickEvent.stopPropagation();
-                        if (!out) onOpenDay?.(day);
-                      }}
-                      className='text-muted-foreground hover:text-foreground px-2 text-left text-[11px] font-medium'
-                    >
-                      +{overflow} más
-                    </button>
-                  )}
                 </div>
+
+                {positionedSegments.length > 0 && (
+                  <div
+                    className='pointer-events-none absolute inset-x-0 top-11 z-10 grid grid-cols-7 gap-0'
+                    style={{ gridTemplateRows: 'repeat(3, 24px)' }}
+                    aria-hidden='false'
+                  >
+                    {positionedSegments.map(({ event, startIndex, endIndex, lane, showTitle }) => {
+                      const category = categoryFor(event, categories);
+                      return (
+                        <button
+                          key={`${event.id}-${weekIndex}`}
+                          type='button'
+                          onClick={(clickEvent) => {
+                            clickEvent.stopPropagation();
+                            onOpenEvent(event);
+                          }}
+                          title={event.title}
+                          className={cn(
+                            'pointer-events-auto col-span-1 flex h-6 min-w-0 items-center gap-1 border-y px-2 py-0.5 text-left text-[11px] font-medium transition-colors hover:brightness-95',
+                            startIndex > 0
+                              ? 'rounded-l-none border-l-0'
+                              : 'rounded-l-md border-l-2',
+                            endIndex < 7 ? 'rounded-r-none border-r-0' : 'rounded-r-md border-r',
+                            showTitle ? 'justify-start' : 'justify-center'
+                          )}
+                          style={{
+                            gridColumn: `${startIndex + 1} / ${endIndex + 1}`,
+                            gridRow: lane + 1,
+                            backgroundColor: `${category.color}14`,
+                            borderColor: category.color,
+                            color: category.color
+                          }}
+                        >
+                          {showTitle && (
+                            <span className='min-w-0 truncate'>
+                              {event.title}
+                              {linkedEventIds.includes(event.id) && ' · ✓'}
+                            </span>
+                          )}
+                          {!showTitle && <span className='sr-only'>{event.title}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2366,6 +2456,7 @@ function MonthView({
     </div>
   );
 }
+
 function TimelineView(
   props: ViewProps & {
     view: 'week' | 'day';
