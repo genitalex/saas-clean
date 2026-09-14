@@ -599,7 +599,7 @@ export function CalendarPage({
             </div>
           </div>
 
-          <div className='mx-auto flex h-12 w-full max-w-[1040px]'>
+          <div className='mx-auto mb-2 flex h-12 w-full max-w-[1040px]'>
             <SegmentedToggle
               className='h-12 w-full [&>button]:h-11 [&>button]:py-0'
               options={['Mes', 'Semana', 'Día', 'Agenda']}
@@ -2000,11 +2000,7 @@ function MobileDayTimeline({
                   borderColor: `color-mix(in srgb, ${category.color} 30%, var(--border))`
                 }}
               >
-                <span
-                  className='absolute inset-y-0 left-0 w-1'
-                  style={{ backgroundColor: category.color }}
-                />
-                <span className='flex h-full min-w-0 flex-col justify-center px-3 pl-4'>
+                <span className='flex h-full min-w-0 flex-col justify-center px-3'>
                   <span className='truncate text-sm font-semibold'>{event.title}</span>
                   <span className='mt-0.5 text-[11px] text-muted-foreground'>
                     {format(displayStart, 'HH:mm')} – {format(displayEnd, 'HH:mm')}
@@ -2434,9 +2430,7 @@ function MonthView({
                           title={event.title}
                           className={cn(
                             'pointer-events-auto col-span-1 flex h-6 min-w-0 items-center gap-1 border-y px-2 py-0.5 text-left text-[11px] font-medium transition-colors hover:brightness-95',
-                            startIndex > 0
-                              ? 'rounded-l-none border-l-0'
-                              : 'rounded-l-md border-l-2',
+                            'rounded-l-none border-l-0',
                             endIndex < 7 ? 'rounded-r-none border-r-0' : 'rounded-r-md border-r',
                             showTitle ? 'justify-start' : 'justify-center'
                           )}
@@ -2767,11 +2761,7 @@ function CompressedDayTimeline({
                         borderColor: `color-mix(in srgb, ${category.color} 28%, var(--border))`
                       }}
                     >
-                      <span
-                        className='absolute inset-y-0 left-0 w-1'
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
+                      <span className='flex h-full min-w-0 flex-col px-3 py-2'>
                         <span className='flex min-w-0 items-center gap-1.5'>
                           <span className='truncate text-sm font-semibold'>{event.title}</span>
                           {linkedEventIds.includes(event.id) && (
@@ -3185,11 +3175,7 @@ function WeekTimeline({
                             borderColor: `color-mix(in srgb, ${category.color} 28%, var(--border))`
                           }}
                         >
-                          <span
-                            className='absolute inset-y-0 left-0 w-1'
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span className='flex h-full min-w-0 flex-col px-3 py-2 pl-4'>
+                          <span className='flex h-full min-w-0 flex-col px-3 py-2'>
                             <span className='flex min-w-0 items-center gap-1.5'>
                               <span className='truncate text-sm font-semibold'>{event.title}</span>
                               {linkedEventIds.includes(event.id) && (
@@ -3302,11 +3288,7 @@ function WeekTimeline({
                     }}
                     title={event.title}
                   >
-                    <span
-                      className='absolute inset-y-0 left-0 w-1'
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <span className='flex h-full min-w-0 items-center gap-2 px-3 pl-4'>
+                    <span className='flex h-full min-w-0 items-center gap-2 px-3'>
                       <span className='min-w-0 flex-1 truncate text-sm font-semibold'>
                         {event.title}
                       </span>
