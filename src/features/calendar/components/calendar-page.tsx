@@ -2329,7 +2329,7 @@ function MonthView({
         <div className='divide-y divide-border/70'>
           {weekRows.map((week, weekIndex) => {
             const weekStart = week[0];
-            const weekEndExclusive = addDays(weekStart, 7);
+            const weekEndExclusive = addDays(start, 7);
             const segments = events
               .filter(
                 (event) =>
@@ -2856,22 +2856,20 @@ function WeekTimeline({
     .map((event) => {
       const startAt = new Date(event.startAt);
       const endAt = new Date(event.endAt);
-      const weekEndExclusive = addDays(weekStart, 7);
-      if (startAt >= weekEndExclusive || endAt <= weekStart) return null;
-      const visibleStart = startAt < weekStart ? weekStart : startAt;
+      const weekEndExclusive = addDays(start, 7);
+      if (startAt >= weekEndExclusive || endAt <= start) return null;
+      const visibleStart = startAt < start ? start : startAt;
       const visibleEnd = endAt > weekEndExclusive ? weekEndExclusive : endAt;
       const startIndex = Math.max(
         0,
         Math.min(
           6,
-          Math.floor(
-            (startOfDay(visibleStart).getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000)
-          )
+          Math.floor((startOfDay(visibleStart).getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
         )
       );
       const endIndexExclusive = Math.max(
         startIndex + 1,
-        Math.min(7, Math.ceil((visibleEnd.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000)))
+        Math.min(7, Math.ceil((visibleEnd.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)))
       );
       return {
         event,
@@ -3277,11 +3275,11 @@ function WeekTimeline({
             {multiDayEvents.map(({ event, startIndex, span }) => {
               const category = categoryFor(event, categories);
               const startAt = new Date(event.startAt);
-              const visibleStart = startIndex === 0 && startAt < weekStart ? weekStart : startAt;
+              const visibleStart = startIndex === 0 && startAt < start ? start : startAt;
               const startMinutes = minutesFromDate(visibleStart);
               const top = offset(Math.max(startHour * 60, startMinutes));
               const endAt = new Date(event.endAt);
-              const displayEnd = endAt <= addDays(weekStart, 7) ? endAt : addDays(weekStart, 7);
+              const displayEnd = endAt <= addDays(start, 7) ? endAt : addDays(start, 7);
               return (
                 <div
                   key={`multi-day-${event.id}`}
