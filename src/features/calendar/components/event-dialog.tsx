@@ -105,6 +105,8 @@ function DateSegmentControl({
   const selectedDay = Number(dayText) || 1;
   const [activeSegment, setActiveSegment] = useState<'day' | 'month' | 'year' | null>(null);
   const controlRef = useRef<HTMLDivElement>(null);
+  const wheelAccumulatorRef = useRef(0);
+  const wheelLockUntilRef = useRef(0);
   const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
   const years = Array.from({ length: 21 }, (_, index) => selectedYear - 10 + index);
   const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
@@ -180,6 +182,43 @@ function DateSegmentControl({
           role='listbox'
           aria-label={`Opciones de ${activeSegment}`}
           className='absolute inset-x-0 top-[calc(100%+0.5rem)] z-30 max-h-52 overflow-y-auto rounded-[10px] border border-border/55 bg-background p-1 shadow-none'
+          onWheel={(event) => {
+            event.preventDefault();
+            const now = performance.now();
+            const direction = event.deltaY > 0 ? 1 : -1;
+            const magnitude = Math.min(120, Math.max(1, Math.abs(event.deltaY)));
+
+            // Treat the wheel like a physical picker: every accepted movement
+            // advances exactly one option. Faster scrolling shortens the
+            // interval between those individual steps instead of jumping over
+            // several dates at once.
+            wheelAccumulatorRef.current += magnitude;
+            if (now < wheelLockUntilRef.current || wheelAccumulatorRef.current < 18) return;
+
+            wheelAccumulatorRef.current = 0;
+            wheelLockUntilRef.current = now + Math.max(35, 115 - magnitude * 0.65);
+
+            const segment = segments.find((item) => item.key === activeSegment);
+            if (!segment) return;
+
+            const currentIndex = segment.options.findIndex(
+              (option) =>
+                option ===
+                (activeSegment === 'day'
+                  ? selectedDay
+                  : activeSegment === 'month'
+                    ? selectedMonth
+                    : selectedYear)
+            );
+            if (currentIndex < 0) return;
+
+            const nextIndex = Math.max(
+              0,
+              Math.min(segment.options.length - 1, currentIndex + direction)
+            );
+            if (nextIndex === currentIndex) return;
+            selectDatePart(activeSegment, Number(segment.options[nextIndex]));
+          }}
         >
           {segments
             .find((segment) => segment.key === activeSegment)
