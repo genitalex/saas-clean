@@ -1155,6 +1155,8 @@ function MobileCalendar({
             onSelectDay={(day) => {
               onSelectDate(day);
               onCursorChange(day);
+              onModeChange('day');
+              onViewChange('day');
             }}
           />
         )}
@@ -2329,7 +2331,7 @@ function MonthView({
         <div className='divide-y divide-border/70'>
           {weekRows.map((week, weekIndex) => {
             const weekStart = week[0];
-            const weekEndExclusive = addDays(start, 7);
+            const weekEndExclusive = addDays(weekStart, 7);
             const segments = events
               .filter(
                 (event) =>
