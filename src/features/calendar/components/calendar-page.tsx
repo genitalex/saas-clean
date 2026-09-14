@@ -273,6 +273,12 @@ export function CalendarPage({
       if (view === 'week') return direction === 1 ? addWeeks(current, 1) : subWeeks(current, 1);
       return direction === 1 ? addDays(current, 1) : addDays(current, -1);
     });
+  const goToday = () => {
+    const today = startOfDay(new Date());
+    setCursor(today);
+    setSelectedDate(today);
+    setMobileCursor(today);
+  };
   const openCreate = (date = cursor) => {
     setInspectorOpen(false);
     setSelectedEvent(null);
@@ -465,8 +471,8 @@ export function CalendarPage({
 
               <Button
                 variant='ghost'
-                onClick={() => setSelectedDate(new Date())}
-                className='!border-border/60 !bg-muted/25 !text-muted-foreground h-8 rounded-[10px] px-3 text-[11px] font-medium shadow-none outline-none hover:!border-border hover:!bg-muted hover:!text-foreground focus-visible:!border-border focus-visible:ring-1 focus-visible:ring-border'
+                onClick={goToday}
+                className='!border-border/60 !bg-muted/25 !text-muted-foreground h-8 rounded-[10px] px-3 text-[11px] font-medium shadow-none outline-none hover:!border-border hover:!bg-muted hover:!text-foreground focus:!border-border/60 focus:!outline-none focus:!ring-0 active:!border-border/60 active:!bg-muted/25'
               >
                 Hoy
               </Button>
@@ -544,7 +550,7 @@ export function CalendarPage({
                             )
                           }
                           className={cn(
-                            'flex w-full items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
+                            'mx-0.5 flex w-[calc(100%-0.25rem)] items-center justify-between gap-3 rounded-[10px] px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/80',
                             active && 'bg-muted/60'
                           )}
                         >
@@ -586,7 +592,7 @@ export function CalendarPage({
                 onClick={() => openCreate(selectedDate)}
                 aria-label='Nuevo evento'
                 title='Nuevo evento'
-                className='!text-foreground h-8 w-8 rounded-[10px] border border-border/60 bg-muted/25 shadow-none hover:!border-border hover:!bg-muted hover:!text-foreground focus-visible:ring-1 focus-visible:ring-border'
+                className='!border-border/60 !bg-background/80 !text-foreground h-8 w-8 rounded-[10px] border shadow-none hover:!border-border hover:!bg-muted hover:!text-foreground focus:!border-border/60 focus:!outline-none focus:!ring-0'
               >
                 <span className='text-foreground text-[18px] leading-none font-medium'>+</span>
               </Button>
@@ -711,7 +717,7 @@ export function CalendarPage({
       {/* Desktop / tablet: month, week and day grid views. */}
       <Card
         className={cn(
-          'hidden min-w-0 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card py-0 md:block'
+          'hidden min-w-0 overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card py-0 md:-mt-3 md:block'
         )}
       >
         {isLoading ? (
@@ -726,6 +732,7 @@ export function CalendarPage({
             onOpenEvent={openEvent}
             onOpenDay={(day) => {
               setCursor(day);
+              setSelectedDate(startOfDay(day));
               setView('day');
             }}
           />
@@ -749,6 +756,7 @@ export function CalendarPage({
             onOpenEvent={openEvent}
             onOpenDay={(day) => {
               setCursor(day);
+              setSelectedDate(startOfDay(day));
               setView('day');
             }}
             onMoveEvent={moveEvent}
@@ -1052,7 +1060,7 @@ function MobileCalendar({
           onClick={() => onCreate(selectedDate)}
           aria-label='Nuevo evento'
           title='Nuevo evento'
-          className='!text-foreground h-8 w-8 shrink-0 rounded-[10px] border border-border/60 bg-muted/35 shadow-none hover:!border-border hover:!bg-muted hover:!text-foreground focus-visible:ring-1 focus-visible:ring-border'
+          className='!border-border/60 !bg-background/80 !text-foreground h-8 w-8 shrink-0 rounded-[10px] border shadow-none hover:!border-border hover:!bg-muted hover:!text-foreground focus:!border-border/60 focus:!outline-none focus:!ring-0'
         >
           <span className='text-foreground text-[18px] leading-none font-medium'>+</span>
         </Button>
@@ -1115,6 +1123,8 @@ function MobileCalendar({
             onSelectDay={(day) => {
               onSelectDate(day);
               onCursorChange(day);
+              onModeChange('day');
+              onViewChange('day');
             }}
             onOpenEvent={onOpenEvent}
             onCreate={onCreate}
@@ -2553,7 +2563,6 @@ function CompressedDayTimeline({
 
   const today = new Date();
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
-
   const renderHour = (hour: number) => {
     const top = offset(hour * 60);
     const h = hour < 5 ? earlyHeight / 5 : hour >= 21 ? lateHeight / 3 : hourHeight;
@@ -2842,6 +2851,45 @@ function WeekTimeline({
   const totalHeight = earlyHeight + 16 * hourHeight + lateHeight;
   const today = new Date();
   const nowMinutes = today.getHours() * 60 + today.getMinutes();
+  const multiDayEvents = events
+    .filter((event) => !event.allDay && isMultiDayEvent(event))
+    .map((event) => {
+      const startAt = new Date(event.startAt);
+      const endAt = new Date(event.endAt);
+      const weekEndExclusive = addDays(weekStart, 7);
+      if (startAt >= weekEndExclusive || endAt <= weekStart) return null;
+      const visibleStart = startAt < weekStart ? weekStart : startAt;
+      const visibleEnd = endAt > weekEndExclusive ? weekEndExclusive : endAt;
+      const startIndex = Math.max(
+        0,
+        Math.min(
+          6,
+          Math.floor(
+            (startOfDay(visibleStart).getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000)
+          )
+        )
+      );
+      const endIndexExclusive = Math.max(
+        startIndex + 1,
+        Math.min(7, Math.ceil((visibleEnd.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000)))
+      );
+      return {
+        event,
+        startIndex,
+        span: Math.max(1, endIndexExclusive - startIndex),
+        visibleStart
+      };
+    })
+    .filter(
+      (
+        entry
+      ): entry is {
+        event: Event;
+        startIndex: number;
+        span: number;
+        visibleStart: Date;
+      } => !!entry
+    );
   const offset = useCallback(
     (minutes: number) => {
       const value = Math.max(0, Math.min(1440, minutes));
@@ -3046,7 +3094,9 @@ function WeekTimeline({
             </div>
 
             {days.map((day) => {
-              const dayEvents = eventsForDay(events, day).filter((event) => !event.allDay);
+              const dayEvents = eventsForDay(events, day).filter(
+                (event) => !event.allDay && !isMultiDayEvent(event)
+              );
               const renderCreateHour = (hour: number) => (
                 <button
                   key={hour}
@@ -3223,6 +3273,51 @@ function WeekTimeline({
                 </div>
               );
             })}
+
+            {multiDayEvents.map(({ event, startIndex, span }) => {
+              const category = categoryFor(event, categories);
+              const startAt = new Date(event.startAt);
+              const visibleStart = startIndex === 0 && startAt < weekStart ? weekStart : startAt;
+              const startMinutes = minutesFromDate(visibleStart);
+              const top = offset(Math.max(startHour * 60, startMinutes));
+              const endAt = new Date(event.endAt);
+              const displayEnd = endAt <= addDays(weekStart, 7) ? endAt : addDays(weekStart, 7);
+              return (
+                <div
+                  key={`multi-day-${event.id}`}
+                  className='pointer-events-none absolute left-[72px] right-0 top-0 h-full'
+                  style={{ zIndex: 18 }}
+                >
+                  <button
+                    type='button'
+                    onClick={() => onOpenEvent(event)}
+                    className='pointer-events-auto absolute overflow-hidden rounded-[4px] border text-left shadow-none transition-[filter,transform] hover:-translate-y-px hover:brightness-[0.98]'
+                    style={{
+                      left: `${(startIndex * 100) / 7}%`,
+                      width: `${(span * 100) / 7}%`,
+                      top: top + 3,
+                      height: 44,
+                      backgroundColor: `color-mix(in srgb, ${category.color} 20%, var(--card))`,
+                      borderColor: `color-mix(in srgb, ${category.color} 30%, var(--border))`
+                    }}
+                    title={event.title}
+                  >
+                    <span
+                      className='absolute inset-y-0 left-0 w-1'
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <span className='flex h-full min-w-0 items-center gap-2 px-3 pl-4'>
+                      <span className='min-w-0 flex-1 truncate text-sm font-semibold'>
+                        {event.title}
+                      </span>
+                      <span className='shrink-0 text-[11px] text-muted-foreground'>
+                        {format(visibleStart, 'HH:mm')} – {format(displayEnd, 'HH:mm')}
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -3340,6 +3435,13 @@ function CalendarSkeleton() {
     </div>
   );
 }
+function isMultiDayEvent(event: Event) {
+  if (event.allDay) return false;
+  const start = new Date(event.startAt);
+  const end = new Date(event.endAt);
+  return !isSameDay(start, end);
+}
+
 function eventsForDay(events: Event[], day: Date) {
   const start = startOfDay(day).getTime();
   const end = addDays(startOfDay(day), 1).getTime();
