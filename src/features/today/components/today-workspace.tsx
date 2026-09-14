@@ -456,16 +456,30 @@ function TodayLoadWidget({
           <span className='bg-primary/85 h-full' style={{ width: `${taskShare}%` }} />
           <span className='bg-primary/35 h-full' style={{ width: `${eventShare}%` }} />
         </div>
-        <div className='text-muted-foreground mt-2.5 flex items-center justify-between gap-3 text-[11px]'>
-          <span className='inline-flex min-w-0 items-center gap-1.5'>
+        <div className='text-muted-foreground mt-2.5 flex items-center justify-between gap-2 text-[11px]'>
+          <Link
+            href='/dashboard/my-work?mode=list'
+            className='inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 transition-colors hover:bg-muted/60 hover:text-foreground'
+            aria-label={`Ver ${todayTasks.length} tareas de hoy`}
+          >
             <span className='bg-primary/85 size-1.5 shrink-0 rounded-full' />
             {todayTasks.length} tareas
-          </span>
-          <span className='inline-flex min-w-0 items-center gap-1.5'>
+          </Link>
+          <Link
+            href='/dashboard/calendar'
+            className='inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 transition-colors hover:bg-muted/60 hover:text-foreground'
+            aria-label={`Ver ${todayEvents.length} eventos de hoy`}
+          >
             <span className='bg-primary/35 size-1.5 shrink-0 rounded-full' />
             {todayEvents.length} eventos
-          </span>
-          <span className='shrink-0 tabular-nums'>{remaining} pendientes</span>
+          </Link>
+          <Link
+            href='/dashboard/my-work?mode=list'
+            className='shrink-0 rounded-md px-1 py-0.5 tabular-nums transition-colors hover:bg-muted/60 hover:text-foreground'
+            aria-label={`Ver ${remaining} elementos pendientes`}
+          >
+            {remaining} pendientes
+          </Link>
         </div>
       </div>
     </div>
@@ -481,7 +495,9 @@ function ActivityRhythmWidget({
   tasks: Task[];
   events: Event[];
 }) {
-  const getCreatedCount = (day: Date) => {
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+  const getDayBreakdown = (day: Date) => {
     const nextDay = addDays(day, 1);
     const taskCount = tasks.filter((task) => {
       const created = new Date(task.createdAt);
@@ -491,25 +507,28 @@ function ActivityRhythmWidget({
       const created = new Date(event.createdAt);
       return created >= day && created < nextDay;
     }).length;
-    return taskCount + eventCount;
+    return { taskCount, eventCount, total: taskCount + eventCount };
   };
 
-  const last7 = Array.from({ length: 7 }, (_, index) => getCreatedCount(subDays(today, 6 - index)));
+  const days = Array.from({ length: 7 }, (_, index) => subDays(today, 6 - index));
+  const last7 = days.map((day) => getDayBreakdown(day));
   const previous7 = Array.from({ length: 7 }, (_, index) =>
-    getCreatedCount(subDays(today, 13 - index))
+    getDayBreakdown(subDays(today, 13 - index))
   );
-  const currentTotal = last7.reduce((sum, value) => sum + value, 0);
-  const previousTotal = previous7.reduce((sum, value) => sum + value, 0);
+  const currentTotal = last7.reduce((sum, value) => sum + value.total, 0);
+  const previousTotal = previous7.reduce((sum, value) => sum + value.total, 0);
   const delta =
     previousTotal === 0
       ? currentTotal > 0
         ? 100
         : 0
       : Math.round(((currentTotal - previousTotal) / previousTotal) * 100);
-  const max = Math.max(1, ...last7);
-  const todayCount = last7[last7.length - 1];
+  const max = Math.max(1, ...last7.map((value) => value.total));
+  const todayCount = last7[last7.length - 1].total;
   const currentAverage = currentTotal / 7;
   const previousAverage = previousTotal / 7;
+  const selected = selectedDay === null ? null : last7[selectedDay];
+  const selectedDate = selectedDay === null ? null : days[selectedDay];
 
   return (
     <div className='flex h-full min-w-0 flex-col justify-between'>
@@ -522,7 +541,7 @@ function ActivityRhythmWidget({
           <p
             className={cn(
               'text-xl font-semibold tabular-nums tracking-tight',
-              delta > 0 ? 'text-primary' : 'text-foreground'
+              delta > 0 ? 'text-primary' : delta < 0 ? 'text-foreground' : 'text-muted-foreground'
             )}
           >
             {delta > 0 ? '+' : ''}
@@ -533,30 +552,68 @@ function ActivityRhythmWidget({
       </div>
 
       <div className='mt-3'>
-        <div
-          className='flex h-16 items-end gap-1.5'
-          aria-label='Elementos creados durante los últimos 7 días'
-        >
+        <div className='flex h-16 items-end gap-1.5' aria-label='Actividad de los últimos 7 días'>
           {last7.map((value, index) => {
-            const height = value === 0 ? 8 : Math.max(14, (value / max) * 100);
+            const height = value.total === 0 ? 8 : Math.max(14, (value.total / max) * 100);
             const isToday = index === last7.length - 1;
+            const isSelected = selectedDay === index;
+            const dayLabel = format(days[index], 'EEEE d MMMM', { locale: es });
             return (
-              <span
-                key={`${index}-${value}`}
-                className={cn(
-                  'min-w-0 flex-1 rounded-[5px] transition-[height] duration-300',
-                  isToday ? 'bg-primary' : 'bg-primary/25'
-                )}
-                style={{ height: `${height}%` }}
-                title={`${value} ${value === 1 ? 'elemento' : 'elementos'}`}
-              />
+              <div
+                key={`${index}-${value.total}`}
+                className='group relative min-w-0 flex-1 self-stretch'
+              >
+                <button
+                  type='button'
+                  onClick={() => setSelectedDay(isSelected ? null : index)}
+                  className='absolute inset-x-0 bottom-0 flex h-full items-end rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
+                  aria-label={`${dayLabel}: ${value.total} elementos, ${value.taskCount} tareas y ${value.eventCount} eventos`}
+                >
+                  <span
+                    className={cn(
+                      'block w-full rounded-[5px] transition-[height,background-color,opacity] duration-300',
+                      isSelected
+                        ? 'bg-primary opacity-100'
+                        : isToday
+                          ? 'bg-primary'
+                          : 'bg-primary/25 group-hover:bg-primary/45'
+                    )}
+                    style={{ height: `${height}%` }}
+                  />
+                </button>
+                <span className='pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-48 -translate-x-1/2 rounded-lg border border-border/60 bg-popover px-2.5 py-2 text-[10px] leading-tight text-popover-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100'>
+                  <strong className='block font-semibold'>{dayLabel}</strong>
+                  <span className='text-muted-foreground mt-0.5 block'>
+                    {value.total} {value.total === 1 ? 'elemento' : 'elementos'} · {value.taskCount}{' '}
+                    tareas · {value.eventCount} eventos
+                  </span>
+                </span>
+              </div>
             );
           })}
         </div>
+
         <div className='text-muted-foreground mt-2.5 flex items-center justify-between text-[10px] tabular-nums'>
           <span>Hace 6 días</span>
           <span>Hoy · {todayCount}</span>
         </div>
+
+        {selected && selectedDate && (
+          <div className='mt-2 rounded-lg border border-border/55 bg-muted/25 px-2.5 py-2 text-[10px]'>
+            <div className='flex items-center justify-between gap-3'>
+              <span className='font-medium capitalize'>
+                {format(selectedDate, 'EEEE d MMMM', { locale: es })}
+              </span>
+              <span className='text-muted-foreground tabular-nums'>
+                {selected.total} {selected.total === 1 ? 'elemento' : 'elementos'}
+              </span>
+            </div>
+            <div className='text-muted-foreground mt-0.5 flex gap-3'>
+              <span>{selected.taskCount} tareas</span>
+              <span>{selected.eventCount} eventos</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className='text-muted-foreground mt-2 grid grid-cols-2 gap-3 text-[11px]'>
