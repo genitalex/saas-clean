@@ -151,7 +151,7 @@ export default function CustomerListing() {
       </div>
 
       <div className='overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_1px_2px_rgba(23,32,25,0.03)]'>
-        <div className='hidden grid-cols-[minmax(250px,1.5fr)_minmax(190px,1fr)_minmax(220px,1.1fr)_minmax(180px,0.9fr)_32px] items-center gap-4 border-b border-border/60 bg-muted/25 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:grid'>
+        <div className='hidden grid-cols-[minmax(240px,1.5fr)_minmax(220px,1.15fr)_minmax(220px,1.1fr)_minmax(190px,0.95fr)_32px] items-center gap-4 border-b border-border/60 bg-muted/25 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:grid'>
           <span>Cliente</span>
           <span>Contacto</span>
           <span>Dirección / Web</span>
@@ -166,7 +166,7 @@ export default function CustomerListing() {
               key={customer.id}
               type='button'
               onClick={() => openCustomer(customer)}
-              className='group grid w-full grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-border/55 px-4 py-3.5 text-left transition-colors hover:bg-muted/20 active:bg-muted/35 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3 lg:grid-cols-[minmax(240px,1.5fr)_minmax(180px,1fr)_minmax(200px,1.1fr)_minmax(170px,0.9fr)_32px] lg:items-center lg:gap-3 lg:px-4 lg:py-2.5'
+              className='group grid w-full grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-border/55 px-4 py-3.5 text-left transition-colors hover:bg-muted/20 active:bg-muted/35 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-3 lg:grid-cols-[minmax(240px,1.5fr)_minmax(220px,1.15fr)_minmax(220px,1.1fr)_minmax(190px,0.95fr)_32px] lg:items-center lg:gap-3 lg:px-5 lg:py-3'
             >
               <span className='col-span-1 flex min-w-0 items-center gap-2.5'>
                 <span className='col-start-2 row-start-1 flex h-9 items-center justify-end text-muted-foreground lg:hidden'>
@@ -186,21 +186,27 @@ export default function CustomerListing() {
                 </span>
               </span>
 
-              <span className='col-span-2 flex min-w-0 items-center gap-2.5 pl-11 text-[12px] leading-5 sm:pl-0 lg:col-span-1 lg:col-start-auto lg:row-auto lg:block lg:text-[13px]'>
-                {customer.email ? <span className='truncate'>{customer.email}</span> : null}
+              <span className='col-span-2 flex min-w-0 flex-col gap-0.5 pl-11 text-[12px] leading-5 sm:pl-0 lg:col-span-1 lg:col-start-auto lg:row-auto lg:items-start lg:gap-0.5 lg:text-[13px]'>
+                {customer.email ? (
+                  <span className='block w-full min-w-0 truncate'>{customer.email}</span>
+                ) : null}
                 {customer.phone ? (
-                  <span className='truncate text-xs text-muted-foreground'>{customer.phone}</span>
+                  <span className='block w-full min-w-0 truncate text-xs text-muted-foreground'>
+                    {customer.phone}
+                  </span>
                 ) : !customer.email ? (
                   <span className='text-xs text-muted-foreground'>Sin contacto</span>
                 ) : null}
               </span>
 
-              <span className='col-span-2 flex min-w-0 flex-col gap-0.5 pl-11 text-[12px] leading-5 sm:pl-0 lg:col-span-1 lg:col-start-auto lg:row-auto lg:text-[13px]'>
-                <span className='truncate text-muted-foreground'>
+              <span className='col-span-2 flex min-w-0 flex-col gap-0.5 pl-11 text-[12px] leading-5 sm:pl-0 lg:col-span-1 lg:col-start-auto lg:row-auto lg:items-start lg:text-[13px]'>
+                <span className='block w-full min-w-0 truncate text-muted-foreground'>
                   {customer.address || 'Sin dirección'}
                 </span>
                 {customer.website ? (
-                  <span className='truncate text-xs text-primary'>{customer.website}</span>
+                  <span className='block w-full min-w-0 truncate text-xs text-primary'>
+                    {customer.website}
+                  </span>
                 ) : null}
               </span>
 
