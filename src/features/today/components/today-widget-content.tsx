@@ -127,9 +127,7 @@ export function WeeklyAgenda({
   const linkedEventIds = new Set(tasks.flatMap((task) => (task.eventId ? [task.eventId] : [])));
   const todayPlan = [
     ...tasks
-      .filter(
-        (task) => task.status !== 'done' && task.dueAt && isSameDay(new Date(task.dueAt), today)
-      )
+      .filter((task) => task.dueAt && isSameDay(new Date(task.dueAt), today))
       .map((task) => ({ type: 'task' as const, task, at: new Date(task.dueAt!) })),
     ...events
       .filter((event) => isSameDay(new Date(event.startAt), today) && !linkedEventIds.has(event.id))
@@ -196,18 +194,33 @@ export function WeeklyAgenda({
                     {format(day, 'd')}
                   </span>
                   <span className='mt-2 flex flex-1 flex-col items-start gap-1 overflow-hidden text-left'>
-                    {dayEvents.map((event) => (
-                      <span
-                        key={event.id}
-                        className='flex w-full min-w-0 items-center gap-1 text-[10px] leading-4'
-                      >
-                        <i
-                          className='size-1.5 shrink-0 rounded-full bg-primary'
-                          title={event.title}
-                        />
-                        <span className='truncate'>{event.title}</span>
-                      </span>
-                    ))}
+                    {dayEvents.map((event) => {
+                      const resolved = event.status === 'done';
+                      return (
+                        <span
+                          key={event.id}
+                          className={cn(
+                            'flex w-full min-w-0 items-center gap-1 text-[10px] leading-4',
+                            resolved && 'text-muted-foreground/65'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'flex size-3 shrink-0 items-center justify-center rounded-full',
+                              resolved
+                                ? 'bg-muted-foreground/20 text-muted-foreground'
+                                : 'bg-primary/10 text-primary'
+                            )}
+                            title={resolved ? 'Resuelto' : event.title}
+                          >
+                            {resolved ? <Icons.check className='size-2.5' /> : null}
+                          </span>
+                          <span className={cn('truncate', resolved && 'line-through')}>
+                            {event.title}
+                          </span>
+                        </span>
+                      );
+                    })}
                   </span>
                 </Link>
               );
@@ -291,6 +304,7 @@ function TodayPlanRow({
   const isTask = item.type === 'task';
   const title = isTask ? item.task.title : item.event.title;
   const customerName = isTask ? item.task.customer?.name : item.event.customer?.name;
+  const resolved = isTask ? item.task.status === 'done' : item.event.status === 'done';
 
   async function refresh() {
     await Promise.all([
@@ -389,30 +403,53 @@ function TodayPlanRow({
         <span
           className={cn(
             'flex size-7 shrink-0 items-center justify-center rounded-lg',
-            isTask ? 'bg-primary/10 text-primary' : 'bg-background/70 text-muted-foreground'
+            resolved
+              ? 'bg-muted text-muted-foreground'
+              : isTask
+                ? 'bg-primary/10 text-primary'
+                : 'bg-background/70 text-muted-foreground'
           )}
         >
-          {isTask ? <Icons.check className='size-3.5' /> : <Icons.calendar className='size-3.5' />}
+          {resolved ? (
+            <Icons.check className='size-3.5' />
+          ) : isTask ? (
+            <Icons.check className='size-3.5' />
+          ) : (
+            <Icons.calendar className='size-3.5' />
+          )}
         </span>
         <span className='min-w-0 flex-1'>
-          <span className='block truncate text-sm font-medium'>{title}</span>
+          <span
+            className={cn(
+              'block truncate text-sm font-medium',
+              resolved && 'text-muted-foreground line-through'
+            )}
+          >
+            {title}
+          </span>
           <span className='text-muted-foreground mt-0.5 block truncate text-xs'>
-            {isTask ? 'Tarea planificada' : 'Evento'}
+            {resolved ? 'Resuelto' : isTask ? 'Tarea planificada' : 'Evento'}
             {customerName ? ` · ${customerName}` : ''}
           </span>
         </span>
       </Link>
       <div className='flex shrink-0 items-center gap-1'>
-        <Button variant='ghost' size='sm' disabled={pending} onClick={() => void complete()}>
-          Hecho
-        </Button>
-        <Button variant='ghost' size='sm' disabled={pending} onClick={() => void postpone()}>
-          Mañana
-        </Button>
-        {isTask && !item.task.eventId && (
-          <Button variant='ghost' size='sm' disabled={pending} onClick={() => void plan()}>
-            Planificar
-          </Button>
+        {resolved ? (
+          <span className='px-2 text-xs font-medium text-muted-foreground'>Hecho</span>
+        ) : (
+          <>
+            <Button variant='ghost' size='sm' disabled={pending} onClick={() => void complete()}>
+              Hecho
+            </Button>
+            <Button variant='ghost' size='sm' disabled={pending} onClick={() => void postpone()}>
+              Mañana
+            </Button>
+            {isTask && !item.task.eventId && (
+              <Button variant='ghost' size='sm' disabled={pending} onClick={() => void plan()}>
+                Planificar
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>
