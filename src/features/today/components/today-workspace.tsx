@@ -254,7 +254,7 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
               )
               .slice(0, 6)
               .map((task) => {
-                const completed = task.status === 'done';
+                const completed = task.status === 'done' || Boolean(task.completedAt);
                 return (
                   <Link
                     key={task.id}
@@ -276,10 +276,10 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
                     <span
                       className={cn(
                         'min-w-0 flex-1 truncate text-sm font-medium',
-                        completed && 'text-muted-foreground line-through'
+                        completed && 'text-muted-foreground'
                       )}
                     >
-                      {task.title}
+                      <span className={completed ? 'line-through' : undefined}>{task.title}</span>
                     </span>
                     {task.dueAt && (
                       <span
