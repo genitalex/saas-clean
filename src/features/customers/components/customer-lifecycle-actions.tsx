@@ -25,13 +25,11 @@ import {
 export function CustomerLifecycleActions({
   customerId,
   archived,
-  onEdit,
   onCompleted,
   triggerClassName
 }: {
   customerId: string;
   archived: boolean;
-  onEdit?: () => void;
   onCompleted?: (action: 'archived' | 'restored' | 'deleted') => void;
   triggerClassName?: string;
 }) {
@@ -101,9 +99,6 @@ export function CustomerLifecycleActions({
           <Icons.ellipsis className='size-4' />
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-64 bg-popover p-1.5'>
-          <DropdownMenuItem className='py-2.5' onClick={onEdit} disabled={!onEdit}>
-            <Icons.edit /> Editar
-          </DropdownMenuItem>
           <DropdownMenuItem
             className='py-2.5'
             onClick={() => void archiveOrRestore()}
