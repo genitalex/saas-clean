@@ -437,9 +437,18 @@ function TodayLoadWidget({
   const taskShare = total > 0 ? Math.round((todayTasks.length / total) * 100) : 0;
   const eventShare = total > 0 ? 100 - taskShare : 0;
   const remaining = Math.max(0, total - completed);
+  const todayDateKey = format(today, 'yyyy-MM-dd');
+  const visibleEvents = [...todayEvents]
+    .toSorted((left, right) => {
+      const leftDone = left.status === 'done';
+      const rightDone = right.status === 'done';
+      if (leftDone !== rightDone) return Number(leftDone) - Number(rightDone);
+      return new Date(left.startAt).getTime() - new Date(right.startAt).getTime();
+    })
+    .slice(0, 2);
 
   return (
-    <div className='flex h-full min-w-0 flex-col justify-between'>
+    <div className='flex h-full min-w-0 flex-col'>
       <div className='flex items-start justify-between gap-4'>
         <div className='min-w-0'>
           <p className='text-2xl font-semibold tabular-nums tracking-tight'>{total}</p>
@@ -466,7 +475,7 @@ function TodayLoadWidget({
             {todayTasks.length} tareas
           </Link>
           <Link
-            href='/dashboard/calendar'
+            href={`/dashboard/calendar?date=${todayDateKey}&view=day`}
             className='inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 transition-colors hover:bg-muted/60 hover:text-foreground'
             aria-label={`Ver ${todayEvents.length} eventos de hoy`}
           >
@@ -474,10 +483,50 @@ function TodayLoadWidget({
             {todayEvents.length} eventos
           </Link>
           <span className='shrink-0 rounded-md px-1 py-0.5 tabular-nums'>
-            {remaining} pendientes
+            {remaining} {remaining === 1 ? 'pendiente' : 'pendientes'}
           </span>
         </div>
       </div>
+
+      {visibleEvents.length > 0 && (
+        <div className='mt-3 space-y-1'>
+          {visibleEvents.map((event) => {
+            const resolved = event.status === 'done';
+            return (
+              <Link
+                key={event.id}
+                href={`/dashboard/calendar?event=${event.id}&date=${todayDateKey}&view=day`}
+                className={cn(
+                  'flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors hover:bg-muted/55',
+                  resolved && 'text-muted-foreground/70'
+                )}
+              >
+                <span
+                  className={cn(
+                    'flex size-6 shrink-0 items-center justify-center rounded-md',
+                    resolved ? 'bg-muted text-muted-foreground' : 'bg-primary/8 text-primary'
+                  )}
+                >
+                  {resolved ? (
+                    <Icons.check className='size-3' />
+                  ) : (
+                    <Icons.calendar className='size-3' />
+                  )}
+                </span>
+                <span className='min-w-0 flex-1 truncate'>
+                  <span className={cn('block truncate font-medium', resolved && 'line-through')}>
+                    {event.title}
+                  </span>
+                  <span className='text-muted-foreground block truncate text-[10px]'>
+                    {event.allDay ? 'Todo el día' : format(new Date(event.startAt), 'HH:mm')}
+                    {resolved ? ' · Resuelto' : ' · Pendiente'}
+                  </span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
