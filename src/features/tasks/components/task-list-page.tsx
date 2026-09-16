@@ -978,7 +978,7 @@ function TaskInspector({
               type='button'
               aria-label={task.status === 'done' ? 'Reabrir tarea' : 'Completar tarea'}
               onClick={() => void save({ status: task.status === 'done' ? 'todo' : 'done' })}
-              className={`mt-1 flex size-6 shrink-0 items-center justify-center rounded-full border ${task.status === 'done' ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary'}`}
+              className={`mt-1 flex size-6 shrink-0 items-center justify-center rounded-full border transition-colors ${task.status === 'done' ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary'}`}
             >
               {task.status === 'done' && <Icons.check className='size-3.5' />}
             </button>
@@ -998,20 +998,37 @@ function TaskInspector({
               <SheetDescription className='mt-1'>Contexto de ejecución</SheetDescription>
             </div>
           </div>
-          <div className='mt-4 flex flex-wrap gap-2'>
-            {(Object.keys(statusLabels) as TaskStatus[]).map((value) => (
-              <button
-                key={value}
-                type='button'
-                onClick={() => void save({ status: value })}
-                className={`rounded-full border px-2.5 py-1 text-xs font-medium ${task.status === value ? 'border-primary/30 bg-primary/10 text-primary' : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted'}`}
-              >
-                {statusLabels[value]}
-              </button>
-            ))}
-          </div>
         </SheetHeader>
         <div className='min-h-0 flex-1 space-y-6 overflow-y-auto p-5'>
+          <section className='space-y-3'>
+            <div>
+              <h3 className='text-sm font-semibold'>Estado</h3>
+              <p className='text-muted-foreground mt-0.5 text-xs'>
+                Actualiza en qué punto está esta tarea.
+              </p>
+            </div>
+            <div className='grid grid-cols-2 gap-1 rounded-xl bg-muted/45 p-1 sm:grid-cols-4'>
+              {(Object.keys(statusLabels) as TaskStatus[]).map((value) => {
+                const active = task.status === value;
+                return (
+                  <button
+                    key={value}
+                    type='button'
+                    onClick={() => void save({ status: value })}
+                    className={cn(
+                      'rounded-lg px-2.5 py-2 text-xs font-medium transition-colors',
+                      active
+                        ? 'bg-background text-foreground shadow-sm ring-1 ring-border/70'
+                        : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                    )}
+                  >
+                    {statusLabels[value]}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <section className='space-y-3'>
             <h3 className='text-sm font-semibold'>Contexto</h3>
             <div className='grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/60'>
@@ -1198,93 +1215,139 @@ function TaskInspector({
             </div>
           </section>
           <Separator />
-          <section className='space-y-3'>
-            <h3 className='text-sm font-semibold'>Siguiente decisión</h3>
-            <div className='flex flex-wrap gap-2'>
-              <Button variant='outline' size='sm' onClick={() => void scheduleTask('later')}>
-                Más tarde
-              </Button>
-              <Button variant='outline' size='sm' onClick={() => void scheduleTask('today')}>
-                Hoy
-              </Button>
-              <Button variant='outline' size='sm' onClick={() => void scheduleTask('tomorrow')}>
-                Mañana
-              </Button>
-              <Button variant='outline' size='sm' onClick={() => void scheduleTask('nextWeek')}>
-                Próxima semana
-              </Button>
-              <Button variant='outline' size='sm' onClick={() => void scheduleTask('thisWeek')}>
-                Esta semana
-              </Button>
-              <Button variant='secondary' size='sm' onClick={() => void planInCalendar()}>
-                Planificar en calendario
-              </Button>
+          <section className='space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-3.5 sm:p-4'>
+            <div>
+              <h3 className='text-sm font-semibold'>Siguiente decisión</h3>
+              <p className='text-muted-foreground mt-0.5 text-xs'>
+                Decide qué debe ocurrir con esta tarea.
+              </p>
             </div>
-            <div className='flex flex-wrap items-center gap-2'>
+
+            <div className='grid grid-cols-2 gap-1.5 sm:grid-cols-5'>
+              {(
+                [
+                  ['later', 'Más tarde'],
+                  ['today', 'Hoy'],
+                  ['tomorrow', 'Mañana'],
+                  ['thisWeek', 'Esta semana'],
+                  ['nextWeek', 'Próxima semana']
+                ] as const
+              ).map(([value, label]) => (
+                <Button
+                  key={value}
+                  variant='outline'
+                  size='sm'
+                  className='h-9 justify-center rounded-lg bg-background/70'
+                  onClick={() => void scheduleTask(value)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+
+            <div className='grid gap-2 sm:grid-cols-[1fr_auto]'>
               <DatePicker
                 value={scheduleDate}
                 onChange={setScheduleDate}
                 aria-label='Elegir fecha de la tarea'
-                className='w-40'
               />
-              {scheduleDate && (
-                <Button variant='outline' size='sm' onClick={() => void scheduleOnDate()}>
-                  Elegir fecha
-                </Button>
-              )}
+              <Button
+                variant='secondary'
+                size='sm'
+                disabled={!scheduleDate}
+                onClick={() => void scheduleOnDate()}
+                className='rounded-lg sm:min-w-32'
+              >
+                Guardar fecha
+              </Button>
             </div>
+
+            <Button
+              variant='outline'
+              className='w-full rounded-lg'
+              onClick={() => void planInCalendar()}
+            >
+              <Icons.calendar data-icon='inline-start' />
+              Planificar en calendario
+            </Button>
+
             {task.status === 'waiting' && (
-              <div className='flex flex-wrap items-center gap-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => void save({ status: 'todo', waitingOn: null })}
-                >
-                  Ya no estoy esperando
-                </Button>
-                <DatePicker
-                  value={followUpDate}
-                  onChange={setFollowUpDate}
-                  aria-label='Fecha del seguimiento'
-                  className='w-40'
-                />
-                {followUpDate && (
-                  <Button variant='secondary' size='sm' onClick={() => void createFollowUp()}>
+              <div className='rounded-xl border border-border/60 bg-background/60 p-3'>
+                <div className='flex items-center justify-between gap-3'>
+                  <div>
+                    <p className='text-sm font-medium'>Esperando respuesta</p>
+                    <p className='text-muted-foreground mt-0.5 text-xs'>
+                      Retoma la tarea cuando llegue la respuesta.
+                    </p>
+                  </div>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => void save({ status: 'todo', waitingOn: null })}
+                    className='rounded-lg'
+                  >
+                    Continuar
+                  </Button>
+                </div>
+                <div className='mt-3 grid gap-2 sm:grid-cols-[1fr_auto]'>
+                  <DatePicker
+                    value={followUpDate}
+                    onChange={setFollowUpDate}
+                    aria-label='Fecha del seguimiento'
+                  />
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    disabled={!followUpDate}
+                    onClick={() => void createFollowUp()}
+                    className='rounded-lg sm:min-w-32'
+                  >
                     Crear seguimiento
                   </Button>
-                )}
+                </div>
               </div>
             )}
-            <div className='flex flex-wrap gap-2'>
-              {(Object.keys(priorityLabels) as TaskPriority[]).map((value) => (
-                <Button
-                  key={value}
-                  variant={task.priority === value ? 'secondary' : 'outline'}
-                  size='sm'
-                  onClick={() => void save({ priority: value })}
+
+            <div className='border-t border-border/50 pt-3'>
+              <div className='flex items-center justify-between gap-3'>
+                <span className='text-xs font-medium text-muted-foreground'>Prioridad</span>
+                <div className='flex flex-wrap gap-1.5'>
+                  {(Object.keys(priorityLabels) as TaskPriority[]).map((value) => (
+                    <Button
+                      key={value}
+                      variant={task.priority === value ? 'secondary' : 'outline'}
+                      size='sm'
+                      className='h-8 rounded-lg px-2.5'
+                      onClick={() => void save({ priority: value })}
+                    >
+                      {priorityLabels[value]}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className='mt-3 flex items-center justify-between gap-3 border-t border-border/40 pt-3'>
+                <div>
+                  <span className='text-xs font-medium text-muted-foreground'>Repetición</span>
+                  <p className='text-muted-foreground mt-0.5 text-[11px]'>
+                    Se crea la siguiente al completar.
+                  </p>
+                </div>
+                <NativeSelect
+                  aria-label='Repetición de la tarea'
+                  value={recurrenceRule}
+                  onChange={(event) => {
+                    const value = event.target.value as TaskRecurrence | '';
+                    setRecurrenceRule(value);
+                    void save({ recurrenceRule: value || null });
+                  }}
                 >
-                  {priorityLabels[value]}
-                </Button>
-              ))}
-            </div>
-            <div className='flex flex-wrap items-center gap-2'>
-              <NativeSelect
-                aria-label='Repetición de la tarea'
-                value={recurrenceRule}
-                onChange={(event) => {
-                  const value = event.target.value as TaskRecurrence | '';
-                  setRecurrenceRule(value);
-                  void save({ recurrenceRule: value || null });
-                }}
-              >
-                <NativeSelectOption value=''>Sin repetición</NativeSelectOption>
-                <NativeSelectOption value='daily'>Cada día</NativeSelectOption>
-                <NativeSelectOption value='weekly'>Cada semana</NativeSelectOption>
-                <NativeSelectOption value='monthly'>Cada mes</NativeSelectOption>
-              </NativeSelect>
-              <span className='text-muted-foreground text-xs'>
-                Se crea la próxima al completar.
-              </span>
+                  <NativeSelectOption value=''>Sin repetición</NativeSelectOption>
+                  <NativeSelectOption value='daily'>Cada día</NativeSelectOption>
+                  <NativeSelectOption value='weekly'>Cada semana</NativeSelectOption>
+                  <NativeSelectOption value='monthly'>Cada mes</NativeSelectOption>
+                </NativeSelect>
+              </div>
             </div>
           </section>
           <section className='space-y-2'>
