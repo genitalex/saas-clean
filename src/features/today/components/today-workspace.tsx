@@ -247,10 +247,9 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       maxHeight: 3,
       content: (
         <div className='space-y-1'>
-          {tasks
-            .filter((task) => task.status !== 'done')
-            .slice(0, 6)
-            .map((task) => (
+          {tasks.slice(0, 6).map((task) => {
+            const completed = task.status === 'done';
+            return (
               <Link
                 key={task.id}
                 href={`/dashboard/my-work?mode=list&task=${task.id}`}
@@ -259,22 +258,37 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
                 <span
                   className={cn(
                     'flex size-7 shrink-0 items-center justify-center rounded-lg',
-                    taskNeedsAttention(task, now) ? 'bg-primary/10 text-primary' : 'bg-muted/70'
+                    completed
+                      ? 'bg-muted text-muted-foreground'
+                      : taskNeedsAttention(task, now)
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-muted/70'
                   )}
                 >
                   <Icons.check className='size-3.5' />
                 </span>
-                <span className='min-w-0 flex-1 truncate text-sm font-medium'>{task.title}</span>
+                <span
+                  className={cn(
+                    'min-w-0 flex-1 truncate text-sm font-medium',
+                    completed && 'text-muted-foreground line-through'
+                  )}
+                >
+                  {task.title}
+                </span>
                 {task.dueAt && (
-                  <span className='text-muted-foreground shrink-0 text-[11px]'>
+                  <span
+                    className={cn(
+                      'shrink-0 text-[11px]',
+                      completed ? 'text-muted-foreground/70' : 'text-muted-foreground'
+                    )}
+                  >
                     {format(new Date(task.dueAt), 'd MMM', { locale: es })}
                   </span>
                 )}
               </Link>
-            ))}
-          {tasks.filter((task) => task.status !== 'done').length === 0 && (
-            <p className='text-muted-foreground py-5 text-sm'>Todo despejado.</p>
-          )}
+            );
+          })}
+          {tasks.length === 0 && <p className='text-muted-foreground py-5 text-sm'>Sin tareas.</p>}
           <Link
             href='/dashboard/my-work?mode=list'
             className='text-muted-foreground block px-1 pt-2 text-xs hover:text-foreground'
