@@ -108,7 +108,6 @@ export function WeeklyAgenda({
   function handleAgendaPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse') {
       dragState.current = { x: event.clientX, scrollLeft: event.currentTarget.scrollLeft };
-      event.currentTarget.setPointerCapture(event.pointerId);
     }
   }
   function handleAgendaPointerMove(event: React.PointerEvent<HTMLDivElement>) {

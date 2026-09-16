@@ -278,8 +278,9 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
                         'min-w-0 flex-1 truncate text-sm font-medium',
                         completed && 'text-muted-foreground'
                       )}
+                      style={{ textDecorationLine: completed ? 'line-through' : undefined }}
                     >
-                      <span className={completed ? 'line-through' : undefined}>{task.title}</span>
+                      {task.title}
                     </span>
                     {task.dueAt && (
                       <span
