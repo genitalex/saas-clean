@@ -347,24 +347,6 @@ export function EventInspector({
               </Button>
             </div>
           </div>
-
-          <div className='mt-3 flex flex-wrap gap-2'>
-            {(['planned', 'in_progress', 'done', 'cancelled'] as const).map((status) => (
-              <button
-                key={status}
-                type='button'
-                disabled={savingField === 'status'}
-                onClick={() => void savePatch('status', { status })}
-                className={cn(
-                  'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-                  statusClass(status),
-                  currentEvent.status === status && 'ring-2 ring-primary/20'
-                )}
-              >
-                {statusLabel(status)}
-              </button>
-            ))}
-          </div>
         </SheetHeader>
 
         <div className='min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5'>
@@ -410,6 +392,36 @@ export function EventInspector({
                     {formatTime(new Date(currentEvent.endAt))}
                   </button>
                 </div>
+              </div>
+            </section>
+
+            <section className='space-y-3'>
+              <div>
+                <h3 className='text-sm font-semibold'>Estado</h3>
+                <p className='text-muted-foreground mt-0.5 text-xs'>
+                  Cambia el estado de esta cita desde aquí.
+                </p>
+              </div>
+              <div className='grid grid-cols-2 gap-1 rounded-xl bg-muted/45 p-1 sm:grid-cols-4'>
+                {(['planned', 'in_progress', 'done', 'cancelled'] as const).map((status) => {
+                  const active = currentEvent.status === status;
+                  return (
+                    <button
+                      key={status}
+                      type='button'
+                      disabled={savingField === 'status'}
+                      onClick={() => void savePatch('status', { status })}
+                      className={cn(
+                        'min-h-9 rounded-lg px-2 py-1.5 text-xs font-medium transition-all',
+                        active
+                          ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
+                          : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
+                      )}
+                    >
+                      {statusLabel(status)}
+                    </button>
+                  );
+                })}
               </div>
             </section>
 
@@ -643,28 +655,38 @@ export function EventInspector({
         </div>
 
         <SheetFooter className='shrink-0 border-t border-border/70 bg-background p-3 sm:p-4'>
-          <div className='grid grid-cols-2 gap-2 sm:grid-cols-4'>
-            <Button variant='outline' className='rounded-xl' onClick={() => void handleFollowUp()}>
+          <div className='grid w-full grid-cols-2 gap-2 sm:grid-cols-4'>
+            <Button
+              variant='outline'
+              className='h-9 rounded-xl px-3 text-xs'
+              onClick={() => void handleFollowUp()}
+            >
+              <Icons.clock className='size-3.5' />
               Seguimiento
             </Button>
-            <Button variant='outline' className='rounded-xl' onClick={() => void handleDuplicate()}>
+            <Button
+              variant='outline'
+              className='h-9 rounded-xl px-3 text-xs'
+              onClick={() => void handleDuplicate()}
+            >
+              <span className='text-sm leading-none'>⧉</span>
               Duplicar
             </Button>
             <Button
               variant='outline'
-              className='rounded-xl'
+              className='h-9 rounded-xl px-3 text-xs'
               onClick={() => onCreateAt(new Date(currentEvent.endAt))}
             >
-              <Icons.add />
-              <span className='hidden lg:inline'>Después</span>
+              <Icons.add className='size-3.5' />
+              Añadir después
             </Button>
             <Button
-              variant='destructive'
-              className='rounded-xl'
+              variant='outline'
+              className='h-9 rounded-xl border-destructive/25 px-3 text-xs text-destructive hover:bg-destructive/5 hover:text-destructive'
               onClick={() => void handleDelete()}
             >
-              <Icons.trash />
-              <span className='hidden lg:inline'>Eliminar</span>
+              <Icons.trash className='size-3.5' />
+              Eliminar
             </Button>
           </div>
         </SheetFooter>
