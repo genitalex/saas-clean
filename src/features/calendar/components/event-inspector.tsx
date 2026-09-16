@@ -18,7 +18,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle
 } from '@/components/ui/sheet';
@@ -74,13 +73,7 @@ function statusClass(status: Event['status']) {
   }[status];
 }
 
-export function EventInspector({
-  event,
-  open,
-  onOpenChange,
-  onEditFull,
-  onCreateAt
-}: EventInspectorProps) {
+export function EventInspector({ event, open, onOpenChange, onEditFull }: EventInspectorProps) {
   const queryClient = useQueryClient();
   const [width, setWidth] = useState(() => {
     if (typeof window === 'undefined') return DEFAULT_WIDTH;
@@ -198,61 +191,6 @@ export function EventInspector({
       toast.success('Tarea vinculada al evento');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo crear la tarea.');
-    }
-  };
-
-  const handleFollowUp = async () => {
-    try {
-      const start = new Date(currentEvent.startAt);
-      start.setDate(start.getDate() + 1);
-      const duration =
-        new Date(currentEvent.endAt).getTime() - new Date(currentEvent.startAt).getTime();
-      await createEvent({
-        title: `Seguimiento · ${currentEvent.title}`,
-        description: currentEvent.description,
-        startAt: start.toISOString(),
-        endAt: new Date(start.getTime() + duration).toISOString(),
-        allDay: currentEvent.allDay,
-        location: currentEvent.location,
-        url: currentEvent.url,
-        customerId: currentEvent.customerId,
-        assigneeId: currentEvent.assigneeId,
-        color: currentEvent.color,
-        reminderMinutes: currentEvent.reminderMinutes
-      });
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
-      toast.success('Seguimiento creado');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo crear el seguimiento.');
-    }
-  };
-
-  const handleDuplicate = async () => {
-    try {
-      const start = new Date(currentEvent.startAt);
-      start.setDate(start.getDate() + 1);
-      const duration =
-        new Date(currentEvent.endAt).getTime() - new Date(currentEvent.startAt).getTime();
-      await createEvent({
-        title: currentEvent.title,
-        description: currentEvent.description,
-        startAt: start.toISOString(),
-        endAt: new Date(start.getTime() + duration).toISOString(),
-        allDay: currentEvent.allDay,
-        location: currentEvent.location,
-        url: currentEvent.url,
-        customerId: currentEvent.customerId,
-        assigneeId: currentEvent.assigneeId,
-        color: currentEvent.color,
-        reminderMinutes: currentEvent.reminderMinutes,
-        status: 'planned'
-      });
-      await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
-      toast.success('Evento duplicado');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo duplicar el evento.');
     }
   };
 
@@ -654,42 +592,16 @@ export function EventInspector({
           </div>
         </div>
 
-        <SheetFooter className='shrink-0 border-t border-border/70 bg-background p-3 sm:p-4'>
-          <div className='grid w-full grid-cols-2 gap-2 sm:grid-cols-4'>
-            <Button
-              variant='outline'
-              className='h-9 rounded-xl px-3 text-xs'
-              onClick={() => void handleFollowUp()}
-            >
-              <Icons.clock className='size-3.5' />
-              Seguimiento
-            </Button>
-            <Button
-              variant='outline'
-              className='h-9 rounded-xl px-3 text-xs'
-              onClick={() => void handleDuplicate()}
-            >
-              <span className='text-sm leading-none'>⧉</span>
-              Duplicar
-            </Button>
-            <Button
-              variant='outline'
-              className='h-9 rounded-xl px-3 text-xs'
-              onClick={() => onCreateAt(new Date(currentEvent.endAt))}
-            >
-              <Icons.add className='size-3.5' />
-              Añadir después
-            </Button>
-            <Button
-              variant='outline'
-              className='h-9 rounded-xl border-destructive/25 px-3 text-xs text-destructive hover:bg-destructive/5 hover:text-destructive'
-              onClick={() => void handleDelete()}
-            >
-              <Icons.trash className='size-3.5' />
-              Eliminar
-            </Button>
-          </div>
-        </SheetFooter>
+        <div className='shrink-0 border-t border-border/70 bg-background p-3 sm:p-4'>
+          <Button
+            variant='outline'
+            className='h-9 w-full rounded-xl border-destructive/25 text-xs text-destructive hover:bg-destructive/5 hover:text-destructive'
+            onClick={() => void handleDelete()}
+          >
+            <Icons.trash className='size-3.5' />
+            Eliminar evento
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );
