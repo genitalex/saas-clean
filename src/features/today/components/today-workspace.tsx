@@ -246,54 +246,63 @@ export function TodayWorkspace({ userId, userName }: { userId: string; userName:
       minHeight: 2,
       maxHeight: 3,
       content: (
-        <div className='space-y-1'>
-          {tasks.slice(0, 6).map((task) => {
-            const completed = task.status === 'done';
-            return (
-              <Link
-                key={task.id}
-                href={`/dashboard/my-work?mode=list&task=${task.id}`}
-                className={surfaceLink}
-              >
-                <span
-                  className={cn(
-                    'flex size-7 shrink-0 items-center justify-center rounded-lg',
-                    completed
-                      ? 'bg-muted text-muted-foreground'
-                      : taskNeedsAttention(task, now)
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted/70'
-                  )}
-                >
-                  <Icons.check className='size-3.5' />
-                </span>
-                <span
-                  className={cn(
-                    'min-w-0 flex-1 truncate text-sm font-medium',
-                    completed && 'text-muted-foreground line-through'
-                  )}
-                >
-                  {task.title}
-                </span>
-                {task.dueAt && (
-                  <span
-                    className={cn(
-                      'shrink-0 text-[11px]',
-                      completed ? 'text-muted-foreground/70' : 'text-muted-foreground'
-                    )}
+        <div className='flex h-full min-h-0 flex-col'>
+          <div className='min-h-0 flex-1 space-y-1 overflow-y-auto pr-1 scrollbar-none'>
+            {[...tasks]
+              .sort(
+                (left, right) => Number(left.status === 'done') - Number(right.status === 'done')
+              )
+              .slice(0, 6)
+              .map((task) => {
+                const completed = task.status === 'done';
+                return (
+                  <Link
+                    key={task.id}
+                    href={`/dashboard/my-work?mode=list&task=${task.id}`}
+                    className={cn(surfaceLink, completed && 'opacity-75')}
                   >
-                    {format(new Date(task.dueAt), 'd MMM', { locale: es })}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-          {tasks.length === 0 && <p className='text-muted-foreground py-5 text-sm'>Sin tareas.</p>}
+                    <span
+                      className={cn(
+                        'flex size-7 shrink-0 items-center justify-center rounded-lg',
+                        completed
+                          ? 'bg-muted text-muted-foreground'
+                          : taskNeedsAttention(task, now)
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted/70'
+                      )}
+                    >
+                      <Icons.check className='size-3.5' />
+                    </span>
+                    <span
+                      className={cn(
+                        'min-w-0 flex-1 truncate text-sm font-medium',
+                        completed && 'text-muted-foreground line-through'
+                      )}
+                    >
+                      {task.title}
+                    </span>
+                    {task.dueAt && (
+                      <span
+                        className={cn(
+                          'shrink-0 text-[11px]',
+                          completed ? 'text-muted-foreground/70' : 'text-muted-foreground'
+                        )}
+                      >
+                        {format(new Date(task.dueAt), 'd MMM', { locale: es })}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            {tasks.length === 0 && (
+              <p className='text-muted-foreground py-5 text-sm'>Sin tareas.</p>
+            )}
+          </div>
           <Link
             href='/dashboard/my-work?mode=list'
-            className='text-muted-foreground block px-1 pt-2 text-xs hover:text-foreground'
+            className='text-muted-foreground shrink-0 px-1 pt-2 text-xs hover:text-foreground'
           >
-            Ver tareas
+            Ver todas las tareas
           </Link>
         </div>
       )
