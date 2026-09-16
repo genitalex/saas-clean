@@ -971,7 +971,10 @@ function TaskInspector({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side='right' className='w-full gap-0 overflow-hidden p-0 sm:max-w-md'>
+      <SheetContent
+        side='right'
+        className='left-1/2 right-auto top-1/2 bottom-auto h-[min(760px,calc(100vh-3rem))] w-[min(680px,calc(100vw-1.5rem))] max-w-none -translate-x-1/2 -translate-y-1/2 gap-0 overflow-hidden rounded-2xl border border-border/70 p-0 shadow-2xl data-starting-style:translate-x-1/2 data-ending-style:translate-x-1/2 data-starting-style:translate-y-1/2 data-ending-style:translate-y-1/2 sm:max-w-none'
+      >
         <SheetHeader className='shrink-0 border-b border-border/60 p-5 pb-4'>
           <div className='flex items-start gap-3'>
             <button
