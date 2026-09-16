@@ -260,7 +260,7 @@ export function CustomerInspector({
                     />
                     <NewTaskDialog
                       customerId={customer.id}
-                      triggerClassName='h-8 rounded-[10px] px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 active:scale-[0.98] sm:px-3'
+                      triggerClassName='h-8 rounded-[10px] border-transparent bg-transparent px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-transparent hover:bg-muted/65 active:scale-[0.98] sm:px-3'
                       triggerIcon={<Icons.check className='size-3.5' />}
                     />
                   </div>
@@ -544,32 +544,9 @@ export function CustomerInspector({
               </div>
 
               <div className='shrink-0 border-t border-border/50 bg-background px-4 py-3 sm:px-6'>
-                <div className='flex items-center justify-between gap-3'>
-                  <p className='hidden text-xs text-muted-foreground sm:block'>
-                    Los cambios se guardan al salir de cada campo.
-                  </p>
-                  <div className='flex w-full items-center justify-center gap-2 sm:ml-auto sm:w-auto sm:justify-end'>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      onClick={() => setEventDialogOpen(true)}
-                      className='h-9 rounded-full border-border/55 bg-background px-3.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/60 active:scale-[0.98]'
-                    >
-                      <Icons.calendar className='size-3.5' />
-                      <span>Planificar</span>
-                    </Button>
-                    <Button
-                      type='button'
-                      onClick={() => void createFollowUp('task')}
-                      className='group h-9 rounded-full bg-primary px-3.5 text-xs font-medium text-primary-foreground shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/90 active:scale-[0.98]'
-                    >
-                      <span>Nuevo seguimiento</span>
-                      <span className='flex size-5 items-center justify-center rounded-full bg-primary-foreground/10 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5'>
-                        <Icons.arrowRight className='size-3' />
-                      </span>
-                    </Button>
-                  </div>
-                </div>
+                <p className='text-center text-xs text-muted-foreground sm:text-left'>
+                  Los cambios se guardan al salir de cada campo.
+                </p>
               </div>
             </>
           )}
