@@ -167,53 +167,6 @@ export function CustomerInspector({
     }
   };
 
-  const createFollowUp = async (type: 'task' | 'event') => {
-    if (!customer) return;
-
-    try {
-      const start = new Date();
-      start.setDate(start.getDate() + 1);
-      start.setHours(10, 0, 0, 0);
-      const end = new Date(start.getTime() + 60 * 60 * 1000);
-
-      if (type === 'task') {
-        await fetch('/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: `Seguimiento · ${customer.name}`,
-            description: customer.nextAction || 'Seguimiento del cliente',
-            dueAt: start.toISOString(),
-            customerId: customer.id,
-            priority: 'medium'
-          })
-        });
-        await queryClient.invalidateQueries({ queryKey: taskKeys.all });
-        toast.success('Tarea de seguimiento creada');
-      } else {
-        await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: `Seguimiento · ${customer.name}`,
-            description: customer.nextAction || 'Seguimiento del cliente',
-            startAt: start.toISOString(),
-            endAt: end.toISOString(),
-            customerId: customer.id,
-            status: 'planned'
-          })
-        });
-        await queryClient.invalidateQueries({ queryKey: eventKeys.all });
-        toast.success('Evento de seguimiento creado');
-      }
-
-      await queryClient.invalidateQueries({ queryKey: activityKeys.all });
-      await queryClient.invalidateQueries({ queryKey: ['customer', customer.id] });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo crear el seguimiento.');
-    }
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -310,25 +263,6 @@ export function CustomerInspector({
                       triggerClassName='h-8 rounded-[10px] px-2.5 text-xs font-medium shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/65 active:scale-[0.98] sm:px-3'
                       triggerIcon={<Icons.check className='size-3.5' />}
                     />
-                  </div>
-
-                  <div className='flex items-center rounded-[13px] border border-border/45 bg-muted/25 p-0.5'>
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      onClick={() => void createFollowUp('task')}
-                      className='h-8 rounded-[10px] px-2.5 text-xs shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background/85 active:scale-[0.98] sm:px-3'
-                    >
-                      <Icons.check className='size-3.5' /> <span>Seguimiento</span>
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant='ghost'
-                      onClick={() => void createFollowUp('event')}
-                      className='h-8 rounded-[10px] px-2.5 text-xs shadow-none transition-[background-color,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background/85 active:scale-[0.98] sm:px-3'
-                    >
-                      <Icons.calendar className='size-3.5' /> <span>Reunión</span>
-                    </Button>
                   </div>
 
                   <div className='ml-auto flex items-center gap-1 rounded-[13px] border border-border/45 bg-background p-0.5'>
