@@ -260,30 +260,51 @@ export function WeeklyAgenda({
       </div>
 
       <div className='mt-4 grid gap-2 sm:grid-cols-2'>
-        {upcomingEvents.slice(0, 2).map((event) => (
-          <Link
-            key={event.id}
-            href={`/dashboard/calendar?event=${event.id}&date=${format(new Date(event.startAt), 'yyyy-MM-dd')}`}
-            className={cn(
-              'flex min-w-0 items-center gap-3 rounded-xl bg-background/45 px-3.5 py-3 ring-1 ring-border/45',
-              softButton
-            )}
-          >
-            <span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary'>
-              <Icons.calendar className='size-4' />
-            </span>
-            <span className='min-w-0 flex-1'>
-              <span className='block truncate text-sm font-medium'>{event.title}</span>
-              <span className='text-muted-foreground mt-0.5 block text-xs'>
-                {format(
-                  new Date(event.startAt),
-                  event.allDay ? "EEE d · 'Todo el día'" : 'EEE d · HH:mm',
-                  { locale: es }
-                )}
+        {upcomingEvents.slice(0, 2).map((event) => {
+          const linkedTask = tasks.find((task) => task.eventId === event.id);
+          const resolved =
+            event.status === 'done' ||
+            linkedTask?.status === 'done' ||
+            Boolean(linkedTask?.completedAt);
+
+          return (
+            <Link
+              key={event.id}
+              href={`/dashboard/calendar?event=${event.id}&date=${format(new Date(event.startAt), 'yyyy-MM-dd')}`}
+              className={cn(
+                'flex min-w-0 items-center gap-3 rounded-xl bg-background/45 px-3.5 py-3 ring-1 ring-border/45',
+                softButton,
+                resolved && 'opacity-70'
+              )}
+            >
+              <span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary'>
+                <Icons.calendar className='size-4' />
               </span>
-            </span>
-          </Link>
-        ))}
+              <span className='min-w-0 flex-1'>
+                <span
+                  className={cn(
+                    'block truncate text-sm font-medium',
+                    resolved && 'text-muted-foreground line-through'
+                  )}
+                >
+                  {event.title}
+                </span>
+                <span
+                  className={cn(
+                    'text-muted-foreground mt-0.5 block text-xs',
+                    resolved && 'line-through'
+                  )}
+                >
+                  {format(
+                    new Date(event.startAt),
+                    event.allDay ? "EEE d · 'Todo el día'" : 'EEE d · HH:mm',
+                    { locale: es }
+                  )}
+                </span>
+              </span>
+            </Link>
+          );
+        })}
         {upcomingEvents.length === 0 && (
           <p className='text-muted-foreground text-sm'>No hay reuniones próximas.</p>
         )}
