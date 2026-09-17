@@ -116,32 +116,32 @@
   stroke: currentColor !important;
 }
 
-/* Ambient Today header: weather and time/greeting icons stay white. */
-[data-theme='graphite'] header svg {
+/* Only the ambient Today content keeps its white icons. */
+[data-theme='graphite'] header .text-white svg,
+[data-theme='graphite'] [aria-label='Configurar tiempo'] svg {
   color: #ffffff !important;
   stroke: currentColor !important;
 }
 
-/* Central create button: plus/close stays white in light and dark mode. */
-[data-theme='graphite'] button[aria-label='Nuevo'] svg {
-  color: #ffffff !important;
+/* The central create button stays graphite in dark mode as well. */
+[data-theme='graphite'].dark [aria-label='Nuevo'] {
+  background: #2a2a2a !important;
+  border-color: #3a3a3a !important;
+}
+
+[data-theme='graphite'] [aria-label='Nuevo'] svg {
+  color: var(--muted-foreground) !important;
   stroke: currentColor !important;
 }
 
-/* Weather indicator remains white wherever it is rendered. */
-[data-theme='graphite'] [aria-label='Configurar tiempo'] svg,
-[data-theme='graphite'] .text-white svg {
-  color: #ffffff !important;
-  stroke: currentColor !important;
-}
-
-/* In dark mode normal icons follow the dark theme's muted-foreground token. */
+/* In dark mode normal icons still follow the same muted tone. */
 [data-theme='graphite'].dark svg {
   color: var(--muted-foreground) !important;
   stroke: currentColor !important;
 }
 
-[data-theme='graphite'].dark .text-white svg {
+[data-theme='graphite'].dark header .text-white svg,
+[data-theme='graphite'].dark [aria-label='Configurar tiempo'] svg {
   color: #ffffff !important;
   stroke: currentColor !important;
 }
