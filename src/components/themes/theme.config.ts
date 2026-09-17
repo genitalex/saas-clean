@@ -13,5 +13,10 @@ export const THEMES = [
     name: 'Azul',
     value: 'blue',
     description: 'Neutro, preciso y elegante'
+  },
+  {
+    name: 'Grafito',
+    value: 'graphite',
+    description: 'Neutro, limpio y minimalista'
   }
 ];

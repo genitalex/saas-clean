@@ -1,6 +1,7 @@
 /* Base is the product reference theme. Other themes remain available for later work. */
 @import './themes/base.css';
 @import './themes/blue.css';
+@import './themes/graphite.css';
 
 [data-theme] {
   --shadow-2xs: 0 1px 2px rgb(15 23 42 / 0.04);
@@ -41,7 +42,6 @@ body {
   --header-height: calc(var(--spacing, 0.25rem) * 12 + 1px);
 }
 
-/* Keep the loaded font variables active across every theme. */
 [data-theme] body {
   font-family: var(--font-sans);
 }
