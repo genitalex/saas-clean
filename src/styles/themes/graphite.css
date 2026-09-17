@@ -141,9 +141,6 @@
   stroke: currentColor !important;
 }
 
-[data-theme='graphite'].dark header svg,
-[data-theme='graphite'].dark button[aria-label='Nuevo'] svg,
-[data-theme='graphite'].dark [aria-label='Configurar tiempo'] svg,
 [data-theme='graphite'].dark .text-white svg {
   color: #ffffff !important;
   stroke: currentColor !important;
