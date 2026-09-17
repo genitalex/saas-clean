@@ -110,20 +110,41 @@
   --chart-5: #4b4b4b;
 }
 
+/* All product icons use the graphite identity. */
 [data-theme='graphite'] svg {
-  color: #212121;
+  color: #212121 !important;
+  stroke: currentColor !important;
 }
 
+/* The ambient Today header keeps its weather/time icons white. */
+[data-theme='graphite'] header svg {
+  color: #ffffff !important;
+  stroke: currentColor !important;
+}
+
+/* The central create button keeps its plus/close icon white. */
+[data-theme='graphite'] button[aria-label='Nuevo'] svg {
+  color: #ffffff !important;
+  stroke: currentColor !important;
+}
+
+/* Keep the weather widget explicitly white. */
 [data-theme='graphite'] [aria-label='Configurar tiempo'] svg,
 [data-theme='graphite'] .text-white svg {
-  color: #ffffff;
+  color: #ffffff !important;
+  stroke: currentColor !important;
 }
 
+/* Dark mode keeps icons readable while preserving the monochrome system. */
 [data-theme='graphite'].dark svg {
-  color: #f2f2f2;
+  color: #f2f2f2 !important;
+  stroke: currentColor !important;
 }
 
+[data-theme='graphite'].dark header svg,
+[data-theme='graphite'].dark button[aria-label='Nuevo'] svg,
 [data-theme='graphite'].dark [aria-label='Configurar tiempo'] svg,
 [data-theme='graphite'].dark .text-white svg {
-  color: #ffffff;
+  color: #ffffff !important;
+  stroke: currentColor !important;
 }
